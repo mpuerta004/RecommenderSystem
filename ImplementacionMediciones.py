@@ -40,7 +40,7 @@ def calcular_subordenamientos(dic):
     return agrupamientos
 
 
-def generar(reodenamiento, dic):
+def measurements(reodenamiento, dic):
     m = t_final // x
     if t_final % x != 0:
         m = m + 1
@@ -67,28 +67,9 @@ def generar(reodenamiento, dic):
         for l in range(nCells):
             a=a+f[l][j]
         for i in range(0, nCells):
-            print(f[i][:j+1].sum())
             f.loc[j, 'P_n' + str(i)] = (f[i][:j+1].sum() / a) * nCells
     return f
 
-def generar_normal(reodenamiento, dic):
-    m = t_final // x
-    if t_final % x != 0:
-        m = m + 1
-    index = []
-    a = list(range(m + 1))
-    col = a
-    for i in range(0, nCells):
-        index.append(i)
-        index.append('P_t'+str(i))
-    f = pd.DataFrame(np.zeros((len(col), len(index))), index=col, columns=index)
-    for i in range(0, nCells):
-        for j in range(0, m):
-            y = len(reodenamiento[i][j])
-            f.loc[j + 1,i] = y
-
-        print(f)
-    return f
 
 
 
@@ -96,5 +77,4 @@ def generar_normal(reodenamiento, dic):
 if __name__ == '__main__':
     dic = n_sampling()
     a = calcular_subordenamientos(dic)
-    print(a)
-    print(generar(a, dic))
+    print(measurements(a, dic))
