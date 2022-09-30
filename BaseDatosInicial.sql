@@ -16,7 +16,7 @@ CREATE TABLE User (
 CREATE TABLE QueenBee (
     queenBeeID INT UNIQUE AUTO_INCREMENT,
     name VARCHAR(30),
-    surame VARCHAR(30),
+    surname VARCHAR(30),
     age INT,
     gender Set('Male', 'Female','Intersexual','I dont want to answer') default 'I dont want to answer',
     PRIMARY KEY (queenBeeID)
@@ -27,18 +27,20 @@ CREATE TABLE Campaign (
     campaignID INT UNIQUE AUTO_INCREMENT PRIMARY KEY,
     createdBy INT,
     city varchar(30),
-    cellSize decimal,
+    #cellSize decimal,
     # Igual el mapa.... 
     FOREIGN  KEY (createdBy) REFERENCES QueenBee(queenBeeID) 
 );
 
 CREATE TABLE Cell(
    cellID INT UNIQUE AUTO_INCREMENT PRIMARY KEY,
-   # https://dev.mysql.com/doc/refman/8.0/en/spatial-types.html
-   centerLonguitud Decimal,
-   centerLatitude Decimal, 
+   # https://dev.mysql.com/doc/refman/8.0/en/opengis-geometry-model.html
+   center point,
+   type set('Dynamic','Static') default 'Dynamic',
+   #forma 
+   #centerLonguitud Decimal,
+   #centerLatitude Decimal, 
    isInCampaign INT,
-   #Mirar este tipo de dato a ver si es el correcto.
    necessityOfCoverage Decimal,
        FOREIGN KEY (isInCampaign) REFERENCES Campaign(campaignID)
 );
@@ -58,12 +60,12 @@ CREATE TABLE AirData (
    time TIMESTAMP,
    capturedBy  INT,
    # https://dev.mysql.com/doc/refman/8.0/en/spatial-types.html
-   locationLonguitud Decimal,
-   locationLatitude Decimal, 
+   location point,
+   #locationLonguitud Decimal,
+   #locationLatitude Decimal, 
    No2 Decimal,
    Co2 Decimal,
           FOREIGN KEY (dataFromCell) REFERENCES Cell(cellID),
           FOREIGN KEY  (capturedBy) REFERENCES  User(userID),
 Primary Key (dataFromCell, capturedBy, time)				
 );
-
