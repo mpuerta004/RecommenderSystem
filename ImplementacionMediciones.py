@@ -15,6 +15,7 @@ numeroMininmoSampling=6
 
 def n_sampling():
     dic = []
+    # Este diccionario tiene por cada celda dinamica el timeStap ficticio en el que se supone que se ha polinizado.
     for i in range(0, nCellsDinamicas):
         dic.append([])
         longuitud = random.randint(numeroMininmoSampling, t_final)
@@ -47,7 +48,7 @@ def calcular_subordenamientos(dic):
     return agrupamientos
 
 
-def measurements(reodenamiento, dic):
+def measurements(reodenamiento):
     m = t_final // x
     if t_final % x != 0:
         m = m + 1
@@ -92,6 +93,6 @@ def measurements(reodenamiento, dic):
 
 if __name__ == '__main__':
     dic = n_sampling()
+    print(dic)
     a = calcular_subordenamientos(dic)
-
-    print(measurements(a, dic))
+    measurements(a)

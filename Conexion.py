@@ -34,17 +34,28 @@ class Connexion:
                 print("No se ha podido cerrar la conexión")
                 return False
 
+    def vaciarDatos(self):
+        self.cursor.execute("Delete from AirDataPomise;")  # ;'
+        self.client.commit()
+        self.cursor.execute("Delete from AirData;")  # ;'
+        self.client.commit()
+        self.cursor.execute("Delete from Cell;")  # ;'
+        self.client.commit()
+        self.cursor.execute("Delete from Campaign;")  # ;'
+        self.client.commit()
+        self.cursor.execute("Delete from Campaign;")
+        self.client.commit()
+        self.cursor.execute("Delete from QueenBee;")
+        self.client.commit()
+        self.cursor.execute("Delete from User;")
+        self.client.commit()
 
 
 
 if __name__ == '__main__':
     bd = Connexion()
     print(bd.start())
-
-
-    bd.cursor.execute("INSERT into QueenBee (name, surname, age) values ('tralala','tralalala2',40);")#;'
-    bd.client.commit()
-    print(bd.cursor.fetchall)
+    bd.vaciarDatos()
     bd.cursor.execute("Select* from QueenBee")
     for i in bd.cursor.fetchall():
         print(i)
