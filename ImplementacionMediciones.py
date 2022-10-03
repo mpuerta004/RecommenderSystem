@@ -68,17 +68,13 @@ def measurements(reodenamiento):
             else:
                 y = len(reodenamiento[i][j])
                 f.loc[j + 1,i] = y
-            if (j+1 == 5):
-                f.loc[j+1, 0] = 100
-                #print(max(1, math.log(max(1, abs(f[i][j + 1] - 100)))))
-                b = max(2, 100 - f[i][j+1])
+            #if (j+1 == 5):
+            #    f.loc[j+1, 0] = 100
             if(i>=nCellsDinamicas):
                 f.loc[j+1, i] = 100
-
-                #print(math.log(b,f[i][j+1] +2))
-            #b=max(2,100-f[i][j+1])
             b = max(2, 100 - f[i][j])
-            f.loc[j+1,'P_t'+str(i)] = max(1,math.log(max(2,abs(f[i][j+1]-100))))*math.log(b,f[i][j+1] +2)
+            a= max(2,100-f[i][j+1])
+            f.loc[j+1,'P_t'+str(i)] = math.log(a)*math.log(b,f[i][j+1] +2)
     a=0
     for j in range(1, m + 1):
         for l in range(nCellsTotal):
@@ -93,6 +89,5 @@ def measurements(reodenamiento):
 
 if __name__ == '__main__':
     dic = n_sampling()
-    print(dic)
     a = calcular_subordenamientos(dic)
-    measurements(a)
+    print(measurements(a))

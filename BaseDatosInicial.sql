@@ -28,6 +28,7 @@ CREATE TABLE Campaign (
     id INT UNIQUE AUTO_INCREMENT PRIMARY KEY,
     manager_id INT,
     city varchar(30),
+    start timestamp,
     cell_radius decimal,
     min_samples INT, # minimum number of times a cell has to be visited in a campaign during its sampling period
     sampling_period INT,# seconds during which samples will be grouped by campaign
