@@ -32,7 +32,7 @@ CREATE TABLE Campaign (
     sampling_period INT,# seconds during which samples will be grouped by campaign
     planning_limit_time INT, #  upper number of seconds limit that a sampling promise can be scheduled for
     # Igual el mapa.... A new entity called Surface could be created, a campaign may have N surfaces, where each surface has M hexagons
-    FOREIGN  KEY (createdBy) REFERENCES CampaignManager(id) 
+    FOREIGN  KEY (manager_id) REFERENCES CampaignManager(id) 
 );
 
 CREATE TABLE Surface (
@@ -45,7 +45,7 @@ CREATE TABLE Surface (
 CREATE TABLE Boundary (
     id INT UNIQUE AUTO_INCREMENT PRIMARY KEY,
     surface_id INT,
-    boundary LinearString
+    boundary linestring,
     FOREIGN  KEY (surface_id) REFERENCES CampaignManager(id) 
 );
 
@@ -82,7 +82,7 @@ CREATE TABLE CellSample (
    #locationLonguitud Decimal,
    #locationLatitude Decimal, 
    FOREIGN KEY (cell_id) REFERENCES Cell(id),
-   FOREIGN KEY  (user_id) REFERENCES  User(id),
+   FOREIGN KEY  (user_id) REFERENCES  User(id)
    #PRIMARY KEY (cell_id, user_id, sampling_timestamp)				
 );
 
@@ -91,7 +91,7 @@ CREATE TABLE AirData (
    sample_id INT, 
    No2 Decimal, # I would make a reference to Sample since we can then generalize it
    Co2 Decimal,
-   FOREIGN KEY (sample_id) REFERENCES CellSample(id),	
+   FOREIGN KEY (sample_id) REFERENCES CellSample(id)	
 );
 
 
