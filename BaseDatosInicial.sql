@@ -2,7 +2,8 @@ CREATE DATABASE SocioBee;
 Use SocioBee;
 
 # ON DELETE and ON UPDATE
-# Mapa y las formas de localización
+
+
 CREATE TABLE User (
     id INT UNIQUE AUTO_INCREMENT,
     name VARCHAR(30),
@@ -31,7 +32,7 @@ CREATE TABLE Campaign (
     min_samples INT, # minimum number of times a cell has to be visited in a campaign during its sampling period
     sampling_period INT,# seconds during which samples will be grouped by campaign
     planning_limit_time INT, #  upper number of seconds limit that a sampling promise can be scheduled for
-    campaign_duration timestamp,
+    campaign_duration INT, # seconds during the campaign.
     # A new entity called Surface could be created, a campaign may have M surfaces, where each surface has N hexagons
     FOREIGN  KEY (manager_id) REFERENCES CampaignManager(id) 
 );
@@ -59,6 +60,18 @@ CREATE TABLE Cell(
    FOREIGN KEY (surface_id) REFERENCES Surface(id)
 );
 
+CREATE TABLE CellPriorityMeasurement (
+   #This is the priority of pollinating a cell in the timeslot [start_timeSlot,start_timeSlot+sampling_period)
+   cell_id INT,
+   start_sampling_period TIMESTAMP,
+   #end_timeSlot TIMESTAMP,
+   temporal_priority Decimal, 
+   trend_priority Decimal, 
+   FOREIGN KEY (cell_id) REFERENCES Cell(id),
+   PRIMARY KEY (cell_id,start_sampling_period)
+);
+
+
 CREATE TABLE CellMeasurementPromise (
    cell_id INT,
    user_id  INT,
@@ -75,6 +88,7 @@ CREATE TABLE CellMeasurement (
    user_id  INT,
    timestamp TIMESTAMP,
    measurement_type set('AirData','Sound') default 'AirData',
+   data_id INT,
    # https://dev.mysql.com/doc/refman/8.0/en/spatial-types.html
    location point,
    FOREIGN KEY (cell_id) REFERENCES Cell(id),
@@ -84,10 +98,10 @@ CREATE TABLE CellMeasurement (
 
 CREATE TABLE AirData (
    id INT UNIQUE AUTO_INCREMENT PRIMARY KEY,
-   measurement_id INT, 
+   measurement_id INT,
    No2 Decimal, # I would make a reference to Measurement since we can then generalize it
    Co2 Decimal,
-   FOREIGN KEY (sample_id) REFERENCES CellSample(id)	
+   FOREIGN KEY (measurement_id) REFERENCES CellMeasurement(id)
 );
 
 
