@@ -31,7 +31,8 @@ CREATE TABLE Campaign (
     min_samples INT, # minimum number of times a cell has to be visited in a campaign during its sampling period
     sampling_period INT,# seconds during which samples will be grouped by campaign
     planning_limit_time INT, #  upper number of seconds limit that a sampling promise can be scheduled for
-    # Igual el mapa.... A new entity called Surface could be created, a campaign may have N surfaces, where each surface has M hexagons
+    campaign_duration timestamp,
+    # A new entity called Surface could be created, a campaign may have M surfaces, where each surface has N hexagons
     FOREIGN  KEY (manager_id) REFERENCES CampaignManager(id) 
 );
 
@@ -54,9 +55,6 @@ CREATE TABLE Cell(
    # https://dev.mysql.com/doc/refman/8.0/en/opengis-geometry-model.html
    center point,
    cell_type set('Dynamic','Static') default 'Dynamic',
-   #forma 
-   #centerLongitud Decimal,
-   #centerLatitude Decimal, 
    surface_id INT,
    FOREIGN KEY (surface_id) REFERENCES Surface(id)
 );
@@ -66,7 +64,6 @@ CREATE TABLE CellSamplePromise (
    user_id  INT,
    sampling_limit TIMESTAMP, # limit timestamp
    is_active BOOLEAN, # by default set to TRUE but changed once sampling_limit time is exceeded
-   # no more than 2 or 3 day from the actual time. 
    FOREIGN KEY (cell_id) REFERENCES Cell(id),
    FOREIGN KEY  (user_id) REFERENCES  User(id),
    PRIMARY KEY (cell_id, user_id, sampling_limit)				
@@ -79,8 +76,6 @@ CREATE TABLE CellSample (
    timestamp TIMESTAMP,
    # https://dev.mysql.com/doc/refman/8.0/en/spatial-types.html
    location point,
-   #locationLonguitud Decimal,
-   #locationLatitude Decimal, 
    FOREIGN KEY (cell_id) REFERENCES Cell(id),
    FOREIGN KEY  (user_id) REFERENCES  User(id)
    #PRIMARY KEY (cell_id, user_id, sampling_timestamp)				
