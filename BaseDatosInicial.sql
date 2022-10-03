@@ -61,7 +61,7 @@ CREATE TABLE Cell(
    FOREIGN KEY (surface_id) REFERENCES Surface(id)
 );
 
-CREATE TABLE CellSamplePromisse (
+CREATE TABLE CellSamplePromise (
    cell_id INT,
    user_id  INT,
    sampling_limit TIMESTAMP, # limit timestamp
