@@ -7,7 +7,7 @@ class Connexion:
         self.client = None
         self.cursor=None
 
-    def star(self):
+    def start(self):
         if self.client == None:
             # cur.execute( "SELECT name FROM User" )
             try:
@@ -39,7 +39,7 @@ class Connexion:
 
 if __name__ == '__main__':
     bd = Connexion()
-    print(bd.star())
+    print(bd.start())
 
 
     bd.cursor.execute("INSERT into QueenBee (name, surname, age) values ('tralala','tralalala2',40);")#;'
@@ -48,8 +48,4 @@ if __name__ == '__main__':
     bd.cursor.execute("Select* from QueenBee")
     for i in bd.cursor.fetchall():
         print(i)
-
-
-    #                  'INSERT  INTO Campaign (createdBy, city) values (1,"Zaragoza")',multi=True )
-    #a=bd.cursor.execute("Select* from QueenBee")
     bd.close()

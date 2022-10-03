@@ -4,7 +4,7 @@ import numpy as np
 import math
 t_0 = 0
 t_final = 1000
-x = 100
+x = 36
 nCellsDinamicas = 5  # random.randint(10,15 )
 nCellsEstaticas=30
 nCellsTotal=nCellsDinamicas+nCellsEstaticas
@@ -20,7 +20,7 @@ def n_sampling():
         longuitud = random.randint(numeroMininmoSampling, t_final)
         t=[]
         for j in range(0,longuitud):
-            t.append(random.uniform(numeroMininmoSampling,t_final))
+            t.append(random.uniform(0,t_final))
         t.sort()
         dic[i].append(t)
         data = []
@@ -93,4 +93,5 @@ def measurements(reodenamiento, dic):
 if __name__ == '__main__':
     dic = n_sampling()
     a = calcular_subordenamientos(dic)
+
     print(measurements(a, dic))
