@@ -59,7 +59,7 @@ CREATE TABLE Cell(
    FOREIGN KEY (surface_id) REFERENCES Surface(id)
 );
 
-CREATE TABLE CellSamplePromise (
+CREATE TABLE CellMeasurementPromise (
    cell_id INT,
    user_id  INT,
    sampling_limit TIMESTAMP, # limit timestamp
@@ -69,11 +69,12 @@ CREATE TABLE CellSamplePromise (
    PRIMARY KEY (cell_id, user_id, sampling_limit)				
 );
 
-CREATE TABLE CellSample (
+CREATE TABLE CellMeasurement (
    id INT UNIQUE AUTO_INCREMENT PRIMARY KEY,
    cell_id INT,
    user_id  INT,
    timestamp TIMESTAMP,
+   measurement_type set('AirData','Sound') default 'AirData',
    # https://dev.mysql.com/doc/refman/8.0/en/spatial-types.html
    location point,
    FOREIGN KEY (cell_id) REFERENCES Cell(id),
@@ -83,8 +84,8 @@ CREATE TABLE CellSample (
 
 CREATE TABLE AirData (
    id INT UNIQUE AUTO_INCREMENT PRIMARY KEY,
-   sample_id INT, 
-   No2 Decimal, # I would make a reference to Sample since we can then generalize it
+   measurement_id INT, 
+   No2 Decimal, # I would make a reference to Measurement since we can then generalize it
    Co2 Decimal,
    FOREIGN KEY (sample_id) REFERENCES CellSample(id)	
 );
