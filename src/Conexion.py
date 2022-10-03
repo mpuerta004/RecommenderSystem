@@ -1,5 +1,5 @@
 import mysql.connector
-import Conf
+import src.Conf as conf
 
 class Connexion:
 
@@ -11,7 +11,7 @@ class Connexion:
         if self.client == None:
             # cur.execute( "SELECT name FROM User" )
             try:
-                self.client = mysql.connector.connect(host='localhost', user='root', passwd='Sesamo940', db='SocioBee')
+                self.client = mysql.connector.connect(host='localhost', user='root', passwd=conf.passwd, db='SocioBee')
                 self.cursor=self.client.cursor()
 
                 return True
@@ -55,7 +55,7 @@ class Connexion:
 if __name__ == '__main__':
     bd = Connexion()
     print(bd.start())
-    bd.vaciarDatos()
+    #bd.vaciarDatos()
     bd.cursor.execute("Select* from QueenBee")
     for i in bd.cursor.fetchall():
         print(i)
