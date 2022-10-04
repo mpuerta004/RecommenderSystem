@@ -41,7 +41,7 @@ CREATE TABLE Campaign (
 CREATE TABLE Surface (
     id INT UNIQUE AUTO_INCREMENT PRIMARY KEY,
     campaign_id INT,
-    FOREIGN  KEY (campaign_id) REFERENCES CampaignManager(id) 
+    FOREIGN  KEY (campaign_id) REFERENCES Campaign(id)
 );
 
 
@@ -49,7 +49,7 @@ CREATE TABLE Boundary (
     id INT UNIQUE AUTO_INCREMENT PRIMARY KEY,
     surface_id INT,
     boundary linestring,
-    FOREIGN  KEY (surface_id) REFERENCES CampaignManager(id) 
+    FOREIGN  KEY (surface_id) REFERENCES Surface(id) 
 );
 
 CREATE TABLE Cell(
