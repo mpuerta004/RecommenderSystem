@@ -28,7 +28,7 @@ CREATE TABLE Campaign (
     id INT UNIQUE AUTO_INCREMENT PRIMARY KEY,
     manager_id INT,
     city varchar(30),
-    start timestamp,
+    start_timestamp timestamp,
     cell_radius decimal,
     min_samples INT, # minimum number of times a cell has to be visited in a campaign during its sampling period
     sampling_period INT,# seconds during which samples will be grouped by campaign
@@ -77,7 +77,7 @@ CREATE TABLE CellMeasurementPromise (
    cell_id INT,
    user_id  INT,
    sampling_limit TIMESTAMP, # limit timestamp
-   is_active BOOLEAN, # by default set to TRUE but changed once sampling_limit time is exceeded
+   is_active BOOLEAN default TRUE, # by default set to TRUE but changed once sampling_limit time is exceeded
    FOREIGN KEY (cell_id) REFERENCES Cell(id),
    FOREIGN KEY  (user_id) REFERENCES  User(id),
    PRIMARY KEY (cell_id, user_id, sampling_limit)				
