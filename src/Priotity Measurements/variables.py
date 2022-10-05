@@ -7,15 +7,18 @@ import numpy as np
 import math
 
 
-start_campaing = datetime.datetime.utcnow()
+start_campaing = datetime.datetime.now()
+print(start_campaing)
 nDynamicas=30
 nStatic=10
 max_sampling_time_slot = 150
 min_sampling_time_slot =10
 sampling_period = 60 * 60 * 3
-ntimeslots=20
+ntimeslots=3
 campaign_duration = ntimeslots * (60 * 3 * 60)
 min_number_samples=100
+
+print(start_campaing+datetime.timedelta(seconds=campaign_duration))
 
 
 # Dados los datos del CampaignManager y el numeor de celdas Estaticas y Dinamicas crea los datos.
@@ -86,6 +89,10 @@ def measurements(bd,dinamicas,estatica):
             if (i >= nDynamicas):
                 f.loc[j + 1, i] = 100 # No necesito preguntar pero se podria.
                 #f.loc[j+1,"cell_id"+str(i)]=estatica[i-nDynamicas]
+                cell_id=estatica[i-nDynamicas]
+                timestamp_time_slot = start_campaing + datetime.timedelta(seconds=j*sampling_period)
+                timestamp_time = "'"+str(timestamp_time_slot.strftime('%Y-%m-%d %H:%M:%S'))+"'"
+
             else:
                 #f.loc[j+1,'cell_id'+str(i)]=dinamica[i]
                 cell_id=str(dinamicas[i])
@@ -104,18 +111,31 @@ def measurements(bd,dinamicas,estatica):
             #    f.loc[j+1, 0] = 100
             b = max(2, 100 - f[i][j])
             a = max(2, 100 - f[i][j + 1])
-            f.loc[j + 1, 'P_t' + str(i)] = math.log(a) * math.log(b, f[i][j + 1] + 2)
+            result=math.log(a) * math.log(b, f[i][j + 1] + 2)
+            f.loc[j + 1, 'P_t' + str(i)] =result # math.log(a) * math.log(b, f[i][j + 1] + 2)
     a = 0
     for j in range(1, m + 1):
-         for l in range(nDynamicas+nStatic):
+        timestamp_time_slot = start_campaing + datetime.timedelta(seconds=(j-1)* sampling_period)
+        timestamp_time = "'" + str(timestamp_time_slot.strftime('%Y-%m-%d %H:%M:%S')) + "'"
+        for l in range(nDynamicas+nStatic):
              a = a + f[l][j]
-         for i in range(0, nDynamicas+nStatic):
-             f.loc[j, 'P_n' + str(i)] = (f[i][:j + 1].sum() / a) * (nDynamicas+nStatic)
+        for i in range(0, nDynamicas+nStatic):
+            if (i >= nDynamicas):
+                cell_id=estatica[i-nDynamicas]
+            else:
+                cell_id = dinamicas[i]
+            result= (f[i][:j + 1].sum() / a) * (nDynamicas+nStatic)
+            f.loc[j, 'P_n' + str(i)] =result
+            bd.insertCellPriorityMeasurement(cell_id=cell_id,start_sampling_period=timestamp_time,
+                                             temporal_priority=f['P_t'+str(i)][j],trend_priority=result)
+
     return f
 
 if __name__ == '__main__':
     bd = Conexion.Connexion()
     bd.start()
+    bd.vaciarDatos()
+    bd.vaciarDatos()
     #sampling_period = 3 horas.
     #Tiempo de duracion de la campaña 18 horas.
     # # timeslots = 6
@@ -132,10 +152,8 @@ if __name__ == '__main__':
     #Insertar las datos!
     insertData(bd,dinamica,estatica)
     f=measurements(bd,dinamica,estatica)
-    print(f)
     f.to_csv('h.csv',sep=';',float_format='%.3f')
     bd.close()
-
 # Generar varias campañas.
 # # --- INPUTS--------
 # nCanpañas = [1]  # Cada una de estas las ha creado un CampaignManager diferente. Estos usuarios se suponen que
