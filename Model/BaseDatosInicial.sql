@@ -29,7 +29,7 @@ CREATE TABLE Campaign (
     manager_id INT,
     city varchar(30),
     start_timestamp timestamp,
-    cell_radius decimal,
+    cell_radius float8,
     min_samples INT, # minimum number of times a cell has to be visited in a campaign during its sampling period
     sampling_period INT,# seconds during which samples will be grouped by campaign
     planning_limit_time INT, #  upper number of seconds limit that a sampling promise can be scheduled for
@@ -66,8 +66,8 @@ CREATE TABLE CellPriorityMeasurement (
    cell_id INT,
    start_sampling_period TIMESTAMP,
    #end_timeSlot TIMESTAMP,
-   temporal_priority Decimal, 
-   trend_priority Decimal, 
+   temporal_priority float8, 
+   trend_priority float8, 
    FOREIGN KEY (cell_id) REFERENCES Cell(id),
    PRIMARY KEY (cell_id,start_sampling_period)
 );
@@ -100,8 +100,8 @@ CREATE TABLE CellMeasurement (
 CREATE TABLE AirData (
    id INT UNIQUE AUTO_INCREMENT PRIMARY KEY,
    measurement_id INT,
-   No2 Decimal, # I would make a reference to Measurement since we can then generalize it
-   Co2 Decimal,
+   No2 float8, # I would make a reference to Measurement since we can then generalize it
+   Co2 float8,
    FOREIGN KEY (measurement_id) REFERENCES CellMeasurement(id)
 );
 
