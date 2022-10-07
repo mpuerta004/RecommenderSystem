@@ -110,7 +110,7 @@ CREATE TAble Recommendation(
     user_id INT,
     #timestamp_priority TIMESTAMP, # Moment in where you select that the cell has a important priority
     recommendation_timestamp TIMESTAMP,
-    state SET('Rejected', 'Open', 'Planning', 'Realized'),
+    state SET('Rejected', 'Open', 'Planning', 'Realized') default 'Rejected',
     FOREIGN KEY (cell_id) REFERENCES CellPriorityMeasurement(cell_id),
     FOREIGN KEY (cell_id) REFERENCES Cell(id),
     FOREIGN KEY (user_id) REFERENCES  User(id),
