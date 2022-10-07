@@ -92,8 +92,8 @@ class Connexion:
                             f"value ({cell_id},{timestamp},{temporal_priority},{trend_priority})")
         self.client.commit()
         id = int(self.cursor.lastrowid)
-
         return id
+    #Cuidado hay funciones que no tienene id
     def insertCellMeasurementPromise(self, cell_id,user_id,sampling_limit,is_active="TRUE"):
         self.cursor.execute(
             f"INSERT INTO CellMeasurementPromise (cell_id,user_id,sampling_limit,is_active) "
@@ -119,6 +119,13 @@ class Connexion:
         id = int(self.cursor.lastrowid)
         return id
 
+    def insertRecommendation(self, cell_id,user_id, recommendation_timestamp="NULL", state="'"+"Rejected"+"'"):
+        self.cursor.execute(
+            f"INSERT INTO  Recommendation (cell_id,user_id,recommendation_timestamp,state) "
+            f"value ({cell_id},{user_id},{recommendation_timestamp},{state})")
+        self.client.commit()
+        id = int(self.cursor.lastrowid)
+        return id
     def vaciarDatos(self):
         try:
             self.cursor.execute("Delete from AirData;")  # ;'
