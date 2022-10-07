@@ -4,19 +4,20 @@ import datetime
 import random
 import pandas as pd
 import numpy as np
+
 import math
 
 
 start_campaing = datetime.datetime.now()
 print(start_campaing)
-nDynamicas=30
-nStatic=10
-max_sampling_time_slot = 150
-min_sampling_time_slot =10
+nDynamicas=4
+nStatic=1
+max_sampling_time_slot = 50
+min_sampling_time_slot =1
 sampling_period = 60 * 60 * 3
-ntimeslots=3
+ntimeslots=15
 campaign_duration = ntimeslots * (60 * 3 * 60)
-min_number_samples=100
+min_number_samples=10
 
 print(start_campaing+datetime.timedelta(seconds=campaign_duration))
 
@@ -87,7 +88,7 @@ def measurements(bd,dinamicas,estatica):
     for i in range(0, nDynamicas+nStatic):
         for j in range(0, m) : #MIRAR SI EL Indice va hasta donde quiero.
             if (i >= nDynamicas):
-                f.loc[j + 1, i] = 100 # No necesito preguntar pero se podria.
+                f.loc[j + 1, i] = min_number_samples # No necesito preguntar pero se podria.
                 #f.loc[j+1,"cell_id"+str(i)]=estatica[i-nDynamicas]
                 cell_id=estatica[i-nDynamicas]
                 timestamp_time_slot = start_campaing + datetime.timedelta(seconds=j*sampling_period)
@@ -100,17 +101,15 @@ def measurements(bd,dinamicas,estatica):
                 timestamp_time = "'"+str(timestamp_time_slot.strftime('%Y-%m-%d %H:%M:%S'))+"'"
                 end_time_slot_time = timestamp_time_slot + datetime.timedelta(seconds=sampling_period-1)
                 end_time = "'"+ str(end_time_slot_time.strftime('%Y-%m-%d %H:%M:%S'))+"'"
-                print(timestamp_time , end_time)
                 bd.cursor.execute("Select Count(*) from CellMeasurement where "
                                       f"cell_id={cell_id} AND "
                                       f"timestamp between {timestamp_time} and {end_time}")
                 elemento=bd.cursor.fetchall()[0][0]
-                print(elemento)
                 f.loc[j + 1, i] = elemento
             # if (j+1 == 5):
             #    f.loc[j+1, 0] = 100
-            b = max(2, 100 - f[i][j])
-            a = max(2, 100 - f[i][j + 1])
+            b = max(2, min_number_samples - f[i][j])
+            a = max(2, min_number_samples - f[i][j + 1])
             result=math.log(a) * math.log(b, f[i][j + 1] + 2)
             f.loc[j + 1, 'P_t' + str(i)] =result # math.log(a) * math.log(b, f[i][j + 1] + 2)
     a = 0
@@ -126,8 +125,9 @@ def measurements(bd,dinamicas,estatica):
                 cell_id = dinamicas[i]
             result= (f[i][:j + 1].sum() / a) * (nDynamicas+nStatic)
             f.loc[j, 'P_n' + str(i)] =result
-            bd.insertCellPriorityMeasurement(cell_id=cell_id,start_sampling_period=timestamp_time,
+            id=bd.insertCellPriorityMeasurement(cell_id=cell_id,timestamp=timestamp_time,
                                              temporal_priority=f['P_t'+str(i)][j],trend_priority=result)
+            print(id)
 
     return f
 
@@ -143,16 +143,18 @@ if __name__ == '__main__':
     campaing_dic={"manager_id":bd.insertCampaignManager(),
                   "min_samples":min_number_samples,
                   "sampling_period":sampling_period,
-                    "campaign_duration":campaign_duration,
+                    "campaign_duration": campaign_duration,
                     "start_timestamp": start_campaing.strftime('%Y-%m-%d %H:%M:%S')
     }
     dinamica, estatica = generarUNACampaña(bd, campaing_dic, nDynamicas, nStatic)
     print(dinamica)
     print(estatica)
+
     #Insertar las datos!
     insertData(bd,dinamica,estatica)
     f=measurements(bd,dinamica,estatica)
-    f.to_csv('h.csv',sep=';',float_format='%.3f')
+
+    f.to_csv("example_data.csv",sep=';',float_format='%.3f',decimal=",")
     bd.close()
 # Generar varias campañas.
 # # --- INPUTS--------
