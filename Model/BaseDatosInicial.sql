@@ -64,12 +64,12 @@ CREATE TABLE Cell(
 CREATE TABLE CellPriorityMeasurement (
    #This is the priority of pollinating a cell in the timeslot [start_timeSlot,start_timeSlot+sampling_period)
    cell_id INT,
-   start_sampling_period TIMESTAMP,
+   timestamp TIMESTAMP,
    #end_timeSlot TIMESTAMP,
    temporal_priority float8, 
    trend_priority float8, 
    FOREIGN KEY (cell_id) REFERENCES Cell(id),
-   PRIMARY KEY (cell_id,start_sampling_period)
+   PRIMARY KEY (cell_id,timestamp)
 );
 
 
@@ -104,5 +104,15 @@ CREATE TABLE AirData (
    Co2 float8,
    FOREIGN KEY (measurement_id) REFERENCES CellMeasurement(id)
 );
+
+CREATE TAble Recommendation(
+    cell_id INT,
+    user_id int,
+    timestamp TIMESTAMP, # Moment in where you select that the cell has a important priority
+    rcommendation_timestamp timestamp,
+    state SET{'rejected', 'Open', 'Planning', 'Realized'},
+     FOREIGN KEY (timestamp) REFERENCES CellPriotityMeasurement(timestamp),
+     FOREIGN KEY (cell_id,usr_id) REFERENCES Cell(id), User(id)
+)
 
 
