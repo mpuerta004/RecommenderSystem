@@ -107,12 +107,14 @@ CREATE TABLE AirData (
 
 CREATE TAble Recommendation(
     cell_id INT,
-    user_id int,
-    timestamp TIMESTAMP, # Moment in where you select that the cell has a important priority
-    rcommendation_timestamp timestamp,
-    state SET{'rejected', 'Open', 'Planning', 'Realized'},
-     FOREIGN KEY (timestamp) REFERENCES CellPriotityMeasurement(timestamp),
-     FOREIGN KEY (cell_id,usr_id) REFERENCES Cell(id), User(id)
+    user_id INT,
+    #timestamp_priority TIMESTAMP, # Moment in where you select that the cell has a important priority
+    recommendation_timestamp TIMESTAMP,
+    state SET('Rejected', 'Open', 'Planning', 'Realized'),
+    FOREIGN KEY (cell_id) REFERENCES CellPriorityMeasurement(cell_id),
+    FOREIGN KEY (cell_id) REFERENCES Cell(id),
+    FOREIGN KEY (user_id) REFERENCES  User(id),
+    Primary KEY (user_id, cell_id)
 )
 
 
