@@ -87,9 +87,9 @@ class Connexion:
         id = int(self.cursor.lastrowid)
         return id
 
-    def insertCellPriorityMeasurement(self,cell_id,start_sampling_period,temporal_priority="Null",trend_priority="Null"):
-        self.cursor.execute(f"INSERT INTO CellPriorityMeasurement (cell_id,start_sampling_period,temporal_priority,trend_priority) "
-                            f"value ({cell_id},{start_sampling_period},{temporal_priority},{trend_priority})")
+    def insertCellPriorityMeasurement(self,cell_id,timestamp,temporal_priority="Null",trend_priority="Null"):
+        self.cursor.execute(f"INSERT INTO CellPriorityMeasurement (cell_id,timestamp,temporal_priority,trend_priority) "
+                            f"value ({cell_id},{timestamp},{temporal_priority},{trend_priority})")
         self.client.commit()
         id = int(self.cursor.lastrowid)
 
