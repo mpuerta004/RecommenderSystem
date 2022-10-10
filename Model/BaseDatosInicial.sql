@@ -61,28 +61,6 @@ CREATE TABLE Cell(
    FOREIGN KEY (surface_id) REFERENCES Surface(id)
 );
 
-CREATE TABLE CellPriorityMeasurement (
-   #This is the priority of pollinating a cell in the timeslot [start_timeSlot,start_timeSlot+sampling_period)
-   cell_id INT,
-   timestamp TIMESTAMP,
-   #end_timeSlot TIMESTAMP,
-   temporal_priority float8, 
-   trend_priority float8, 
-   FOREIGN KEY (cell_id) REFERENCES Cell(id),
-   PRIMARY KEY (cell_id,timestamp)
-);
-
-
-CREATE TABLE CellMeasurementPromise (
-   cell_id INT,
-   user_id  INT,
-   sampling_limit TIMESTAMP, # limit timestamp
-   is_active BOOLEAN, # by default set to TRUE but changed once sampling_limit time is exceeded
-   FOREIGN KEY (cell_id) REFERENCES Cell(id),
-   FOREIGN KEY  (user_id) REFERENCES  User(id),
-   PRIMARY KEY (cell_id, user_id, sampling_limit)				
-);
-
 CREATE TABLE CellMeasurement (
    id INT UNIQUE AUTO_INCREMENT PRIMARY KEY,
    cell_id INT,
@@ -97,6 +75,19 @@ CREATE TABLE CellMeasurement (
    #PRIMARY KEY (cell_id, user_id, sampling_timestamp)				
 );
 
+CREATE TABLE CellPriorityMeasurement (
+   #This is the priority of pollinating a cell in the timeslot [start_timeSlot,start_timeSlot+sampling_period)
+   cell_id INT,
+   timestamp TIMESTAMP,
+   #end_timeSlot TIMESTAMP,
+   temporal_priority float8, 
+   trend_priority float8, 
+   FOREIGN KEY (cell_id) REFERENCES Cell(id),
+   PRIMARY KEY (cell_id,timestamp)
+);
+
+
+
 CREATE TABLE AirData (
    id INT UNIQUE AUTO_INCREMENT PRIMARY KEY,
    measurement_id INT,
@@ -106,15 +97,32 @@ CREATE TABLE AirData (
 );
 
 CREATE TAble Recommendation(
+    id INT AUTO_INCREMENT,
     cell_id INT,
     user_id INT,
-    #timestamp_priority TIMESTAMP, # Moment in where you select that the cell has a important priority
+    is_active BOOLEAN default TRUE,
     recommendation_timestamp TIMESTAMP,
+    measurement_id INT,
     state SET('Rejected', 'Open', 'Planning', 'Realized') default 'Rejected',
     FOREIGN KEY (cell_id) REFERENCES CellPriorityMeasurement(cell_id),
     FOREIGN KEY (cell_id) REFERENCES Cell(id),
     FOREIGN KEY (user_id) REFERENCES  User(id),
-    Primary KEY (user_id, cell_id)
-)
+    FOREIGN KEY (measurement_id) REFERENCES CellMeasurement(id),
+    Primary KEY (id, user_id, cell_id)
+);
+CREATE TABLE CellMeasurementPromise (
+   id INT UNIQUE AUTO_INCREMENT,
+   cell_id INT,
+   user_id  INT,
+   sampling_limit TIMESTAMP, # limit timestamp
+   measurement_id INT,
+   recommendation_id INT,
+   is_active BOOLEAN default TRUE, # by default set to TRUE but changed once sampling_limit time is exceeded
+   FOREIGN KEY (cell_id) REFERENCES Cell(id),
+   FOREIGN KEY  (user_id) REFERENCES  User(id),
+   FOREIGN KEY  (measurement_id) REFERENCES CellMeasurement(id),
+   FOREIGN KEY  (recommendation_id) REFERENCES Recommendation(id),
+   PRIMARY KEY (id, cell_id, user_id, sampling_limit)
+);
 
 
