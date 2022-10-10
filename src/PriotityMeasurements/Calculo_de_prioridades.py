@@ -7,7 +7,6 @@ import numpy as np
 
 import math
 
-
 start_campaing = datetime.datetime.now()
 print(start_campaing)
 nDynamicas=4
@@ -49,8 +48,9 @@ def generarUNACampaña(bd, Campaing_dic, n_cellDynamic, n_cellStatic):
             ListStaticCellsID.append(bd.insertCell(cell_type="'Static'", surface_id=Surface_id))
         return ListDynamicCellsID, ListStaticCellsID
 
-def generarDataINCell():
-    nTimeSlots=6
+
+
+
 
 def insertData(bd,dinamicaID, estaticaID):
     m = campaign_duration // sampling_period
