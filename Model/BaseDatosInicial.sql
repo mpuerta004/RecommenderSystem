@@ -14,7 +14,7 @@ CREATE TABLE User (
 );
 
 
-CREATE TABLE CampaignManager (
+CREATE TABLE QueenBee (
     id INT UNIQUE AUTO_INCREMENT,
     name VARCHAR(30),
     surname VARCHAR(30),
@@ -35,7 +35,7 @@ CREATE TABLE Campaign (
     planning_limit_time INT, #  upper number of seconds limit that a sampling promise can be scheduled for
     campaign_duration INT, # seconds during the campaign.
     # A new entity called Surface could be created, a campaign may have M surfaces, where each surface has N hexagons
-    FOREIGN  KEY (manager_id) REFERENCES CampaignManager(id) 
+    FOREIGN  KEY (manager_id) REFERENCES QueenBee(id) 
 );
 
 CREATE TABLE Surface (
@@ -102,7 +102,7 @@ CREATE TAble Recommendation(
     user_id INT,
     is_active BOOLEAN default TRUE,
     recommendation_timestamp TIMESTAMP,
-    measurement_id INT,
+    measurement_id INT default NULL,
     state SET('Rejected', 'Open', 'Planning', 'Realized') default 'Rejected',
     FOREIGN KEY (cell_id) REFERENCES CellPriorityMeasurement(cell_id),
     FOREIGN KEY (cell_id) REFERENCES Cell(id),

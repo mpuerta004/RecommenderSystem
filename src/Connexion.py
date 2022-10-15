@@ -46,9 +46,9 @@ class Connexion:
         id = int(self.cursor.lastrowid)
         return id
 
-    def insertCampaignManager(self, name="NULL", surname="NULL", age="NULL", gender="'I dont want to answer'"):
+    def insertQueenBee(self, name="NULL", surname="NULL", age="NULL", gender="'I dont want to answer'"):
         self.cursor.execute(
-            f"INSERT INTO CampaignManager (name,surname,age,gender) value ({name},{surname},{age},{gender})")
+            f"INSERT INTO QueenBee (name,surname,age,gender) value ({name},{surname},{age},{gender})")
         self.client.commit()
         id = int(self.cursor.lastrowid)
 
@@ -150,9 +150,9 @@ class Connexion:
             self.cursor.execute("Delete from Campaign;")
             self.client.commit()
             self.cursor.execute("ALTER TABLE Campaign AUTO_INCREMENT = 1;")  # ;'
-            self.cursor.execute("Delete from CampaignManager;")
+            self.cursor.execute("Delete from QueenBee;")
             self.client.commit()
-            self.cursor.execute("ALTER TABLE CampaignManager AUTO_INCREMENT = 1;")  # ;'
+            self.cursor.execute("ALTER TABLE QueenBee AUTO_INCREMENT = 1;")  # ;'
             self.cursor.execute("Delete from User;")
             self.client.commit()
             self.cursor.execute("ALTER TABLE USer AUTO_INCREMENT = 1;")  # ;'
@@ -167,7 +167,7 @@ if __name__ == '__main__':
     bd = Connexion()
     print(bd.start())
     print(bd.insertUser())
-    print(bd.insertCampaignManager())
+    print(bd.insertQueenBee())
     print(bd.vaciarDatos())
     bd.close()
 
