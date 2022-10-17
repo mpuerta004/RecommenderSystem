@@ -7,22 +7,20 @@ import numpy as np
 
 import math
 
-
 start_campaing = datetime.datetime.now()
 
-nDynamicas=5
-nStatic=1
+nDynamicas = 5
+nStatic = 1
 nPerson = 10
 max_sampling_time_slot = 25
-min_sampling_time_slot =15
+min_sampling_time_slot = 15
 sampling_period = 60 * 60 * 3
-ntimeslots=15
+ntimeslots = 15
 campaign_duration = ntimeslots * (60 * 3 * 60)
-min_number_samples=20
-recursos=10
+min_number_samples = 20
+recursos = 10
 
-
-print(start_campaing+datetime.timedelta(seconds=campaign_duration))
+print(start_campaing + datetime.timedelta(seconds=campaign_duration))
 
 
 # Dados los datos del CampaignManager y el numeor de celdas Estaticas y Dinamicas crea los datos.
@@ -52,32 +50,31 @@ print(start_campaing+datetime.timedelta(seconds=campaign_duration))
 #             ListStaticCellsID.append(bd.insertCell(cell_type="'Static'", surface_id=Surface_id))
 #         return ListDynamicCellsID, ListStaticCellsID
 
-def generarUNACampaña(bd, Campaing_dic, n_cellDynamic, n_cellStatic):
-         # Generar el CampaignManager y obtener su ID
-         # Generar la campaña
-         print(Campaing_dic)
-         CampaignID = bd.insertCampaign(manager_id=str(Campaing_dic["manager_id"]),
-                                        min_samples=str(Campaing_dic["min_samples"]),
-                                        start_timestamp="'"+str(Campaing_dic["start_timestamp"])+"'",
-                                        sampling_period=str(Campaing_dic["sampling_period"]),
-                                        campaign_duration=str(Campaing_dic["campaign_duration"])
-                                        )
-         # Crear la Surface
-         Surface_id = bd.insertSurface(campaign_id=CampaignID)
-         bd.client.commit()
-         # Generar las celdas de la campaña
-         ListDynamicCellsID = []
-         ListStaticCellsID = []
-         for i in range(n_cellDynamic):
-             id=bd.insertCell(surface_id=Surface_id)
-             ListDynamicCellsID.append(id)
-         for i in range(n_cellStatic):
-             ListStaticCellsID.append(bd.insertCell(cell_type="'Static'", surface_id=Surface_id))
-         return ListDynamicCellsID, ListStaticCellsID, CampaignID
+def generarUNACampana(bd, Campaing_dic, n_cellDynamic, n_cellStatic):
+    # Generar el CampaignManager y obtener su ID
+    # Generar la campaña
+    print(Campaing_dic)
+    CampaignID = bd.insertCampaign(manager_id=str(Campaing_dic["manager_id"]),
+                                   min_samples=str(Campaing_dic["min_samples"]),
+                                   start_timestamp="'" + str(Campaing_dic["start_timestamp"]) + "'",
+                                   sampling_period=str(Campaing_dic["sampling_period"]),
+                                   campaign_duration=str(Campaing_dic["campaign_duration"])
+                                   )
+    # Crear la Surface
+    Surface_id = bd.insertSurface(campaign_id=CampaignID)
+    bd.client.commit()
+    # Generar las celdas de la campaña
+    ListDynamicCellsID = []
+    ListStaticCellsID = []
+    for i in range(n_cellDynamic):
+        id = bd.insertCell(surface_id=Surface_id)
+        ListDynamicCellsID.append(id)
+    for i in range(n_cellStatic):
+        ListStaticCellsID.append(bd.insertCell(cell_type="'Static'", surface_id=Surface_id))
+    return ListDynamicCellsID, ListStaticCellsID, CampaignID
 
 
-
-def calculoPrioridad(bd,i,slot, start_campaing):
+def calculoPrioridad(bd, i, slot, start_campaing):
     time_pasado = start_campaing + datetime.timedelta(seconds=(slot - 1) * sampling_period)
     pasado = time_pasado.strftime('%Y-%m-%d %H:%M:%S')
     time_start = start_campaing + datetime.timedelta(seconds=slot * sampling_period)
@@ -97,7 +94,7 @@ def calculoPrioridad(bd,i,slot, start_campaing):
     b = max(2, min_number_samples - int(Cardinal_pasado))
     a = max(2, min_number_samples - int(Cardinal_actual))
     result = math.log(a) * math.log(b, int(Cardinal_actual) + 2)
-    #print(result)
+    # print(result)
     bd.cursor.execute(f"Select Count(*) from "
                       f"CellMeasurement where timestamp <= '{end}' ")
     Cardinal_total = bd.cursor.fetchall()[0][0]
@@ -107,10 +104,10 @@ def calculoPrioridad(bd,i,slot, start_campaing):
     result_tendy = (Cardinal_total_celda / Cardinal_total) * (nDynamicas + nStatic)
     id = bd.insertCellPriorityMeasurement(cell_id=i, timestamp="'" + start + "'",
                                           temporal_priority=result, trend_priority=result_tendy)
-    return result,result_tendy
+    return result, result_tendy
 
 
-def insertar_CellMEasurement(bd,slot,dinamica, statica):
+def insertar_CellMEasurement(bd, slot, dinamica, statica):
     time_start = start_campaing + datetime.timedelta(seconds=slot * sampling_period)
     start = time_start.strftime('%Y-%m-%d %H:%M:%S')
     for i in dinamica:
@@ -123,26 +120,23 @@ def insertar_CellMEasurement(bd,slot,dinamica, statica):
             bd.insertCellMeasurement(cell_id=t, timestamp="'" + start + "'")
 
 
-
-def CalculoPrioridades(bd, dinamica, statica,CampaignID):
+def CalculoPrioridades(bd, dinamica, statica, CampaignID):
     m = campaign_duration // sampling_period
     if campaign_duration % sampling_period != 0:
         m = m + 1
-    for slot in range(0,m):
-        insertar_CellMEasurement(bd,slot, dinamica,statica)
+    for slot in range(0, m):
+        insertar_CellMEasurement(bd, slot, dinamica, statica)
         for i in dinamica:
-            ptemporal,pModa=calculoPrioridad(bd,i,slot,start_campaing)
+            ptemporal, pModa = calculoPrioridad(bd, i, slot, start_campaing)
         for i in estatica:
-            ptemporal, pModa = calculoPrioridad(bd,i, slot, start_campaing)
+            ptemporal, pModa = calculoPrioridad(bd, i, slot, start_campaing)
 
 
-
-
-def comprobacion_numeros(bd,dinamica, statica):
+def comprobacion_numeros(bd, dinamica, statica):
     m = campaign_duration // sampling_period
     if campaign_duration % sampling_period != 0:
         m = m + 1
-    m=100
+    m = 100
     index = []
     a = list(range(m))
     col = a
@@ -152,7 +146,7 @@ def comprobacion_numeros(bd,dinamica, statica):
             index.append(name)
             # index.append("cell_id"+str(i))
             index.append('P_t' + str(name))
-            #index.append('P_n' + str(name))
+            # index.append('P_n' + str(name))
         else:
             name = statica[i - nDynamicas]
             index.append(name)
@@ -160,33 +154,33 @@ def comprobacion_numeros(bd,dinamica, statica):
             index.append('P_t' + str(name))
             index.append('P_n' + str(name))
     f = pd.DataFrame(np.zeros((len(col), len(index))), index=col, columns=index)
-    for slot in range(0,m):
-        time_start= start_campaing +datetime.timedelta(seconds=slot * sampling_period)
+    for slot in range(0, m):
+        time_start = start_campaing + datetime.timedelta(seconds=slot * sampling_period)
         start = time_start.strftime('%Y-%m-%d %H:%M:%S')
-        Final_time_slot =start_campaing +datetime.timedelta(seconds=  (slot+1)*sampling_period -1)
-        end =Final_time_slot.strftime('%Y-%m-%d %H:%M:%S')
+        Final_time_slot = start_campaing + datetime.timedelta(seconds=(slot + 1) * sampling_period - 1)
+        end = Final_time_slot.strftime('%Y-%m-%d %H:%M:%S')
         for i in dinamica:
             bd.cursor.execute(f"Select Count(*) from "
                               f"CellMeasurement where cell_id={i} AND timestamp BETWEEN  "
                               f"'{start}' AND '{end}' ")
-            f.loc[slot,i]= bd.cursor.fetchall()[0][0]
+            f.loc[slot, i] = bd.cursor.fetchall()[0][0]
             bd.cursor.execute(f"Select temporal_priority, trend_priority from "
-                             f"CellPriorityMeasurement where cell_id={i} AND timestamp BETWEEN  "
-                             f"'{start}' AND '{end}' ")
+                              f"CellPriorityMeasurement where cell_id={i} AND timestamp BETWEEN  "
+                              f"'{start}' AND '{end}' ")
             a = bd.cursor.fetchall()[0]
             f.loc[slot, 'P_t' + str(i)] = a[0]
-            #f.loc[slot, 'P_n' + str(i)] = a[1]
+            # f.loc[slot, 'P_n' + str(i)] = a[1]
         for i in statica:
             bd.cursor.execute(f"Select Count(*) from "
                               f"CellMeasurement where cell_id={i} AND timestamp BETWEEN  "
                               f"'{start}' AND '{end}' ")
-            f.loc[slot,i]= bd.cursor.fetchall()[0][0]
+            f.loc[slot, i] = bd.cursor.fetchall()[0][0]
             bd.cursor.execute(f"Select temporal_priority, trend_priority from "
-                             f"CellPriorityMeasurement where cell_id={i} AND timestamp BETWEEN  "
-                             f"'{start}' AND '{end}' ")
-            a=bd.cursor.fetchall()[0]
-            f.loc[slot,'P_t'+str(i)]=a[0]
-            #f.loc[slot,'P_n'+str(i)]=a[1]
+                              f"CellPriorityMeasurement where cell_id={i} AND timestamp BETWEEN  "
+                              f"'{start}' AND '{end}' ")
+            a = bd.cursor.fetchall()[0]
+            f.loc[slot, 'P_t' + str(i)] = a[0]
+            # f.loc[slot,'P_n'+str(i)]=a[1]
     return f
 
 
@@ -195,20 +189,20 @@ if __name__ == '__main__':
     bd.start()
     bd.vaciarDatos()
     bd.vaciarDatos()
-    #sampling_period = 3 horas.
-    #Tiempo de duracion de la campaña 18 horas.
+    # sampling_period = 3 horas.
+    # Tiempo de duracion de la campaña 18 horas.
     # # timeslots = 6
 
-    campaing_dic={"manager_id":bd.insertQueenBee(),
-                  "min_samples":min_number_samples,
-                  "sampling_period":sampling_period,
+    campaing_dic = {"manager_id": bd.insertQueenBee(),
+                    "min_samples": min_number_samples,
+                    "sampling_period": sampling_period,
                     "campaign_duration": campaign_duration,
                     "start_timestamp": start_campaing.strftime('%Y-%m-%d %H:%M:%S')
-    }
-    dinamica, estatica, CampaignID = generarUNACampaña(bd, campaing_dic, nDynamicas, nStatic)
+                    }
+    dinamica, estatica, CampaignID = generarUNACampana(bd, campaing_dic, nDynamicas, nStatic)
     print(dinamica)
     print(estatica)
-    CalculoPrioridades(bd, dinamica, estatica,CampaignID)
+    CalculoPrioridades(bd, dinamica, estatica, CampaignID)
     f = comprobacion_numeros(bd, dinamica, estatica)
     f.to_csv("example_data.csv", sep=';', float_format='%.3f', decimal=",")
     print(f)

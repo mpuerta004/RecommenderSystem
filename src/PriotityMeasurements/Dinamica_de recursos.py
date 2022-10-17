@@ -184,7 +184,7 @@ if __name__ == '__main__':
                     "campaign_duration": campaign_duration,
                     "start_timestamp": start_campaing.strftime('%Y-%m-%d %H:%M:%S')
     }
-    dinamica, estatica, CampaignID = calculo.generarUNACampaña(bd, campaing_dic, nDynamicas, nStatic)
+    dinamica, estatica, CampaignID = calculo.generarUNACampana(bd, campaing_dic, nDynamicas, nStatic)
     print(dinamica)
     print(estatica)
     CalculoPrioridades(bd, dinamica, estatica,CampaignID)
