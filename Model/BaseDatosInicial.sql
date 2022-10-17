@@ -4,7 +4,7 @@ Use SocioBee;
 # ON DELETE and ON UPDATE
 
 
-CREATE TABLE User (
+CREATE TABLE WorkerBee (
     id INT UNIQUE AUTO_INCREMENT,
     name VARCHAR(30),
     surname VARCHAR(30),
@@ -64,15 +64,15 @@ CREATE TABLE Cell(
 CREATE TABLE CellMeasurement (
    id INT UNIQUE AUTO_INCREMENT PRIMARY KEY,
    cell_id INT,
-   user_id  INT,
+   workerbee_id  INT,
    timestamp TIMESTAMP,
    measurement_type set('AirData','Sound') default 'AirData',
    data_id INT,
    # https://dev.mysql.com/doc/refman/8.0/en/spatial-types.html
    location point,
    FOREIGN KEY (cell_id) REFERENCES Cell(id),
-   FOREIGN KEY  (user_id) REFERENCES  User(id)
-   #PRIMARY KEY (cell_id, user_id, sampling_timestamp)				
+   FOREIGN KEY  (workerBee_id) REFERENCES  WorkerBee(id)
+   #PRIMARY KEY (cell_id, workerBee_id, sampling_timestamp)
 );
 
 CREATE TABLE CellPriorityMeasurement (
@@ -99,30 +99,30 @@ CREATE TABLE AirData (
 CREATE TAble Recommendation(
     id INT AUTO_INCREMENT,
     cell_id INT,
-    user_id INT,
+    workerBee_id INT,
     is_active BOOLEAN default TRUE,
     recommendation_timestamp TIMESTAMP,
     measurement_id INT default NULL,
     state SET('Rejected', 'Open', 'Planning', 'Realized') default 'Rejected',
     FOREIGN KEY (cell_id) REFERENCES CellPriorityMeasurement(cell_id),
     FOREIGN KEY (cell_id) REFERENCES Cell(id),
-    FOREIGN KEY (user_id) REFERENCES  User(id),
+    FOREIGN KEY (workerBee_id) REFERENCES  WorkerBee(id),
     FOREIGN KEY (measurement_id) REFERENCES CellMeasurement(id),
-    Primary KEY (id, user_id, cell_id)
+    Primary KEY (id, workerBee_id, cell_id)
 );
 CREATE TABLE CellMeasurementPromise (
    id INT UNIQUE AUTO_INCREMENT,
    cell_id INT,
-   user_id  INT,
+   workerBee_id  INT,
    sampling_limit TIMESTAMP, # limit timestamp
    measurement_id INT,
    recommendation_id INT,
    is_active BOOLEAN default TRUE, # by default set to TRUE but changed once sampling_limit time is exceeded
    FOREIGN KEY (cell_id) REFERENCES Cell(id),
-   FOREIGN KEY  (user_id) REFERENCES  User(id),
+   FOREIGN KEY  (workerBee_id) REFERENCES  WorkerBee(id),
    FOREIGN KEY  (measurement_id) REFERENCES CellMeasurement(id),
    FOREIGN KEY  (recommendation_id) REFERENCES Recommendation(id),
-   PRIMARY KEY (id, cell_id, user_id, sampling_limit)
+   PRIMARY KEY (id, cell_id, workerBee_id, sampling_limit)
 );
 
 
