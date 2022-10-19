@@ -4,7 +4,7 @@ Use SocioBee;
 # ON DELETE and ON UPDATE
 
 
-CREATE TABLE WorkerBee (
+CREATE TABLE Participant (
     id INT UNIQUE AUTO_INCREMENT,
     name VARCHAR(30),
     surname VARCHAR(30),
@@ -12,7 +12,6 @@ CREATE TABLE WorkerBee (
     gender Set('Male', 'Female','Intersexual','I dont want to answer') default 'I dont want to answer',
     PRIMARY KEY (id)
 );
-
 
 CREATE TABLE QueenBee (
     id INT UNIQUE AUTO_INCREMENT,
@@ -30,6 +29,8 @@ CREATE TABLE Campaign (
     city varchar(30),
     start_timestamp timestamp,
     cell_radius float8,
+    edge INT,
+    cell_size INT,
     min_samples INT, # minimum number of times a cell has to be visited in a campaign during its sampling period
     sampling_period INT,# seconds during which samples will be grouped by campaign
     planning_limit_time INT, #  upper number of seconds limit that a sampling promise can be scheduled for
@@ -56,6 +57,7 @@ CREATE TABLE Cell(
    id INT UNIQUE AUTO_INCREMENT PRIMARY KEY,
    # https://dev.mysql.com/doc/refman/8.0/en/opengis-geometry-model.html
    center point,
+   #Point abajo y arriba de la celda.
    cell_type set('Dynamic','Static') default 'Dynamic',
    surface_id INT,
    FOREIGN KEY (surface_id) REFERENCES Surface(id)
@@ -64,15 +66,14 @@ CREATE TABLE Cell(
 CREATE TABLE CellMeasurement (
    id INT UNIQUE AUTO_INCREMENT PRIMARY KEY,
    cell_id INT,
-   workerbee_id  INT,
+   participant_id  INT,
    timestamp TIMESTAMP,
    measurement_type set('AirData','Sound') default 'AirData',
    data_id INT,
    # https://dev.mysql.com/doc/refman/8.0/en/spatial-types.html
    location point,
    FOREIGN KEY (cell_id) REFERENCES Cell(id),
-   FOREIGN KEY  (workerBee_id) REFERENCES  WorkerBee(id)
-   #PRIMARY KEY (cell_id, workerBee_id, sampling_timestamp)
+   FOREIGN KEY  (participant_id) REFERENCES  Participant(id)
 );
 
 CREATE TABLE CellPriorityMeasurement (
@@ -99,30 +100,30 @@ CREATE TABLE AirData (
 CREATE TAble Recommendation(
     id INT AUTO_INCREMENT,
     cell_id INT,
-    workerBee_id INT,
+    participant_id INT,
     is_active BOOLEAN default TRUE,
     recommendation_timestamp TIMESTAMP,
     measurement_id INT default NULL,
     state SET('Rejected', 'Open', 'Planning', 'Realized') default 'Rejected',
     FOREIGN KEY (cell_id) REFERENCES CellPriorityMeasurement(cell_id),
     FOREIGN KEY (cell_id) REFERENCES Cell(id),
-    FOREIGN KEY (workerBee_id) REFERENCES  WorkerBee(id),
+    FOREIGN KEY (participant_id) REFERENCES  Participant(id),
     FOREIGN KEY (measurement_id) REFERENCES CellMeasurement(id),
-    Primary KEY (id, workerBee_id, cell_id)
+    Primary KEY (id, participant_id, cell_id)
 );
 CREATE TABLE CellMeasurementPromise (
    id INT UNIQUE AUTO_INCREMENT,
    cell_id INT,
-   workerBee_id  INT,
+   participant_id  INT,
    sampling_limit TIMESTAMP, # limit timestamp
    measurement_id INT,
    recommendation_id INT,
    is_active BOOLEAN default TRUE, # by default set to TRUE but changed once sampling_limit time is exceeded
    FOREIGN KEY (cell_id) REFERENCES Cell(id),
-   FOREIGN KEY  (workerBee_id) REFERENCES  WorkerBee(id),
+   FOREIGN KEY  (participant_id) REFERENCES  Participant(id),
    FOREIGN KEY  (measurement_id) REFERENCES CellMeasurement(id),
    FOREIGN KEY  (recommendation_id) REFERENCES Recommendation(id),
-   PRIMARY KEY (id, cell_id, workerBee_id, sampling_limit)
+   PRIMARY KEY (id, cell_id, participant_id, sampling_limit)
 );
 
 
