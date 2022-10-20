@@ -40,8 +40,8 @@ class Connexion:
                 print("No se ha podido cerrar la conexión")
                 return False
 
-    def insertUser(self, name="NULL", surname="NULL", age="NULL", gender="'I dont want to answer'"):
-        self.cursor.execute(f"INSERT INTO USER (name,surname,age,gender) value ({name},{surname},{age},{gender})")
+    def insertParticipant(self, name="NULL", surname="NULL", age="NULL", gender="'I dont want to answer'"):
+        self.cursor.execute(f"INSERT INTO Participant (name,surname,age,gender) value ({name},{surname},{age},{gender})")
         bd.client.commit()
         id = int(self.cursor.lastrowid)
         return id
@@ -94,19 +94,19 @@ class Connexion:
         id = int(self.cursor.lastrowid)
         return id
     #Cuidado hay funciones que no tienene id
-    def insertCellMeasurementPromise(self, cell_id,user_id,sampling_limit,is_active="TRUE"):
+    def insertCellMeasurementPromise(self, cell_id,participant_id,sampling_limit,is_active="TRUE"):
         self.cursor.execute(
-            f"INSERT INTO CellMeasurementPromise (cell_id,user_id,sampling_limit,is_active) "
-            f"value ({cell_id},{user_id},{sampling_limit},{is_active})")
+            f"INSERT INTO CellMeasurementPromise (cell_id,participant_id,sampling_limit,is_active) "
+            f"value ({cell_id},{participant_id},{sampling_limit},{is_active})")
         self.client.commit()
         id = int(self.cursor.lastrowid)
         return id
 
-    def insertCellMeasurement(self,cell_id="Null",user_id="Null",timestamp="Null",measurement_type="'AirData'",
+    def insertCellMeasurement(self,cell_id="Null",participant_id="Null",timestamp="Null",measurement_type="'AirData'",
                               data_id="Null",location="Null"):
         self.cursor.execute(
-            f"INSERT INTO  CellMeasurement (cell_id,user_id,timestamp,measurement_type,data_id,location) "
-            f"value ({cell_id},{user_id},{timestamp},{measurement_type},{data_id},{location})")
+            f"INSERT INTO  CellMeasurement (cell_id,participant_id,timestamp,measurement_type,data_id,location) "
+            f"value ({cell_id},{participant_id},{timestamp},{measurement_type},{data_id},{location})")
         self.client.commit()
         id = int(self.cursor.lastrowid)
         return id
@@ -119,10 +119,10 @@ class Connexion:
         id = int(self.cursor.lastrowid)
         return id
 
-    def insertRecommendation(self, cell_id,user_id, recommendation_timestamp="NULL", state="'"+"Rejected"+"'"):
+    def insertRecommendation(self, cell_id,participant_id, recommendation_timestamp="NULL", state="'"+"Rejected"+"'"):
         self.cursor.execute(
-            f"INSERT INTO  Recommendation (cell_id,user_id,recommendation_timestamp,state) "
-            f"value ({cell_id},{user_id},{recommendation_timestamp},{state})")
+            f"INSERT INTO  Recommendation (cell_id,participant_id,recommendation_timestamp,state) "
+            f"value ({cell_id},{participant_id},{recommendation_timestamp},{state})")
         self.client.commit()
         id = int(self.cursor.lastrowid)
         return id
@@ -153,9 +153,9 @@ class Connexion:
             self.cursor.execute("Delete from QueenBee;")
             self.client.commit()
             self.cursor.execute("ALTER TABLE QueenBee AUTO_INCREMENT = 1;")  # ;'
-            self.cursor.execute("Delete from User;")
+            self.cursor.execute("Delete from participant;")
             self.client.commit()
-            self.cursor.execute("ALTER TABLE USer AUTO_INCREMENT = 1;")  # ;'
+            self.cursor.execute("ALTER TABLE participant AUTO_INCREMENT = 1;")  # ;'
             self.client.commit()
 
             return True
@@ -166,7 +166,7 @@ class Connexion:
 if __name__ == '__main__':
     bd = Connexion()
     print(bd.start())
-    print(bd.insertUser())
+    print(bd.insertParticipant())
     print(bd.insertQueenBee())
     print(bd.vaciarDatos())
     bd.close()

@@ -8,17 +8,16 @@ import numpy as np
 import math
 
 start_campaing = datetime.datetime.now()
-
-nDynamicas = 5
-nStatic = 1
+nDynamicas=10
+nStatic=1
 nPerson = 10
 max_sampling_time_slot = 25
-min_sampling_time_slot = 15
-sampling_period = 60 * 60 * 3
-ntimeslots = 15
+min_sampling_time_slot =15
+sampling_period = 60 * 60
+ntimeslots=3
 campaign_duration = ntimeslots * (60 * 3 * 60)
-min_number_samples = 20
-recursos = 10
+min_number_samples=120
+recursos=2
 
 print(start_campaing + datetime.timedelta(seconds=campaign_duration))
 
@@ -74,7 +73,7 @@ def generarUNACampana(bd, Campaing_dic, n_cellDynamic, n_cellStatic):
     return ListDynamicCellsID, ListStaticCellsID, CampaignID
 
 
-def calculoPrioridad(bd, i, slot, start_campaing):
+def calculoPrioridad(bd, i, slot, start_campaing,bool=True,inicio_str='Null'):
     time_pasado = start_campaing + datetime.timedelta(seconds=(slot - 1) * sampling_period)
     pasado = time_pasado.strftime('%Y-%m-%d %H:%M:%S')
     time_start = start_campaing + datetime.timedelta(seconds=slot * sampling_period)
@@ -102,7 +101,10 @@ def calculoPrioridad(bd, i, slot, start_campaing):
                       f"CellMeasurement where cell_id={i} AND timestamp <= '{end}' ")
     Cardinal_total_celda = bd.cursor.fetchall()[0][0]
     result_tendy = (Cardinal_total_celda / Cardinal_total) * (nDynamicas + nStatic)
-    id = bd.insertCellPriorityMeasurement(cell_id=i, timestamp="'" + start + "'",
+    if inicio_str=='Null':
+        inicio_str=start
+    if bool:
+        id = bd.insertCellPriorityMeasurement(cell_id=i, timestamp="'" + inicio_str + "'",
                                           temporal_priority=result, trend_priority=result_tendy)
     return result, result_tendy
 
@@ -136,9 +138,9 @@ def comprobacion_numeros(bd, dinamica, statica):
     m = campaign_duration // sampling_period
     if campaign_duration % sampling_period != 0:
         m = m + 1
-    m = 100
     index = []
-    a = list(range(m))
+    l=40*5+40
+    a = list(range(l))
     col = a
     for i in range(0, nDynamicas + nStatic):
         if (i < nDynamicas):
@@ -153,34 +155,112 @@ def comprobacion_numeros(bd, dinamica, statica):
             # index.append("cell_id"+str(i))
             index.append('P_t' + str(name))
             index.append('P_n' + str(name))
-    f = pd.DataFrame(np.zeros((len(col), len(index))), index=col, columns=index)
+    f = pd.DataFrame(np.zeros((len(col), len(index))), index=a,columns=index)
+    ac=-1
     for slot in range(0, m):
+        ac=ac+1
         time_start = start_campaing + datetime.timedelta(seconds=slot * sampling_period)
         start = time_start.strftime('%Y-%m-%d %H:%M:%S')
         Final_time_slot = start_campaing + datetime.timedelta(seconds=(slot + 1) * sampling_period - 1)
         end = Final_time_slot.strftime('%Y-%m-%d %H:%M:%S')
         for i in dinamica:
+
             bd.cursor.execute(f"Select Count(*) from "
                               f"CellMeasurement where cell_id={i} AND timestamp BETWEEN  "
                               f"'{start}' AND '{end}' ")
-            f.loc[slot, i] = bd.cursor.fetchall()[0][0]
+            a = bd.cursor.fetchall()
+
+            if a == []:
+                a = 0
+            else:
+                a = a[0][0]
+            f.loc[ac, i] = a
             bd.cursor.execute(f"Select temporal_priority, trend_priority from "
                               f"CellPriorityMeasurement where cell_id={i} AND timestamp BETWEEN  "
                               f"'{start}' AND '{end}' ")
-            a = bd.cursor.fetchall()[0]
-            f.loc[slot, 'P_t' + str(i)] = a[0]
+            a = bd.cursor.fetchall()
+
+            if a == []:
+                a = 0
+            else:
+                a = a[0][0]
+            f.loc[ac, 'P_t' + str(i)] = a
             # f.loc[slot, 'P_n' + str(i)] = a[1]
         for i in statica:
             bd.cursor.execute(f"Select Count(*) from "
-                              f"CellMeasurement where cell_id={i} AND timestamp BETWEEN  "
-                              f"'{start}' AND '{end}' ")
-            f.loc[slot, i] = bd.cursor.fetchall()[0][0]
+                                  f"CellMeasurement where cell_id={i} AND timestamp BETWEEN  "
+                                  f"'{start}' AND '{end}' ")
+            a = bd.cursor.fetchall()
+            if a == []:
+                a = 0
+            else:
+                a = a[0][0]
+            print(a)
+            f.loc[ac, i] = a
             bd.cursor.execute(f"Select temporal_priority, trend_priority from "
-                              f"CellPriorityMeasurement where cell_id={i} AND timestamp BETWEEN  "
-                              f"'{start}' AND '{end}' ")
-            a = bd.cursor.fetchall()[0]
-            f.loc[slot, 'P_t' + str(i)] = a[0]
-            # f.loc[slot,'P_n'+str(i)]=a[1]
+                                  f"CellPriorityMeasurement where cell_id={i} AND timestamp BETWEEN  "
+                                  f"'{start}' AND '{end}' ")
+            a = bd.cursor.fetchall()
+            if a == []:
+                a = 0
+            else:
+                a = a[0][0]
+            f.loc[ac, 'P_t' + str(i)] = a
+
+
+        # llll
+
+        for l in range(5):
+            ac=ac+1
+            inicio_un_poco_mas = time_start + datetime.timedelta(seconds=l * sampling_period / 5)
+            inicio_str = inicio_un_poco_mas.strftime('%Y-%m-%d %H:%M:%S')
+            final_un_poco_mas = time_start + datetime.timedelta(seconds= ((l+1) * sampling_period / 5 ) -1)
+            final_sub_str=final_un_poco_mas.strftime('%Y-%m-%d %H:%M:%S')
+            for i in dinamica:
+
+
+                bd.cursor.execute(f"Select Count(*) from "
+                                  f"CellMeasurement where cell_id={i} AND timestamp BETWEEN  "
+                                  f"'{inicio_str}' AND '{final_sub_str}' ")
+                a = bd.cursor.fetchall()
+
+                if a == []:
+                    a = 0
+                else:
+                    a = a[0][0]
+                f.loc[ac, i] = a
+                bd.cursor.execute(f"Select temporal_priority, trend_priority from "
+                                  f"CellPriorityMeasurement where cell_id={i} AND timestamp BETWEEN  "
+                                  f"'{inicio_str}' AND '{final_sub_str}' ")
+                a=bd.cursor.fetchall()
+
+                if a == []:
+                    a = 0
+                else:
+                    a = a[0][0]
+                f.loc[ac, 'P_t' + str(i)] = a
+                # f.loc[slot, 'P_n' + str(i)] = a[1]
+            for i in statica:
+                bd.cursor.execute(f"Select Count(*) from "
+                                  f"CellMeasurement where cell_id={i} AND timestamp BETWEEN  "
+                                  f"'{inicio_str}' AND '{final_sub_str}' ")
+                a = bd.cursor.fetchall()
+                if a==[]:
+                    a=0
+                else:
+                    a=a[0][0]
+                print(a)
+                f.loc[ac, i] = a
+                bd.cursor.execute(f"Select temporal_priority, trend_priority from "
+                                  f"CellPriorityMeasurement where cell_id={i} AND timestamp BETWEEN  "
+                                  f"'{inicio_str}' AND '{final_sub_str}' ")
+                a = bd.cursor.fetchall()
+                if a == []:
+                    a = 0
+                else:
+                    a = a[0][0]
+                f.loc[ac, 'P_t' + str(i)] = a
+                # f.loc[slot,'P_n'+str(i)]=a[1]
     return f
 
 
