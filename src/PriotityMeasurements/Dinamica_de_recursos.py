@@ -4,7 +4,7 @@ import sys
 sys.path.append("/home/ubuntu/carpeta_compartida_docker/RecommenderSystem/src")
 print(sys.path)
 from Connexion import Connexion
-from PriotityMeasurements.Calculo_prioridades_dinamicas import generarUNACampana 
+from PriotityMeasurements.Calculo_prioridades_dinamicas import generarUNACampana, comprobacion_numeros
 from datetime import datetime
 import datetime
 import random
@@ -336,9 +336,9 @@ if __name__ == '__main__':
     print(dinamica)
     print(estatica)
     asignacion_recursos(bd, dinamica, estatica,CampaignID)
-    f = calculo.comprobacion_numeros(bd, dinamica, estatica)
-    f.to_csv("example_data.csv", sep=';', float_format='%.3f', decimal=",")
-    print(f)
+    #f = calculo.comprobacion_numeros(bd, dinamica, estatica)
+    #f.to_csv("example_data.csv", sep=';', float_format='%.3f', decimal=",")
+    #print(f)
     bd.close()
 
 #estoy aqui quiero polinizar y el planning. ->
