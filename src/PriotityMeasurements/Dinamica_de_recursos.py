@@ -1,5 +1,10 @@
-import src.PriotityMeasurements.Calculo_prioridades_dinamicas as calculo
-import src.Connexion as Conexion
+#!/usr/bin/python
+
+import sys
+sys.path.append("/home/ubuntu/carpeta_compartida_docker/RecommenderSystem/src")
+print(sys.path)
+from Connexion import Connexion
+from PriotityMeasurements.Calculo_prioridades_dinamicas import generarUNACampana 
 from datetime import datetime
 import datetime
 import random
@@ -7,7 +12,6 @@ import pandas as pd
 import numpy as np
 
 import math
-
 
 #En la prioridad temporal debemos tener en cuenta el mapeo de las celdas.
 #Y cuales estan mas cerca que otras.
@@ -252,8 +256,8 @@ def CalculoDinamicaPrioridad(bd, indicesDinamicas,segundo,campaignID):
     #rPregunto a la base de datos el orden de prioridad temporal.
     bd.cursor.execute("Select C.Cell_id, C.temporal_priority  "
                       "from CellPriorityMeasurement C, Cell Ce, Surface S"
-                      f" where c.timestamp ='{time_str}' AND "
-                      f"C.cell_id=CE.id AND Ce.surface_id=S.campaign_id AND S.campaign_id={campaignID} AND cell_type='Dynamic' ORDER By C.temporal_priority DESC  Limit {cardinal_lista};")
+                      f" where C.timestamp ='{time_str}' AND "
+                      f"C.cell_id=Ce.id AND Ce.surface_id=S.campaign_id AND S.campaign_id={campaignID} AND cell_type='Dynamic' ORDER By C.temporal_priority DESC  Limit {cardinal_lista};")
     a = bd.cursor.fetchall()
     result = []
     for i in a:
@@ -314,7 +318,7 @@ def asignacion_recursos(bd,indicesDinamicas, indicesEstaticas,CampaignID):
 
 
 if __name__ == '__main__':
-    bd = Conexion.Connexion()
+    bd = Connexion()
     bd.start()
     bd.vaciarDatos()
     bd.vaciarDatos()
@@ -328,7 +332,7 @@ if __name__ == '__main__':
                     "campaign_duration": campaign_duration,
                     "start_timestamp": start_campaing.strftime('%Y-%m-%d %H:%M:%S')
     }
-    dinamica, estatica, CampaignID = calculo.generarUNACampana(bd, campaing_dic, nDynamicas, nStatic)
+    dinamica, estatica, CampaignID = generarUNACampana(bd, campaing_dic, nDynamicas, nStatic)
     print(dinamica)
     print(estatica)
     asignacion_recursos(bd, dinamica, estatica,CampaignID)

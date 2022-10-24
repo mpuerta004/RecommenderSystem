@@ -1,10 +1,13 @@
-import src.Connexion as Conexion
+
+import sys
+sys.path.insert(1,"/home/ubuntu/carpeta_compartida_docker/RecommenderSystem/src")
+print(sys.path)
+from Connexion import Connexion
 from datetime import datetime
 import datetime
 import random
 import pandas as pd
 import numpy as np
-
 import math
 
 start_campaing = datetime.datetime.now()
@@ -265,7 +268,7 @@ def comprobacion_numeros(bd, dinamica, statica):
 
 
 if __name__ == '__main__':
-    bd = Conexion.Connexion()
+    bd = Connexion.Connexion()
     bd.start()
     bd.vaciarDatos()
     bd.vaciarDatos()

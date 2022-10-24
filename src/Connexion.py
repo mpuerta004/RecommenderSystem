@@ -1,5 +1,5 @@
 import mysql.connector
-import src.Conf as conf
+import Conf as conf
 
 # data = [
 #   ('Jane', date(2005, 2, 12)),
@@ -18,7 +18,9 @@ class Connexion:
     def start(self):
         if self.client == None:
             try:
+                
                 self.client = mysql.connector.connect(host='localhost', user='root', passwd=conf.passwd, db='SocioBee')
+                
                 self.cursor = self.client.cursor()
                 return True
             except:
@@ -165,6 +167,7 @@ class Connexion:
 
 if __name__ == '__main__':
     bd = Connexion()
+    print(bd.vaciarDatos())
     print(bd.start())
     print(bd.insertParticipant())
     print(bd.insertQueenBee())
