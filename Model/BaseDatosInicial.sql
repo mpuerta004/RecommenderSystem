@@ -1,3 +1,4 @@
+DROP DATABASE SocioBee;
 CREATE DATABASE SocioBee;
 Use SocioBee;
 
@@ -9,7 +10,7 @@ CREATE TABLE Participant (
     name VARCHAR(30),
     surname VARCHAR(30),
     age INT,
-    gender Set('Male', 'Female','Intersexual','I dont want to answer') default 'I dont want to answer',
+    gender  VARCHAR(30) default 'I dont want to answer',
     PRIMARY KEY (id)
 );
 
@@ -18,25 +19,23 @@ CREATE TABLE QueenBee (
     name VARCHAR(30),
     surname VARCHAR(30),
     age INT,
-    gender Set('Male', 'Female','Intersexual','I dont want to answer') default 'I dont want to answer',
+    gender VARCHAR(30) default 'I dont want to answer',
     PRIMARY KEY (id)
 );
 
 
 CREATE TABLE Campaign (
     id INT UNIQUE AUTO_INCREMENT PRIMARY KEY,
-    manager_id INT,
+    queenBee_id INT,
     city varchar(30),
     start_timestamp timestamp,
-    cell_radius float8,
-    edge INT,
-    cell_size INT,
+    cell_edge INT,
     min_samples INT, # minimum number of times a cell has to be visited in a campaign during its sampling period
     sampling_period INT,# seconds during which samples will be grouped by campaign
     planning_limit_time INT, #  upper number of seconds limit that a sampling promise can be scheduled for
     campaign_duration INT, # seconds during the campaign.
     # A new entity called Surface could be created, a campaign may have M surfaces, where each surface has N hexagons
-    FOREIGN  KEY (manager_id) REFERENCES QueenBee(id) 
+    FOREIGN  KEY (queenBee_id) REFERENCES QueenBee(id) 
 );
 
 CREATE TABLE Surface (
@@ -91,10 +90,10 @@ CREATE TABLE CellPriorityMeasurement (
 
 CREATE TABLE AirData (
    id INT UNIQUE AUTO_INCREMENT PRIMARY KEY,
-   measurement_id INT,
+   cell_measurement_id INT,
    No2 float8, # I would make a reference to Measurement since we can then generalize it
    Co2 float8,
-   FOREIGN KEY (measurement_id) REFERENCES CellMeasurement(id)
+   FOREIGN KEY (cell_measurement_id) REFERENCES CellMeasurement(id)
 );
 
 CREATE TAble Recommendation(
@@ -103,27 +102,27 @@ CREATE TAble Recommendation(
     participant_id INT,
     is_active BOOLEAN default TRUE,
     recommendation_timestamp TIMESTAMP,
-    measurement_id INT default NULL,
+    cell_measurement_id INT default NULL,
     state SET('Rejected', 'Open', 'Planning', 'Realized') default 'Rejected',
     FOREIGN KEY (cell_id) REFERENCES CellPriorityMeasurement(cell_id),
     FOREIGN KEY (cell_id) REFERENCES Cell(id),
     FOREIGN KEY (participant_id) REFERENCES  Participant(id),
-    FOREIGN KEY (measurement_id) REFERENCES CellMeasurement(id),
+    FOREIGN KEY (cell_measurement_id) REFERENCES CellMeasurement(id),
     Primary KEY (id, participant_id, cell_id)
 );
 CREATE TABLE CellMeasurementPromise (
    id INT UNIQUE AUTO_INCREMENT,
    cell_id INT,
    participant_id  INT,
-   sampling_limit TIMESTAMP, # limit timestamp
-   measurement_id INT,
+   #sampling_limit TIMESTAMP, # limit timestamp -> planning_limit_time
+   cell_measurement_id INT,
    recommendation_id INT,
    is_active BOOLEAN default TRUE, # by default set to TRUE but changed once sampling_limit time is exceeded
    FOREIGN KEY (cell_id) REFERENCES Cell(id),
    FOREIGN KEY  (participant_id) REFERENCES  Participant(id),
-   FOREIGN KEY  (measurement_id) REFERENCES CellMeasurement(id),
+   FOREIGN KEY  (cell_measurement_id) REFERENCES CellMeasurement(id),
    FOREIGN KEY  (recommendation_id) REFERENCES Recommendation(id),
-   PRIMARY KEY (id, cell_id, participant_id, sampling_limit)
+   PRIMARY KEY (id, cell_id, participant_id)
 );
 
 

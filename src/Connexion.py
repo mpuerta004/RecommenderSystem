@@ -1,6 +1,6 @@
 import mysql.connector
 import Conf as conf
-
+import pandas as pd
 # data = [
 #   ('Jane', date(2005, 2, 12)),
 #   ('Joe', date(2006, 5, 23)),
@@ -18,13 +18,11 @@ class Connexion:
     def start(self):
         if self.client == None:
             try:
-                
                 self.client = mysql.connector.connect(host='localhost', user='root', passwd=conf.passwd, db='SocioBee')
-                
                 self.cursor = self.client.cursor()
                 return True
-            except:
-                print("No se ha podido establecer la conexión:")
+            except Exception as err:
+                print("No se ha podido establecer la conexión: ", err)
                 return False
         else:
             return True
@@ -43,27 +41,35 @@ class Connexion:
                 return False
 
     def insertParticipant(self, name="NULL", surname="NULL", age="NULL", gender="'I dont want to answer'"):
-        self.cursor.execute(f"INSERT INTO Participant (name,surname,age,gender) value ({name},{surname},{age},{gender})")
-        bd.client.commit()
-        id = int(self.cursor.lastrowid)
-        return id
-
-    def insertQueenBee(self, name="NULL", surname="NULL", age="NULL", gender="'I dont want to answer'"):
+        try:
+            self.cursor.execute(f"INSERT INTO Participant (name,surname,age,gender) value ({name},{surname},{age},{gender})")
+            self.client.commit()
+            id = int(self.cursor.lastrowid)
+            return id
+        except Exception as err:
+            print(err)   
+            
+            
+                       
+    def insertQueenBee(self, name='NULL', surname='NULL', age='NULL', gender="I dont want to answer"):   
+        query= f"INSERT INTO QueenBee (name,surname,age,gender) value ({name},{surname},{age},{gender})"
+        print(query)
         self.cursor.execute(
-            f"INSERT INTO QueenBee (name,surname,age,gender) value ({name},{surname},{age},{gender})")
+            f"INSERT INTO QueenBee (name,surname,age,gender) value ({name},{surname},{age},'{gender}')")
         self.client.commit()
         id = int(self.cursor.lastrowid)
-
         return id
 
-    def insertCampaign(self, manager_id="NULL", city="NULL", start_timestamp="NULL", cell_radius="NULL",
+
+
+    def insertCampaign(self, manager_id="NULL", city="NULL", start_timestamp="NULL", cell_edge="NULL",
                        min_samples="NULL", sampling_period="NULL", planning_limit_time="NULL",
                        campaign_duration="NULL"):
 
         self.cursor.execute(
-            f"INSERT INTO Campaign (manager_id,city,start_timestamp,cell_radius,min_samples,"
+            f"INSERT INTO Campaign (manager_id,city,start_timestamp,cell_edge,min_samples,"
             f" sampling_period,planning_limit_time,campaign_duration) value"
-            f"({manager_id},{city},{start_timestamp},{cell_radius},{min_samples},{sampling_period},"
+            f"({manager_id},{city},{start_timestamp},{cell_edge},{min_samples},{sampling_period},"
             f"{planning_limit_time},{campaign_duration})")
 
         self.client.commit()
@@ -155,24 +161,30 @@ class Connexion:
             self.cursor.execute("Delete from QueenBee;")
             self.client.commit()
             self.cursor.execute("ALTER TABLE QueenBee AUTO_INCREMENT = 1;")  # ;'
-            self.cursor.execute("Delete from participant;")
+            self.cursor.execute("Delete from Participant;")
             self.client.commit()
-            self.cursor.execute("ALTER TABLE participant AUTO_INCREMENT = 1;")  # ;'
+            self.cursor.execute("ALTER TABLE Participant AUTO_INCREMENT = 1;")  # ;'
             self.client.commit()
 
             return True
-        except:
+        except Exception as err:
+            print(err)
             return False
 
 
 if __name__ == '__main__':
+
     bd = Connexion()
-    print(bd.vaciarDatos())
-    print(bd.start())
-    print(bd.insertParticipant())
-    print(bd.insertQueenBee())
-    print(bd.vaciarDatos())
-    bd.close()
+    con = bd.start()
+    print(con)
+    if con==True:
+        print(bd.vaciarDatos())
+        a="hola"
+    
+        print(bd.insertParticipant())
+        print(bd.insertQueenBee())
+        print(bd.vaciarDatos())
+        bd.close()
 
 
 # Tendria que hacer lo msimo con los alters pero no lo voy a hacer porque no los voy a usar creo

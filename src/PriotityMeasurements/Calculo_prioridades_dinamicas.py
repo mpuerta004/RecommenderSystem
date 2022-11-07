@@ -268,7 +268,7 @@ def comprobacion_numeros(bd, dinamica, statica):
 
 
 if __name__ == '__main__':
-    bd = Connexion.Connexion()
+    bd = Connexion()#.Connexion()
     bd.start()
     bd.vaciarDatos()
     bd.vaciarDatos()

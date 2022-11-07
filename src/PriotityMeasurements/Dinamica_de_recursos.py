@@ -10,7 +10,6 @@ import datetime
 import random
 import pandas as pd
 import numpy as np
-
 import math
 
 #En la prioridad temporal debemos tener en cuenta el mapeo de las celdas.
