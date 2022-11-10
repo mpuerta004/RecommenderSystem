@@ -1,1 +1,1 @@
-Select * from Campaign;
+SELECT * from Participant

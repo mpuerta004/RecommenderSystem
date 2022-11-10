@@ -10,6 +10,7 @@ CREATE TABLE Participant (
     name VARCHAR(30),
     surname VARCHAR(30),
     age INT,
+    city VARCHAR(30),
     gender  VARCHAR(30) default 'I dont want to answer',
     PRIMARY KEY (id)
 );
@@ -55,9 +56,11 @@ CREATE TABLE Boundary (
 CREATE TABLE Cell(
    id INT UNIQUE AUTO_INCREMENT PRIMARY KEY,
    # https://dev.mysql.com/doc/refman/8.0/en/opengis-geometry-model.html
+   inferior_coord point,
+   superior_coord point,
    center point,
    #Point abajo y arriba de la celda.
-   cell_type set('Dynamic','Static') default 'Dynamic',
+   cell_type Varchar(30)  default 'Dynamic', #set('Dynamic','Static')
    surface_id INT,
    FOREIGN KEY (surface_id) REFERENCES Surface(id)
 );
@@ -67,7 +70,7 @@ CREATE TABLE CellMeasurement (
    cell_id INT,
    participant_id  INT,
    timestamp TIMESTAMP,
-   measurement_type set('AirData','Sound') default 'AirData',
+   measurement_type Varchar(30) default 'AirData', #set('AirData','Sound')
    data_id INT,
    # https://dev.mysql.com/doc/refman/8.0/en/spatial-types.html
    location point,
@@ -103,7 +106,7 @@ CREATE TAble Recommendation(
     is_active BOOLEAN default TRUE,
     recommendation_timestamp TIMESTAMP,
     cell_measurement_id INT default NULL,
-    state SET('Rejected', 'Open', 'Planning', 'Realized') default 'Rejected',
+    state Varchar(30)  default 'Rejected', #SET('Rejected', 'Open', 'Planning', 'Realized')
     FOREIGN KEY (cell_id) REFERENCES CellPriorityMeasurement(cell_id),
     FOREIGN KEY (cell_id) REFERENCES Cell(id),
     FOREIGN KEY (participant_id) REFERENCES  Participant(id),
