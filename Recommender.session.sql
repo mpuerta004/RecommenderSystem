@@ -1,1 +1,1 @@
-SELECT * from Participant
+SELECT * from Cell

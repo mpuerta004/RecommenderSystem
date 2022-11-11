@@ -15,10 +15,10 @@ class QueenBee(Base):
     name=Column(String) 
     age=Column(Integer)
     surname=Column(String)
-    # city=Column(String)
+    city=Column(String)
     gender=Column(String,default='I dont want to answer')
 
-    # campaigns= relationship("Campaign", back_populates="queenBee")
+    campaigns= relationship("Campaign", back_populates="queenBee")
     
     
 

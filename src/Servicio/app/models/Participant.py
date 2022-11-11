@@ -10,11 +10,11 @@ from db.base_class import Base
 
 class Participant(Base):
     __tablename__='Participant'
-    id=Column(Integer, primary_key=True, index=True, unique=True,  autoincrement=True)
-    name=Column(String)
-    age=Column(Integer)
-    surname=Column(String)
-    # city=Column(String)
+    id=Column(Integer, primary_key=True, index=True, unique=True,  autoincrement=True, nullable=False)
+    name=Column(String,nullable=True)
+    age=Column(Integer,nullable=True)
+    surname=Column(String,nullable=True)
+    city=Column(String,nullable=True)
     gender=Column(String,default='I dont want to answer')
     
     

@@ -3,12 +3,13 @@ from pydantic import BaseModel, EmailStr
 
 
 class ParticipantBase(BaseModel):
-    name: str
-    age: Union[int,None]=None
-    surname: Union[str,None]=None
-    gender: Union[str,None]=None
+    name: str 
+    surname: str=None
+    age: int
+    gender:str=None
+    city: str
 
-
+    
 # Properties to receive via API on creation
 class ParticipantCreate(ParticipantBase):
     pass
@@ -16,7 +17,7 @@ class ParticipantCreate(ParticipantBase):
 
 # Properties to receive via API on update
 class ParticipantUpdate(ParticipantBase):
-    ...
+    pass
 
 
 class ParticipantInDBBase(ParticipantBase):

@@ -21,8 +21,7 @@ class CRUDQueenBee(CRUDBase[QueenBee, QueenBeeCreate, QueenBeeUpdate]):
 
         return super().update(db, db_obj=db_obj, obj_in=update_data)
 
-    def is_superuser(self, user: QueenBee) -> bool:
-        return user.is_superuser
+    
 
 
 queenBee = CRUDQueenBee(QueenBee)

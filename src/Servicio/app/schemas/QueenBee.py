@@ -1,20 +1,18 @@
-from typing import Optional, Union
+from typing import Optional, Union, Sequence
 from pydantic import BaseModel, EmailStr
 
 
 class QueenBeeBase(BaseModel):
-    name: Union[str,None]=None
-    age: Union[int,None]=None
-    surname: Union[str,None]=None
-    gender: Union[str,None]=None
+    name: str 
+    surname: str=None
+    age: int
+    gender: str=None
+    city: str
 
 
 # Properties to receive via API on creation
 class QueenBeeCreate(QueenBeeBase):
-    name: str
-    age: Union[int,None]=None
-    surname: Union[str,None]=None
-    gender: Union[str,None]=None
+    pass
 
 
 
@@ -35,3 +33,8 @@ class QueenBee(QueenBeeBase):
     id:int
     class Config:
         orm_mode = True
+
+
+
+class QueenBeeSearchResults(BaseModel):
+    results: Sequence[QueenBee]

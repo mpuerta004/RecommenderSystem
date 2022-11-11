@@ -11,9 +11,7 @@ class CRUDParticipant(CRUDBase[Participant, ParticipantCreate, ParticipantUpdate
     def get_by_id(self, db: Session, *, id:int) -> Optional[Participant]:
         return db.query(Participant).filter(Participant.id == id).first()
 
-    # def get_all(self, db: Session) -> Optional[ParticipantSearchResults]:
-    #     return db.query(Participant)
-    
+   
     def update(
         self, db: Session, *, db_obj: Participant, obj_in: Union[ParticipantUpdate, Dict[str, Any]]
     ) -> Participant:

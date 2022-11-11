@@ -20,6 +20,7 @@ CREATE TABLE QueenBee (
     name VARCHAR(30),
     surname VARCHAR(30),
     age INT,
+    city VARCHAR(30),
     gender VARCHAR(30) default 'I dont want to answer',
     PRIMARY KEY (id)
 );
