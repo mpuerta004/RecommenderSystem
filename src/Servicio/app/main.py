@@ -66,8 +66,8 @@ def fetch_participant(
     return result
 
 
-@api_router.post("/Participant/new", status_code=201, response_model=Participant)
-def create_PArticipant(
+@api_router.post("/NewParticipant/", status_code=201, response_model=Participant)
+def create_Participant(
     *, recipe_in: ParticipantCreate, db: Session = Depends(deps.get_db)
 ) -> dict:
     """
@@ -114,7 +114,7 @@ def fetch_queenBee(
 
     return result
 
-@api_router.post("/QueenBee/new", status_code=201, response_model=QueenBee)
+@api_router.post("/NewQueenBee/", status_code=201, response_model=QueenBee)
 def create_QueemBee(
     *, recipe_in: QueenBeeCreate, db: Session = Depends(deps.get_db)
 ) -> dict:
@@ -161,9 +161,40 @@ def fetch_campaign(
     return result
 
 
+@api_router.post("/NewCampaign/", status_code=201, response_model=Campaign)
+def create_Campaimg(
+    *, recipe_in: CampaignCreate, number_cells:int,db: Session = Depends(deps.get_db)
+) -> dict:
+    """
+    Create a new recipe in the database.
+    """
+    Campaign = crud.campaign.create(db=db, obj_in=recipe_in)
+    #TODO: Esto iria enlazado con el programa que permite seleccionar las celdas de la campaña pero de momento esto nos vale. 
+    surface=SurfaceCreate(campaign_id=Campaign.id)
+    Surface=crud.surface.create(db=db, obj_in=surface)
+    for i in range(number_cells):
+        print(Surface.id)
+        cell_create=CellCreate(surface_id=Surface.id)
+        cell=crud.cell.create(db=db,obj_in=cell_create)
+    return Campaign
 
-@api_router.get("/SurfaceOfCampaign/{Campaign_id}", status_code=200, response_model=List[Surface])
-def fetch_campaign(
+
+@api_router.get("/AllCampaign/", status_code=200, response_model=CampaignSearchResults)
+def search_AllCampaign(
+    *,
+    max_results: Optional[int] = 10,
+    db: Session = Depends(deps.get_db),
+) -> dict:
+    """
+    Search for recipes based on label keyword
+    """
+    Campaigns = crud.campaign.get_multi(db=db, limit=max_results)
+    
+    return {"results": list(Campaigns)[:max_results]}
+
+
+@api_router.get("/SurfaceOfCampaign/{Campaign_id}", status_code=200, response_model=CellSearchResults)
+def fetch_Surface_of_Campaign(
     *,
     Campaign_id: int,
     db: Session = Depends(deps.get_db),
@@ -181,11 +212,27 @@ def fetch_campaign(
         raise HTTPException(
             status_code=404, detail=f"Recipe with ID {Campaign_id} not found"
         )
-    return result
+    return {"results": list(result)}
 
 
-@api_router.get("/CellOfCampaign/{Campaign_id}", status_code=200, response_model=List[Cell])
-def fetch_CellOfCampaign(
+##################################################### Campaign ################################################################################
+
+
+
+@api_router.post("/NewCell/", status_code=201, response_model=Cell)
+def create_Cell(
+    *, recipe_in: CellCreate,db: Session = Depends(deps.get_db)
+) -> dict:
+    """
+    Create a new recipe in the database.
+    """
+    cell = crud.cell.create(db=db, obj_in=recipe_in)
+    return cell
+
+
+
+@api_router.get("/CellOfCampaign/{Campaign_id}", status_code=200, response_model=CellSearchResults)
+def fetch_Cell_of_Campaign(
     *,
     Campaign_id: int,
     db: Session = Depends(deps.get_db),
@@ -203,12 +250,12 @@ def fetch_CellOfCampaign(
         raise HTTPException(
              status_code=404, detail=f"Recipe with ID {Campaign_id} not found"
          )
-    return cells
+    return {"results": list(cells)}
 
 
 
-@api_router.get("/CellOfSurface/{Surface_id}", status_code=200, response_model=List[Cell])
-def fetch_CellOfCampaign(
+@api_router.get("/CellOfSurface/{Surface_id}", status_code=200, response_model=CellSearchResults)
+def fetch_Cell_Of_Campaign(
     *,
     Surface_id: int,
     db: Session = Depends(deps.get_db),
@@ -224,48 +271,12 @@ def fetch_CellOfCampaign(
         raise HTTPException(
              status_code=404, detail=f"Recipe with ID {Surface_id} not found"
          )
-    return cells
+    return {"results": list(cells)}
         
-    # if not result:
-    #     # the exception is raised, not returned - you will get a validation
-    #     # error otherwise.
-    #     raise HTTPException(
-    #         status_code=404, detail=f"Recipe with ID {Campaign_id} not found"
-    #     )
-    # return result
 
 
-@api_router.post("/newCampaign/new", status_code=201, response_model=Campaign)
-def create_Campaimg(
-    *, recipe_in: CampaignCreate, number_cells:int,db: Session = Depends(deps.get_db)
-) -> dict:
-    """
-    Create a new recipe in the database.
-    """
-    Campaign = crud.campaign.create(db=db, obj_in=recipe_in)
-    print(Campaign.surfaces)
-    #Esto iria enlazado con el programa que permite seleccionar y demas pero de momento esto nos vale. 
-    surface=SurfaceCreate(campaign_id=Campaign.id)
-    Surface=crud.surface.create(db=db, obj_in=surface)
-    for i in range(number_cells):
-        print(Surface.id)
-        cell_create=CellCreate(surface_id=Surface.id)
-        cell=crud.cell.create(db=db,obj_in=cell_create)
-    print(Campaign.surfaces[0].cells)
-    print(Surface.cells)
-    return Campaign
 
-@api_router.post("/newCell/new", status_code=201, response_model=Cell)
-def create_Cell(
-    *, recipe_in: CellCreate,db: Session = Depends(deps.get_db)
-) -> dict:
-    """
-    Create a new recipe in the database.
-    """
-    print("gola")
-    cell = crud.cell.create(db=db, obj_in=recipe_in)
-   
-    return cell
+
 
 # @api_router.post("/recipe/", status_code=201, response_model=Recipe)
 # def create_recipe(
