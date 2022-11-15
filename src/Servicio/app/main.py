@@ -8,24 +8,26 @@ from sqlalchemy.orm import Session
 from schemas.Campaign import CampaignSearchResults, Campaign, CampaignCreate
 from schemas.Participant import Participant, ParticipantCreate, ParticipantSearchResults
 from schemas.QueenBee import QueenBee, QueenBeeCreate, QueenBeeSearchResults
-from schemas.Cell import Cell, CellCreate, CellSearchResults, Point
-from crud import crud_cell
-from schemas.Surface import SurfaceSearchResults, Surface, SurfaceCreate
+from schemas.AirData import AirData, AirDataCreate, AirDataSearchResults
+from schemas.CellMeasurement import CellMeasurement, CellMeasurementCreate, CellMeasurementSearchResults
 
+from schemas.Cell import Cell, CellCreate, CellSearchResults, Point
+from schemas.Surface import SurfaceSearchResults, Surface, SurfaceCreate
 import deps
 import crud
+from routes import Bee 
 
 # Project Directories
 ROOT = Path(__file__).resolve().parent.parent
 BASE_PATH = Path(__file__).resolve().parent
-print(BASE_PATH)
 TEMPLATES = Jinja2Templates(directory=str(BASE_PATH / "templates"))
 
 
-app = FastAPI(title="Recipe API", openapi_url="/openapi.json")
+app = FastAPI(title="Micro-volunteer Engine",version=1.0, openapi_url="/openapi.json")
+
+app.include_router(Bee.api_router_bee)
 
 api_router = APIRouter()
-
 
 # Updated to serve a Jinja2 template
 # https://www.starlette.io/templates/
@@ -43,100 +45,6 @@ def root(
         "index.html",
         {"request": request, "recipes": campaign},
     )
-
-##################################################### Participant ################################################################################
-
-@api_router.get("/Bee/Participants/{participant_id}", status_code=200, response_model=Participant)
-def fetch_participant(
-    *,
-    participant_id: int,
-    db: Session = Depends(deps.get_db),
-) -> Any:
-    """
-    Fetch a single recipe by ID
-    """
-    result = crud.participant.get_by_id(db=db, id=participant_id)
-    if not result:
-        # the exception is raised, not returned - you will get a validation
-        # error otherwise.
-        raise HTTPException(
-            status_code=404, detail=f"Recipe with ID {participant_id} not found"
-        )
-
-    return result
-
-
-@api_router.post("/Bee/Participants/", status_code=201, response_model=Participant)
-def create_Participant(
-    *, recipe_in: ParticipantCreate, db: Session = Depends(deps.get_db)
-) -> dict:
-    """
-    Create a new recipe in the database.
-    """
-    Participant = crud.participant.create(db=db, obj_in=recipe_in)
-    return Participant
-
-
-
-@api_router.get("/Bee/Participants/", status_code=200, response_model=ParticipantSearchResults)
-def search_Participant(
-    *,
-    max_results: Optional[int] = 10,
-    db: Session = Depends(deps.get_db),
-) -> dict:
-    """
-    Search for recipes based on label keyword
-    """
-    Participants = crud.participant.get_multi(db=db, limit=max_results)
-    
-    return {"results": list(Participants)[:max_results]}
-
-
-##################################################### QueenBee ################################################################################
-
-
-@api_router.get("/Bee/QueenBees/{queenBee_id}", status_code=200, response_model=QueenBee)
-def fetch_queenBee(
-    *,
-    queenBee_id: int,
-    db: Session = Depends(deps.get_db),
-) -> Any:
-    """
-    Fetch a single recipe by ID
-    """
-    result = crud.queenBee.get(db=db, id=queenBee_id)
-    if not result:
-        # the exception is raised, not returned - you will get a validation
-        # error otherwise.
-        raise HTTPException(
-            status_code=404, detail=f"Recipe with ID {queenBee_id} not found"
-        )
-
-    return result
-@api_router.get("/Bee/QueenBees/", status_code=200, response_model=QueenBeeSearchResults)
-def search_Participant(
-    *,
-    max_results: Optional[int] = 10,
-    db: Session = Depends(deps.get_db),
-) -> dict:
-    """
-    Search for recipes based on label keyword
-    """
-    QueenBees = crud.participant.get_multi(db=db, limit=max_results)
-    
-    return {"results": list(QueenBees)[:max_results]}
-
-@api_router.post("/Bee/QueenBees/", status_code=201, response_model=QueenBee)
-def create_QueemBee(
-    *, recipe_in: QueenBeeCreate, db: Session = Depends(deps.get_db)
-) -> dict:
-    """
-    Create a new recipe in the database.
-    """
-    QueenBee = crud.queenBee.create(db=db, obj_in=recipe_in)
-    return QueenBee
-
-
 
 
 
@@ -173,10 +81,8 @@ def create_Campaimg(
     surface=SurfaceCreate(campaign_id=Campaign.id)
     Surface=crud.surface.create(db=db, obj_in=surface)
     for i in range(number_cells):
-        # ce=crud.cell.get_cell(db=db,id=1)
-        # return ce
         cell_create=CellCreate(surface_id=Surface.id,inferior_coord=Point(x=0,y=0))
-        cell=crud.cell.create_new(db=db,obj_in=cell_create)
+        cell=crud.cell.create(db=db,obj_in=cell_create)
     return Campaign
 
 
@@ -216,9 +122,25 @@ def fetch_Surface_of_Campaign(
     return {"results": list(result)}
 
 
-##################################################### Campaign ################################################################################
+##################################################### Cells ################################################################################
 
-
+@api_router.get("/Cells/{Cell_id}", status_code=200, response_model=Cell)
+def fetch_cell(
+    *,
+    Cell_id: int,
+    db: Session = Depends(deps.get_db),
+) -> Cell:
+    """
+    Fetch a single cell by ID
+    """
+    result = crud.cell.get(db=db, id=Cell_id)
+    if not result:
+        # the exception is raised, not returned - you will get a validation
+        # error otherwise.
+        raise HTTPException(
+            status_code=404, detail=f"Recipe with ID {Cell_id} not found"
+        )
+    return result
 
 @api_router.post("/Cells/", status_code=201, response_model=Cell)
 def create_Cell(
@@ -237,9 +159,9 @@ def fetch_Cell_of_Campaign(
     *,
     Campaign_id: int,
     db: Session = Depends(deps.get_db),
-) -> Any:
+) -> CellSearchResults:
     """
-    Fetch a single recipe by ID
+    Fetch a cell of a campaign by Campaign_id
     """
     Campaign = crud.campaign.get(db=db, id=Campaign_id)
     cells=[]
@@ -275,7 +197,131 @@ def fetch_Cell_Of_Campaign(
         
 
 
+##################################################### AirData ################################################################################
 
+@api_router.get("/AirData/{AirData_id}", status_code=200, response_model=AirData)
+def fetch_campaign(
+    *,
+    AirData_id: int,
+    db: Session = Depends(deps.get_db),
+) -> Any:
+    """
+    Fetch a single recipe by ID
+    """
+    result = crud.airData.get(db=db, id=AirData_id)
+    if not result:
+        # the exception is raised, not returned - you will get a validation
+        # error otherwise.
+        raise HTTPException(
+            status_code=404, detail=f"Recipe with ID {AirData_id} not found"
+        )
+    return result
+
+
+@api_router.post("/AirData/", status_code=201, response_model=AirData)
+def create_Campaimg(
+    *, recipe_in: AirDataCreate, db: Session = Depends(deps.get_db)
+) -> dict:
+    """
+    Create a new recipe in the database.
+    """
+    airData = crud.airData.create(db=db, obj_in=recipe_in)
+    return airData
+
+
+@api_router.get("/AirData/", status_code=200, response_model=AirDataSearchResults)
+def search_AllAirData(
+    *,
+    max_results: Optional[int] = 10,
+    db: Session = Depends(deps.get_db),
+) -> dict:
+    """
+    Search for recipes based on label keyword
+    """
+    Campaigns = crud.airData.get_multi(db=db, limit=max_results)
+    
+    return {"results": list(Campaigns)[:max_results]}
+
+
+@api_router.get("/Campaigns/Cell/{Cell_id}/AirData", status_code=200, response_model=AirDataSearchResults)
+def search_AllAirData(
+    *,
+    Cell_id: int,
+    db: Session = Depends(deps.get_db),
+) -> dict:
+    """
+    Search for recipes based on label keyword
+    """
+    result=[]
+    Cell = crud.cell.get(db=db,id=Cell_id)
+    for i in Cell.measurements:
+        result.append(i.airdata_Data)
+    return {"results": result}
+
+
+
+
+##################################################### CellMeasurement ################################################################################
+
+@api_router.get("/CellMeasurement/{CellMeasurement_id}", status_code=200, response_model=CellMeasurement)
+def fetch_campaign(
+    *,
+    CellMeasurement_id: int,
+    db: Session = Depends(deps.get_db),
+) -> Any:
+    """
+    Fetch a single recipe by ID
+    """
+    result = crud.cellMeasurement.get(db=db, id=CellMeasurement_id)
+    if not result:
+        # the exception is raised, not returned - you will get a validation
+        # error otherwise.
+        raise HTTPException(
+            status_code=404, detail=f"Recipe with ID {CellMeasurement_id} not found"
+        )
+    return result
+
+
+@api_router.post("/CellMeasurement/", status_code=201, response_model=CellMeasurement)
+def create_Campaimg(
+    *, recipe_in: CellMeasurementCreate, db: Session = Depends(deps.get_db)
+) -> dict:
+    """
+    Create a new recipe in the database.
+    """
+    airData = crud.cellMeasurement.create(db=db, obj_in=recipe_in)
+    return airData
+
+
+@api_router.get("/Cell/{cell_id}/CellMeasurement/", status_code=200, response_model=CellMeasurementSearchResults)
+def search_AllAirData(
+    *,
+    max_results: Optional[int] = 10,
+    Cell_id:int,
+    db: Session = Depends(deps.get_db),
+) -> dict:
+    """
+    Search for recipes based on label keyword
+    """
+    Cell=crud.cell.get(db=db, id=Cell_id)
+
+    return {"results": list(Cell.measurements)[:max_results]}
+
+
+@api_router.get("/CellMeasurement/{CellMeasurement_id}/AirData", status_code=200, response_model=AirData)
+def search_AllAirData(
+    *,
+    CellMeasurement_id:int,
+    db: Session = Depends(deps.get_db),
+) -> dict:
+    """
+    Search for recipes based on label keyword
+    """
+    result=[]
+    CellMeasurement = crud.cellMeasurement.get(db=db,id=CellMeasurement_id)
+    id=CellMeasurement.airdata_id
+    AirData_data=crud.airData.get(db=db, id=id)
+    return AirData_data
 
 
 # @api_router.post("/recipe/", status_code=201, response_model=Recipe)
@@ -290,7 +336,6 @@ def fetch_Cell_Of_Campaign(
 
 
 app.include_router(api_router)
-
 
 
 if __name__ == "__main__":

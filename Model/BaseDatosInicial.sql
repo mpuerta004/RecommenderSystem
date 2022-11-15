@@ -58,46 +58,49 @@ CREATE TABLE Cell (
    id INT UNIQUE AUTO_INCREMENT PRIMARY KEY,
    # https://dev.mysql.com/doc/refman/8.0/en/opengis-geometry-model.html
    inferior_coord POINT SRID 0,
-   #superior_coord point,
-   #center point,
+   superior_coord POINT SRID 0,
+   center POINT SRID 0,
    cell_type Varchar(30)  default 'Dynamic', #set('Dynamic','Static')
    surface_id INT,
    FOREIGN KEY (surface_id) REFERENCES Surface(id)
 );
 
+
+CREATE TABLE AirData (
+   id INT UNIQUE AUTO_INCREMENT PRIMARY KEY,
+   #cellMeasurement_id INT,
+   No2 float8, # I would make a reference to Measurement since we can then generalize it
+   Co2 float8
+   #FOREIGN KEY (cellMeasurement_id) REFERENCES CellMeasurement(id)
+);
 CREATE TABLE CellMeasurement (
    id INT UNIQUE AUTO_INCREMENT PRIMARY KEY,
    cell_id INT,
    participant_id  INT,
    timestamp TIMESTAMP,
    measurement_type Varchar(30) default 'AirData', #set('AirData','Sound')
-   data_id INT,
+   airdata_id INT,
    # https://dev.mysql.com/doc/refman/8.0/en/spatial-types.html
    location point,
    FOREIGN KEY (cell_id) REFERENCES Cell(id),
-   FOREIGN KEY  (participant_id) REFERENCES  Participant(id)
+    FOREIGN KEY (airData_id) REFERENCES AirData(id),
+    FOREIGN KEY (participant_id) REFERENCES Participant(id)
 );
 
 CREATE TABLE CellPriorityMeasurement (
    #This is the priority of pollinating a cell in the timeslot [start_timeSlot,start_timeSlot+sampling_period)
    cell_id INT,
+   cellMeasurement_id INT,
    timestamp TIMESTAMP,
-   #end_timeSlot TIMESTAMP,
    temporal_priority float8, 
    trend_priority float8, 
-   FOREIGN KEY (cell_id) REFERENCES Cell(id),
+   FOREIGN KEY (cell_id) REFERENCES Cell(id), 
+   FOREIGN KEY (cellMeasurement_id) REFERENCES CellMeasurement(id),
    PRIMARY KEY (cell_id,timestamp)
 );
 
 
 
-CREATE TABLE AirData (
-   id INT UNIQUE AUTO_INCREMENT PRIMARY KEY,
-   cell_measurement_id INT,
-   No2 float8, # I would make a reference to Measurement since we can then generalize it
-   Co2 float8,
-   FOREIGN KEY (cell_measurement_id) REFERENCES CellMeasurement(id)
-);
 
 CREATE TAble Recommendation(
     id INT AUTO_INCREMENT,

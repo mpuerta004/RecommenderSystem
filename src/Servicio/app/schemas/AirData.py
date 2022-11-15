@@ -11,23 +11,22 @@ from pydantic import BaseModel, ValidationError
 
 
 
-class CellBase(BaseModel):
-    surface_id:int
-    inferior_coord:Point=None
-    superior_coord:Point=None
-    center:Point=None
-    cell_type:str='Dynamic'
+class AirDataBase(BaseModel):
+    #Todo:Mirar si poner el cellMeasurement_id
+    No2:float
+    Co2:float
+    
     
 
-class CellCreate(CellBase):
+class AirDataCreate(AirDataBase):
     pass
 
 
-class CellUpdate(CellBase):
+class AirDataUpdate(AirDataBase):
     ...
 
 # Properties shared by models stored in DB
-class CellInDBBase(CellBase):
+class AirDataInDBBase(AirDataBase):
     id:int 
     
     class Config:
@@ -35,15 +34,15 @@ class CellInDBBase(CellBase):
 
 
 # Properties to return to client
-class Cell(CellInDBBase):
+class AirData(AirDataInDBBase):
 
     pass
 
 
 # Properties properties stored in DB
-class RecipeInDB(CellInDBBase):
+class RecipeInDB(AirDataInDBBase):
     pass
 
 
-class CellSearchResults(BaseModel):
-    results: Sequence[Cell]
+class AirDataSearchResults(BaseModel):
+    results: Sequence[AirData]

@@ -1,6 +1,6 @@
 from crud.base import CRUDBase
-from models.Cell import Cell
-from schemas.Cell import CellCreate, CellUpdate
+from models.CellMeasurement import CellMeasurement
+from schemas.CellMeasurement import CellMeasurementCreate, CellMeasurementUpdate
 from typing import Any, Dict, Optional, Union, List
 from typing import Any, Dict, Generic, List, Optional, Type, TypeVar, Union
 
@@ -18,10 +18,10 @@ from crud.base import CRUDBase
 from models.Surface import Surface
 
 
-class CRUDCell(CRUDBase[Cell, CellCreate, CellUpdate]):
+class CRUDCellMeasurement(CRUDBase[CellMeasurement, CellMeasurementCreate, CellMeasurementUpdate]):
         pass
 
         
                 
 
-cell = CRUDCell(Cell)
+cellMeasurement = CRUDCellMeasurement(CellMeasurement)

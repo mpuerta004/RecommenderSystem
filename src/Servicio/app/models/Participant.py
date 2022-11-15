@@ -17,6 +17,7 @@ class Participant(Base):
     city=Column(String,nullable=True)
     gender=Column(String,default='I dont want to answer')
     
-    
+    cellMeasurement=relationship("CellMeasurement", back_populates="participants")
+
 if __name__ == "__main__":
     a=Participant(id=1,name="hola",surname="hola",gender="Hola")
