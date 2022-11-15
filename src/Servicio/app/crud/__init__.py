@@ -5,3 +5,4 @@ from .crud_surface import surface
 from .crud_cell import cell
 from .crud_AirData import airData
 from .crud_cellMeasurement import cellMeasurement
+from .crud_cellPriority import cellPriority

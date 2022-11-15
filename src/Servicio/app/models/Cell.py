@@ -58,7 +58,8 @@ class Cell(Base):
     
     surfaces_cells=relationship("Surface", back_populates="cells")
     measurements=relationship("CellMeasurement",back_populates="cells")
-    
+    priority=relationship("CellPriority", back_populates="cell")
+
     #De este modo se define una relacion inversa... no se si seran utiles. 
     #queenBee=relationship("Campaign", back_populates="campaigns")
     

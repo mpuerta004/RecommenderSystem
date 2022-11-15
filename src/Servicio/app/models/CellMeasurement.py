@@ -60,5 +60,7 @@ class CellMeasurement(Base):
     cells=relationship("Cell", back_populates="measurements")
     participants=relationship("Participant", back_populates="cellMeasurement")
     airdata_data=relationship("AirData",back_populates="cellMeasurement")
+    # priority=relationship("CellPriority",back_populates="cellMeasurements")
+
     # airData=relationship("AirData",back_populates="measurement")
    

@@ -7,6 +7,8 @@ from sqlalchemy.orm import Session
 
 from schemas.Campaign import CampaignSearchResults, Campaign, CampaignCreate
 from schemas.Participant import Participant, ParticipantCreate, ParticipantSearchResults
+from schemas.CellPriority import CellPriority, CellPriorityCreate, CellPrioritySearchResults
+
 from schemas.QueenBee import QueenBee, QueenBeeCreate, QueenBeeSearchResults
 from schemas.AirData import AirData, AirDataCreate, AirDataSearchResults
 from schemas.CellMeasurement import CellMeasurement, CellMeasurementCreate, CellMeasurementSearchResults
@@ -333,6 +335,44 @@ def search_AllAirData(
 #     """
 #     recipe = crud.recipe.create(db=db, obj_in=recipe_in)
 #     return recipe
+
+##################################################### CellPriorirty ################################################################################
+
+@api_router.get("/Cell/{Cell_id}/Priority", status_code=200, response_model=CellPrioritySearchResults)
+def fetch_campaign(
+    *,
+    cell_id: int,
+    db: Session = Depends(deps.get_db),
+) -> Any:
+    """
+    Fetch a single recipe by ID
+    
+    
+    """
+    res=[]
+    result = crud.cell.get(db=db, id=cell_id)
+        
+    res.append(result.priority)
+    if res==[]:
+        # the exception is raised, not returned - you will get a validation
+        # error otherwise.
+        raise HTTPException(
+            status_code=404, detail=f"Recipe with ID {cell_id} not found"
+        )
+    return {"results": list(res)}
+
+
+
+@api_router.post("/Cell/Priority", status_code=201, response_model=CellPriority)
+def create_Priority(
+    *, recipe_in: CellPriorityCreate,db: Session = Depends(deps.get_db)
+) -> CellPriority:
+    """
+    Create a new recipe in the database.
+    """
+    
+    cellPriority = crud.cellPriority.create(db=db, obj_in=recipe_in)
+    return cellPriority
 
 
 app.include_router(api_router)
