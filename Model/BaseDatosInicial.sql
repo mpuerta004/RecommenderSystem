@@ -46,7 +46,6 @@ CREATE TABLE Surface (
     FOREIGN  KEY (campaign_id) REFERENCES Campaign(id)
 );
 
-
 CREATE TABLE Boundary (
     id INT UNIQUE AUTO_INCREMENT PRIMARY KEY,
     surface_id INT,
@@ -54,13 +53,13 @@ CREATE TABLE Boundary (
     FOREIGN  KEY (surface_id) REFERENCES Surface(id) 
 );
 
-CREATE TABLE Cell(
+CREATE TABLE Cell (
+   #g GEOMETRY NOT NULL SRID 4326,
    id INT UNIQUE AUTO_INCREMENT PRIMARY KEY,
    # https://dev.mysql.com/doc/refman/8.0/en/opengis-geometry-model.html
-   inferior_coord point,
-   superior_coord point,
-   center point,
-   #Point abajo y arriba de la celda.
+   inferior_coord POINT SRID 0,
+   #superior_coord point,
+   #center point,
    cell_type Varchar(30)  default 'Dynamic', #set('Dynamic','Static')
    surface_id INT,
    FOREIGN KEY (surface_id) REFERENCES Surface(id)

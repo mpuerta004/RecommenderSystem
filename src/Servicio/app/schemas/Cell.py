@@ -9,17 +9,17 @@ from pydantic import BaseModel, ValidationError
 
 
 class Point(NamedTuple):
-    x: int
-    y: int
+    x: float
+    y: float
 
 
-class Model(BaseModel):
-    p: Point
+# class Model(BaseModel):
+#      : Point
 
 
 class CellBase(BaseModel):
     surface_id:int
-    #inferior_coord:Model=None
+    inferior_coord:Point=None
     #superior_coord:Model=None
     #center:Model=None
     cell_type:str='Dynamic'

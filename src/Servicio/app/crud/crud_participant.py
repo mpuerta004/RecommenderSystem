@@ -22,8 +22,8 @@ class CRUDParticipant(CRUDBase[Participant, ParticipantCreate, ParticipantUpdate
 
         return super().update(db, db_obj=db_obj, obj_in=update_data)
 
-    def is_superuser(self, user: Participant) -> bool:
-        return user.is_superuser
+    # def is_superuser(self, user: Participant) -> bool:
+    #     return user.is_superuser
 
 
 participant = CRUDParticipant(Participant)

@@ -8,8 +8,8 @@ from sqlalchemy.orm import Session
 from schemas.Campaign import CampaignSearchResults, Campaign, CampaignCreate
 from schemas.Participant import Participant, ParticipantCreate, ParticipantSearchResults
 from schemas.QueenBee import QueenBee, QueenBeeCreate, QueenBeeSearchResults
-from schemas.Cell import Cell, CellCreate, CellSearchResults
-
+from schemas.Cell import Cell, CellCreate, CellSearchResults, Point
+from crud import crud_cell
 from schemas.Surface import SurfaceSearchResults, Surface, SurfaceCreate
 
 import deps
@@ -46,7 +46,7 @@ def root(
 
 ##################################################### Participant ################################################################################
 
-@api_router.get("/Participant/{participant_id}", status_code=200, response_model=Participant)
+@api_router.get("/Bee/Participants/{participant_id}", status_code=200, response_model=Participant)
 def fetch_participant(
     *,
     participant_id: int,
@@ -66,7 +66,7 @@ def fetch_participant(
     return result
 
 
-@api_router.post("/NewParticipant/", status_code=201, response_model=Participant)
+@api_router.post("/Bee/Participants/", status_code=201, response_model=Participant)
 def create_Participant(
     *, recipe_in: ParticipantCreate, db: Session = Depends(deps.get_db)
 ) -> dict:
@@ -78,7 +78,7 @@ def create_Participant(
 
 
 
-@api_router.get("/AllParticipant/", status_code=200, response_model=ParticipantSearchResults)
+@api_router.get("/Bee/Participants/", status_code=200, response_model=ParticipantSearchResults)
 def search_Participant(
     *,
     max_results: Optional[int] = 10,
@@ -95,7 +95,7 @@ def search_Participant(
 ##################################################### QueenBee ################################################################################
 
 
-@api_router.get("/QueenBee/{queenBee_id}", status_code=200, response_model=QueenBee)
+@api_router.get("/Bee/QueenBees/{queenBee_id}", status_code=200, response_model=QueenBee)
 def fetch_queenBee(
     *,
     queenBee_id: int,
@@ -113,19 +113,7 @@ def fetch_queenBee(
         )
 
     return result
-
-@api_router.post("/NewQueenBee/", status_code=201, response_model=QueenBee)
-def create_QueemBee(
-    *, recipe_in: QueenBeeCreate, db: Session = Depends(deps.get_db)
-) -> dict:
-    """
-    Create a new recipe in the database.
-    """
-    QueenBee = crud.queenBee.create(db=db, obj_in=recipe_in)
-    return QueenBee
-
-
-@api_router.get("/AllQueenBee/", status_code=200, response_model=QueenBeeSearchResults)
+@api_router.get("/Bee/QueenBees/", status_code=200, response_model=QueenBeeSearchResults)
 def search_Participant(
     *,
     max_results: Optional[int] = 10,
@@ -138,11 +126,23 @@ def search_Participant(
     
     return {"results": list(QueenBees)[:max_results]}
 
+@api_router.post("/Bee/QueenBees/", status_code=201, response_model=QueenBee)
+def create_QueemBee(
+    *, recipe_in: QueenBeeCreate, db: Session = Depends(deps.get_db)
+) -> dict:
+    """
+    Create a new recipe in the database.
+    """
+    QueenBee = crud.queenBee.create(db=db, obj_in=recipe_in)
+    return QueenBee
+
+
+
 
 
 ##################################################### Campaign ################################################################################
 
-@api_router.get("/Campaign/{Campaign_id}", status_code=200, response_model=Campaign)
+@api_router.get("/Campaigns/{Campaign_id}", status_code=200, response_model=Campaign)
 def fetch_campaign(
     *,
     Campaign_id: int,
@@ -161,7 +161,7 @@ def fetch_campaign(
     return result
 
 
-@api_router.post("/NewCampaign/", status_code=201, response_model=Campaign)
+@api_router.post("/Campaigns/", status_code=201, response_model=Campaign)
 def create_Campaimg(
     *, recipe_in: CampaignCreate, number_cells:int,db: Session = Depends(deps.get_db)
 ) -> dict:
@@ -173,13 +173,14 @@ def create_Campaimg(
     surface=SurfaceCreate(campaign_id=Campaign.id)
     Surface=crud.surface.create(db=db, obj_in=surface)
     for i in range(number_cells):
-        print(Surface.id)
-        cell_create=CellCreate(surface_id=Surface.id)
-        cell=crud.cell.create(db=db,obj_in=cell_create)
+        # ce=crud.cell.get_cell(db=db,id=1)
+        # return ce
+        cell_create=CellCreate(surface_id=Surface.id,inferior_coord=Point(x=0,y=0))
+        cell=crud.cell.create_new(db=db,obj_in=cell_create)
     return Campaign
 
 
-@api_router.get("/AllCampaign/", status_code=200, response_model=CampaignSearchResults)
+@api_router.get("/Campaigns/", status_code=200, response_model=CampaignSearchResults)
 def search_AllCampaign(
     *,
     max_results: Optional[int] = 10,
@@ -193,7 +194,7 @@ def search_AllCampaign(
     return {"results": list(Campaigns)[:max_results]}
 
 
-@api_router.get("/SurfaceOfCampaign/{Campaign_id}", status_code=200, response_model=CellSearchResults)
+@api_router.get("/Campaigns/{Campaign_id}/Surface", status_code=200, response_model=CellSearchResults)
 def fetch_Surface_of_Campaign(
     *,
     Campaign_id: int,
@@ -219,7 +220,7 @@ def fetch_Surface_of_Campaign(
 
 
 
-@api_router.post("/NewCell/", status_code=201, response_model=Cell)
+@api_router.post("/Cells/", status_code=201, response_model=Cell)
 def create_Cell(
     *, recipe_in: CellCreate,db: Session = Depends(deps.get_db)
 ) -> dict:
@@ -231,7 +232,7 @@ def create_Cell(
 
 
 
-@api_router.get("/CellOfCampaign/{Campaign_id}", status_code=200, response_model=CellSearchResults)
+@api_router.get("/Campaigns/{Campaign_id}/Surface/Cells", status_code=200, response_model=CellSearchResults)
 def fetch_Cell_of_Campaign(
     *,
     Campaign_id: int,
@@ -253,8 +254,7 @@ def fetch_Cell_of_Campaign(
     return {"results": list(cells)}
 
 
-
-@api_router.get("/CellOfSurface/{Surface_id}", status_code=200, response_model=CellSearchResults)
+@api_router.get("/Surface/{Surface_id}/Cells", status_code=200, response_model=CellSearchResults)
 def fetch_Cell_Of_Campaign(
     *,
     Surface_id: int,
