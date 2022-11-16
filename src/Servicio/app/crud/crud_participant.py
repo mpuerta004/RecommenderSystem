@@ -1,4 +1,4 @@
-from typing import Any, Dict, Optional, Union
+from typing import Any, Dict, Optional, Union, List
 
 from sqlalchemy.orm import Session
 
@@ -13,7 +13,9 @@ class CRUDParticipant(CRUDBase[Participant, ParticipantCreate, ParticipantUpdate
     #Todo: todos los usuario que participan en una campaña 
     #Todo: todos los usuarios de una ciudad 
     #Todo: todos los datos de la campaña 
-   
+    def get_participant_of_city(self, db: Session, *, city:str) -> List[ Participant]:
+        return db.query(Participant).filter(Participant.city == city).all()
+    
     def update(
         self, db: Session, *, db_obj: Participant, obj_in: Union[ParticipantUpdate, Dict[str, Any]]
     ) -> Participant:

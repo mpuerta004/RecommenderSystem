@@ -1,6 +1,10 @@
 from fastapi import FastAPI, APIRouter, Query, HTTPException, Request, Depends
 from fastapi.templating import Jinja2Templates
 
+# # Project Directories
+# ROOT = Path(__file__).resolve().parent.parent
+# BASE_PATH = Path(__file__).resolve().parent
+
 from typing import Optional, Any, List
 from pathlib import Path
 from sqlalchemy.orm import Session
@@ -17,10 +21,6 @@ from crud import crud_cell
 from schemas.Surface import SurfaceSearchResults, Surface, SurfaceCreate
 import deps
 import crud
-
-# # Project Directories
-# ROOT = Path(__file__).resolve().parent.parent
-# BASE_PATH = Path(__file__).resolve().parent
 
 
 api_router_bee = APIRouter(prefix="/Bee")
@@ -178,6 +178,26 @@ def fetch_campaign(
             status_code=404, detail=f"Recipe with ID {participant_id} not found"
         )
     return {"results": list(Participant.promises)}
+
+
+
+@api_router_bee.get("/Participant/{city}/", status_code=200, response_model=ParticipantSearchResults)
+def fetch_queenBee(
+    *,
+    city: str,
+    db: Session = Depends(deps.get_db),
+) -> Any:
+    """
+    Fetch a single recipe by ID
+    """
+    result = crud.participant.get_participant_of_city(db=db, city=city)
+    if not result:
+        
+        raise HTTPException(
+            status_code=404, detail=f"Recipe with ID {city} not found"
+        )
+
+    return {"results": list(result)}
 ##################################################### QueenBee ################################################################################
 
 
@@ -199,6 +219,44 @@ def fetch_queenBee(
         )
 
     return result
+@api_router_bee.get("/QueenBees/{queenBee_id}/Campaigns", status_code=200, response_model=CampaignSearchResults)
+def fetch_queenBee(
+    *,
+    queenBee_id: int,
+    db: Session = Depends(deps.get_db),
+) -> Any:
+    """
+    Fetch a single recipe by ID
+    """
+    result = crud.queenBee.get(db=db, id=queenBee_id)
+    if not result:
+        # the exception is raised, not returned - you will get a validation
+        # error otherwise.
+        raise HTTPException(
+            status_code=404, detail=f"Recipe with ID {queenBee_id} not found"
+        )
+
+    return {"results": list(result.campaigns)}
+
+@api_router_bee.get("/QueenBees/{city}/", status_code=200, response_model=QueenBeeSearchResults)
+def fetch_queenBee(
+    *,
+    city: str,
+    db: Session = Depends(deps.get_db),
+) -> Any:
+    """
+    Fetch a single recipe by ID
+    """
+    result = crud.queenBee.get_queenBee_of_city(db=db, city=city)
+    if not result:
+        # the exception is raised, not returned - you will get a validation
+        # error otherwise.
+        raise HTTPException(
+            status_code=404, detail=f"Recipe with ID {city} not found"
+        )
+
+    return {"results": list(result)}
+
 
 
 @api_router_bee.get("/QueenBees/", status_code=200, response_model=QueenBeeSearchResults)
