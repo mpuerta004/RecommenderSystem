@@ -8,6 +8,9 @@ from schemas.AirData import AirData, AirDataCreate, AirDataSearchResults
 from schemas.CellMeasurement import CellMeasurement, CellMeasurementCreate, CellMeasurementSearchResults
 from schemas.Campaign import CampaignSearchResults, Campaign, CampaignCreate
 from schemas.Participant import Participant, ParticipantCreate, ParticipantSearchResults
+from schemas.Recommendation import Recommendation,RecommendationCreate,RecommendationUpdate, RecommendationSearchResults
+from schemas.MeasurementPromise import MeasurementPromise, MeasurementPromiseSearchResults
+
 from schemas.QueenBee import QueenBee, QueenBeeCreate, QueenBeeSearchResults
 from schemas.Cell import Cell, CellCreate, CellSearchResults, Point
 from crud import crud_cell
@@ -15,9 +18,9 @@ from schemas.Surface import SurfaceSearchResults, Surface, SurfaceCreate
 import deps
 import crud
 
-# Project Directories
-ROOT = Path(__file__).resolve().parent.parent
-BASE_PATH = Path(__file__).resolve().parent
+# # Project Directories
+# ROOT = Path(__file__).resolve().parent.parent
+# BASE_PATH = Path(__file__).resolve().parent
 
 
 api_router_bee = APIRouter(prefix="/Bee")
@@ -25,6 +28,8 @@ api_router_bee = APIRouter(prefix="/Bee")
 ROOT = Path(__file__).resolve().parent.parent
 BASE_PATH = Path(__file__).resolve().parent
 TEMPLATES = Jinja2Templates(directory=str(BASE_PATH / "templates"))
+
+
 @api_router_bee.get("/", status_code=200)
 def root(
     request: Request,
@@ -57,12 +62,11 @@ def fetch_participant(
         raise HTTPException(
             status_code=404, detail=f"Participant with ID {participant_id} not found"
         )
-
     return result
 
 
 @api_router_bee.get("/Participants/{participant_id}/CellMeasurements", status_code=200, response_model=CellMeasurementSearchResults)
-def fetch_participant(
+def fetch_measurement_of_participant(
     *,
     participant_id: int,
     db: Session = Depends(deps.get_db),
@@ -70,9 +74,9 @@ def fetch_participant(
     """
     Fetch a single recipe by ID
     """
-    result = crud.participant.get_by_id(db=db, id=participant_id)
-    result=result.cellMeasurement
-    if  result==[]:
+    participant = crud.participant.get(db=db, id=participant_id)
+    result=participant.cellMeasurements
+    if  not result:
         # the exception is raised, not returned - you will get a validation
         # error otherwise.
         raise HTTPException(
@@ -84,7 +88,7 @@ def fetch_participant(
 
 
 @api_router_bee.get("/Participants/{participant_id}/CellMeasurements/AirData", status_code=200, response_model=AirDataSearchResults)
-def fetch_participant(
+def fetch_airData_of_participant(
     *,
     participant_id: int,
     db: Session = Depends(deps.get_db),
@@ -92,24 +96,24 @@ def fetch_participant(
     """
     Fetch a single recipe by ID
     """
-    res=[]
-    result = crud.participant.get_by_id(db=db, id=participant_id)
-    for i in result.cellMeasurement:
-        res.append(i.airdata_data)
+
+    participant = crud.participant.get(db=db, id=participant_id)
+    result=[i.airData for i in participant.cellMeasurements]
     
-    if  res==[]:
+
+    if  not result:
         # the exception is raised, not returned - you will get a validation
         # error otherwise.
         raise HTTPException(
             status_code=404, detail=f"Participant with ID {participant_id} not found"
         )
 
-    return {"results": list(res)}
+    return {"results": list(result)}
 
 @api_router_bee.post("/Participants/", status_code=201, response_model=Participant)
 def create_Participant(
     *, recipe_in: ParticipantCreate, db: Session = Depends(deps.get_db)
-) -> dict:
+) -> Any:
     """
     Create a new participant in the database.
     """
@@ -119,7 +123,7 @@ def create_Participant(
 
 
 @api_router_bee.get("/Participants/", status_code=200, response_model=ParticipantSearchResults)
-def search_Participant(
+def search_All_Participant(
     *,
     max_results: Optional[int] = 10,
     db: Session = Depends(deps.get_db),
@@ -132,6 +136,48 @@ def search_Participant(
     return {"results": list(Participants)[:max_results]}
 
 
+@api_router_bee.get("/Participant/{participant_id}/Recommendation", status_code=200, response_model=RecommendationSearchResults)
+def fetch_campaign(
+    *,
+    participant_id: int,
+    db: Session = Depends(deps.get_db),
+) -> dict:
+    """
+    Fetch a single recipe by ID
+    """
+    Participant = crud.participant.get(db=db, id=participant_id)
+    
+    # res.append(result.priority)
+    if not Participant:
+        # the exception is raised, not returned - you will get a validation
+        # error otherwise.
+        raise HTTPException(
+            status_code=404, detail=f"Recipe with ID {participant_id} not found"
+        )
+    return {"results": list(Participant.recommendations)}
+
+
+
+
+@api_router_bee.get("/Participant/{participant_id}/MeasurementPromise", status_code=200, response_model=MeasurementPromiseSearchResults)
+def fetch_campaign(
+    *,
+    participant_id: int,
+    db: Session = Depends(deps.get_db),
+) -> dict:
+    """
+    Fetch a single recipe by ID
+    """
+    Participant = crud.participant.get(db=db, id=participant_id)
+    
+    # res.append(result.priority)
+    if not Participant:
+        # the exception is raised, not returned - you will get a validation
+        # error otherwise.
+        raise HTTPException(
+            status_code=404, detail=f"Recipe with ID {participant_id} not found"
+        )
+    return {"results": list(Participant.promises)}
 ##################################################### QueenBee ################################################################################
 
 
@@ -153,8 +199,10 @@ def fetch_queenBee(
         )
 
     return result
+
+
 @api_router_bee.get("/QueenBees/", status_code=200, response_model=QueenBeeSearchResults)
-def search_Participant(
+def search_All_QueenBees(
     *,
     max_results: Optional[int] = 10,
     db: Session = Depends(deps.get_db),
@@ -166,8 +214,9 @@ def search_Participant(
     
     return {"results": list(QueenBees)[:max_results]}
 
+
 @api_router_bee.post("/QueenBees/", status_code=201, response_model=QueenBee)
-def create_QueemBee(
+def create_QueenBee(
     *, recipe_in: QueenBeeCreate, db: Session = Depends(deps.get_db)
 ) -> dict:
     """

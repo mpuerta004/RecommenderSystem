@@ -1,8 +1,5 @@
-from pydantic import BaseModel, HttpUrl
-
-
+from pydantic import BaseModel
 from typing import Sequence
-from datetime import datetime, time, timedelta
 
 class SurfaceBase(BaseModel):
     campaign_id:int

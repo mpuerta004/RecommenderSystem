@@ -10,42 +10,7 @@ from models.Participant import Participant
 from models.Cell import Cell
 from db.base_class import Base
 from models.AirData import AirData
-
-from sqlalchemy import func
-from sqlalchemy.types import UserDefinedType
-
-from sqlalchemy import func
-from sqlalchemy.types import UserDefinedType, Float
-class Point(UserDefinedType):
-
-    def get_col_spec(self):
-        return "POINT"
-
-    def bind_expression(self,bindvalue ):
-        return func.ST_PointFromText(bindvalue, type=self)
-
-    def column_expression(self, col):
-        return func.ST_AsText(col, type_=self)
-    def bind_processor(self, dialect):
-        def process(value):
-            if value is None:
-                return None
-            assert isinstance(value, list)
-            print(value)
-            lat, lng = value
-            return "POINT(%s %s)" % (lng, lat)
-        return process
-
-    def result_processor(self, dialect, coltype):
-        def process(value):
-            if value is None:
-                return None
-            #m = re.match(r'^POINT\((\S+) (\S+)\)$', value)
-            #lng, lat = m.groups()
-            lng, lat = value[6:-1].split()  # 'POINT(135.00 35.00)' => ('135.00', '35.00')
-            return (float(lat), float(lng))
-        return process
-
+from models.Point import Point
 
 class CellMeasurement(Base):
     __tablename__='CellMeasurement'
@@ -57,10 +22,4 @@ class CellMeasurement(Base):
     airdata_id=Column(Integer, ForeignKey(AirData.id), default=None)
     location=Column(Point)
     
-    cells=relationship("Cell", back_populates="measurements")
-    participants=relationship("Participant", back_populates="cellMeasurement")
-    airdata_data=relationship("AirData",back_populates="cellMeasurement")
-    # priority=relationship("CellPriority",back_populates="cellMeasurements")
-
-    # airData=relationship("AirData",back_populates="measurement")
-   
+    airData= relationship("AirData", back_populates="cellMeasurement")

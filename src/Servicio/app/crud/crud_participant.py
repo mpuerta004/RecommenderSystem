@@ -8,9 +8,11 @@ from schemas.Participant import ParticipantCreate, ParticipantUpdate, Participan
 
 
 class CRUDParticipant(CRUDBase[Participant, ParticipantCreate, ParticipantUpdate]):
-    def get_by_id(self, db: Session, *, id:int) -> Optional[Participant]:
-        return db.query(Participant).filter(Participant.id == id).first()
-
+    # def get_by_id(self, db: Session, *, id:int) -> Optional[Participant]:
+    #     return db.query(Participant).filter(Participant.id == id).first()
+    #Todo: todos los usuario que participan en una campaña 
+    #Todo: todos los usuarios de una ciudad 
+    #Todo: todos los datos de la campaña 
    
     def update(
         self, db: Session, *, db_obj: Participant, obj_in: Union[ParticipantUpdate, Dict[str, Any]]

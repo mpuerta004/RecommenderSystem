@@ -1,5 +1,5 @@
-from typing import Optional, Union, Sequence
-from pydantic import BaseModel, EmailStr
+from typing import Optional, Sequence
+from pydantic import BaseModel
 
 
 class QueenBeeBase(BaseModel):
@@ -7,7 +7,7 @@ class QueenBeeBase(BaseModel):
     surname: str=None
     age: int
     gender: str=None
-    city: str
+    city: str=None
 
 
 # Properties to receive via API on creation
@@ -18,11 +18,11 @@ class QueenBeeCreate(QueenBeeBase):
 
 # Properties to receive via API on update
 class QueenBeeUpdate(QueenBeeBase):
-    ...
+    pass
 
 
 class QueenBeeInDBBase(QueenBeeBase):
-    id: Optional[int] = None
+    id: int = None
 
     class Config:
         orm_mode = True

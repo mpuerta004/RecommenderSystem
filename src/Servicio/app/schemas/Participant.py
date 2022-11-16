@@ -1,13 +1,13 @@
-from typing import Optional, Union,Sequence
-from pydantic import BaseModel, EmailStr
+from typing import Sequence,Optional
+from pydantic import BaseModel
 
 
 class ParticipantBase(BaseModel):
     name: str 
-    surname: str=None
+    surname: Optional[str]=None
     age: int
     gender:str=None
-    city: str
+    city: str=None
 
     
 # Properties to receive via API on creation

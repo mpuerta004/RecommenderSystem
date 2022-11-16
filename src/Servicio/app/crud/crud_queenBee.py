@@ -8,8 +8,10 @@ from schemas.QueenBee import QueenBeeCreate, QueenBeeUpdate
 
 
 class CRUDQueenBee(CRUDBase[QueenBee, QueenBeeCreate, QueenBeeUpdate]):
-    def get_by_id(self, db: Session, *, id:int) -> Optional[QueenBee]:
-        return db.query(QueenBee).filter(QueenBee.id == id).first()
+    # def get_by_id(self, db: Session, *, id:int) -> Optional[QueenBee]:
+    #     return db.query(QueenBee).filter(QueenBee.id == id).first()
+     #Todo: todos los usuario que participan en una campaña 
+    #Todo: todos los usuarios de una ciudad 
 
     def update(
         self, db: Session, *, db_obj: QueenBee, obj_in: Union[QueenBeeUpdate, Dict[str, Any]]

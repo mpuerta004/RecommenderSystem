@@ -14,8 +14,7 @@ class Surface(Base):
     campaign_id=Column(Integer,ForeignKey(Campaign.id))
     
     
-    campaigns=relationship("Campaign", back_populates="surfaces")
-    cells = relationship("Cell", back_populates="surfaces_cells")
+    cells = relationship("Cell")
 
     #De este modo se define una relacion inversa... no se si seran utiles. 
     #queenBee=relationship("Campaign", back_populates="campaigns")

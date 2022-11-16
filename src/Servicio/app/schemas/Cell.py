@@ -24,7 +24,7 @@ class CellCreate(CellBase):
 
 
 class CellUpdate(CellBase):
-    ...
+    pass
 
 # Properties shared by models stored in DB
 class CellInDBBase(CellBase):

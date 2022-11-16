@@ -6,3 +6,6 @@ from .crud_cell import cell
 from .crud_AirData import airData
 from .crud_cellMeasurement import cellMeasurement
 from .crud_cellPriority import cellPriority
+from .crud_measurementPromise import measurementPromise
+from .crud_recommendation import recommendation
+from .crud_state import state

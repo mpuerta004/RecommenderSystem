@@ -1,11 +1,10 @@
-from pydantic import BaseModel, HttpUrl
-
-
+from pydantic import BaseModel
 from typing import Sequence
-from datetime import datetime, time, timedelta
+from datetime import datetime
 
 class CampaignBase(BaseModel):
     queenBee_id:int
+    city:str
     start_timestamp:datetime
     cell_edge:int=10
     min_samples:int=12
@@ -18,7 +17,7 @@ class CampaignCreate(CampaignBase):
 
 
 class CampaignUpdate(CampaignBase):
-    ...
+    pass
 
 # Properties shared by models stored in DB
 class CampaignInDBBase(CampaignBase):
@@ -30,7 +29,6 @@ class CampaignInDBBase(CampaignBase):
 
 # Properties to return to client
 class Campaign(CampaignInDBBase):
-
     pass
 
 

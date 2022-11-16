@@ -8,6 +8,9 @@ from sqlalchemy.orm import Session
 from schemas.Campaign import CampaignSearchResults, Campaign, CampaignCreate
 from schemas.Participant import Participant, ParticipantCreate, ParticipantSearchResults
 from schemas.CellPriority import CellPriority, CellPriorityCreate, CellPrioritySearchResults
+from schemas.Recommendation import Recommendation, RecommendationCreate, RecommendationSearchResults
+from schemas.MeasurementPromise import MeasurementPromise, MeasurementPromiseCreate, MeasurementPromiseUpdate
+from schemas.State import State, StateCreate, StateUpdate
 
 from schemas.QueenBee import QueenBee, QueenBeeCreate, QueenBeeSearchResults
 from schemas.AirData import AirData, AirDataCreate, AirDataSearchResults
@@ -18,6 +21,7 @@ from schemas.Surface import SurfaceSearchResults, Surface, SurfaceCreate
 import deps
 import crud
 from routes import Bee 
+from routes import Campaigns
 
 # Project Directories
 ROOT = Path(__file__).resolve().parent.parent
@@ -28,7 +32,7 @@ TEMPLATES = Jinja2Templates(directory=str(BASE_PATH / "templates"))
 app = FastAPI(title="Micro-volunteer Engine",version=1.0, openapi_url="/openapi.json")
 
 app.include_router(Bee.api_router_bee)
-
+app.include_router(Campaigns.api_router_campaign)
 api_router = APIRouter()
 
 # Updated to serve a Jinja2 template
@@ -48,80 +52,6 @@ def root(
         {"request": request, "recipes": campaign},
     )
 
-
-
-##################################################### Campaign ################################################################################
-
-@api_router.get("/Campaigns/{Campaign_id}", status_code=200, response_model=Campaign)
-def fetch_campaign(
-    *,
-    Campaign_id: int,
-    db: Session = Depends(deps.get_db),
-) -> Any:
-    """
-    Fetch a single recipe by ID
-    """
-    result = crud.campaign.get(db=db, id=Campaign_id)
-    if not result:
-        # the exception is raised, not returned - you will get a validation
-        # error otherwise.
-        raise HTTPException(
-            status_code=404, detail=f"Recipe with ID {Campaign_id} not found"
-        )
-    return result
-
-
-@api_router.post("/Campaigns/", status_code=201, response_model=Campaign)
-def create_Campaimg(
-    *, recipe_in: CampaignCreate, number_cells:int,db: Session = Depends(deps.get_db)
-) -> dict:
-    """
-    Create a new recipe in the database.
-    """
-    Campaign = crud.campaign.create(db=db, obj_in=recipe_in)
-    #TODO: Esto iria enlazado con el programa que permite seleccionar las celdas de la campaña pero de momento esto nos vale. 
-    surface=SurfaceCreate(campaign_id=Campaign.id)
-    Surface=crud.surface.create(db=db, obj_in=surface)
-    for i in range(number_cells):
-        cell_create=CellCreate(surface_id=Surface.id,inferior_coord=Point(x=0,y=0))
-        cell=crud.cell.create(db=db,obj_in=cell_create)
-    return Campaign
-
-
-@api_router.get("/Campaigns/", status_code=200, response_model=CampaignSearchResults)
-def search_AllCampaign(
-    *,
-    max_results: Optional[int] = 10,
-    db: Session = Depends(deps.get_db),
-) -> dict:
-    """
-    Search for recipes based on label keyword
-    """
-    Campaigns = crud.campaign.get_multi(db=db, limit=max_results)
-    
-    return {"results": list(Campaigns)[:max_results]}
-
-
-@api_router.get("/Campaigns/{Campaign_id}/Surface", status_code=200, response_model=CellSearchResults)
-def fetch_Surface_of_Campaign(
-    *,
-    Campaign_id: int,
-    db: Session = Depends(deps.get_db),
-) -> Any:
-    """
-    Fetch a single recipe by ID
-    """
-    result=[]
-    Campaign = crud.campaign.get(db=db, id=Campaign_id)
-    for i in Campaign.surfaces:
-        result.append(i)
-    if result==[]:
-        # the exception is raised, not returned - you will get a validation
-        # error otherwise.
-        raise HTTPException(
-            status_code=404, detail=f"Recipe with ID {Campaign_id} not found"
-        )
-    return {"results": list(result)}
 
 
 ##################################################### Cells ################################################################################
@@ -262,7 +192,6 @@ def search_AllAirData(
 
 
 
-
 ##################################################### CellMeasurement ################################################################################
 
 @api_router.get("/CellMeasurement/{CellMeasurement_id}", status_code=200, response_model=CellMeasurement)
@@ -338,40 +267,78 @@ def search_AllAirData(
 
 ##################################################### CellPriorirty ################################################################################
 
-@api_router.get("/Cell/{Cell_id}/Priority", status_code=200, response_model=CellPrioritySearchResults)
+@api_router.get("/Cell/{cell_id}/Priority", status_code=200, response_model=CellPrioritySearchResults)
 def fetch_campaign(
     *,
     cell_id: int,
     db: Session = Depends(deps.get_db),
-) -> Any:
+) -> dict:
     """
     Fetch a single recipe by ID
     
     
     """
-    res=[]
-    result = crud.cell.get(db=db, id=cell_id)
-        
-    res.append(result.priority)
-    if res==[]:
+    cell = crud.cell.get(db=db, id=cell_id)
+    
+    # res.append(result.priority)
+    if not cell:
         # the exception is raised, not returned - you will get a validation
         # error otherwise.
         raise HTTPException(
             status_code=404, detail=f"Recipe with ID {cell_id} not found"
         )
-    return {"results": list(res)}
+    return {"results": list(cell.priority)}
 
 
 
 @api_router.post("/Cell/Priority", status_code=201, response_model=CellPriority)
 def create_Priority(
     *, recipe_in: CellPriorityCreate,db: Session = Depends(deps.get_db)
-) -> CellPriority:
+) -> dict:
     """
     Create a new recipe in the database.
     """
     
     cellPriority = crud.cellPriority.create(db=db, obj_in=recipe_in)
+    return cellPriority
+
+
+
+@api_router.post("/Recommendation", status_code=201, response_model=Recommendation)
+def create_Priority(
+    *, recipe_in: RecommendationCreate,db: Session = Depends(deps.get_db)
+) -> dict:
+    """
+    Create a new recipe in the database.
+    """
+    
+    cellPriority = crud.recommendation.create(db=db, obj_in=recipe_in)
+    return cellPriority
+
+
+
+@api_router.post("/Status", status_code=201, response_model=State)
+def create_Priority(
+    *, recipe_in: StateCreate,db: Session = Depends(deps.get_db)
+) -> Any:
+    """
+    Create a new recipe in the database.
+    """
+    
+    cellPriority = crud.state.create(db=db, obj_in=recipe_in)
+    return cellPriority
+
+
+
+@api_router.post("/MeasurementPromise", status_code=201, response_model=MeasurementPromise)
+def create_Priority(
+    *, recipe_in: MeasurementPromiseCreate,db: Session = Depends(deps.get_db)
+) -> dict:
+    """
+    Create a new recipe in the database.
+    """
+    
+    cellPriority = crud.measurementPromise.create(db=db, obj_in=recipe_in)
     return cellPriority
 
 
