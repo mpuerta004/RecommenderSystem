@@ -75,8 +75,8 @@ CREATE TABLE Boundary (
 -- -----------------------------------------------------
 CREATE TABLE Cell (
   id INT NOT NULL AUTO_INCREMENT UNIQUE,
-  inferior_coord POINT NULL DEFAULT NULL,
-  superior_coord POINT NULL DEFAULT NULL,
+  inferior_coord POINT not null,
+  superior_coord POINT not null,
   center POINT NULL DEFAULT NULL,
   cell_type VARCHAR(30) NULL DEFAULT 'Dynamic',
   surface_id INT NULL DEFAULT NULL,

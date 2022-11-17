@@ -9,12 +9,21 @@ from schemas.CellMeasurement import CellMeasurement, CellMeasurementCreate, Cell
 from schemas.Campaign import CampaignSearchResults, Campaign, CampaignCreate
 from schemas.Participant import Participant, ParticipantCreate, ParticipantSearchResults
 from schemas.QueenBee import QueenBee, QueenBeeCreate, QueenBeeSearchResults
+from schemas.CellPriority import CellPriority, CellPriorityCreate, CellPrioritySearchResults
+from datetime import datetime, timedelta
 from schemas.Cell import Cell, CellCreate, CellSearchResults, Point
 from crud import crud_cell
 from schemas.Surface import SurfaceSearchResults, Surface, SurfaceCreate
 import deps
 import crud
-
+import numpy as np
+from io import BytesIO
+from starlette.responses import StreamingResponse
+import sys
+import cv2
+import numpy as np
+from io import BytesIO
+from starlette.responses import StreamingResponse
 # # Project Directories
 # ROOT = Path(__file__).resolve().parent.parent
 # BASE_PATH = Path(__file__).resolve().parent
@@ -40,6 +49,35 @@ TEMPLATES = Jinja2Templates(directory=str(BASE_PATH / "templates"))
 #         "index.html",
 #         {"request": request, "recipes": campaign},
 #     )
+
+
+
+@api_router_campaign.get("/", status_code=200)
+def root(
+    request: Request,
+    db: Session = Depends(deps.get_db),
+) -> Any:
+    """
+    Root GET
+    """
+    return None
+@api_router_campaign.get("/Surface/{Surface_id}/", status_code=200)
+def draw_campaign(
+    request: Request,
+    Surface_id:int,
+    db: Session = Depends(deps.get_db),
+) -> Any:
+    """
+    Root GET
+    """
+    imagen = 255*np.ones((600,1000,3),dtype=np.uint8)
+    surfaces= crud.surface.get(db=db,id=Surface_id)
+    for j in surfaces.cells:
+        # cell = crud.cell.get(db=db, id=j.id)
+        cv2.rectangle(imagen,pt1=(int(j.superior_coord[0]),int(j.superior_coord[1])), pt2=(int(j.inferior_coord[0]),int(j.inferior_coord[1])),color=(0,0,0))
+    res, im_png = cv2.imencode(".png", imagen)
+    return StreamingResponse(BytesIO(im_png.tobytes()), media_type="image/png")
+
 
 @api_router_campaign.get("/", status_code=200, response_model=CampaignSearchResults)
 def search_AllCampaign(
@@ -88,8 +126,13 @@ def create_Campaimg(
     surface=SurfaceCreate(campaign_id=Campaign.id)
     Surface=crud.surface.create(db=db, obj_in=surface)
     for i in range(number_cells):
-        cell_create=CellCreate(surface_id=Surface.id,inferior_coord=Point(x=0,y=0))
+        coord_x=((i%5)+1)*100
+        coord_y=((i//5)+1)*100
+        cell_create=CellCreate(surface_id=Surface.id,superior_coord=Point(x=coord_x,y=coord_y), inferior_coord=Point(x=coord_x+100,y=coord_y+100))
         cell=crud.cell.create(db=db,obj_in=cell_create)
+        #Todo:Estas prioridades deben estar al menos bien echas... pilla la formula y carlcula la primera! 
+        Cell_priority=CellPriorityCreate(cell_id=cell.id,timestamp=Campaign.start_timestamp,temporal_priority=10.0,trend_priority=0.0)
+        priority=crud.cellPriority.create(db=db, obj_in=Cell_priority)
     return Campaign
 
 

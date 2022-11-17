@@ -19,15 +19,21 @@ from schemas.CellMeasurement import CellMeasurement, CellMeasurementCreate, Cell
 from schemas.Cell import Cell, CellCreate, CellSearchResults, Point
 from schemas.Surface import SurfaceSearchResults, Surface, SurfaceCreate
 import deps
+from fastapi.responses import FileResponse
 import crud
 from routes import Bee 
 from routes import Campaigns
+import cv2
+import numpy as np
+import numpy as np
+from io import BytesIO
+from starlette.responses import StreamingResponse
+import sys
 
-# Project Directories
+
 ROOT = Path(__file__).resolve().parent.parent
 BASE_PATH = Path(__file__).resolve().parent
 TEMPLATES = Jinja2Templates(directory=str(BASE_PATH / "templates"))
-
 
 app = FastAPI(title="Micro-volunteer Engine",version=1.0, openapi_url="/openapi.json")
 
@@ -42,15 +48,63 @@ api_router = APIRouter()
 def root(
     request: Request,
     db: Session = Depends(deps.get_db),
-) -> dict:
+) -> Any:
     """
     Root GET
     """
-    campaign = crud.campaign.get_multi(db=db, limit=10)
-    return TEMPLATES.TemplateResponse(
-        "index.html",
-        {"request": request, "recipes": campaign},
-    )
+    imagen = 255*np.ones((1000,1500,3),dtype=np.uint8)
+    campañas_activas= crud.campaign.get_multi(db=db)
+    count=-1
+    for c in campañas_activas:
+
+
+        count=count+1
+        count2=-1
+        cv2.putText(imagen, f"Campaign: id={c.id},", (100+count*600,50), cv2.FONT_HERSHEY_SIMPLEX , 0.75, (0,0,0))
+        cv2.putText(imagen, f"city={c.city}", (100+count*600,80), cv2.FONT_HERSHEY_SIMPLEX , 0.75, (0,0,0))
+
+
+        for i in c.surfaces:
+            count2=count2+1
+            for j in i.cells:
+                # cell = crud.cell.get(db=db, id=j.id)
+                prioridad=crud.cellPriority.get_last(db=db,cell_id=j.id)     
+                temporal_prioridad=prioridad.temporal_priority
+                if temporal_prioridad>2.5: # ROJO
+                    color=(201,191,255)
+                elif temporal_prioridad<1.5: #VERDE
+                    color=(175,243,184)
+                else: #NARANJA
+                    color=(191, 355, 255) 
+                cv2.rectangle(imagen,pt1=(int(j.superior_coord[0])+count*600,int(j.superior_coord[1])), pt2=(int(j.inferior_coord[0])+count*600,int(j.inferior_coord[1])),color=color ,thickness = -1)
+                cv2.rectangle(imagen,pt1=(int(j.superior_coord[0])+count*600,int(j.superior_coord[1])), pt2=(int(j.inferior_coord[0])+count*600,int(j.inferior_coord[1])),color=(0,0,0))   
+    
+    Participants = crud.participant.get_multi(db=db, limit=100000)
+    n_participants =len(list(Participants))
+    QueenBees = crud.queenBee.get_multi(db=db, limit=100000)
+    n_queenBees =len(list(QueenBees))
+    cv2.putText(imagen, f"n QueenBees:", (50+(count+1)*600,50), cv2.FONT_HERSHEY_SIMPLEX , 0.75, (0,0,0))
+    cv2.putText(imagen, f"{n_queenBees}", (100+(count+1)*600,90), cv2.FONT_HERSHEY_SIMPLEX , 0.75, (0,0,0))
+    
+    cv2.putText(imagen, f"n Participants:", (50+(count+1)*600,150), cv2.FONT_HERSHEY_SIMPLEX , 0.75, (0,0,0))
+    cv2.putText(imagen, f"{n_participants}", (100+(count+1)*600,190), cv2.FONT_HERSHEY_SIMPLEX , 0.75, (0,0,0))
+    #Dibujando un círculos
+    # cv2.circle(imagen,(300,200),100,(255,255,0),-1)
+    # cv2.circle(imagen,(300,20),10,(255,0,255),3)
+
+     # Returns a cv2 image array from the document vector
+    
+    res, im_png = cv2.imencode(".png", imagen)
+    return StreamingResponse(BytesIO(im_png.tobytes()), media_type="image/png")
+   
+    
+    # return FileResponse("/home/ubuntu/carpeta_compartida_docker/RecommenderSystem/src/Servicio/app/PhD.jpg")
+# Project Directories
+    # campaign = crud.campaign.get_multi(db=db, limit=10)
+    # return TEMPLATES.TemplateResponse(
+    #     "index.html",
+    #     {"request": request, "recipes": campaign},
+    # )
 
 
 

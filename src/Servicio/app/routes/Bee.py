@@ -268,7 +268,7 @@ def search_All_QueenBees(
     """
     Search for recipes based on label keyword
     """
-    QueenBees = crud.participant.get_multi(db=db, limit=max_results)
+    QueenBees = crud.queenBee.get_multi(db=db, limit=max_results)
     
     return {"results": list(QueenBees)[:max_results]}
 

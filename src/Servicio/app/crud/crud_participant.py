@@ -11,8 +11,9 @@ class CRUDParticipant(CRUDBase[Participant, ParticipantCreate, ParticipantUpdate
     # def get_by_id(self, db: Session, *, id:int) -> Optional[Participant]:
     #     return db.query(Participant).filter(Participant.id == id).first()
     #Todo: todos los usuario que participan en una campaña 
-    #Todo: todos los usuarios de una ciudad 
     #Todo: todos los datos de la campaña 
+    
+    
     def get_participant_of_city(self, db: Session, *, city:str) -> List[ Participant]:
         return db.query(Participant).filter(Participant.city == city).all()
     

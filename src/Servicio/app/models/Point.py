@@ -21,7 +21,6 @@ class Point(UserDefinedType):
             if value is None:
                 return None
             assert isinstance(value, list)
-            print(value)
             lat, lng = value
             return "POINT(%s %s)" % (lng, lat)
         return process

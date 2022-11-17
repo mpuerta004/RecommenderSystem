@@ -8,6 +8,9 @@ from sqlalchemy.orm import Session
 from crud.base import CRUDBase
 
 class CRUDCellPriority(CRUDBase[CellPriority, CellPriorityCreate, CellPriorityUpdate]):
-    pass
+    def get_last(self, db: Session, *, cell_id:int) -> CellPriority:
+        return db.query(CellPriority).filter(CellPriority.cell_id == cell_id).order_by(CellPriority.timestamp.desc()).first()
+    
+
 
 cellPriority = CRUDCellPriority(CellPriority)

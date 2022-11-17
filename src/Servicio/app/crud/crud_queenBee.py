@@ -11,7 +11,6 @@ from schemas.QueenBee import QueenBeeCreate, QueenBeeUpdate
 class CRUDQueenBee(CRUDBase[QueenBee, QueenBeeCreate, QueenBeeUpdate]):
     def get_queenBee_of_city(self, db: Session, *, city:str) -> List[ QueenBee]:
         return db.query(QueenBee).filter(QueenBee.city == city).all()
-    #Todo: todos los usuario que participan en una campaña 
 
     def update(
         self, db: Session, *, db_obj: QueenBee, obj_in: Union[QueenBeeUpdate, Dict[str, Any]]
