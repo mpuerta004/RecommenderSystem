@@ -9,3 +9,4 @@ from .crud_cellPriority import cellPriority
 from .crud_measurementPromise import measurementPromise
 from .crud_recommendation import recommendation
 from .crud_state import state
+from .crud_Slot import slot

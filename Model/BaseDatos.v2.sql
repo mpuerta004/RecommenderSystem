@@ -4,7 +4,7 @@ Use SocioBee;
 
 
 -- -----------------------------------------------------
--- Table sociobee.airdata
+-- Table Airdata
 -- -----------------------------------------------------
 CREATE TABLE AirData (
   id INT NOT NULL AUTO_INCREMENT UNIQUE,
@@ -58,7 +58,7 @@ CREATE TABLE Surface (
 
 
 -- -----------------------------------------------------
--- Table sociobee.boundary
+-- Table Boundary
 -- -----------------------------------------------------
 CREATE TABLE Boundary (
   id INT NOT NULL AUTO_INCREMENT UNIQUE,
@@ -68,6 +68,7 @@ CREATE TABLE Boundary (
     FOREIGN KEY (surface_id)
     REFERENCES Surface (id))
 ;
+
 
 
 -- -----------------------------------------------------
@@ -84,6 +85,22 @@ CREATE TABLE Cell (
     FOREIGN KEY (surface_id)
     REFERENCES Surface (id)
     );
+
+
+
+-- -----------------------------------------------------
+-- Table Slot
+-- -----------------------------------------------------
+CREATE TABLE Slot (
+id int not null auto_increment unique,
+cell_id int not null,
+start_timestamp timestamp, 
+end_timestamp timestamp, 
+PRIMARY key(cell_id,id),
+FOREIGN KEY (cell_id)
+    REFERENCES Cell (id)
+);
+
 
 -- -----------------------------------------------------
 -- Table State
@@ -183,12 +200,12 @@ CREATE TABLE MeasurementPromise (
 -- Table CellPriority
 -- -----------------------------------------------------
 CREATE TABLE CellPriority (
-  cell_id INT NOT NULL,
+  slot_id INT NOT NULL ,
   timestamp TIMESTAMP NOT NULL,
   temporal_priority float8 NULL DEFAULT NULL,
   trend_priority float8 NULL DEFAULT NULL,
-  PRIMARY KEY (cell_id, timestamp),
-    FOREIGN KEY (cell_id)
-    REFERENCES Cell (id));
+  PRIMARY KEY (slot_id, timestamp),
+    FOREIGN KEY (slot_id)
+    REFERENCES Slot (id));
 
 

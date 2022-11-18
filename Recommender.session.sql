@@ -1,1 +1,1 @@
-SELECT * from Cell
+SELECT * from CellPriority where cell_id=1

@@ -17,7 +17,7 @@ class Cell(Base):
     center = Column(Point)
     cell_type = Column(String, default="Dynamic")
 
-    priority = relationship("CellPriority")
+    slots = relationship("Slot")
     measurements = relationship("CellMeasurement")
     recommendations=relationship("Recommendation")
     promise=relationship("MeasurementPromise")

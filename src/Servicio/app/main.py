@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session
 from schemas.Campaign import CampaignSearchResults, Campaign, CampaignCreate
 from schemas.Participant import Participant, ParticipantCreate, ParticipantSearchResults
 from schemas.CellPriority import CellPriority, CellPriorityCreate, CellPrioritySearchResults
+from schemas.Slot import Slot, SlotCreate, SlotSearchResults
 from schemas.Recommendation import Recommendation, RecommendationCreate, RecommendationSearchResults
 from schemas.MeasurementPromise import MeasurementPromise, MeasurementPromiseCreate, MeasurementPromiseUpdate
 from schemas.State import State, StateCreate, StateUpdate
@@ -68,7 +69,8 @@ def root(
             count2=count2+1
             for j in i.cells:
                 # cell = crud.cell.get(db=db, id=j.id)
-                prioridad=crud.cellPriority.get_last(db=db,cell_id=j.id)     
+                las_slot=crud.slot.get_last_of_Cell(db=db,cell_id=j.id)
+                prioridad=crud.cellPriority.get_last(db=db,slot_id=las_slot.id)     
                 temporal_prioridad=prioridad.temporal_priority
                 if temporal_prioridad>2.5: # ROJO
                     color=(201,191,255)
@@ -348,6 +350,19 @@ def fetch_campaign(
 @api_router.post("/Cell/Priority", status_code=201, response_model=CellPriority)
 def create_Priority(
     *, recipe_in: CellPriorityCreate,db: Session = Depends(deps.get_db)
+) -> dict:
+    """
+    Create a new recipe in the database.
+    """
+    
+    cellPriority = crud.cellPriority.create(db=db, obj_in=recipe_in)
+    return cellPriority
+
+
+
+@api_router.post("/Cell/Slot", status_code=201, response_model=Slot)
+def create_Priority(
+    *, recipe_in: SlotCreate,db: Session = Depends(deps.get_db)
 ) -> dict:
     """
     Create a new recipe in the database.

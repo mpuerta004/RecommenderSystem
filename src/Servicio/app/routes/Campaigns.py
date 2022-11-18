@@ -9,6 +9,8 @@ from schemas.CellMeasurement import CellMeasurement, CellMeasurementCreate, Cell
 from schemas.Campaign import CampaignSearchResults, Campaign, CampaignCreate
 from schemas.Participant import Participant, ParticipantCreate, ParticipantSearchResults
 from schemas.QueenBee import QueenBee, QueenBeeCreate, QueenBeeSearchResults
+from schemas.Slot import Slot, SlotCreate,SlotSearchResults
+
 from schemas.CellPriority import CellPriority, CellPriorityCreate, CellPrioritySearchResults
 from datetime import datetime, timedelta
 from schemas.Cell import Cell, CellCreate, CellSearchResults, Point
@@ -16,6 +18,8 @@ from crud import crud_cell
 from schemas.Surface import SurfaceSearchResults, Surface, SurfaceCreate
 import deps
 import crud
+from datetime import datetime
+import math
 import numpy as np
 from io import BytesIO
 from starlette.responses import StreamingResponse
@@ -24,9 +28,7 @@ import cv2
 import numpy as np
 from io import BytesIO
 from starlette.responses import StreamingResponse
-# # Project Directories
-# ROOT = Path(__file__).resolve().parent.parent
-# BASE_PATH = Path(__file__).resolve().parent
+
 
 
 api_router_campaign = APIRouter(prefix="/Campaigns")
@@ -130,8 +132,19 @@ def create_Campaimg(
         coord_y=((i//5)+1)*100
         cell_create=CellCreate(surface_id=Surface.id,superior_coord=Point(x=coord_x,y=coord_y), inferior_coord=Point(x=coord_x+100,y=coord_y+100))
         cell=crud.cell.create(db=db,obj_in=cell_create)
+        
+        end_time_slot= Campaign.start_timestamp + timedelta(seconds=Campaign.sampling_period)
+        slot_create=SlotCreate(cell_id=cell.id, start_timestamp=Campaign.start_timestamp, end_timestamp=end_time_slot)
+        slot=crud.slot.create(db=db,obj_in=slot_create)
+        
+        b = max(2, Campaign.min_samples - 0)
+        a = max(2, Campaign.min_samples - 0)
+        result = math.log(a) * math.log(b, 0 + 2)
+        print(result)
+        #Maximo de la prioridad temporal -> 8.908297157282622
+        #Minimo -> 0.1820547846864113
         #Todo:Estas prioridades deben estar al menos bien echas... pilla la formula y carlcula la primera! 
-        Cell_priority=CellPriorityCreate(cell_id=cell.id,timestamp=Campaign.start_timestamp,temporal_priority=10.0,trend_priority=0.0)
+        Cell_priority=CellPriorityCreate(slot_id=slot.id,timestamp=Campaign.start_timestamp,temporal_priority=result,trend_priority=0.0)
         priority=crud.cellPriority.create(db=db, obj_in=Cell_priority)
     return Campaign
 

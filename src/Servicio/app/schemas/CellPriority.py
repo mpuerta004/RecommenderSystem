@@ -10,7 +10,7 @@ from datetime import datetime, time, timedelta
 
 
 class CellPriorityBase(BaseModel):   
-    cell_id:int # INT,
+    slot_id:int # INT,
     timestamp:datetime
     temporal_priority:float
     trend_priority:float
