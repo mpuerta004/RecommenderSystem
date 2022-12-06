@@ -2,47 +2,46 @@ from pydantic import BaseModel, HttpUrl
 
 from schemas.Point import Point
 from typing import Sequence, Union
-
 from datetime import datetime, time, timedelta
 from typing import NamedTuple
 
 from pydantic import BaseModel, ValidationError
 from datetime import datetime, time, timedelta
+from schemas.Role import Role
 
-class BooleanModel(BaseModel):
-    bool_value: bool
 
-class StateBase(BaseModel): 
-    state:str="created"
-    timestamp_update:datetime=datetime.now()
-    initiative_human:bool=False
+class HiveBase(BaseModel):    
+    city:str
+    
     
 
-
-class StateCreate(StateBase):
-    initiative_human:bool=False
+class HiveCreate(HiveBase):
     pass
 
 
-class StateUpdate(StateBase):
-    pass
+class HiveUpdate(HiveBase):
+    ...
 
 # Properties shared by models stored in DB
-class StateInDBBase(StateBase):
-    id:int
+class HiveInDBBase(HiveBase):
+    id:int 
+    
     class Config:
         orm_mode = True
 
 
 # Properties to return to client
-class State(StateInDBBase):
-    pass
+class Hive(HiveInDBBase):
+    id:int 
+    member_role:Sequence[Role]=None
 
+    class Config:
+        orm_mode = True
 
 # Properties properties stored in DB
-class RecipeInDB(StateInDBBase):
+class RecipeInDB(HiveInDBBase):
     pass
 
 
-class StateSearchResults(BaseModel):
-    results: Sequence[State]
+class HiveSearchResults(BaseModel):
+    results: Sequence[Hive]

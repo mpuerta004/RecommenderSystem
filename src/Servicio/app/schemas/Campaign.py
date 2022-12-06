@@ -1,9 +1,11 @@
 from pydantic import BaseModel
 from typing import Sequence
 from datetime import datetime
+from schemas.Surface import Surface
+from schemas.Cell import Cell
 
 class CampaignBase(BaseModel):
-    queenBee_id:int
+    member_id:int
     city:str
     start_timestamp:datetime
     cell_edge:int=10
@@ -17,23 +19,27 @@ class CampaignCreate(CampaignBase):
 
 
 class CampaignUpdate(CampaignBase):
+    
     pass
 
 # Properties shared by models stored in DB
 class CampaignInDBBase(CampaignBase):
     id:int 
-    
+    hive_id:int
+    surfaces:Sequence[Surface]=None
+
     class Config:
         orm_mode = True
 
 
 # Properties to return to client
 class Campaign(CampaignInDBBase):
+    
     pass
 
 
 # Properties properties stored in DB
-class RecipeInDB(CampaignInDBBase):
+class RecipeInDB(BaseModel):
     pass
 
 

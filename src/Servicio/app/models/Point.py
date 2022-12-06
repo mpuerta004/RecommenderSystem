@@ -1,7 +1,6 @@
 from sqlalchemy import func
 from sqlalchemy.types import UserDefinedType
-# sys.path.append("/home/ubuntu/carpeta_compartida_docker/RecommenderSystem/src")
-# print(sys.path)
+
 
 
 

@@ -90,12 +90,13 @@ CREATE TABLE CellMeasurement (
 CREATE TABLE CellPriority (
    #This is the priority of pollinating a cell in the timeslot [start_timeSlot,start_timeSlot+sampling_period)
    cell_id INT,
-   cellMeasurement_id INT, #This is the mesurement that user realize to correct the priority
+   #cellMeasurement_id INT, #This is the mesurement that user realize to correct the priority
    timestamp TIMESTAMP,
+   n_slot INT,
    temporal_priority float8, 
    trend_priority float8, 
    FOREIGN KEY (cell_id) REFERENCES Cell(id), 
-   FOREIGN KEY (cellMeasurement_id) REFERENCES CellMeasurement(id),
+   #FOREIGN KEY (cellMeasurement_id) REFERENCES CellMeasurement(id),
    PRIMARY KEY (cell_id,timestamp)
 );
 
@@ -110,7 +111,7 @@ CREATE TAble Recommendation(
     recommendation_timestamp TIMESTAMP,
     cell_measurement_id INT default NULL,
     state Varchar(30)  default 'Rejected', #SET('Rejected', 'Open', 'Planning', 'Realized')
-    FOREIGN KEY (cell_id) REFERENCES CellPriority(cell_id),
+    #FOREIGN KEY (cell_id) REFERENCES CellPriority(cell_id),
     FOREIGN KEY (cell_id) REFERENCES Cell(id),
     FOREIGN KEY (participant_id) REFERENCES  Participant(id),
     FOREIGN KEY (cell_measurement_id) REFERENCES CellMeasurement(id),

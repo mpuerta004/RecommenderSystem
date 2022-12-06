@@ -7,16 +7,17 @@ from typing import NamedTuple
 
 from pydantic import BaseModel, ValidationError
 from datetime import datetime, time, timedelta
+from schemas.Point import Point
 
 
 class RecommendationBase(BaseModel):
     cell_id:int
-    participant_id:int
     cellMeasurement_id:int=None
-    recommendation_timestamp:datetime
+    recommendation_timestamp:datetime = datetime.now()
     planning_timestamp:datetime=None
-    state_id:int
-    pass
+    campaign_id:int
+    member_current_location:Point
+    
     
 
 class RecommendationCreate(RecommendationBase):
@@ -28,7 +29,10 @@ class RecommendationUpdate(RecommendationBase):
 
 # Properties shared by models stored in DB
 class RecommendationInDBBase(RecommendationBase):
-    
+    member_id:int
+    state_id:int
+    id:int
+    slot_id:int
     class Config:
         orm_mode = True
 

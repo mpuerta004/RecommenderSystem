@@ -1,1 +1,1 @@
-SELECT * from CellPriority where cell_id=1
+Select * from Member

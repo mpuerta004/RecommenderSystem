@@ -6,20 +6,27 @@ from sqlalchemy.orm import relationship
 from db.base_class import Base
 
 from models.Cell import Cell
-from models.Participant import Participant
+from models.Member import Member
 from models.CellMeasurement import CellMeasurement
 from models.State import State
+from models.Point import Point
 
-
-
+from models.Campaign import Campaign
+from models.Slot import Slot
 class Recommendation(Base):
     __tablename__='Recommendation'
-    cell_id=Column(Integer, ForeignKey(Cell.id),primary_key=True)
-    participant_id=Column(Integer, ForeignKey(Participant.id),primary_key=True)
-    recommendation_timestamp=Column(DateTime,primary_key=True)
+    cell_id=Column(Integer, ForeignKey(Cell.id))
+    member_id=Column(Integer, ForeignKey(Member.id),primary_key=True)
+    recommendation_timestamp=Column(DateTime)
     planning_timestamp=Column(DateTime,nullable=True)
     cellMeasurement_id=Column(Integer, ForeignKey(CellMeasurement.id),nullable=True)
     state_id=Column(Integer,ForeignKey(State.id))
-    
+    campaign_id=Column(Integer, ForeignKey(Campaign.id))
+    id=Column(Integer,primary_key=True,  autoincrement=True, nullable=False )
+    member_current_location=Column(Point)
+    slot_id=Column(Integer,ForeignKey(Slot.id))
     
     state=relationship("State")
+    
+    
+    

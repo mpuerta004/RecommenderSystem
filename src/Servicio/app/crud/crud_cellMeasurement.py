@@ -19,9 +19,22 @@ from models.Surface import Surface
 
 
 class CRUDCellMeasurement(CRUDBase[CellMeasurement, CellMeasurementCreate, CellMeasurementUpdate]):
-        pass
-
+        #TODO: el numero de mediciones por  slot!
+        # def get_last_of_Cell(self, db: Session, *, cell_id:int) -> CellMeasurement:
+        #         return db.query(CellMeasurement).filter(CellMeasurement.cell_id == cell_id ).order_by(Slot.end_timestamp.desc()).first()
+        def create_cellMeasurement(self, db: Session, *, obj_in: CellMeasurementCreate, member_id:int,slot_id:int) -> CellMeasurement:
+                obj_in_data = jsonable_encoder(obj_in) 
+                db_obj = self.model(**obj_in_data,member_id=member_id,slot_id=slot_id)  # type: ignore
+                db.add(db_obj)
+                db.commit()
+                db.refresh(db_obj)
+                return db_obj
+        
+        def get_CellMeasurement(self, db: Session, *, member_id:int,measurement_id:int,) -> CellMeasurement:
+                 return db.query(CellMeasurement).filter(CellMeasurement.id == measurement_id).filter(CellMeasurement.member_id==member_id).first()
+        def get_All_CellMeasurement(self, db: Session, *, member_id:int) -> List[CellMeasurement]:
+                 return db.query(CellMeasurement).filter(CellMeasurement.member_id==member_id).all()
+        
         
                 
-
 cellMeasurement = CRUDCellMeasurement(CellMeasurement)

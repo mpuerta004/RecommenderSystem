@@ -1,9 +1,9 @@
 from pydantic import BaseModel
 from typing import Sequence
 
+from schemas.Cell import Cell
 class SurfaceBase(BaseModel):
-    campaign_id:int
-    
+    pass    
 
 class SurfaceCreate(SurfaceBase):
     pass
@@ -15,7 +15,8 @@ class SurfaceUpdate(SurfaceBase):
 # Properties shared by models stored in DB
 class SurfaceInDBBase(SurfaceBase):
     id:int 
-    
+    campaign_id:int
+    cells:Sequence[Cell]
     class Config:
         orm_mode = True
 

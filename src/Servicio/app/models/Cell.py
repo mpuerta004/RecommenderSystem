@@ -3,6 +3,7 @@ from sqlalchemy import Integer, String, Column, ForeignKey
 from sqlalchemy.orm import relationship
 from db.base_class import Base
 from models.Surface import Surface
+from models.Campaign import Campaign
 from models.Point import Point
 # sys.path.append("/home/ubuntu/carpeta_compartida_docker/RecommenderSystem/src")
 # print(sys.path)
@@ -16,11 +17,11 @@ class Cell(Base):
     superior_coord = Column(Point)
     center = Column(Point)
     cell_type = Column(String, default="Dynamic")
+    campaign_id = Column(Integer, ForeignKey(Campaign.id))
 
-    slots = relationship("Slot")
-    measurements = relationship("CellMeasurement")
-    recommendations=relationship("Recommendation")
-    promise=relationship("MeasurementPromise")
-    
+
+    # slots = relationship("Slot")
+    # recommendations=relationship("Recommendation")
+    # priority=relationship("Priority")
     # De este modo se define una relacion inversa... no se si seran utiles.
     #queenBee=relationship("Campaign", back_populates="campaigns")

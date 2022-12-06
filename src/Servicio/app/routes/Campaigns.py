@@ -7,8 +7,6 @@ from sqlalchemy.orm import Session
 from schemas.AirData import AirData, AirDataCreate, AirDataSearchResults
 from schemas.CellMeasurement import CellMeasurement, CellMeasurementCreate, CellMeasurementSearchResults
 from schemas.Campaign import CampaignSearchResults, Campaign, CampaignCreate
-from schemas.Participant import Participant, ParticipantCreate, ParticipantSearchResults
-from schemas.QueenBee import QueenBee, QueenBeeCreate, QueenBeeSearchResults
 from schemas.Slot import Slot, SlotCreate,SlotSearchResults
 
 from schemas.CellPriority import CellPriority, CellPriorityCreate, CellPrioritySearchResults
@@ -31,141 +29,133 @@ from starlette.responses import StreamingResponse
 
 
 
-api_router_campaign = APIRouter(prefix="/Campaigns")
-# Project Directories
-ROOT = Path(__file__).resolve().parent.parent
-BASE_PATH = Path(__file__).resolve().parent
-TEMPLATES = Jinja2Templates(directory=str(BASE_PATH / "templates"))
-
-
-# @api_router_campaign.get("/", status_code=200)
-# def root(
-#     request: Request,
-#     db: Session = Depends(deps.get_db),
-# ) -> dict:
-#     """
-#     Root GET
-#     """
-#     campaign = crud.campaign.get_multi(db=db, limit=10)
-#     return TEMPLATES.TemplateResponse(
-#         "index.html",
-#         {"request": request, "recipes": campaign},
-#     )
-
-
-
-@api_router_campaign.get("/", status_code=200)
-def root(
-    request: Request,
-    db: Session = Depends(deps.get_db),
-) -> Any:
-    """
-    Root GET
-    """
-    return None
-@api_router_campaign.get("/Surface/{Surface_id}/", status_code=200)
-def draw_campaign(
-    request: Request,
-    Surface_id:int,
-    db: Session = Depends(deps.get_db),
-) -> Any:
-    """
-    Root GET
-    """
-    imagen = 255*np.ones((600,1000,3),dtype=np.uint8)
-    surfaces= crud.surface.get(db=db,id=Surface_id)
-    for j in surfaces.cells:
-        # cell = crud.cell.get(db=db, id=j.id)
-        cv2.rectangle(imagen,pt1=(int(j.superior_coord[0]),int(j.superior_coord[1])), pt2=(int(j.inferior_coord[0]),int(j.inferior_coord[1])),color=(0,0,0))
-    res, im_png = cv2.imencode(".png", imagen)
-    return StreamingResponse(BytesIO(im_png.tobytes()), media_type="image/png")
+api_router_campaign = APIRouter(prefix="/hives/{hive_id}/campaigns")
 
 
 @api_router_campaign.get("/", status_code=200, response_model=CampaignSearchResults)
-def search_AllCampaign(
+def get_all_Campaign_of_hive(
     *,
+    hive_id:int, 
     max_results: Optional[int] = 10,
     db: Session = Depends(deps.get_db),
 ) -> dict:
     """
-    Search for recipes based on label keyword
+    Get all campaings of a hive
     """
-    Campaigns = crud.campaign.get_multi(db=db, limit=max_results)
+    Campaigns = crud.campaign.get_campaigns_from_hive_id(
+        db=db,
+        hive_id=hive_id,
+        limit=max_results)
     
+    if not Campaigns:
+        raise HTTPException(
+            status_code=404, detail=f"Recipe with ID {hive_id} not found"
+        )
     return {"results": list(Campaigns)[:max_results]}
 
-
-##################################################### Campaign ################################################################################
-
-@api_router_campaign.get("/{Campaign_id}", status_code=200, response_model=Campaign)
-def fetch_campaign(
+@api_router_campaign.get("/{campaign_id}", status_code=200, response_model=Campaign)
+def get_campaign(
     *,
-    Campaign_id: int,
+    hive_id:int, 
+    campaign_id:int,
     db: Session = Depends(deps.get_db),
-) -> Any:
+) -> dict:
     """
-    Fetch a single recipe by ID
+    Search a campaing based on campaing_id and hive_id
     """
-    result = crud.campaign.get(db=db, id=Campaign_id)
-    if not result:
-        # the exception is raised, not returned - you will get a validation
-        # error otherwise.
+    Campaigns = crud.campaign.get_campaign(db=db, hive_id=hive_id, campaign_id=campaign_id)
+    if not Campaigns:
         raise HTTPException(
-            status_code=404, detail=f"Recipe with ID {Campaign_id} not found"
+            status_code=404, detail=f"Recipe with ID {campaign_id} and/or {hive_id} not found"
         )
-    return result
+    return Campaigns
+
+
 
 
 @api_router_campaign.post("/", status_code=201, response_model=Campaign)
-def create_Campaimg(
-    *, recipe_in: CampaignCreate, number_cells:int,db: Session = Depends(deps.get_db)
+def create_Campaign(
+    *,
+    recipe_in: CampaignCreate,
+    hive_id:int,
+    number_cells:int,
+    db: Session = Depends(deps.get_db)
 ) -> dict:
     """
-    Create a new recipe in the database.
+    Create a new campaing in the database.
     """
-    Campaign = crud.campaign.create(db=db, obj_in=recipe_in)
-    #TODO: Esto iria enlazado con el programa que permite seleccionar las celdas de la campaña pero de momento esto nos vale. 
-    surface=SurfaceCreate(campaign_id=Campaign.id)
-    Surface=crud.surface.create(db=db, obj_in=surface)
-    for i in range(number_cells):
-        coord_x=((i%5)+1)*100
-        coord_y=((i//5)+1)*100
-        cell_create=CellCreate(surface_id=Surface.id,superior_coord=Point(x=coord_x,y=coord_y), inferior_coord=Point(x=coord_x+100,y=coord_y+100))
-        cell=crud.cell.create(db=db,obj_in=cell_create)
+    role=crud.role.get_roles(db=db,member_id=recipe_in.member_id, hive_id=hive_id)
+    
+    if ("QueenBee",) in role:
+        Campaign = crud.campaign.create_cam(db=db, obj_in=recipe_in,hive_id=hive_id)
+        Surface=crud.surface.create_sur(db=db, campaign_id=Campaign.id)
+        #TODO: Esto iria enlazado con el programa que permite seleccionar las celdas de la campaña pero de momento esto nos vale. 
         
-        end_time_slot= Campaign.start_timestamp + timedelta(seconds=Campaign.sampling_period)
-        slot_create=SlotCreate(cell_id=cell.id, start_timestamp=Campaign.start_timestamp, end_timestamp=end_time_slot)
-        slot=crud.slot.create(db=db,obj_in=slot_create)
-        
-        b = max(2, Campaign.min_samples - 0)
-        a = max(2, Campaign.min_samples - 0)
-        result = math.log(a) * math.log(b, 0 + 2)
-        print(result)
-        #Maximo de la prioridad temporal -> 8.908297157282622
-        #Minimo -> 0.1820547846864113
-        #Todo:Estas prioridades deben estar al menos bien echas... pilla la formula y carlcula la primera! 
-        Cell_priority=CellPriorityCreate(slot_id=slot.id,timestamp=Campaign.start_timestamp,temporal_priority=result,trend_priority=0.0)
-        priority=crud.cellPriority.create(db=db, obj_in=Cell_priority)
-    return Campaign
+        for i in range(number_cells):
+            coord_x=((i%5)+1)*100
+            coord_y=((i//5)+1)*100
 
-
-@api_router_campaign.get("/{Campaign_id}/Surface", status_code=200, response_model=CellSearchResults)
-def fetch_Surface_of_Campaign(
+            cell_create=CellCreate(surface_id=Surface.id,superior_coord=Point(x=coord_x,y=coord_y), inferior_coord=Point(x=coord_x+100,y=coord_y+100),campaign_id=Campaign.id)
+            cell=crud.cell.create_cell(db=db,obj_in=cell_create,campaign_id=Campaign.id, surface_id=Surface.id)
+            # Vamos a crear los slot de tiempo de esta celda. 
+            end_time_slot= Campaign.start_timestamp + timedelta(seconds=Campaign.sampling_period -1)
+            start_time_slot= Campaign.start_timestamp
+            while start_time_slot < (Campaign.start_timestamp + timedelta(seconds= Campaign.campaign_duration)):
+                slot_create=SlotCreate(cell_id=cell.id, start_timestamp=Campaign.start_timestamp, end_timestamp=end_time_slot)
+                slot=crud.slot.create(db=db,obj_in=slot_create)
+               
+                if start_time_slot==Campaign.start_timestamp:
+                    #Todo: creo que cuando se crea una celda se deberia generar todos los slot necesarios. 
+                    b = max(2, Campaign.min_samples - 0)
+                    a = max(2, Campaign.min_samples - 0)
+                    result = math.log(a) * math.log(b, 0 + 2)
+                    #Maximo de la prioridad temporal -> 8.908297157282622
+                    #Minimo -> 0.1820547846864113
+                    #Todo:Estas prioridades deben estar al menos bien echas... pilla la formula y carlcula la primera! 
+                    # Slot_result= crud.slot.get_slot_time(db=db, cell_id=cell.id, time=Campaign.start_timestamp)
+                    Cell_priority=CellPriorityCreate(slot_id=slot.id,timestamp=Campaign.start_timestamp,temporal_priority=result,trend_priority=0.0,cell_id=cell.id)
+                    priority=crud.cellPriority.create(db=db, obj_in=Cell_priority)    
+                start_time_slot= end_time_slot + timedelta(seconds=1)
+                end_time_slot = end_time_slot + timedelta(seconds=Campaign.sampling_period)
+        return Campaign
+    else: 
+         raise HTTPException(
+            status_code=404, detail=f"The participant dont have the necesary role to create a hive"
+         )
+#Todo: comporbat que va bien          
+@api_router_campaign.get("/{campaign_id}/show",status_code=200)
+def show_a_campaign(
     *,
-    Campaign_id: int,
+    hive_id:int,
+    campaign_id:int, 
+    time:datetime,
+    # request: Request,
     db: Session = Depends(deps.get_db),
 ) -> Any:
     """
-    Fetch a single recipe by ID
+    Show a campaign
     """
-    result=[]
-    Campaign = crud.campaign.get(db=db, id=Campaign_id)
-    for i in Campaign.surfaces:
-        result.append(i)
-    if result==[]:
-        # the exception is raised, not returned - you will get a validation
-        # error otherwise.
-        raise HTTPException(
-            status_code=404, detail=f"Recipe with ID {Campaign_id} not found"
-        )
-    return {"results": list(result)}
+    imagen = 255*np.ones((1000,1500,3),dtype=np.uint8)
+    campañas_activas= crud.campaign.get_campaign(db=db, hive_id=hive_id, campaign_id=campaign_id)
+    count=0
+    cv2.putText(imagen, f"Campaign: id={campañas_activas.id},", (100+count*600,50), cv2.FONT_HERSHEY_SIMPLEX , 0.75, (0,0,0))
+    cv2.putText(imagen, f"city={campañas_activas.city}", (100+count*600,80), cv2.FONT_HERSHEY_SIMPLEX , 0.75, (0,0,0))
+    for i in campañas_activas.surfaces:
+            count=count+1
+            for j in i.cells:
+                slot=crud.slot.get_slot_time(db=db, cell_id=j.id,time=time)
+                prioridad= crud.cellPriority.get_last(db=db,slot_id=slot.id)
+                temporal_prioridad=prioridad.temporal_priority
+                if temporal_prioridad>2.5: # ROJO
+                    color=(201,191,255)
+                elif temporal_prioridad<1.5: #VERDE
+                    color=(175,243,184)
+                else: #NARANJA
+                    color=(191, 355, 255) 
+                cv2.rectangle(imagen,pt1=(int(j.superior_coord[0])+(count-1)*600,int(j.superior_coord[1])), pt2=(int(j.inferior_coord[0])+(count-1)*600,int(j.inferior_coord[1])),color=color ,thickness = -1)
+                cv2.rectangle(imagen,pt1=(int(j.superior_coord[0])+(count-1)*600,int(j.superior_coord[1])), pt2=(int(j.inferior_coord[0])+(count-1)*600,int(j.inferior_coord[1])),color=(0,0,0))   
+
+    
+    res, im_png = cv2.imencode(".png", imagen)
+    return StreamingResponse(BytesIO(im_png.tobytes()), media_type="image/png")
+   

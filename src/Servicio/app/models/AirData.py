@@ -13,4 +13,3 @@ class AirData(Base):
     Co2=Column(Float)
     No2=Column(Float)
     
-    cellMeasurement= relationship("CellMeasurement", back_populates="airData")

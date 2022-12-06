@@ -2,6 +2,8 @@ from typing import Optional, Sequence
 from pydantic import BaseModel
 from datetime import datetime
 
+from schemas.CellMeasurement import CellMeasurement
+
 
 class SlotBase(BaseModel):
     cell_id: int 
@@ -23,7 +25,7 @@ class SlotUpdate(SlotBase):
 
 class SlotInDBBase(SlotBase):
     id: int = None
-
+    measurements:Sequence[CellMeasurement]=None
     class Config:
         orm_mode = True
 
