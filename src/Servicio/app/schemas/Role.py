@@ -24,7 +24,7 @@ class RoleInDBBase(RoleBase):
 
 
 # Additional properties to return via API
-class Role(RoleBase):
+class Role(RoleInDBBase):
     hive_id:int
     member_id: int = None
     # member:Sequence[Member]=None
@@ -34,7 +34,8 @@ class Role(RoleBase):
     class Config:
         orm_mode = True
 
-
+class RoleInDB(RoleInDBBase):
+    pass
 
 class RoleSearchResults(BaseModel):
     results: Sequence[Role]

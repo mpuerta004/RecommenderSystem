@@ -35,6 +35,8 @@ class CRUDCellMeasurement(CRUDBase[CellMeasurement, CellMeasurementCreate, CellM
         def get_All_CellMeasurement(self, db: Session, *, member_id:int) -> List[CellMeasurement]:
                  return db.query(CellMeasurement).filter(CellMeasurement.member_id==member_id).all()
         
-        
-                
+        def get_all_Measurement_campaign(self, db:Session, *, campaign_id:int)-> int:
+            return db.query(CellMeasurement).filter(CellMeasurement.campaign_id==campaign_id).count()
+        def get_all_Measurement_campaign_cell(self, db:Session, *, campaign_id:int, cell_id:int)-> int:
+            return db.query(CellMeasurement).filter((CellMeasurement.campaign_id==campaign_id)& (CellMeasurement.cell_id==cell_id)).count()        
 cellMeasurement = CRUDCellMeasurement(CellMeasurement)

@@ -46,7 +46,7 @@ def search_all_surfaces_of_campaing(
     surfaces = crud.surface.get_multi_surface_from_campaign_id(db=db, campaign_id=campaign_id,limit=max_results)
     if surfaces is None:
         raise HTTPException(
-            status_code=404, detail=f"Recipe with ID {campaign_id} not found"
+            status_code=404, detail=f"Campaign with ID {campaign_id} not found"
         )
     return {"results": list(surfaces)[:max_results]}
 
@@ -64,7 +64,7 @@ def search_a_campaign_by_id(
     surface = crud.surface.get_surface_by_ids(db=db, surface_id=surface_id,campaign_id=campaign_id)
     if surface is None:
         raise HTTPException(
-            status_code=404, detail=f"Recipe with ID {surface_id} or {campaign_id} not found"
+            status_code=404, detail=f"Surface with IDs surface_id: {surface_id} and campaign_id: {campaign_id} not found"
         )
     return surface
 
@@ -82,38 +82,46 @@ def create_surface(
     Create a new recipe in the database.
     """
     Campaign = crud.campaign.get_campaign(db=db, campaign_id=campaign_id, hive_id=hive_id)
-    #TODO: Esto iria enlazado con el programa que permite seleccionar las celdas de la campaña pero de momento esto nos vale. 
+    if Campaign is None:
+        raise HTTPException(
+            status_code=404, detail=f"Campaign with campaign_id=={campaign_id} and hive_id=={hive_id} not found"
+        )
     Surface=crud.surface.create_sur(db=db, campaign_id=campaign_id)
-     #TODO: Esto iria enlazado con el programa que permite seleccionar las celdas de la campaña pero de momento esto nos vale. 
-    # Generar la surface! 
-        
+    if Surface is None:
+        raise HTTPException(
+            status_code=400, detail=f"INVALID REQUEST"
+        )
+    
+    #TODO: Esto iria enlazado con el programa que permite seleccionar las celdas de la campaña pero de momento esto nos vale. 
     # Generar las celdas! Esto no debe ser asi! 
     for i in range(number_cells):
             coord_x=((i%5)+1)*100
             coord_y=((i//5)+1)*100
-        
-            cell_create=CellCreate(surface_id=Surface.id,superior_coord=Point(x=coord_x,y=coord_y), inferior_coord=Point(x=coord_x+100,y=coord_y+100),campaign_id=Campaign.id)
+            center_x= (coord_x+100-coord_x)/2 + coord_x
+            center_y=(coord_y+100-coord_y)/2 + coord_y
+            cell_create=CellCreate(surface_id=Surface.id,superior_coord=Point(x=coord_x,y=coord_y), inferior_coord=Point(x=coord_x+100,y=coord_y+100),center=Point(center_x,center_y),campaign_id=Campaign.id)
             cell=crud.cell.create_cell(db=db,obj_in=cell_create,campaign_id=Campaign.id, surface_id=Surface.id)
+            
             # Vamos a crear los slot de tiempo de esta celda. 
             end_time_slot= Campaign.start_timestamp + timedelta(seconds=Campaign.sampling_period -1)
             start_time_slot= Campaign.start_timestamp
-            while start_time_slot < (Campaign.start_timestamp + timedelta(seconds= Campaign.campaign_duration)):
-                slot_create=SlotCreate(cell_id=cell.id, start_timestamp=Campaign.start_timestamp, end_timestamp=end_time_slot)
-                slot=crud.slot.create(db=db,obj_in=slot_create)
+            # while start_time_slot < (Campaign.start_timestamp + timedelta(seconds= Campaign.campaign_duration)):
+            slot_create=SlotCreate(cell_id=cell.id, start_timestamp=Campaign.start_timestamp, end_timestamp=end_time_slot)
+            slot=crud.slot.create(db=db,obj_in=slot_create)
                
-                if start_time_slot==Campaign.start_timestamp:
-                    #Todo: creo que cuando se crea una celda se deberia generar todos los slot necesarios. 
-                    b = max(2, Campaign.min_samples - 0)
-                    a = max(2, Campaign.min_samples - 0)
-                    result = math.log(a) * math.log(b, 0 + 2)
-                    #Maximo de la prioridad temporal -> 8.908297157282622
-                    #Minimo -> 0.1820547846864113
-                    #Todo:Estas prioridades deben estar al menos bien echas... pilla la formula y carlcula la primera! 
-                    # Slot_result= crud.slot.get_slot_time(db=db, cell_id=cell.id, time=Campaign.start_timestamp)
-                    Cell_priority=CellPriorityCreate(slot_id=slot.id,timestamp=Campaign.start_timestamp,temporal_priority=result,trend_priority=0.0,cell_id=cell.id)
-                    priority=crud.cellPriority.create(db=db, obj_in=Cell_priority)    
-                start_time_slot= end_time_slot + timedelta(seconds=1)
-                end_time_slot = end_time_slot + timedelta(seconds=Campaign.sampling_period)
+            #     if start_time_slot==Campaign.start_timestamp:
+            #         #Todo: creo que cuando se crea una celda se deberia generar todos los slot necesarios. 
+            b = max(2, Campaign.min_samples - 0)
+            a = max(2, Campaign.min_samples - 0)
+            result = math.log(a) * math.log(b, 0 + 2)
+            #         #Maximo de la prioridad temporal -> 8.908297157282622
+            #         #Minimo -> 0.1820547846864113
+            #         #Todo:Estas prioridades deben estar al menos bien echas... pilla la formula y carlcula la primera! 
+            #         # Slot_result= crud.slot.get_slot_time(db=db, cell_id=cell.id, time=Campaign.start_timestamp)
+            Cell_priority=CellPriorityCreate(slot_id=slot.id,timestamp=Campaign.start_timestamp,temporal_priority=result,trend_priority=0.0)#,cell_id=cell.id)
+            priority=crud.cellPriority.create(db=db, obj_in=Cell_priority)    
+            # start_time_slot= end_time_slot + timedelta(seconds=1)
+            # end_time_slot = end_time_slot + timedelta(seconds=Campaign.sampling_period)
     return Surface
 
 

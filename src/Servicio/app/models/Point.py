@@ -33,3 +33,6 @@ class Point(UserDefinedType):
             lng, lat = value[6:-1].split()  # 'POINT(135.00 35.00)' => ('135.00', '35.00')
             return (float(lat), float(lng))
         return process
+
+
+    

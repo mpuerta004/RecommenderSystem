@@ -13,6 +13,8 @@ from models.Point import Point
 
 from models.Campaign import Campaign
 from models.Slot import Slot
+
+
 class Recommendation(Base):
     __tablename__='Recommendation'
     cell_id=Column(Integer, ForeignKey(Cell.id))
@@ -27,6 +29,6 @@ class Recommendation(Base):
     slot_id=Column(Integer,ForeignKey(Slot.id))
     
     state=relationship("State")
-    
+    cell=relationship("Cell")
     
     

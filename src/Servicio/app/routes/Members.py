@@ -42,19 +42,20 @@ def get_members_of_hive(
     db: Session = Depends(deps.get_db),
 ) -> Cell:
     """
-    Fetch a single member of the Hive
+    Fetch all members of the Hive
     """
     result = crud.role.get_member_id(db=db, hive_id=hive_id)
 
+    
+
+    if not result:
+        raise HTTPException(
+            status_code=404, detail=f"Members with hive_id=={hive_id} not found"
+        )
     List_members=[]
     for i in result:
         user=crud.member.get_by_id(db=db, id=i[0])
         List_members.append(user)
-
-    if not result:
-        raise HTTPException(
-            status_code=404, detail=f"Recipe with ID {hive_id} not found"
-        )
     return {"results": List_members}
 
 @api_router_members.get("/{member_id}", status_code=200, response_model=Member)
@@ -70,12 +71,13 @@ def get_a_member_of_hive(
     
     user=crud.member.get_by_id(db=db, id=member_id)
 
-    if not user:
+    if  user is None:
         raise HTTPException(
-            status_code=404, detail=f"Recipe with ID {member_id} not found"
+            status_code=404, detail=f"Member with member_id=={member_id} not found"
         )
     return user
 
+#Todo: esto no se si deberia ir asi... control de errores! 
 @api_router_members.post("/",status_code=201, response_model=Member )
 def create_member_of_hive(
     *,    
@@ -86,10 +88,8 @@ def create_member_of_hive(
     """
     Create a new member of the hive in the database.
     """
-    
     member=MemberCreate(name=recipe_in.name,surname=recipe_in.surname,age=recipe_in.age,city=recipe_in.city,mail=recipe_in.mail,gender=recipe_in.gender)
     member_new= crud.member.create(db=db, obj_in=member)
-    print(recipe_in.role)
     Role= RoleCreate(role=recipe_in.role)
     role_new=crud.role.create_Role(db=db,obj_in=Role, hive_id=hive_id, member_id=member_new.id)
     return member_new
@@ -114,7 +114,7 @@ def create_new_role_for_member_of_hive(
     user=crud.member.get(db=db, id=member_id)
     if not user:
         raise HTTPException(
-            status_code=404, detail=f"Recipe with ID {member_id} not found"
+            status_code=404, detail=f"Recipe with member_id=={member_id} not found"
         )
     else:
         role_new=crud.role.create_Role(db=db,obj_in=obje, hive_id=hive_id, member_id=member_id)

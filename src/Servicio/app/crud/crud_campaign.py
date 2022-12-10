@@ -33,5 +33,9 @@ class CRUDCampaign(CRUDBase[Campaign, CampaignCreate, CampaignUpdate]):
         campaign_id:int) ->Campaign:
         return db.query(Campaign).filter((Campaign.hive_id== hive_id)&(Campaign.id==campaign_id)).first()
 
+      def get_all_campaign(
+        self,        db: Session) ->List[Campaign]:
+        return db.query(Campaign).all()
+
       
 campaign = CRUDCampaign(Campaign)

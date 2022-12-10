@@ -14,7 +14,7 @@ from models.Cell import Cell
 class CellPriority(Base):
     __tablename__='CellPriority'
     timestamp=Column(DateTime, primary_key=True)
-    cell_id=Column(Integer, ForeignKey(Cell.id),primary_key=True)
+    # cell_id=Column(Integer, ForeignKey(Cell.id),primary_key=True)
     slot_id=Column(Integer, ForeignKey(Slot.id),primary_key=True)
     temporal_priority=Column(Float) 
     trend_priority=Column(Float)

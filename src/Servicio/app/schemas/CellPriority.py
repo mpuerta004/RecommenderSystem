@@ -14,7 +14,7 @@ class CellPriorityBase(BaseModel):
     timestamp:datetime
     temporal_priority:float
     trend_priority:float
-    cell_id:int
+    # cell_id:int
     
 
 class CellPriorityCreate(CellPriorityBase):

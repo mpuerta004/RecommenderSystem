@@ -12,11 +12,10 @@ from pydantic import BaseModel, ValidationError
 
 
 class CellBase(BaseModel):
-    inferior_coord:Point=None
-    superior_coord:Point=None
-    center:Point=None
+    inferior_coord:Point
+    superior_coord:Point
     cell_type:str='Dynamic'
-    
+    center: Point=None
 
 class CellCreate(CellBase):
     pass
@@ -30,6 +29,7 @@ class CellInDBBase(CellBase):
     id:int 
     campaign_id:int
     surface_id:int
+
     # slots:Sequence[Slot]
     class Config:
         orm_mode = True

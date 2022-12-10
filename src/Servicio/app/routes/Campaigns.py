@@ -26,7 +26,9 @@ import cv2
 import numpy as np
 from io import BytesIO
 from starlette.responses import StreamingResponse
-
+from fastapi_events.dispatcher import dispatch
+from fastapi_events.middleware import EventHandlerASGIMiddleware
+from fastapi_events.handlers.local import local_handler
 
 
 api_router_campaign = APIRouter(prefix="/hives/{hive_id}/campaigns")
@@ -47,12 +49,14 @@ def get_all_Campaign_of_hive(
         hive_id=hive_id,
         limit=max_results)
     
-    if not Campaigns:
+    if  Campaigns is None:
         raise HTTPException(
-            status_code=404, detail=f"Recipe with ID {hive_id} not found"
+            status_code=404, detail=f"Canpaign with hive_id=={hive_id} not found"
         )
     return {"results": list(Campaigns)[:max_results]}
 
+ 
+ 
 @api_router_campaign.get("/{campaign_id}", status_code=200, response_model=Campaign)
 def get_campaign(
     *,
@@ -64,12 +68,11 @@ def get_campaign(
     Search a campaing based on campaing_id and hive_id
     """
     Campaigns = crud.campaign.get_campaign(db=db, hive_id=hive_id, campaign_id=campaign_id)
-    if not Campaigns:
+    if  Campaigns is None:
         raise HTTPException(
-            status_code=404, detail=f"Recipe with ID {campaign_id} and/or {hive_id} not found"
+            status_code=404, detail=f"Recipe with campaign_id=={campaign_id} and hive_id=={hive_id} not found"
         )
     return Campaigns
-
 
 
 
@@ -94,35 +97,37 @@ def create_Campaign(
         for i in range(number_cells):
             coord_x=((i%5)+1)*100
             coord_y=((i//5)+1)*100
-
-            cell_create=CellCreate(surface_id=Surface.id,superior_coord=Point(x=coord_x,y=coord_y), inferior_coord=Point(x=coord_x+100,y=coord_y+100),campaign_id=Campaign.id)
+            center_x= (coord_x+100-coord_x)/2 + coord_x
+            center_y=(coord_y+100-coord_y)/2 + coord_y
+            cell_create=CellCreate(surface_id=Surface.id,superior_coord=Point(x=coord_x,y=coord_y), inferior_coord=Point(x=coord_x+100,y=coord_y+100),center=Point(center_x,center_y),campaign_id=Campaign.id)
             cell=crud.cell.create_cell(db=db,obj_in=cell_create,campaign_id=Campaign.id, surface_id=Surface.id)
             # Vamos a crear los slot de tiempo de esta celda. 
             end_time_slot= Campaign.start_timestamp + timedelta(seconds=Campaign.sampling_period -1)
             start_time_slot= Campaign.start_timestamp
-            while start_time_slot < (Campaign.start_timestamp + timedelta(seconds= Campaign.campaign_duration)):
-                slot_create=SlotCreate(cell_id=cell.id, start_timestamp=Campaign.start_timestamp, end_timestamp=end_time_slot)
-                slot=crud.slot.create(db=db,obj_in=slot_create)
+            # while start_time_slot < (Campaign.start_timestamp + timedelta(seconds= Campaign.campaign_duration)):
+            #     slot_create=SlotCreate(cell_id=cell.id, start_timestamp=Campaign.start_timestamp, end_timestamp=end_time_slot)
+            #     slot=crud.slot.create(db=db,obj_in=slot_create)
                
-                if start_time_slot==Campaign.start_timestamp:
-                    #Todo: creo que cuando se crea una celda se deberia generar todos los slot necesarios. 
-                    b = max(2, Campaign.min_samples - 0)
-                    a = max(2, Campaign.min_samples - 0)
-                    result = math.log(a) * math.log(b, 0 + 2)
-                    #Maximo de la prioridad temporal -> 8.908297157282622
-                    #Minimo -> 0.1820547846864113
-                    #Todo:Estas prioridades deben estar al menos bien echas... pilla la formula y carlcula la primera! 
-                    # Slot_result= crud.slot.get_slot_time(db=db, cell_id=cell.id, time=Campaign.start_timestamp)
-                    Cell_priority=CellPriorityCreate(slot_id=slot.id,timestamp=Campaign.start_timestamp,temporal_priority=result,trend_priority=0.0,cell_id=cell.id)
-                    priority=crud.cellPriority.create(db=db, obj_in=Cell_priority)    
-                start_time_slot= end_time_slot + timedelta(seconds=1)
-                end_time_slot = end_time_slot + timedelta(seconds=Campaign.sampling_period)
+            #     if start_time_slot==Campaign.start_timestamp:
+            #         #Todo: creo que cuando se crea una celda se deberia generar todos los slot necesarios. 
+            #         b = max(2, Campaign.min_samples - 0)
+            #         a = max(2, Campaign.min_samples - 0)
+            #         result = math.log(a) * math.log(b, 0 + 2)
+            #         #Maximo de la prioridad temporal -> 8.908297157282622
+            #         #Minimo -> 0.1820547846864113
+            #         #Todo:Estas prioridades deben estar al menos bien echas... pilla la formula y carlcula la primera! 
+            #         # Slot_result= crud.slot.get_slot_time(db=db, cell_id=cell.id, time=Campaign.start_timestamp)
+            #         Cell_priority=CellPriorityCreate(slot_id=slot.id,timestamp=Campaign.start_timestamp,temporal_priority=result,trend_priority=0.0,cell_id=cell.id)
+            #         priority=crud.cellPriority.create(db=db, obj_in=Cell_priority)    
+            #     start_time_slot= end_time_slot + timedelta(seconds=1)
+            #     end_time_slot = end_time_slot + timedelta(seconds=Campaign.sampling_period)
         return Campaign
     else: 
          raise HTTPException(
-            status_code=404, detail=f"The participant dont have the necesary role to create a hive"
+            status_code=401, detail=f"The participant dont have the necesary role to create a hive"
          )
-#Todo: comporbat que va bien          
+    
+#Todo: control de errores.        
 @api_router_campaign.get("/{campaign_id}/show",status_code=200)
 def show_a_campaign(
     *,
@@ -137,6 +142,10 @@ def show_a_campaign(
     """
     imagen = 255*np.ones((1000,1500,3),dtype=np.uint8)
     campañas_activas= crud.campaign.get_campaign(db=db, hive_id=hive_id, campaign_id=campaign_id)
+    if campañas_activas is None:
+        raise HTTPException(
+                status_code=404, detail=f"Campaign with campaign_id== {campaign_id}  and hive_id=={hive_id} not found"
+            )
     count=0
     cv2.putText(imagen, f"Campaign: id={campañas_activas.id},", (100+count*600,50), cv2.FONT_HERSHEY_SIMPLEX , 0.75, (0,0,0))
     cv2.putText(imagen, f"city={campañas_activas.city}", (100+count*600,80), cv2.FONT_HERSHEY_SIMPLEX , 0.75, (0,0,0))

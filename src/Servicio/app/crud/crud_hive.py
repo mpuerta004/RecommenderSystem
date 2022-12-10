@@ -16,7 +16,8 @@ from crud.base import CRUDBase
 
 
 class CRUDHive(CRUDBase[Hive, HiveCreate, HiveUpdate]):
-        pass
+        def get_all(self,*, db: Session) -> List[Hive] or Any:
+                return db.query(Hive).all()
 
         
 

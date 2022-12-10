@@ -8,10 +8,10 @@ from typing import NamedTuple
 from pydantic import BaseModel, ValidationError
 from datetime import datetime, time, timedelta
 from schemas.Point import Point
-
+from schemas.Cell import Cell
+from schemas.State import State
 
 class RecommendationBase(BaseModel):
-    cell_id:int
     cellMeasurement_id:int=None
     recommendation_timestamp:datetime = datetime.now()
     planning_timestamp:datetime=None
@@ -33,14 +33,20 @@ class RecommendationInDBBase(RecommendationBase):
     state_id:int
     id:int
     slot_id:int
+    cell_id:int
+    state:State=None
+    cell:Cell=None
     class Config:
         orm_mode = True
 
 
 # Properties to return to client
 class Recommendation(RecommendationInDBBase):
-
-    pass
+    member_id:int
+    state_id:int
+    id:int
+    slot_id:int
+    cell_id:int
 
 
 # Properties properties stored in DB

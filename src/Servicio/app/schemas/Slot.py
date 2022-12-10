@@ -36,7 +36,8 @@ class Slot(SlotBase):
     class Config:
         orm_mode = True
 
-
+class SlotInDB(SlotInDBBase):
+    pass
 
 class SlotSearchResults(BaseModel):
     results: Sequence[Slot]

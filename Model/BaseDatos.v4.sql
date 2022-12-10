@@ -106,7 +106,7 @@ CREATE TABLE Cell (
   id INT NOT NULL AUTO_INCREMENT,
   inferior_coord POINT not null,
   superior_coord POINT not null,
-  center POINT NULL DEFAULT NULL,
+  center POINT not NULL,
   cell_type VARCHAR(30) NULL DEFAULT 'Dynamic',
   surface_id INT not null,
   campaign_id INT not null, 
@@ -210,14 +210,11 @@ CREATE TABLE Recommendation (
 -- -----------------------------------------------------
 CREATE TABLE CellPriority (
   slot_id INT NOT NULL ,
-  cell_id int not null,
   timestamp TIMESTAMP NOT NULL,
   temporal_priority float8 NULL DEFAULT NULL,
   trend_priority float8 NULL DEFAULT NULL,
-  PRIMARY KEY (slot_id, cell_id, timestamp),
+  PRIMARY KEY (slot_id, timestamp),
     FOREIGN KEY (slot_id)
-    REFERENCES Slot (id),
-    FOREIGN KEY (cell_id)
-    REFERENCES Cell (id));
+    REFERENCES Slot (id));
 
 

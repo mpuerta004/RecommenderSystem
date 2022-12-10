@@ -3,7 +3,7 @@ from typing import Sequence
 from datetime import datetime
 from schemas.Surface import Surface
 from schemas.Cell import Cell
-
+import pytz
 class CampaignBase(BaseModel):
     member_id:int
     city:str
@@ -27,7 +27,7 @@ class CampaignInDBBase(CampaignBase):
     id:int 
     hive_id:int
     surfaces:Sequence[Surface]=None
-
+    cells:Sequence[Cell]=None
     class Config:
         orm_mode = True
 

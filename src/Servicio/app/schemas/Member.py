@@ -43,7 +43,8 @@ class Member(MemberInDBBase):
     #campaigns:CampaignSearchResults
     
 
-
+class MemberInDB(MemberInDBBase):
+    pass
 
 class MemberSearchResults(BaseModel):
     results: Sequence[Member]

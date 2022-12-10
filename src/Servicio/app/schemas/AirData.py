@@ -29,7 +29,7 @@ class AirData(AirDataInDBBase):
 
 
 # Properties properties stored in DB
-class RecipeInDB(AirDataInDBBase):
+class AirDaraInDB(AirDataInDBBase):
     pass
 
 

@@ -47,12 +47,13 @@ def get_hive(
     Fetch a single Hive by ID
     """
     result = crud.hive.get(db=db, id=hive_id)
-    if not result:
+    if  result is None:
         raise HTTPException(
-            status_code=404, detail=f"Recipe with ID {hive_id} not found"
+            status_code=404, detail=f"Hive with   hive_id=={hive_id} not found"
         )
     return result
 
+#Todo: control de errores! 
 @api_router_hive.post("/",status_code=201, response_model=Hive)
 def create_hive(
     *, recipe_in: HiveCreate,db: Session = Depends(deps.get_db)
@@ -61,6 +62,10 @@ def create_hive(
     Create a new hive in the database.
     """
     hive = crud.hive.create(db=db, obj_in=recipe_in)
+    if hive is None:
+        raise HTTPException(
+            status_code=400, detail=f"INVALID REQUEST"
+        )
     return hive
 
 

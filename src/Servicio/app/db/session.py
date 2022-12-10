@@ -23,4 +23,3 @@ engine = create_engine(
 #Each instance of the SessionLocal class will be a database session.
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
-
