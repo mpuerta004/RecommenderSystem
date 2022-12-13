@@ -5,7 +5,7 @@ from enum import Enum, IntEnum
 
 
 class role(str, Enum):
-    Participant="Participant" 
+    WorkerBee="WorkerBee" 
     QueenBee="QueenBee" 
     BeeKeeper="BeeKeeper" 
     DroneBee="DroneBee" 

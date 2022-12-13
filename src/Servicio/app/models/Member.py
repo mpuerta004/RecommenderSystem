@@ -17,7 +17,7 @@ class Member(Base):
     city=Column(String,nullable=True)
     gender=Column(String,default='I dont want to answer')
     
-    cellMeasurements=relationship("CellMeasurement")
+    Measurements=relationship("Measurement")
     roles=relationship("Role", back_populates="member")
     campaign_creator= relationship("Campaign")
 

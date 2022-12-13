@@ -12,6 +12,6 @@ class Slot(Base):
     start_timestamp=Column(DateTime)
     end_timestamp=Column(DateTime)
 
-    # priority=relationship("CellPriority")
-    measurements = relationship("CellMeasurement")
+    # priority=relationship("Priority")
+    measurements = relationship("Measurement")
     recomendations=relationship("Recommendation")

@@ -5,7 +5,7 @@ from schemas.Surface import Surface
 from schemas.Cell import Cell
 import pytz
 class CampaignBase(BaseModel):
-    member_id:int
+    creator_id:int
     city:str
     start_timestamp:datetime
     cell_edge:int=10
@@ -27,7 +27,7 @@ class CampaignInDBBase(CampaignBase):
     id:int 
     hive_id:int
     surfaces:Sequence[Surface]=None
-    cells:Sequence[Cell]=None
+    # cells:Sequence[Cell]=None
     class Config:
         orm_mode = True
 

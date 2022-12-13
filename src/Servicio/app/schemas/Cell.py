@@ -27,7 +27,7 @@ class CellUpdate(CellBase):
 # Properties shared by models stored in DB
 class CellInDBBase(CellBase):
     id:int 
-    campaign_id:int
+    # campaign_id:int
     surface_id:int
 
     # slots:Sequence[Slot]

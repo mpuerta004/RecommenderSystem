@@ -9,7 +9,7 @@ from pydantic import BaseModel, ValidationError
 from datetime import datetime, time, timedelta
 
 
-class CellPriorityBase(BaseModel):   
+class PriorityBase(BaseModel):   
     slot_id:int # INT,
     timestamp:datetime
     temporal_priority:float
@@ -17,29 +17,29 @@ class CellPriorityBase(BaseModel):
     # cell_id:int
     
 
-class CellPriorityCreate(CellPriorityBase):
+class PriorityCreate(PriorityBase):
     pass
 
 
-class CellPriorityUpdate(CellPriorityBase):
+class PriorityUpdate(PriorityBase):
     pass
 
 # Properties shared by models stored in DB
-class CellPriorityInDBBase(CellPriorityBase):
+class PriorityInDBBase(PriorityBase):
     
     class Config:
         orm_mode = True
 
 
 # Properties to return to client
-class CellPriority(CellPriorityInDBBase):
+class Priority(PriorityInDBBase):
     pass
 
 
 # Properties properties stored in DB
-class RecipeInDB(CellPriorityInDBBase):
+class RecipeInDB(PriorityInDBBase):
     pass
 
 
-class CellPrioritySearchResults(BaseModel):
-    results: Sequence[CellPriority]
+class PrioritySearchResults(BaseModel):
+    results: Sequence[Priority]

@@ -9,7 +9,7 @@ from models.Cell import Cell
 from models.Member import Member
 from models.Hive import Hive
 
-from models.CellMeasurement import CellMeasurement
+from models.Measurement import Measurement
 from models.State import State
 
 

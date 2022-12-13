@@ -4,7 +4,7 @@ from fastapi.templating import Jinja2Templates
 from typing import Optional, Any, List
 from pathlib import Path
 from sqlalchemy.orm import Session
-from schemas.CellMeasurement import CellMeasurement, CellMeasurementCreate, CellMeasurementSearchResults
+from schemas.Measurement import Measurement, MeasurementCreate, MeasurementSearchResults
 from schemas.Campaign import CampaignSearchResults, Campaign, CampaignCreate
 from schemas.Slot import Slot, SlotCreate,SlotSearchResults
 from schemas.Hive import Hive, HiveCreate, HiveSearchResults
@@ -13,7 +13,7 @@ from schemas.AirData import AirData, AirDataCreate, AirDataSearchResults
 
 from schemas.Role import Role,RoleCreate,RoleSearchResults
 from schemas.newMember import NewMemberBase
-from schemas.CellPriority import CellPriority, CellPriorityCreate, CellPrioritySearchResults
+from schemas.Priority import Priority, PriorityCreate, PrioritySearchResults
 from datetime import datetime, timedelta
 from schemas.Cell import Cell, CellCreate, CellSearchResults, Point
 from crud import crud_cell
@@ -36,7 +36,7 @@ from starlette.responses import StreamingResponse
 api_router_measurements = APIRouter(prefix="/members/{member_id}/measurements")
 
 
-@api_router_measurements.get("/", status_code=200, response_model=CellMeasurementSearchResults)
+@api_router_measurements.get("/", status_code=200, response_model=MeasurementSearchResults)
 def search_all_measurements_of_member(
     *,
     member_id:int,
@@ -45,14 +45,14 @@ def search_all_measurements_of_member(
     """
     Search all cells of the surface based on label keyword
     """
-    measurement = crud.cellMeasurement.get_All_CellMeasurement(db=db,member_id=member_id)
+    measurement = crud.measurement.get_All_Measurement(db=db,member_id=member_id)
     if  measurement is None:
         raise HTTPException(
             status_code=404, detail=f"Cell with member_id=={member_id} not found"
         )
     return {"results": list(measurement)}
 
-@api_router_measurements.get("/{measurement_id}", status_code=200, response_model=CellMeasurement)
+@api_router_measurements.get("/{measurement_id}", status_code=200, response_model=Measurement)
 def get_measurement(
     *,
     member_id: int,
@@ -62,7 +62,7 @@ def get_measurement(
     """
     Get a measurement of the user member_id
     """
-    result = crud.cellMeasurement.get_CellMeasurement(db=db, measurement_id=measurement_id,member_id=member_id)
+    result = crud.measurement.get_Measurement(db=db, measurement_id=measurement_id,member_id=member_id)
     
     if  result is None:
         raise HTTPException(
@@ -70,11 +70,11 @@ def get_measurement(
         )
     return result
 
-@api_router_measurements.post("/",status_code=201, response_model=CellMeasurement)
+@api_router_measurements.post("/",status_code=201, response_model=Measurement)
 def create_measurements(
     *, 
     member_id:int, 
-    recipe_in: CellMeasurementCreate,
+    recipe_in: MeasurementCreate,
     db: Session = Depends(deps.get_db)
 ) -> dict:
     """
@@ -87,12 +87,12 @@ def create_measurements(
         )
     bool=False
     for i in member.roles:
-        if i.role=="Participant":
+        if i.role=="WorkerBee":
             bool=True
     #Todo: control de errores
     if bool==True:
         slot=crud.slot.get_slot_time(db=db,cell_id=recipe_in.cell_id,time=recipe_in.timestamp)
-        cellMeasurement = crud.cellMeasurement.create_cellMeasurement(db=db, obj_in=recipe_in,member_id=member_id,slot_id=slot.id)
+        cellMeasurement = crud.measurement.create_Measurement(db=db, obj_in=recipe_in,member_id=member_id,slot_id=slot.id)
         
         return cellMeasurement
 

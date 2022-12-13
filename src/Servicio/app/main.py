@@ -11,7 +11,7 @@ from pathlib import Path
 from sqlalchemy.orm import Session
 from schemas.Surface import SurfaceSearchResults, Surface, SurfaceCreate
 
-from schemas.CellPriority import CellPriority, CellPriorityCreate, CellPrioritySearchResults
+from schemas.Priority import Priority, PriorityCreate, PrioritySearchResults
 from schemas.Slot import Slot, SlotCreate, SlotSearchResults
 from schemas.Recommendation import Recommendation, RecommendationCreate, RecommendationSearchResults
 from schemas.State import State, StateCreate, StateUpdate
@@ -19,7 +19,7 @@ from schemas.Campaign import CampaignSearchResults, Campaign, CampaignCreate
 from schemas.Hive import Hive, HiveCreate, HiveSearchResults
 
 from schemas.AirData import AirData, AirDataCreate, AirDataSearchResults
-from schemas.CellMeasurement import CellMeasurement, CellMeasurementCreate, CellMeasurementSearchResults
+from schemas.Measurement import Measurement, MeasurementCreate, MeasurementSearchResults
 
 from schemas.Cell import Cell, CellCreate, CellSearchResults, Point
 import deps
@@ -30,7 +30,7 @@ from routes import Hive
 from routes import Cells
 from routes import Campaigns
 from routes import Surface
-from routes import CellMeasurements
+from routes import Measurements
 from routes import Recommendation
 from fastapi_utils.tasks import repeat_every
 
@@ -64,7 +64,7 @@ app.include_router(Members.api_router_members, tags=["Members"])
 app.include_router(Campaigns.api_router_campaign, tags=["Campaigns"])
 app.include_router(Surface.api_router_surface, tags=["Surfaces"])
 app.include_router(Cells.api_router_cell, tags=["Cells"])
-app.include_router(CellMeasurements.api_router_measurements, tags=["Measurements"])
+app.include_router(Measurements.api_router_measurements, tags=["Measurements"])
 app.include_router(Recommendation.api_router_recommendation, tags=["Recommendations"])
 
 
@@ -93,40 +93,43 @@ async def remove_expired_tokens_task() -> None:
                         hour=a.hour, minute=a.minute, second=a.second)
         for cam in campaigns:
             if date >= cam.start_timestamp and date <= cam.start_timestamp+timedelta(seconds=cam.campaign_duration):
-                for cells in cam.cells:
-                    print(cam.start_timestamp)
-                    momento = datetime.now()
-                    if momento > (cam.start_timestamp+timedelta(seconds=cam.sampling_period)):
-                        slot_pasado = crud.slot.get_slot_time(db=db, cell_id=cells.id, time=(
-                            momento-timedelta(seconds=cam.sampling_period)))
-                        Cardinal_pasado = len(slot_pasado.measurements)
-                        print(Cardinal_pasado)
-                    else:
-                        Cardinal_pasado = 0
-                    slot = crud.slot.get_slot_time(
-                        db=db, cell_id=cells.id, time=momento)
-                    if slot is None:
-                        print("Cuidado")
-                    Cardinal_actual = len(slot.measurements)
-                    print(Cardinal_actual)
-                    b = max(2, cam.min_samples - int(Cardinal_pasado))
-                    a = max(2, cam.min_samples - int(Cardinal_actual))
-                    result = math.log(a) * math.log(b, int(Cardinal_actual) + 2)
-                    total_measurements = crud.cellMeasurement.get_all_Measurement_campaign(
-                        db=db, campaign_id=cam.id)
-                    measurement_of_cell = crud.cellMeasurement.get_all_Measurement_campaign_cell(
-                        db=db, campaign_id=cam.id, cell_id=cells.id)
-                    n_cells = len(cam.cells)
+                for sur in cam.surfaces:
+                    for cells in sur.cells:
+                # for cells in cam.cells:
+                        print(cam.start_timestamp)
+                        momento = datetime.now()
+                        if momento > (cam.start_timestamp+timedelta(seconds=cam.sampling_period)):
+                            slot_pasado = crud.slot.get_slot_time(db=db, cell_id=cells.id, time=(
+                                momento-timedelta(seconds=cam.sampling_period)))
+                            Cardinal_pasado = len(slot_pasado.measurements)
+                            print(Cardinal_pasado)
+                        else:
+                            Cardinal_pasado = 0
+                        slot = crud.slot.get_slot_time(
+                            db=db, cell_id=cells.id, time=momento)
+                        if slot is None:
+                            print("Cuidado")
+                        Cardinal_actual = len(slot.measurements)
+                        print(Cardinal_actual)
+                        b = max(2, cam.min_samples - int(Cardinal_pasado))
+                        a = max(2, cam.min_samples - int(Cardinal_actual))
+                        result = math.log(a) * math.log(b, int(Cardinal_actual) + 2)
+                        total_measurements = crud.measurement.get_all_Measurement_campaign(
+                            db=db, campaign_id=cam.id)
+                        measurement_of_cell = crud.measurement.get_all_Measurement_from_cell(
+                            db=db, cell_id=cells.id)
+                        
+                        n_cells = crud.cell.get_count_cells(db=db, campaign_id=cam.id)
 
-                    trendy = (measurement_of_cell/total_measurements)*n_cells
-                    print("calculo popularidad", trendy)
-                    print("calculo prioridad", result)
-                    # Maximo de la prioridad temporal -> 8.908297157282622
-                    # Minimo -> 0.1820547846864113
-                    Cell_priority = CellPriorityCreate(
-                        slot_id=slot.id, timestamp=momento, temporal_priority=result, trend_priority=trendy)  # ,cell_id=cells.id)
-                    priority = crud.cellPriority.create_cell_priority_detras(
-                        db=db, obj_in=Cell_priority)
+                        trendy = (measurement_of_cell/total_measurements)*n_cells
+                        print("calculo popularidad", trendy)
+                        print("calculo prioridad", result)
+                        # Maximo de la prioridad temporal -> 8.908297157282622
+                        # Minimo -> 0.1820547846864113
+                        Cell_priority = PriorityCreate(
+                            slot_id=slot.id, timestamp=momento, temporal_priority=result, trend_priority=trendy)  # ,cell_id=cells.id)
+                        priority = crud.priority.create_priority_detras(
+                            db=db, obj_in=Cell_priority)
     return None
 
 

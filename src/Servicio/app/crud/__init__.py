@@ -4,8 +4,8 @@ from .crud_role import role
 from .crud_campaign import campaign
 from .crud_cell import cell
 from .crud_surface import surface
-from .crud_cellMeasurement import cellMeasurement
-from .crud_cellPriority import cellPriority
+from .crud_Measurement import measurement
+from .crud_Priority import priority
 from .crud_recommendation import recommendation
 from .crud_state import state
 from .crud_Slot import slot

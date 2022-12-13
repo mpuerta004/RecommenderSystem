@@ -4,7 +4,7 @@ from fastapi.templating import Jinja2Templates
 from typing import Optional, Any, List
 from pathlib import Path
 from sqlalchemy.orm import Session
-from schemas.CellMeasurement import CellMeasurement, CellMeasurementCreate, CellMeasurementSearchResults
+from schemas.Measurement import Measurement, MeasurementCreate, MeasurementSearchResults
 from schemas.Campaign import CampaignSearchResults, Campaign, CampaignCreate
 from schemas.Slot import Slot, SlotCreate,SlotSearchResults
 from schemas.Hive import Hive, HiveCreate, HiveSearchResults
@@ -13,7 +13,7 @@ from schemas.AirData import AirData, AirDataCreate, AirDataSearchResults
 
 from schemas.Role import Role,RoleCreate,RoleSearchResults
 from schemas.newMember import NewMemberBase
-from schemas.CellPriority import CellPriority, CellPriorityCreate, CellPrioritySearchResults
+from schemas.Priority import Priority, PriorityCreate, PrioritySearchResults
 from datetime import datetime, timedelta
 from schemas.Cell import Cell, CellCreate, CellSearchResults, Point
 from crud import crud_cell

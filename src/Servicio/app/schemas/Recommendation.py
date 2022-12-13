@@ -12,10 +12,10 @@ from schemas.Cell import Cell
 from schemas.State import State
 
 class RecommendationBase(BaseModel):
-    cellMeasurement_id:int=None
+    measurement_id:int=None
     recommendation_timestamp:datetime = datetime.now()
     planning_timestamp:datetime=None
-    campaign_id:int
+    # campaign_id:int
     member_current_location:Point
     
     

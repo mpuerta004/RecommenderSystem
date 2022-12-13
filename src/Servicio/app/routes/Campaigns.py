@@ -5,11 +5,11 @@ from typing import Optional, Any, List
 from pathlib import Path
 from sqlalchemy.orm import Session
 from schemas.AirData import AirData, AirDataCreate, AirDataSearchResults
-from schemas.CellMeasurement import CellMeasurement, CellMeasurementCreate, CellMeasurementSearchResults
+from schemas.Measurement import Measurement, MeasurementCreate, MeasurementSearchResults
 from schemas.Campaign import CampaignSearchResults, Campaign, CampaignCreate
 from schemas.Slot import Slot, SlotCreate,SlotSearchResults
 
-from schemas.CellPriority import CellPriority, CellPriorityCreate, CellPrioritySearchResults
+from schemas.Priority import Priority, PriorityCreate, PrioritySearchResults
 from datetime import datetime, timedelta
 from schemas.Cell import Cell, CellCreate, CellSearchResults, Point
 from crud import crud_cell
@@ -91,7 +91,7 @@ async def create_Campaign(
     """
      Create a new campaing in the database.
     """
-    role = crud.role.get_roles(db=db, member_id=recipe_in.member_id, hive_id=hive_id)
+    role = crud.role.get_roles(db=db, member_id=recipe_in.creator_id, hive_id=hive_id)
 
     if ("QueenBee",) in role:
         Campaign = crud.campaign.create_cam(db=db, obj_in=recipe_in, hive_id=hive_id)
@@ -104,18 +104,18 @@ async def create_Campaign(
                     center_x = (coord_x+100-coord_x)/2 + coord_x
                     center_y = (coord_y+100-coord_y)/2 + coord_y
                     cell_create = CellCreate(surface_id=Surface.id, superior_coord=Point(x=coord_x, y=coord_y), inferior_coord=Point(
-                            x=coord_x+100, y=coord_y+100), center=Point(center_x, center_y), campaign_id=Campaign.id)
+                            x=coord_x+100, y=coord_y+100), center=Point(center_x, center_y))
                     cell = crud.cell.create_cell(
-                            db=db, obj_in=cell_create, campaign_id=Campaign.id, surface_id=Surface.id)
+                            db=db, obj_in=cell_create, surface_id=Surface.id)
                     # Vamos a crear los slot de tiempo de esta celda.
-                    end_time_slot = Campaign.start_timestamp + \
-                            timedelta(seconds=Campaign.sampling_period - 1)
-                    start_time_slot = Campaign.start_timestamp
+                    # end_time_slot = Campaign.start_timestamp + \
+                    #         timedelta(seconds=Campaign.sampling_period - 1)
+                    # start_time_slot = Campaign.start_timestamp
         background_tasks.add_task(create_slots, cam=Campaign)
         return Campaign
     else:
         raise HTTPException(
-               status_code=401, detail=f"The participant dont have the necesary role to create a hive"
+               status_code=401, detail=f"The WorkerBee dont have the necesary role to create a hive"
         )
 
 
@@ -152,9 +152,9 @@ async def create_slots(cam: Campaign):
                         # Maximo de la prioridad temporal -> 8.908297157282622
                         # #Minimo -> 0.1820547846864113
                         #Todo:Estas prioridades deben estar al menos bien echas... pilla la formula y carlcula la primera!
-                        Cell_priority = CellPriorityCreate(
+                        Cell_priority = PriorityCreate(
                             slot_id=slot.id, timestamp=cam.start_timestamp, temporal_priority=result, trend_priority=0.0)# ,cell_id=cells.id)
-                        priority = crud.cellPriority.create_cell_priority_detras(
+                        priority = crud.priority.create_priority_detras(
                             db=db, obj_in=Cell_priority)
    
 
@@ -186,7 +186,7 @@ def show_a_campaign(
             count=count+1
             for j in i.cells:
                 slot=crud.slot.get_slot_time(db=db, cell_id=j.id,time=time)
-                prioridad= crud.cellPriority.get_last(db=db,slot_id=slot.id)
+                prioridad= crud.priority.get_last(db=db,slot_id=slot.id)
                 temporal_prioridad=prioridad.temporal_priority
                 if temporal_prioridad>2.5: # ROJO
                     color=(201,191,255)
@@ -194,6 +194,9 @@ def show_a_campaign(
                     color=(175,243,184)
                 else: #NARANJA
                     color=(191, 355, 255) 
+                print(temporal_prioridad, j.id)
+                a=crud.measurement.get_all_Measurement_from_cell(db=db, cell_id=j.id)
+                print(a)
                 cv2.rectangle(imagen,pt1=(int(j.superior_coord[0])+(count-1)*600,int(j.superior_coord[1])), pt2=(int(j.inferior_coord[0])+(count-1)*600,int(j.inferior_coord[1])),color=color ,thickness = -1)
                 cv2.rectangle(imagen,pt1=(int(j.superior_coord[0])+(count-1)*600,int(j.superior_coord[1])), pt2=(int(j.inferior_coord[0])+(count-1)*600,int(j.inferior_coord[1])),color=(0,0,0))   
 

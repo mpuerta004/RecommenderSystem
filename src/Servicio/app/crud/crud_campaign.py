@@ -3,7 +3,7 @@ from models.Campaign import Campaign
 from schemas.Campaign import CampaignCreate, CampaignUpdate
 from typing import Any, Dict, Optional, Union, List
 from fastapi.encoders import jsonable_encoder
-
+from schemas.Cell import Cell
 from sqlalchemy.orm import Session
 
 from crud.base import CRUDBase
@@ -36,6 +36,6 @@ class CRUDCampaign(CRUDBase[Campaign, CampaignCreate, CampaignUpdate]):
       def get_all_campaign(
         self,        db: Session) ->List[Campaign]:
         return db.query(Campaign).all()
-
+      
       
 campaign = CRUDCampaign(Campaign)

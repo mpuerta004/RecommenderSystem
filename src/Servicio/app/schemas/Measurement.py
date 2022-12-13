@@ -10,25 +10,24 @@ from datetime import datetime, time, timedelta
 from schemas.AirData import AirData
 from schemas.Member import Member
 
-class CellMeasurementBase(BaseModel):    
+class MeasurementBase(BaseModel):    
     cell_id:int # INT,
     timestamp:datetime=None
-    campaign_id:int
     measurement_type:str='AirData' #Varchar(30) default 'AirData', #set('AirData','Sound')
     airdata_id:int=None# INT,
     location:Point=None
     
     
 
-class CellMeasurementCreate(CellMeasurementBase):
+class MeasurementCreate(MeasurementBase):
     pass
 
 
-class CellMeasurementUpdate(CellMeasurementBase):
+class MeasurementUpdate(MeasurementBase):
     ...
 
 # Properties shared by models stored in DB
-class CellMeasurementInDBBase(CellMeasurementBase):
+class MeasurementInDBBase(MeasurementBase):
     id:int 
     slot_id:int
     member_id:int #  INT,
@@ -40,15 +39,15 @@ class CellMeasurementInDBBase(CellMeasurementBase):
 
 
 # Properties to return to client
-class CellMeasurement(CellMeasurementInDBBase):
+class Measurement(MeasurementInDBBase):
 
     pass
 
 
 # Properties properties stored in DB
-class RecipeInDB(CellMeasurementInDBBase):
+class RecipeInDB(MeasurementInDBBase):
     pass
 
 
-class CellMeasurementSearchResults(BaseModel):
-    results: Sequence[CellMeasurement]
+class MeasurementSearchResults(BaseModel):
+    results: Sequence[Measurement]

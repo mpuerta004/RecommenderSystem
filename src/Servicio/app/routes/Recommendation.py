@@ -4,7 +4,7 @@ from fastapi.templating import Jinja2Templates
 from typing import Optional, Any, List
 from pathlib import Path
 from sqlalchemy.orm import Session
-from schemas.CellMeasurement import CellMeasurement, CellMeasurementCreate, CellMeasurementSearchResults
+from schemas.Measurement import Measurement, MeasurementCreate, MeasurementSearchResults
 from schemas.Campaign import CampaignSearchResults, Campaign, CampaignCreate
 from schemas.Slot import Slot, SlotCreate,SlotSearchResults
 from schemas.Hive import Hive, HiveCreate, HiveSearchResults
@@ -13,7 +13,7 @@ from schemas.AirData import AirData, AirDataCreate, AirDataSearchResults
 
 from schemas.Role import Role,RoleCreate,RoleSearchResults
 from schemas.newMember import NewMemberBase
-from schemas.CellPriority import CellPriority, CellPriorityCreate, CellPrioritySearchResults
+from schemas.Priority import Priority, PriorityCreate, PrioritySearchResults
 from datetime import datetime, timedelta
 from schemas.Cell import Cell, CellCreate, CellSearchResults, Point
 from schemas.State import State,StateBase,StateCreate,StateSearchResults
@@ -82,15 +82,23 @@ def create_recomendation(
     """
     user=crud.member.get_by_id(db=db,id=member_id)
     admi=False
+    hives=[]
     for i in user.roles:
-        if i.role=="Participant":
+        if not (i.hive_id in  hives):
+            hives.append(i.hive_id)
+        if i.role=="WorkerBee":
             admi=True
     if admi:
         obj_state=StateCreate(db=db)
         state=crud.state.create(db=db,obj_in=obj_state)
         #Calcular las celdas mas cercanas. 
         List_cells_cercanas=[]
-        cells=crud.cell.get_multi_cell(db=db,campaign_id=recipe_in.campaign_id)
+        cells=[]
+        for i in hives:
+            a=crud.cell.get_multi_cell(db=db,hive_id=i)
+            if a is not None:
+                for l in a:
+                    cells.append(l)
         for i in cells: 
             centro= i.center
             point= recipe_in.member_current_location
@@ -104,14 +112,15 @@ def create_recomendation(
             for i in List_cells_cercanas:
                 slot=crud.slot.get_slot_time(db=db,cell_id=i.id,time=recipe_in.recommendation_timestamp)
                 #TODO: Verificar que este gest last es verdad
-                priority=crud.cellPriority.get_last(db=db,slot_id=slot.id)
+                priority=crud.priority.get_last(db=db,slot_id=slot.id)
                 priorities.append(priority)
             #Todo: verificar que esto ordena bien! 
             priorities.sort(key=lambda Cell: (Cell.temporal_priority),reverse=True)
             result=[]
             for i in range(0,3):
-            
-                recomendation=crud.recommendation.create_recommendation(db=db,obj_in=recipe_in,member_id=member_id,state_id=state.id,slot_id=priorities[i].slot_id,cell_id=priorities[i].cell_id)
+                a=crud.slot.get_slot(db=db, slot_id=priorities[i].slot_id)
+                print(a.cell_id)
+                recomendation=crud.recommendation.create_recommendation(db=db,obj_in=recipe_in,member_id=member_id,state_id=state.id,slot_id=priorities[i].slot_id,cell_id=a.cell_id)
                 result.append(recomendation)
         else:
             priorities=[]
@@ -119,14 +128,15 @@ def create_recomendation(
 
                 slot=crud.slot.get_slot_time(db=db,cell_id=i.id,time=recipe_in.recommendation_timestamp)
                 #TODO: Verificar que este gest last es verdad
-                priority=crud.cellPriority.get_last(db=db,slot_id=slot.id)
+                priority=crud.priority.get_last(db=db,slot_id=slot.id)
                 priorities.append(priority)
             #Todo: verificar que esto ordena bien! 
             priorities.sort(key=lambda Cell: (Cell.temporal_priority))
             result=[]
             for i in range(0,3):
-            
-                recomendation=crud.recommendation.create_recommendation(db=db,obj_in=recipe_in,member_id=member_id,state_id=state.id,slot_id=priorities[i].slot_id,cell_id=priorities[i].cell_id)
+                a=crud.slot.get_slot(db=db, slot_id=priorities[i].slot_id)
+                print(a.cell_id)
+                recomendation=crud.recommendation.create_recommendation(db=db,obj_in=recipe_in,member_id=member_id,state_id=state.id,slot_id=priorities[i].slot_id,cell_id=a.cell_id)
                 result.append(recomendation)
         return {"results": result}
     else:
