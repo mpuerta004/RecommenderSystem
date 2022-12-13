@@ -14,13 +14,11 @@ class Member(Base):
     name=Column(String,nullable=True)
     age=Column(Integer,nullable=True)
     surname=Column(String,nullable=True)
-    #hive_id=Column(Integer,ForeignKey(Hive.id) )
     city=Column(String,nullable=True)
     gender=Column(String,default='I dont want to answer')
     
     cellMeasurements=relationship("CellMeasurement")
-    # recommendations=relationship("Recommendation")
     roles=relationship("Role", back_populates="member")
-    campaigns= relationship("Campaign")
+    campaign_creator= relationship("Campaign")
 
     

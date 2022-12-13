@@ -13,6 +13,7 @@ from schemas.CellPriority import CellPriority, CellPriorityCreate, CellPriorityS
 from datetime import datetime, timedelta
 from schemas.Cell import Cell, CellCreate, CellSearchResults, Point
 from crud import crud_cell
+from fastapi import BackgroundTasks, FastAPI
 from schemas.Surface import SurfaceSearchResults, Surface, SurfaceCreate
 import deps
 import crud
@@ -23,6 +24,7 @@ from io import BytesIO
 from starlette.responses import StreamingResponse
 import sys
 import cv2
+import asyncio
 import numpy as np
 from io import BytesIO
 from starlette.responses import StreamingResponse
@@ -30,6 +32,7 @@ from fastapi_events.dispatcher import dispatch
 from fastapi_events.middleware import EventHandlerASGIMiddleware
 from fastapi_events.handlers.local import local_handler
 
+from fastapi_utils.session import FastAPISessionMaker
 
 api_router_campaign = APIRouter(prefix="/hives/{hive_id}/campaigns")
 
@@ -75,57 +78,87 @@ def get_campaign(
     return Campaigns
 
 
-
+    
 @api_router_campaign.post("/", status_code=201, response_model=Campaign)
-def create_Campaign(
+async def create_Campaign(
     *,
     recipe_in: CampaignCreate,
-    hive_id:int,
-    number_cells:int,
-    db: Session = Depends(deps.get_db)
+    hive_id: int,
+    number_cells: int,
+    db: Session = Depends(deps.get_db),
+    background_tasks: BackgroundTasks
 ) -> dict:
     """
-    Create a new campaing in the database.
+     Create a new campaing in the database.
     """
-    role=crud.role.get_roles(db=db,member_id=recipe_in.member_id, hive_id=hive_id)
-    
+    role = crud.role.get_roles(db=db, member_id=recipe_in.member_id, hive_id=hive_id)
+
     if ("QueenBee",) in role:
-        Campaign = crud.campaign.create_cam(db=db, obj_in=recipe_in,hive_id=hive_id)
-        Surface=crud.surface.create_sur(db=db, campaign_id=Campaign.id)
-        #TODO: Esto iria enlazado con el programa que permite seleccionar las celdas de la campaña pero de momento esto nos vale. 
-        
-        for i in range(number_cells):
-            coord_x=((i%5)+1)*100
-            coord_y=((i//5)+1)*100
-            center_x= (coord_x+100-coord_x)/2 + coord_x
-            center_y=(coord_y+100-coord_y)/2 + coord_y
-            cell_create=CellCreate(surface_id=Surface.id,superior_coord=Point(x=coord_x,y=coord_y), inferior_coord=Point(x=coord_x+100,y=coord_y+100),center=Point(center_x,center_y),campaign_id=Campaign.id)
-            cell=crud.cell.create_cell(db=db,obj_in=cell_create,campaign_id=Campaign.id, surface_id=Surface.id)
-            # Vamos a crear los slot de tiempo de esta celda. 
-            end_time_slot= Campaign.start_timestamp + timedelta(seconds=Campaign.sampling_period -1)
-            start_time_slot= Campaign.start_timestamp
-            # while start_time_slot < (Campaign.start_timestamp + timedelta(seconds= Campaign.campaign_duration)):
-            #     slot_create=SlotCreate(cell_id=cell.id, start_timestamp=Campaign.start_timestamp, end_timestamp=end_time_slot)
-            #     slot=crud.slot.create(db=db,obj_in=slot_create)
-               
-            #     if start_time_slot==Campaign.start_timestamp:
-            #         #Todo: creo que cuando se crea una celda se deberia generar todos los slot necesarios. 
-            #         b = max(2, Campaign.min_samples - 0)
-            #         a = max(2, Campaign.min_samples - 0)
-            #         result = math.log(a) * math.log(b, 0 + 2)
-            #         #Maximo de la prioridad temporal -> 8.908297157282622
-            #         #Minimo -> 0.1820547846864113
-            #         #Todo:Estas prioridades deben estar al menos bien echas... pilla la formula y carlcula la primera! 
-            #         # Slot_result= crud.slot.get_slot_time(db=db, cell_id=cell.id, time=Campaign.start_timestamp)
-            #         Cell_priority=CellPriorityCreate(slot_id=slot.id,timestamp=Campaign.start_timestamp,temporal_priority=result,trend_priority=0.0,cell_id=cell.id)
-            #         priority=crud.cellPriority.create(db=db, obj_in=Cell_priority)    
-            #     start_time_slot= end_time_slot + timedelta(seconds=1)
-            #     end_time_slot = end_time_slot + timedelta(seconds=Campaign.sampling_period)
+        Campaign = crud.campaign.create_cam(db=db, obj_in=recipe_in, hive_id=hive_id)
+        Surface = crud.surface.create_sur(db=db, campaign_id=Campaign.id)
+        # TODO: Esto iria enlazado con el programa que permite seleccionar las celdas de la campaña pero de momento esto nos vale.
+
+        for i in range(number_cells):   
+                    coord_x = ((i % 5)+1)*100
+                    coord_y = ((i//5)+1)*100
+                    center_x = (coord_x+100-coord_x)/2 + coord_x
+                    center_y = (coord_y+100-coord_y)/2 + coord_y
+                    cell_create = CellCreate(surface_id=Surface.id, superior_coord=Point(x=coord_x, y=coord_y), inferior_coord=Point(
+                            x=coord_x+100, y=coord_y+100), center=Point(center_x, center_y), campaign_id=Campaign.id)
+                    cell = crud.cell.create_cell(
+                            db=db, obj_in=cell_create, campaign_id=Campaign.id, surface_id=Surface.id)
+                    # Vamos a crear los slot de tiempo de esta celda.
+                    end_time_slot = Campaign.start_timestamp + \
+                            timedelta(seconds=Campaign.sampling_period - 1)
+                    start_time_slot = Campaign.start_timestamp
+        background_tasks.add_task(create_slots, cam=Campaign)
         return Campaign
-    else: 
-         raise HTTPException(
-            status_code=401, detail=f"The participant dont have the necesary role to create a hive"
-         )
+    else:
+        raise HTTPException(
+               status_code=401, detail=f"The participant dont have the necesary role to create a hive"
+        )
+
+
+
+#Todo: no se me queda la base de datos aqui recogida y no tengo claro porque... https://stackoverflow.com/questions/3044580/multiprocessing-vs-threading-python
+async def create_slots(cam: Campaign):
+    """
+    Create all the slot of each cells of the campaign. 
+    """
+    SQLALCHEMY_DATABASE_URL = "mysql+mysqlconnector://root:mypasswd@localhost:3306/SocioBee"
+    sessionmaker = FastAPISessionMaker(SQLALCHEMY_DATABASE_URL)
+    await asyncio.sleep(3)
+    with sessionmaker.context_session() as db:
+        #       campaigns=crud.campaign.get_all_campaign(db=db)
+        #       for cam in campaigns:
+        # if cam.start_timestamp.strftime("%m/%d/%Y, %H:%M:%S")==date_time:
+        n_slot = cam.campaign_duration//cam.sampling_period
+        if cam.campaign_duration % cam.sampling_period != 0:
+            n_slot = n_slot+1
+        for i in range(n_slot):
+            start = cam.start_timestamp + timedelta(seconds=i*cam.sampling_period)
+            end = start + timedelta(seconds=cam.sampling_period - 1)
+            for sur in cam.surfaces:
+                for cells in sur.cells:
+                # for cells in cam.cells:
+                    slot_create =  SlotCreate(
+                        cell_id=cells.id, start_timestamp=start, end_timestamp=end)
+                    slot = crud.slot.create_slot_detras(db=db, obj_in=slot_create)
+                    print(slot.id,cells.id)
+                    if start == cam.start_timestamp:
+                        b = max(2, cam.min_samples - 0)
+                        a = max(2, cam.min_samples - 0)
+                        result = math.log(a) * math.log(b, 0 + 2)
+                        # Maximo de la prioridad temporal -> 8.908297157282622
+                        # #Minimo -> 0.1820547846864113
+                        #Todo:Estas prioridades deben estar al menos bien echas... pilla la formula y carlcula la primera!
+                        Cell_priority = CellPriorityCreate(
+                            slot_id=slot.id, timestamp=cam.start_timestamp, temporal_priority=result, trend_priority=0.0)# ,cell_id=cells.id)
+                        priority = crud.cellPriority.create_cell_priority_detras(
+                            db=db, obj_in=Cell_priority)
+   
+
+
     
 #Todo: control de errores.        
 @api_router_campaign.get("/{campaign_id}/show",status_code=200)

@@ -11,7 +11,6 @@ class Campaign(Base):
     __tablename__='Campaign'
     id=Column(Integer, unique=True, primary_key=True, autoincrement=True) 
     city=Column(String, nullable=False)
-    #hive_id=Column(Integer,ForeignKey(Hive.id) )
     member_id=Column(Integer,ForeignKey(Member.id))
     start_timestamp=Column(DateTime)
     cell_edge=Column(Integer)

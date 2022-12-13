@@ -13,6 +13,8 @@ from models.Point import Point
 from models.Member import Member
 from models.Campaign import Campaign
 from models.Slot import Slot
+
+
 class CellMeasurement(Base):
     __tablename__='CellMeasurement'
     id=Column(Integer, unique=True, primary_key=True, index=True, autoincrement=True) 
