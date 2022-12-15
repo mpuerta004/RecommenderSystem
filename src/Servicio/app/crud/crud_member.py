@@ -6,13 +6,18 @@ from crud.base import CRUDBase
 from models.Member import Member
 from schemas.Member import MemberCreate, MemberUpdate, MemberSearchResults
 from fastapi.encoders import jsonable_encoder
-
+from models.Role import Role
 
 class CRUDMember(CRUDBase[Member, MemberCreate, MemberUpdate]):
     
-    def get_multi_members_from_hive_id(        self, db: Session, *, hive_id:int, limit: int = 100, ) -> List[Member]:
-         return db.query(Member).filter(Member.hive_id== hive_id).limit(limit).all()
-
+    def get_multi_members_from_hive_id(   self, db: Session, *, hive_id:int, limit: int = 100, ) -> List[Member]:
+         return db.query(Member).join(Role).filter((Role.hive_id== hive_id) & (Member.name!="Static") &(Role.member_id==Member.id)).limit(limit).all()
+    
+    def get_static_user(   self, db: Session, *, hive_id:int ) -> Member:
+         return db.query(Member).join(Role).filter((Role.hive_id== hive_id) & (Role.member_id==Member.id) & (Member.name=="Static")).first()
+    
+    def get_multi_worker_members_from_hive_id(   self, db: Session, *, hive_id:int, limit: int = 100, ) -> List[Member]:
+         return db.query(Member).join(Role).filter((Role.hive_id== hive_id) & (Role.role=="WorkerBee") & (Role.member_id==Member.id) & (Member.name!="Static")).limit(limit).distinct().all()
     # def create_Member(self, db: Session, *, obj_in: MemberCreate,hive_id:int) -> Member:
     #     obj_in_data = jsonable_encoder(obj_in) 
     #     db_obj = self.model(**obj_in_data,hive_id=hive_id)  # type: ignore
@@ -23,8 +28,6 @@ class CRUDMember(CRUDBase[Member, MemberCreate, MemberUpdate]):
     
     def get_by_id(self, db: Session, *, id:int) -> Optional[Member]:
          return db.query(Member).filter(Member.id == id).first()
-    #Todo: todos los usuario que participan en una campaña 
-    #Todo: todos los datos de la campaña 
     
     
     def get_Member_of_city(self, db: Session, *, city:str) -> List[ Member]:

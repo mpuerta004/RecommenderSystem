@@ -7,6 +7,7 @@ from schemas.Cell import Cell
 from sqlalchemy.orm import Session
 
 from crud.base import CRUDBase
+from sqlalchemy import and_, extract
 
 class CRUDCampaign(CRUDBase[Campaign, CampaignCreate, CampaignUpdate]):
       def create_cam(self, db: Session, *, obj_in: CampaignCreate, hive_id:int) -> Campaign:
@@ -31,7 +32,7 @@ class CRUDCampaign(CRUDBase[Campaign, CampaignCreate, CampaignUpdate]):
         *, 
         hive_id:int,
         campaign_id:int) ->Campaign:
-        return db.query(Campaign).filter((Campaign.hive_id== hive_id)&(Campaign.id==campaign_id)).first()
+        return db.query(Campaign).filter(and_(Campaign.hive_id== hive_id,Campaign.id==campaign_id)).first()
 
       def get_all_campaign(
         self,        db: Session) ->List[Campaign]:

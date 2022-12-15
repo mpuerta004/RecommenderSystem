@@ -17,6 +17,7 @@ from sqlalchemy.orm import Session
 from crud.base import CRUDBase
 from models.Surface import Surface
 from models.Cell import Cell
+from sqlalchemy import and_, extract
 
 
 class CRUDMeasurement(CRUDBase[Measurement, MeasurementCreate, MeasurementUpdate]):
@@ -32,14 +33,19 @@ class CRUDMeasurement(CRUDBase[Measurement, MeasurementCreate, MeasurementUpdate
                 return db_obj
         
         def get_Measurement(self, db: Session, *, member_id:int,measurement_id:int,) -> Measurement:
-                 return db.query(Measurement).filter(Measurement.id == measurement_id & Measurement.member_id==member_id).first()
+                 return db.query(Measurement).filter(and_(Measurement.id == measurement_id ,Measurement.member_id==member_id)).first()
         def get_All_Measurement(self, db: Session, *, member_id:int) -> List[Measurement]:
                  return db.query(Measurement).filter(Measurement.member_id==member_id).all()
         
-        def get_all_Measurement_campaign(self, db:Session, *, campaign_id:int)-> int:
-            return db.query(Measurement).join(Cell).join(Surface).filter(Measurement.cell_id==Cell.id & Cell.surface_id==Surface.id & Surface.campaign_id==campaign_id).count()
+        def get_all_Measurement_campaign(self, db:Session, *, campaign_id:int, time:DateTime)-> int:
+            return db.query(Measurement).join(Cell).join(Surface).filter(and_(Measurement.cell_id==Cell.id ,Measurement.timestamp<=time,Cell.surface_id==Surface.id) & (Surface.campaign_id==campaign_id)).count()
         
         
-        def get_all_Measurement_from_cell(self, db:Session, *,  cell_id:int)-> int:
-            return db.query(Measurement).filter( (Measurement.cell_id==cell_id)).count()        
+        def get_all_Measurement_from_cell(self, db:Session, *,  cell_id:int, time:DateTime)-> int:
+            return db.query(Measurement).filter(and_(Measurement.cell_id==cell_id,Measurement.timestamp<=time)).count()        
+         
+        def get_all_Measurement_from_cell_in_the_current_slot(self, db:Session, *,  cell_id:int, time:DateTime, slot_id:int)-> int:
+            return db.query(Measurement).filter( and_(Measurement.cell_id==cell_id, Measurement.timestamp<=time, Measurement.slot_id==slot_id)).count()        
+            # return db.query(Measurement).filter( (Measurement.cell_id==cell_id) & (Measurement.slot_id==slot_id)).count()        
+
 measurement = CRUDMeasurement(Measurement)

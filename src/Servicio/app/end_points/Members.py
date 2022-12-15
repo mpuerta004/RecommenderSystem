@@ -8,10 +8,10 @@ from schemas.Measurement import Measurement, MeasurementCreate, MeasurementSearc
 from schemas.Campaign import CampaignSearchResults, Campaign, CampaignCreate
 from schemas.Slot import Slot, SlotCreate,SlotSearchResults
 from schemas.Hive import Hive, HiveCreate, HiveSearchResults
-from schemas.Member import Member,MemberCreate,MemberSearchResults
+from schemas.Member import Member,MemberCreate,MemberSearchResults, MemberUpdate
 from schemas.AirData import AirData, AirDataCreate, AirDataSearchResults
 
-from schemas.Role import Role,RoleCreate,RoleSearchResults
+from schemas.Role import Role,RoleCreate,RoleSearchResults, RoleUpdate
 from schemas.newMember import NewMemberBase, NewRole
 from schemas.Priority import Priority, PriorityCreate, PrioritySearchResults
 from datetime import datetime, timedelta
@@ -74,6 +74,11 @@ def get_a_member_of_hive(
         )
     return user
 
+
+
+
+
+
 #Todo: esto no se si deberia ir asi... control de errores! 
 @api_router_members.post("/",status_code=201, response_model=Member )
 def create_member_of_hive(
@@ -118,3 +123,24 @@ def create_new_role_for_member_of_hive(
         return user
    
 
+@api_router_members.put("/{member_id}", status_code=200, response_model=Member)
+def put_a_member(
+    *,
+    hive_id:int,
+    member_id:int,
+    recipe_in:MemberUpdate,
+    db: Session = Depends(deps.get_db),
+) -> dict:
+    """
+    Update a member
+    """
+    user=crud.member.get_by_id(db=db, id=member_id)
+
+    if  user is None:
+        raise HTTPException(
+            status_code=404, detail=f"Member with member_id=={member_id} not found"
+        )
+    updated_recipe = crud.member.update(db=db, db_obj=user, obj_in=recipe_in)
+    db.commit()
+
+    return updated_recipe

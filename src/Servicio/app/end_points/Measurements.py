@@ -4,7 +4,7 @@ from fastapi.templating import Jinja2Templates
 from typing import Optional, Any, List
 from pathlib import Path
 from sqlalchemy.orm import Session
-from schemas.Measurement import Measurement, MeasurementCreate, MeasurementSearchResults
+from schemas.Measurement import Measurement, MeasurementCreate, MeasurementSearchResults,MeasurementUpdate
 from schemas.Campaign import CampaignSearchResults, Campaign, CampaignCreate
 from schemas.Slot import Slot, SlotCreate,SlotSearchResults
 from schemas.Hive import Hive, HiveCreate, HiveSearchResults
@@ -103,3 +103,29 @@ def create_measurements(
 
 
 
+
+@api_router_measurements.put("/{measurement_id}", status_code=201, response_model=Measurement)
+def update_recipe(
+    *,
+    recipe_in: MeasurementUpdate,
+        member_id:int, 
+measurement_id:int,
+    db: Session = Depends(deps.get_db)
+) -> dict:
+    """
+    Update Campaign with campaign_id 
+    """
+    cell = crud.measurement.get_Measurement(db=db,member_id=member_id, measurement_id=measurement_id)
+    # .get_campaign(db=db,hive_id=hive_id,campaign_id=campaign_id)
+    if not cell:
+        raise HTTPException(
+            status_code=400, detail=f"Recipe with member_id=={member_id} and measurement_id=={measurement_id} not found."
+        )
+    # if recipe.submitter_id != current_user.id:
+    #     raise HTTPException(
+    #         status_code=403, detail=f"You can only update your recipes."
+    #     )
+
+    updated_recipe = crud.measurement.update(db=db, db_obj=cell, obj_in=recipe_in)
+    db.commit()
+    return updated_recipe

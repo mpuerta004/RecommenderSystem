@@ -29,13 +29,17 @@ class CRUDCell(CRUDBase[Cell, CellCreate, CellUpdate]):
                 db.commit()
                 db.refresh(db_obj)
                 return db_obj
-        def get_Cell(self, db: Session, *, cell_id:int,campaign_id:int, surface_id:int) -> Cell:
-                 return db.query(Cell).filter((Cell.id == cell_id) & (Cell.campaign_id==campaign_id) & (Cell.surface_id==surface_id)).first()
+        def get_Cell(self, db: Session, *, cell_id:int) -> Cell:
+                 return db.query(Cell).filter((Cell.id == cell_id)).first()
         
         def get_multi_cell(self, db: Session, *, hive_id:int) -> List[Cell]:
                  return db.query(Cell).join(Surface).join(Campaign).filter( (Cell.surface_id==Surface.id) & (Surface.campaign_id==Campaign.id ) & Campaign.hive_id==hive_id  ).all()
         def get_count_cells(self, db: Session, *, campaign_id:int) -> int:
                  return db.query(Cell).join(Surface).filter( (Cell.surface_id==Surface.id) & (Surface.campaign_id==campaign_id)).count()
-                
+        def get_cells_campaign(self, db: Session, *, campaign_id:int) -> int:
+                 return db.query(Cell).join(Surface).filter( (Cell.surface_id==Surface.id) & (Surface.campaign_id==campaign_id)).all()
+        def get_statics(self, db:Session, *,campaign_id:int) ->List[Cell]:
+                return db.query(Cell).join(Surface).filter((Cell.cell_type!="Dynamic")&(Cell.surface_id==Surface.id) & (Surface.campaign_id==campaign_id)).all()
+
 
 cell = CRUDCell(Cell)

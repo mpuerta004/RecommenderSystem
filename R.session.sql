@@ -1,1 +1,1 @@
-Select * from Cell
+Select * from Measurement where cell_id BETWEEN 248 and 277

@@ -13,7 +13,7 @@ from schemas.Priority import Priority, PriorityCreate, PrioritySearchResults
 from datetime import datetime, timedelta
 from schemas.Cell import Cell, CellCreate, CellSearchResults, Point
 from crud import crud_cell
-from schemas.Surface import SurfaceSearchResults, Surface, SurfaceCreate
+from schemas.Surface import SurfaceSearchResults, Surface, SurfaceCreate, SurfaceUpdate
 import deps
 import crud
 from datetime import datetime
@@ -27,7 +27,7 @@ import numpy as np
 from io import BytesIO
 from starlette.responses import StreamingResponse
 from fastapi import BackgroundTasks, FastAPI
-from routes.Campaigns import create_slots
+from end_points.Campaigns import create_slots
 
 
 
@@ -70,7 +70,28 @@ def search_a_campaign_by_id(
         )
     return surface
 
-
+#Todo: 
+@api_router_surface.put("/{surface_id}", status_code=200, response_model=Surface)
+def put_a_member(
+    *,
+    hive_id:int,
+    campaign_id:int, 
+    surface_id:int,
+    recipe_in:SurfaceUpdate,
+    db: Session = Depends(deps.get_db),
+) -> dict:
+    """
+    Update a surface
+    """
+    surface=crud.surface.get_surface_by_ids(db=db,surface_id=surface_id, campaign_id=campaign_id)
+    a=surface.cells
+    if  surface is None:
+        raise HTTPException(
+            status_code=404, detail=f"Member with surface_id=={surface_id} and campaign_id={campaign_id } not found"
+        )
+    updated_recipe = crud.surface.update(db=db, db_obj=surface, obj_in=recipe_in)
+    db.commit()
+    return updated_recipe
 
 @api_router_surface.post("/", status_code=201, response_model=Surface)
 def create_surface(
@@ -95,15 +116,16 @@ def create_surface(
         raise HTTPException(
             status_code=400, detail=f"INVALID REQUEST"
         )
-    
+    count=len(Campaign.surfaces)
+    mas=(count-1)*600
     #TODO: Esto iria enlazado con el programa que permite seleccionar las celdas de la campaña pero de momento esto nos vale. 
     # Generar las celdas! Esto no debe ser asi! 
     for i in range(number_cells):
-            coord_x=((i%5)+1)*100
-            coord_y=((i//5)+1)*100
-            center_x= (coord_x+100-coord_x)/2 + coord_x
+            coord_x=((i%5)+1)*100 
+            coord_y=((i//5)+1)*100 
+            center_x= (coord_x+100-coord_x)/2 + coord_x +(count-1)*600
             center_y=(coord_y+100-coord_y)/2 + coord_y
-            cell_create=CellCreate(surface_id=Surface.id,superior_coord=Point(x=coord_x,y=coord_y), inferior_coord=Point(x=coord_x+100,y=coord_y+100),center=Point(center_x,center_y))
+            cell_create=CellCreate(surface_id=Surface.id,superior_coord=Point(x=coord_x+mas,y=coord_y), inferior_coord=Point(x=coord_x+100 +mas,y=coord_y+100),center=Point(center_x,center_y))
             cell=crud.cell.create_cell(db=db,obj_in=cell_create, surface_id=Surface.id)
             
             # Vamos a crear los slot de tiempo de esta celda. 

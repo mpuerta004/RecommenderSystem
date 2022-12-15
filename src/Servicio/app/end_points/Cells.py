@@ -15,7 +15,7 @@ from schemas.Role import Role,RoleCreate,RoleSearchResults
 from schemas.newMember import NewMemberBase
 from schemas.Priority import Priority, PriorityCreate, PrioritySearchResults
 from datetime import datetime, timedelta
-from schemas.Cell import Cell, CellCreate, CellSearchResults, Point
+from schemas.Cell import Cell, CellCreate, CellSearchResults, Point, CellUpdate
 from crud import crud_cell
 from schemas.Surface import SurfaceSearchResults, Surface, SurfaceCreate
 import deps
@@ -31,7 +31,7 @@ import numpy as np
 from io import BytesIO
 from starlette.responses import StreamingResponse
 from fastapi import BackgroundTasks
-from routes.Campaigns import create_slots
+from end_points.Campaigns import create_slots
 
 
 api_router_cell = APIRouter(prefix="/surfaces/{surface_id}/cells")
@@ -95,5 +95,35 @@ def create_cell(
     
     background_tasks.add_task(create_slots, cam=Campaign)
     return cell
+
+
+
+@api_router_cell.put("/{cell_id}", status_code=201, response_model=Cell)
+def update_recipe(
+    *,
+    recipe_in: CellUpdate,
+    hive_id:int,
+    campaign_id:int,
+    surface_id:int,
+    cell_id:int,
+    db: Session = Depends(deps.get_db)
+) -> dict:
+    """
+    Update Campaign with campaign_id 
+    """
+    cell = crud.cell.get_Cell(db=db,cell_id=cell_id)
+    # .get_campaign(db=db,hive_id=hive_id,campaign_id=campaign_id)
+    if not cell:
+        raise HTTPException(
+            status_code=400, detail=f"Recipe with hive_id=={hive_id} and campaign_id=={campaign_id} and surface_id={surface_id} not found."
+        )
+    # if recipe.submitter_id != current_user.id:
+    #     raise HTTPException(
+    #         status_code=403, detail=f"You can only update your recipes."
+    #     )
+
+    updated_recipe = crud.cell.update(db=db, db_obj=cell, obj_in=recipe_in)
+    db.commit()
+    return updated_recipe
 
 

@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 from schemas.Measurement import Measurement, MeasurementCreate, MeasurementSearchResults
 from schemas.Campaign import CampaignSearchResults, Campaign, CampaignCreate
 from schemas.Slot import Slot, SlotCreate,SlotSearchResults
-from schemas.Hive import Hive, HiveCreate, HiveSearchResults
+from schemas.Hive import Hive, HiveCreate, HiveSearchResults,HiveUpdate
 from schemas.Member import Member,MemberCreate,MemberSearchResults
 from schemas.AirData import AirData, AirDataCreate, AirDataSearchResults
 
@@ -42,7 +42,7 @@ def get_hive(
     *,
     hive_id: int,
     db: Session = Depends(deps.get_db),
-) -> Cell:
+) -> dict:
     """
     Fetch a single Hive by ID
     """
@@ -67,5 +67,32 @@ def create_hive(
             status_code=400, detail=f"INVALID REQUEST"
         )
     return hive
+
+
+
+@api_router_hive.put("/{hive_id}", status_code=201, response_model=Hive)
+def update_recipe(
+    *,
+    recipe_in: HiveUpdate,
+    hive_id:int,
+    db: Session = Depends(deps.get_db),
+) -> dict:
+    """
+    Update recipe in the database.
+    """
+    hive = crud.hive.get(db, id=hive_id)
+    if not hive:
+        raise HTTPException(
+            status_code=400, detail=f"Recipe with ID: {hive_id} not found."
+        )
+
+    # if recipe.submitter_id != current_user.id:
+    #     raise HTTPException(
+    #         status_code=403, detail=f"You can only update your recipes."
+    #     )
+
+    updated_recipe = crud.hive.update(db=db, db_obj=hive, obj_in=recipe_in)
+    return updated_recipe
+
 
 

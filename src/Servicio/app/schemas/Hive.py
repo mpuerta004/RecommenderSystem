@@ -20,7 +20,7 @@ class HiveCreate(HiveBase):
 
 
 class HiveUpdate(HiveBase):
-    ...
+    pass
 
 # Properties shared by models stored in DB
 class HiveInDBBase(HiveBase):
