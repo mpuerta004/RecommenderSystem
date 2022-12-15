@@ -546,14 +546,16 @@ def show_a_campaign_2(
                 slot=crud.slot.get_slot_time(db=db, cell_id=j.id,time=time)
                 prioridad= crud.priority.get_last(db=db,slot_id=slot.id,time=time)
                 temporal_prioridad=prioridad.temporal_priority
-                if temporal_prioridad>2.5: # ROJO
+                
+                if (temporal_prioridad/9)> 0.1: # ROJO
                     color=(201,191,255)
-                elif temporal_prioridad<1.5: #VERDE
+                elif (temporal_prioridad/9)<0.07: #VERDE
                     color=(175,243,184)
                 else: #NARANJA
                     color=(191, 355, 255) 
-                print(temporal_prioridad, j.id)
                 Cardinal_actual = crud.measurement.get_all_Measurement_from_cell_in_the_current_slot(db=db, cell_id=j.id, time=time,slot_id=slot.id)
+
+                print(temporal_prioridad/9, j.id,Cardinal_actual)
 
                 # a=crud.measurement.get_all_Measurement_from_cell(db=db, cell_id=j.id)
                 # print(a)   a=crud.measurement.get_all_Measurement_from_cell(db=db, cell_id=j.id)
@@ -571,7 +573,7 @@ def show_a_campaign_2(
     #cv2.destroyAllWindows() 
     direcion=f"/home/ubuntu/carpeta_compartida_docker/RecommenderSystem/src/Servicio/app/imagen/{time.strftime('%m-%d-%Y-%H-%M-%S')}.jpeg"
     print(direcion)
-    cv2.imwrite(direcion,im_png)
+    cv2.imwrite(direcion, imagen)
     #return StreamingResponse(BytesIO(im_png.tobytes()), media_type="image/png")
 
 @api_router_campaign.put("/{campaign_id}", status_code=201, response_model=Campaign)
