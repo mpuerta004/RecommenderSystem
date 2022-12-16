@@ -10,7 +10,7 @@ from schemas.Campaign import CampaignSearchResults, Campaign, CampaignCreate, Ca
 from schemas.Slot import Slot, SlotCreate,SlotSearchResults
 from schemas.Recommendation import Recommendation,RecommendationCreate
 from schemas.State import State,StateCreate
-
+from schemas.Member import Member
 from schemas.Priority import Priority, PriorityCreate, PrioritySearchResults
 from schemas.Cell import Cell, CellCreate, CellSearchResults, Point
 from crud import crud_cell
@@ -80,7 +80,7 @@ def prioriry_calculation_2(time:datetime, cam:Campaign, db:Session= Depends(deps
                     for cells in sur.cells:
                 # for cells in cam.cells:
                         momento = time
-                        if momento > (cam.start_timestamp+timedelta(seconds=cam.sampling_period)):
+                        if momento >= (cam.start_timestamp+timedelta(seconds=cam.sampling_period)):
                             slot_pasado = crud.slot.get_slot_time(db=db, cell_id=cells.id, time=(
                                  momento - timedelta(seconds=cam.sampling_period)))
                             Cardinal_pasado =  crud.measurement.get_all_Measurement_from_cell_in_the_current_slot(
@@ -254,6 +254,7 @@ async def asignacion_recursos(cam:Campaign,db: Session = Depends(deps.get_db)):
         # await asyncio.sleep(60)
         dur=cam.campaign_duration - 120
         for segundo in range(60,dur,60):
+            random.seed()
             print("----------------------------------------------------------------------", segundo)
             #TODO: esk este es el tiempo ficcticio y deberias respetarlo creo... 
             time = cam.start_timestamp + timedelta(seconds=segundo)
@@ -293,9 +294,9 @@ async def asignacion_recursos(cam:Campaign,db: Session = Depends(deps.get_db)):
                             b=b+1
                         if n_filas<b:
                             n_filas=b
-                    
-                    x=random.randint(100, n_surface*700)
-                    y=random.randint(100,n_filas*100)
+                    n_filas=n_filas+1
+                    x=random.randint(0, n_surface*700)
+                    y=random.randint(0,n_filas*100)
                     a=RecommendationCreate(recommendation_timestamp=time,member_current_location=Point(x=x,y=y))
                     recomendaciones=create_recomendation_2(db=db,member_id=user.id,recipe_in=a,cam=cam)
                     if recomendaciones is None:
@@ -304,6 +305,8 @@ async def asignacion_recursos(cam:Campaign,db: Session = Depends(deps.get_db)):
                     else:
                         recomendacion_polinizar = RL(recomendaciones['results'])
                         mediciones.append([user, recomendacion_polinizar, random.randint(1,180)])
+                        show_recomendation(db=db, cam=cam, user=user, result=recomendaciones['results'],time=time,recomendation=recomendacion_polinizar)  
+
             new=[]
             # print(len(mediciones))
             for i in range(0,len(mediciones)):
@@ -354,6 +357,7 @@ def create_recomendation_2(
         
         #Calcular las celdas mas cercanas. 
         List_cells_cercanas=[]
+        dic_list_cercanas={}
         cells=[]
         # for i in hives:
         #     a=crud.cell.get_multi_cell(db=db,hive_id=i)
@@ -366,39 +370,48 @@ def create_recomendation_2(
             point= recipe_in.member_current_location
             #Todo: necesitamos el 
             distancia= math.sqrt((centro[0] - point.x)**2+(centro[1]-point.y)**2)
-            if distancia<150:
+            if distancia<253:
                 List_cells_cercanas.append(i)
         # print(List_cells_cercanas)
         if List_cells_cercanas!=[]:
             priorities=[]
+            cells_and_priority=[]
             for i in List_cells_cercanas:
                 slot=crud.slot.get_slot_time(db=db,cell_id=i.id,time=time)
                 #TODO: Verificar que este gest last es verdad
                 
                 priority=crud.priority.get_last(db=db,slot_id=slot.id,time=time)
                 priorities.append(priority)
+                cells_and_priority.append((i,priority, math.sqrt((i.center[0] - point.x)**2+(i.center[1]-point.y)**2) ))
             #Todo: verificar que esto ordena bien! 
             priorities.sort(key=lambda Cell: (Cell.temporal_priority),reverse=True)
+            cells_and_priority.sort(key=lambda Cell: (Cell[1].temporal_priority, -Cell[2] ),reverse=True)
             result=[]
-            if len(priorities)>=3:
+        
+            if len(cells_and_priority)>=3:
                 for i in range(0,3):
-                    a=crud.slot.get_slot(db=db, slot_id=priorities[i].slot_id)
+                    a=crud.slot.get_slot(db=db, slot_id=cells_and_priority[i][1].slot_id)
+                    cell_id=a.cell_id
                     # print(a.cell_id)
                     obj_state=StateCreate(db=db)
                     state=crud.state.create_state(db=db,obj_in=obj_state)
-                    recomendation=crud.recommendation.create_recommendation_detras(db=db,obj_in=recipe_in,member_id=member_id,state_id=state.id,slot_id=priorities[i].slot_id,cell_id=a.cell_id)
+                    recomendation=crud.recommendation.create_recommendation_detras(db=db,obj_in=recipe_in,member_id=member_id,state_id=state.id,slot_id=cells_and_priority[i][1].slot_id,cell_id=a.cell_id)
                     result.append(recomendation)
-            elif  len(priorities)!=0:
-                for i in range(0,len(priorities)):
-                    a=crud.slot.get_slot(db=db, slot_id=priorities[i].slot_id)
+
+            elif  len(cells_and_priority)!=0:
+                for i in range(0,len(cells_and_priority)):
+                    a=crud.slot.get_slot(db=db, slot_id=cells_and_priority[i][1].slot_id)
+                    cell_id=a.cell_id
+                    
                     # print(a.cell_id)
                     obj_state=StateCreate(db=db)
                     state=crud.state.create_state(db=db,obj_in=obj_state)
-                    recomendation=crud.recommendation.create_recommendation_detras(db=db,obj_in=recipe_in,member_id=member_id,state_id=state.id,slot_id=priorities[i].slot_id,cell_id=a.cell_id)
+                    recomendation=crud.recommendation.create_recommendation_detras(db=db,obj_in=recipe_in,member_id=member_id,state_id=state.id,slot_id=cells_and_priority[i][1].slot_id,cell_id=a.cell_id)
                     result.append(recomendation)
+
             else: return None
-                
         else:
+            #Todo! Esto no va bien!  
             priorities=[]
             for i in cells:
 
@@ -418,6 +431,7 @@ def create_recomendation_2(
                     state=crud.state.create_state(db=db,obj_in=obj_state)
                     recomendation=crud.recommendation.create_recommendation_detras(db=db,obj_in=recipe_in,member_id=member_id,state_id=state.id,slot_id=priorities[i].slot_id,cell_id=a.cell_id)
                     result.append(recomendation)
+
             elif  len(priorities)!=0:
                 for i in range(0,len(priorities)):
                     a=crud.slot.get_slot(db=db, slot_id=priorities[i].slot_id)
@@ -426,6 +440,7 @@ def create_recomendation_2(
                     state=crud.state.create_state(db=db,obj_in=obj_state)
                     recomendation=crud.recommendation.create_recommendation_detras(db=db,obj_in=recipe_in,member_id=member_id,state_id=state.id,slot_id=priorities[i].slot_id,cell_id=a.cell_id)
                     result.append(recomendation)
+
             else: return None
 
         return {"results": result}
@@ -438,6 +453,75 @@ def create_recomendation_2(
 import plotly.figure_factory as ff
 import plotly.express as px
 import pandas as pd
+
+
+def show_recomendation(*, cam:Campaign, user:Member, result:list(),time:datetime, recomendation:Recommendation,db: Session = Depends(deps.get_db))->Any:
+    imagen = 255*np.ones((1000,1500,3),dtype=np.uint8)
+    # campañas_activas= crud.campaign.get_campaign(db=db, hive_id=hive_id, campaign_id=campaign_id)
+    # if campañas_activas is None:
+    #     raise HTTPException(
+    #             status_code=404, detail=f"Campaign with campaign_id== {campaign_id}  and hive_id=={hive_id} not found"
+    #         )
+    count=0
+    cv2.putText(imagen, f"Campaign: id={cam.id},", (100+count*600,50), cv2.FONT_HERSHEY_SIMPLEX , 0.75, (0,0,0))
+    cv2.putText(imagen, f"city={cam.city}", (100+count*600,80), cv2.FONT_HERSHEY_SIMPLEX , 0.75, (0,0,0))
+    cv2.putText(imagen, f"time={time.strftime('%m/%d/%Y, %H:%M:%S')}", (100+1*600,50), cv2.FONT_HERSHEY_SIMPLEX , 0.75, (0,0,0))
+    cv2.putText(imagen, f"User, user_id={user.id}", (100+1*600,80), cv2.FONT_HERSHEY_SIMPLEX , 0.75, (0,0,0))
+    
+    
+    cv2.putText(imagen, f"User position", (100+1*600,150), cv2.FONT_HERSHEY_SIMPLEX , 0.75, (0,0,0))
+    cv2.circle(imagen,color=(0,0,0),center=(100+1*600 + 250,140), radius=10,thickness=-1) 
+    cv2.putText(imagen, f"cells recommended", (100+1*600,200), cv2.FONT_HERSHEY_SIMPLEX , 0.75, (0,0,0))
+    cv2.drawMarker(imagen, position=(100+1*600 + 250,190), color=(255,0,0), markerType=cv2.MARKER_SQUARE, markerSize= 20, thickness=2)
+    cv2.putText(imagen, f"Cell Selected", (100+1*600,250), cv2.FONT_HERSHEY_SIMPLEX , 0.75, (0,0,0))
+    cv2.drawMarker(imagen, position=(100+1*600 + 250,240), color=(151,45,248), markerType=cv2.MARKER_TILTED_CROSS,markerSize= 24, thickness=5)
+    
+    Cells_recomendadas=[]
+    for i in result:
+        Cells_recomendadas.append(i.cell_id)
+    cell_elejida=recomendation.cell_id
+    user_position=recomendation.member_current_location
+    for i in cam.surfaces:
+            count=count+1
+            for j in i.cells:
+                slot=crud.slot.get_slot_time(db=db, cell_id=j.id,time=time)
+                prioridad= crud.priority.get_last(db=db,slot_id=slot.id,time=time)
+                temporal_prioridad=prioridad.temporal_priority
+                if temporal_prioridad>2.5: # ROJO
+                    color=(201,191,255)
+                elif temporal_prioridad<1.5: #VERDE
+                    color=(175,243,184)
+                else: #NARANJA
+                    color=(191, 355, 255) 
+                print(temporal_prioridad, j.id)
+                Cardinal_actual = crud.measurement.get_all_Measurement_from_cell_in_the_current_slot(db=db, cell_id=j.id, time=time,slot_id=slot.id)
+
+                # a=crud.measurement.get_all_Measurement_from_cell(db=db, cell_id=j.id)
+                # print(a)   a=crud.measurement.get_all_Measurement_from_cell(db=db, cell_id=j.id)
+                # print(a)
+                pt1=(int(j.superior_coord[0]),int(j.superior_coord[1]))
+                pt2=(int(j.inferior_coord[0]),int(j.inferior_coord[1]))
+                print(pt1, pt2)
+                cv2.rectangle(imagen,pt1=pt1, pt2=pt2,color=color ,thickness = -1)
+                cv2.rectangle(imagen,pt1=(int(j.superior_coord[0]),int(j.superior_coord[1])), pt2=(int(j.inferior_coord[0]),int(j.inferior_coord[1])),color=(0,0,0))   
+                cv2.putText(imagen, str(Cardinal_actual), (int(j.center[0]),int(j.center[1])+40), cv2.FONT_HERSHEY_SIMPLEX , 0.75, (0,0,0))
+                if j.id in Cells_recomendadas:
+                    if j.id== cell_elejida:
+                        cv2.drawMarker(imagen, position=(int(j.center[0]),int(j.center[1])), color=(151,45,248), markerType=cv2.MARKER_TILTED_CROSS,markerSize= 24, thickness=5)
+                        cv2.drawMarker(imagen, position=(int(j.center[0]),int(j.center[1])), color=(255,0,0), markerType=cv2.MARKER_SQUARE, markerSize= 20, thickness=2)
+
+                    else:
+                        cv2.drawMarker(imagen, position=(int(j.center[0]),int(j.center[1])), color=(255,0,0), markerType=cv2.MARKER_SQUARE, markerSize= 20, thickness=2)
+
+    cv2.circle(imagen,color=(0,0,0),center=(int(user_position[0]),int(user_position[1])), radius=10,thickness=-1) 
+    res, im_png = cv2.imencode(".png", imagen)
+    # cv2.imshow('hola',BytesIO(im_png.tobytes()))
+    # cv2.waitKey(2)
+    # cv2.destroyAllWindows() 
+    direcion=f"/home/ubuntu/carpeta_compartida_docker/RecommenderSystem/src/Servicio/app/Recomendaciones/{time.strftime('%m-%d-%Y-%H-%M-%S')}.jpeg"
+    print(direcion)
+    cv2.imwrite(direcion, imagen)
+    return None
 
 #Todo: control de errores.        
 @api_router_campaign.get("/{campaign_id}/show",status_code=200)
@@ -500,10 +584,9 @@ def show_a_campaign(
                 cv2.putText(imagen, str(Cardinal_actual), (int(j.center[0]),int(j.center[1])), cv2.FONT_HERSHEY_SIMPLEX , 0.75, (0,0,0))
     
     res, im_png = cv2.imencode(".png", imagen)
-    cv2.imshow('hola',BytesIO(im_png.tobytes()))
-    cv2.waitKey(2)
-    cv2.destroyAllWindows() 
-    cv2.imwrite(f".../images/{time.strftime('%m/%d/%Y, %H:%M:%S')}.jpeg",BytesIO(im_png.tobytes()))
+    direcion=f"/home/ubuntu/carpeta_compartida_docker/RecommenderSystem/src/Servicio/app/imagen/{time.strftime('%m-%d-%Y-%H-%M-%S')}.jpeg"
+    print(direcion)
+    cv2.imwrite(direcion, imagen)
 
     return StreamingResponse(BytesIO(im_png.tobytes()), media_type="image/png")
 def show_a_campaign_2(

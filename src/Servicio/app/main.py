@@ -133,9 +133,7 @@ sessionmaker = FastAPISessionMaker(SQLALCHEMY_DATABASE_URL)
 
 
 #Funcion sensores automaticos: 
-# cell_statics=crud.cell.get_statics(db=db, campaign_id=cam.id)
-                
-                
+# cell_statics=crud.cell.get_statics(db=db, campaign_id=cam.id)                
 #                 for i in cell_statics:
 #                     Measurementcreate= MeasurementCreate(cell_id=i.id, timestamp=date,location=i.center)
 #                     slot=crud.slot.get_slot_time(db=db,cell_id=i.id,time=date)

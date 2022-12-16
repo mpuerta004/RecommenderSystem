@@ -70,6 +70,7 @@ def get_recommendation(
 
 
 #Todo: control de errores! 
+#Todo: la que esta en campaign esta mucho mas lograda que esta! 
 @api_router_recommendation.post("/",status_code=201, response_model=RecommendationSearchResults)
 def create_recomendation(
     *, 
@@ -77,9 +78,7 @@ def create_recomendation(
     recipe_in: RecommendationCreate,
     db: Session = Depends(deps.get_db)
 ) -> dict:
-    """
-    Create a new recommendation
-    """
+    time=recipe_in.recommendation_timestamp
     user=crud.member.get_by_id(db=db,id=member_id)
     admi=False
     hives=[]
@@ -89,8 +88,7 @@ def create_recomendation(
         if i.role=="WorkerBee":
             admi=True
     if admi:
-        obj_state=StateCreate(db=db)
-        state=crud.state.create(db=db,obj_in=obj_state)
+        
         #Calcular las celdas mas cercanas. 
         List_cells_cercanas=[]
         cells=[]
@@ -99,6 +97,7 @@ def create_recomendation(
             if a is not None:
                 for l in a:
                     cells.append(l)
+        # cells=crud.cell.get_cells_campaign(db,campaign_id=cam.id)
         for i in cells: 
             centro= i.center
             point= recipe_in.member_current_location
@@ -106,38 +105,73 @@ def create_recomendation(
             distancia= math.sqrt((centro[0] - point.x)**2+(centro[1]-point.y)**2)
             if distancia<150:
                 List_cells_cercanas.append(i)
-        print(List_cells_cercanas)
+        # print(List_cells_cercanas)
         if List_cells_cercanas!=[]:
             priorities=[]
             for i in List_cells_cercanas:
-                slot=crud.slot.get_slot_time(db=db,cell_id=i.id,time=recipe_in.recommendation_timestamp)
+                slot=crud.slot.get_slot_time(db=db,cell_id=i.id,time=time)
                 #TODO: Verificar que este gest last es verdad
-                priority=crud.priority.get_last(db=db,slot_id=slot.id)
+                
+                priority=crud.priority.get_last(db=db,slot_id=slot.id,time=time)
                 priorities.append(priority)
             #Todo: verificar que esto ordena bien! 
             priorities.sort(key=lambda Cell: (Cell.temporal_priority),reverse=True)
             result=[]
-            for i in range(0,3):
-                a=crud.slot.get_slot(db=db, slot_id=priorities[i].slot_id)
-                print(a.cell_id)
-                recomendation=crud.recommendation.create_recommendation(db=db,obj_in=recipe_in,member_id=member_id,state_id=state.id,slot_id=priorities[i].slot_id,cell_id=a.cell_id)
-                result.append(recomendation)
+            if len(priorities)>=3:
+                for i in range(0,3):
+                    a=crud.slot.get_slot(db=db, slot_id=priorities[i].slot_id)
+                    # print(a.cell_id)
+                    obj_state=StateCreate(db=db)
+                    state=crud.state.create_state(db=db,obj_in=obj_state)
+                    recomendation=crud.recommendation.create_recommendation_detras(db=db,obj_in=recipe_in,member_id=member_id,state_id=state.id,slot_id=priorities[i].slot_id,cell_id=a.cell_id)
+                    result.append(recomendation)
+                    # show_recomendation(db=db, cam=cam, user=user, result=result,time=time)  
+
+            elif  len(priorities)!=0:
+                for i in range(0,len(priorities)):
+                    a=crud.slot.get_slot(db=db, slot_id=priorities[i].slot_id)
+                    # print(a.cell_id)
+                    obj_state=StateCreate(db=db)
+                    state=crud.state.create_state(db=db,obj_in=obj_state)
+                    recomendation=crud.recommendation.create_recommendation_detras(db=db,obj_in=recipe_in,member_id=member_id,state_id=state.id,slot_id=priorities[i].slot_id,cell_id=a.cell_id)
+                    result.append(recomendation)
+                    # show_recomendation(db=db, cam=cam, user=user, result=result,time=time)  
+
+            else: return None
         else:
             priorities=[]
             for i in cells:
 
-                slot=crud.slot.get_slot_time(db=db,cell_id=i.id,time=recipe_in.recommendation_timestamp)
+                slot=crud.slot.get_slot_time(db=db,cell_id=i.id,time=time)
                 #TODO: Verificar que este gest last es verdad
-                priority=crud.priority.get_last(db=db,slot_id=slot.id)
+                priority=crud.priority.get_last(db=db,slot_id=slot.id,time=time)
                 priorities.append(priority)
             #Todo: verificar que esto ordena bien! 
             priorities.sort(key=lambda Cell: (Cell.temporal_priority))
             result=[]
-            for i in range(0,3):
-                a=crud.slot.get_slot(db=db, slot_id=priorities[i].slot_id)
-                print(a.cell_id)
-                recomendation=crud.recommendation.create_recommendation(db=db,obj_in=recipe_in,member_id=member_id,state_id=state.id,slot_id=priorities[i].slot_id,cell_id=a.cell_id)
-                result.append(recomendation)
+            if len(priorities)>=3:
+
+                for i in range(0,3):
+                    a=crud.slot.get_slot(db=db, slot_id=priorities[i].slot_id)
+                    # print(a.cell_id)
+                    obj_state=StateCreate(db=db)
+                    state=crud.state.create_state(db=db,obj_in=obj_state)
+                    recomendation=crud.recommendation.create_recommendation_detras(db=db,obj_in=recipe_in,member_id=member_id,state_id=state.id,slot_id=priorities[i].slot_id,cell_id=a.cell_id)
+                    result.append(recomendation)
+                    # show_recomendation(db=db, cam=cam, user=user, result=result,time=time)  
+
+            elif  len(priorities)!=0:
+                for i in range(0,len(priorities)):
+                    a=crud.slot.get_slot(db=db, slot_id=priorities[i].slot_id)
+                    # print(a.cell_id)
+                    obj_state=StateCreate(db=db)
+                    state=crud.state.create_state(db=db,obj_in=obj_state)
+                    recomendation=crud.recommendation.create_recommendation_detras(db=db,obj_in=recipe_in,member_id=member_id,state_id=state.id,slot_id=priorities[i].slot_id,cell_id=a.cell_id)
+                    result.append(recomendation)
+                    # show_recomendation(db=db, cam=cam, user=user, result=result,time=time)  
+
+            else: return None
+
         return {"results": result}
     else:
         raise HTTPException(
