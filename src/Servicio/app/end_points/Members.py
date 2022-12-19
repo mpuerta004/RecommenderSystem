@@ -9,7 +9,6 @@ from schemas.Campaign import CampaignSearchResults, Campaign, CampaignCreate
 from schemas.Slot import Slot, SlotCreate,SlotSearchResults
 from schemas.Hive import Hive, HiveCreate, HiveSearchResults
 from schemas.Member import Member,MemberCreate,MemberSearchResults, MemberUpdate
-from schemas.AirData import AirData, AirDataCreate, AirDataSearchResults
 
 from schemas.Role import Role,RoleCreate,RoleSearchResults, RoleUpdate
 from schemas.newMember import NewMemberBase, NewRole

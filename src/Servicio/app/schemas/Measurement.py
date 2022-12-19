@@ -7,7 +7,7 @@ from typing import NamedTuple
 
 from pydantic import BaseModel, ValidationError
 from datetime import datetime, time, timedelta
-from schemas.AirData import AirData
+from schemas.Reading import Reading
 from schemas.Member import Member
 
 class MeasurementBase(BaseModel):    
@@ -31,7 +31,7 @@ class MeasurementInDBBase(MeasurementBase):
     id:int 
     slot_id:int
     member_id:int #  INT,
-    airData:Sequence[AirData]=None
+    readings:Sequence[Reading]=None
     # member:Sequence[Member]
     
     class Config:

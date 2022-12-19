@@ -7,8 +7,8 @@ from db.base_class import Base
 # print(sys.path)
 
 
-class AirData(Base):
-    __tablename__='AirData'
+class Reading(Base):
+    __tablename__='Reading'
     id=Column(Integer, unique=True, primary_key=True, index=True, autoincrement=True,nullable=True) 
     Co2=Column(Float)
     No2=Column(Float)

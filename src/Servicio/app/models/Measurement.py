@@ -7,7 +7,7 @@ import sys
 # sys.path.append("/home/ubuntu/carpeta_compartida_docker/RecommenderSystem/src")
 from models.Cell import Cell
 from db.base_class import Base
-from models.AirData import AirData
+from models.Reading import Reading
 from models.Point import Point
 from models.Member import Member
 from models.Campaign import Campaign
@@ -22,11 +22,11 @@ class Measurement(Base):
     timestamp=Column(DateTime)
     slot_id=Column(Integer, ForeignKey(Slot.id),)
     measurement_type=Column(String)
-    airdata_id=Column(Integer, ForeignKey(AirData.id), nullable=True)
+    airdata_id=Column(Integer, ForeignKey(Reading.id), nullable=True)
     location=Column(Point)
     # campaign_id=Column(Integer, ForeignKey(Campaign.id))
     
-    airData= relationship("AirData")
+    airData= relationship("Reading")
     
     # member=relationship(Member)
     

@@ -5,7 +5,6 @@ from starlette.responses import JSONResponse
 from starlette.applications import Starlette
 from fastapi import FastAPI, APIRouter, Query, HTTPException, Request, Depends
 from fastapi.templating import Jinja2Templates
-import pytz
 from typing import Optional, Any, List
 from pathlib import Path
 from sqlalchemy.orm import Session
@@ -17,10 +16,8 @@ from schemas.Recommendation import Recommendation, RecommendationCreate, Recomme
 from schemas.State import State, StateCreate, StateUpdate
 from schemas.Campaign import CampaignSearchResults, Campaign, CampaignCreate
 from schemas.Hive import Hive, HiveCreate, HiveSearchResults
-
-from schemas.AirData import AirData, AirDataCreate, AirDataSearchResults
+from schemas.Reading import Reading, ReadingCreate, ReadingSearchResults
 from schemas.Measurement import Measurement, MeasurementCreate, MeasurementSearchResults
-
 from schemas.Cell import Cell, CellCreate, CellSearchResults, Point
 import deps
 from fastapi.responses import FileResponse
@@ -35,7 +32,6 @@ from end_points import Recommendation
 from fastapi_utils.tasks import repeat_every
 
 import cv2
-import numpy as np
 import numpy as np
 from io import BytesIO
 from starlette.responses import StreamingResponse
@@ -140,84 +136,8 @@ sessionmaker = FastAPISessionMaker(SQLALCHEMY_DATABASE_URL)
 #                     #Todo: tiene que haber un usuario para los mediciones automaticas. 
 #                     crud.measurement.create_Measurement(db=db, slot_id=slot.id,member_id=)
 
-# import random 
-
-# def reciboUser(cam:Campaign):
-#     with sessionmaker.context_session() as db:
-
-#         aletorio = random.random()
-#         if aletorio>0.95:
-#             users=crud.member.get_multi_members_from_hive_id(db=db,limit=10000,hive_id=cam.hive_id)
-#             return random.choice(users), True
-#         else:
-#             return None, False
-
-# def RL(a:List()):
-#     return random.choice(a)
 
 
-
-
-# async def asignacion_recursos(cam:Campaign):
-#     mediciones=[]
-#     with sessionmaker.context_session() as db:
-#         a = datetime.now()
-#         print(a)
-#         date = datetime(year=a.year, month=a.month, day=a.day,
-#                         hour=a.hour, minute=a.minute, second=a.second)
-#         start = cam.start_timestamp
-        
-#         await asyncio.sleep((start-date).total_seconds())
-
-#         for segundo in range(cam.campaign_duration):
-#             print("----------------------------------------")
-#             # if segundo%30 ==0:
-#             #     time = cam.start_timestamp + datetime.timedelta(seconds=segundo)
-#             #     cell_statics=crud.cell.get_statics(db=db, campaign_id=cam.id)
-                
-                
-#             #     for i in cell_statics:
-#             #         Measurementcreate= MeasurementCreate(cell_id=i.id, timestamp=date,location=i.center)
-#             #         slot=crud.slot.get_slot_time(db=db,cell_id=i.id,time=date)
-#             #         #Todo: tiene que haber un usuario para los mediciones automaticas. 
-#             #         crud.measurement.create_Measurement(db=db, slot_id=slot.id,member_id=)
-                
-#             #Tengo un usuario al que hacer una recomendacion. 
-#             user,bool = reciboUser()
-#             if bool:
-#                 #Genero las recomendaciones y la que el usuario selecciona y el tiempo que va a tardar en realizar dicho recomendacion. 
-#                 n_surface=len(cam.surfaces)
-#                 # La coordenada x tiene que estar entre 100 y (n_surface*700)
-#                 #La coordenada y entre 100 y 100*n_filas
-#                 n_filas = 1
-#                 for i in cam.surfaces:
-#                     a=len(i.cells)
-#                     b=(a//5) +1
-#                     if a%5!=0:
-#                         b=b+1
-#                     if n_filas<b:
-#                         n_filas=b
-                   
-#                 x=random.randint(100, n_surface*700)
-#                 y=random.randint(100,n_filas*100)
-#                 a=RecommendationCreate(db=db,recommendation_timestamp=date,member_current_location=Point(x=x,y=y))
-#                 recomendaciones=Recommendation.create_recomendation(db=db,member_id=user.id,recipe_in=a)
-#                 celda_polinizar = RL(recomendaciones)
-#                 mediciones.append([user, celda_polinizar, random.randint(1,180)])
-#             new=[]
-#             for i in range(0,len(mediciones)):
-#                 mediciones[i][2]=mediciones[i][2]-1
-#                 if mediciones[i][2]==0:
-#                     cell=crud.cell.get_Cell(db=db,cell_id=mediciones[i][1].cell_id)
-#                     creation=MeasurementCreate(db=db, cell_id=mediciones[i][1].cell_id,location=cell.center)
-#                     slot=crud.slot.get_slot_time(db=db, 
-#                                                  cell_id=cell.id,time=date)
-#                     crud.measurement.create_Measurement(db=db, obj_in=creation,member_id=mediciones[i][0].id,slot_id=slot.id)
-                    
-#                 else:
-#                     new.append(mediciones[i])
-#                 mediciones=new
-#             prioriry_calculation()
 
 app.include_router(api_router)
 

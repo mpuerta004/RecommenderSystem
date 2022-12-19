@@ -14,9 +14,9 @@ CREATE TABLE Hive (
 
 
 -- -----------------------------------------------------
--- Table Airdata
+-- Table Reading
 -- -----------------------------------------------------
-CREATE TABLE AirData (
+CREATE TABLE Reading (
   id INT NOT NULL AUTO_INCREMENT,
   No2 DOUBLE NULL DEFAULT NULL,
   Co2 DOUBLE NULL DEFAULT NULL,
@@ -166,7 +166,7 @@ CREATE TABLE Measurement (
     #FOREIGN KEY (campaign_id)
     #REFERENCES Campaign (id),
     FOREIGN KEY (Airdata_id)
-    REFERENCES AirData (id),
+    REFERENCES Reading (id),
     FOREIGN KEY (member_id)
     REFERENCES Member (id),
      FOREIGN KEY (slot_id)

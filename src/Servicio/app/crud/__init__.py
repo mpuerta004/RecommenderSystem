@@ -9,5 +9,6 @@ from .crud_Priority import priority
 from .crud_recommendation import recommendation
 from .crud_state import state
 from .crud_Slot import slot
-from .crud_AirData import airData
+from .crud_Reading import reading
+
 

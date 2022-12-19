@@ -4,7 +4,6 @@ from fastapi.templating import Jinja2Templates
 from typing import Optional, Any, List
 from pathlib import Path
 from sqlalchemy.orm import Session
-from schemas.AirData import AirData, AirDataCreate, AirDataSearchResults
 from schemas.Measurement import Measurement, MeasurementCreate, MeasurementSearchResults
 from schemas.Campaign import CampaignSearchResults, Campaign, CampaignCreate, CampaignUpdate
 from schemas.Slot import Slot, SlotCreate,SlotSearchResults
@@ -248,17 +247,7 @@ async def asignacion_recursos( hive_id:int,
         """
         mediciones=[]
         cam=crud.campaign.get_campaign(db=db,hive_id=hive_id,campaign_id=campaign_id)
-    # SQLALCHEMY_DATABASE_URL = "mysql+mysqlconnector://root:mypasswd@localhost:3306/SocioBee"
-    # sessionmaker = FastAPISessionMaker(SQLALCHEMY_DATABASE_URL)
-    # with sessionmaker.context_session() as db:
-        # a = datetime.now()
-        # print(a)
-        # # date = datetime(year=a.year, month=a.month, day=a.day,
-        # #                 hour=a.hour, minute=a.minute, second=a.second)
-        # start = cam.start_timestamp
-        
-        # await asyncio.sleep(35)
-        # await asyncio.sleep(60)
+   
         dur=cam.campaign_duration + 60
         for segundo in range(0,dur,60):
             await asyncio.sleep(0.1)
@@ -266,11 +255,7 @@ async def asignacion_recursos( hive_id:int,
             print("----------------------------------------------------------------------", segundo)
             #TODO: esk este es el tiempo ficcticio y deberias respetarlo creo... 
             time = cam.start_timestamp + timedelta(seconds=segundo)
-            if time == cam.start_timestamp + timedelta(seconds=cam.campaign_duration):
-                print(segundo)
-                break
-            # a = datetime.now()
-            # await asyncio.sleep((a-time).total_seconds())
+           
             print(f"a ver que es to {time}")
             prioriry_calculation_2(time=time,db=db,cam=cam)
             # print(a)

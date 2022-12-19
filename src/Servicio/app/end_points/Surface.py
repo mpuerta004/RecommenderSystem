@@ -4,7 +4,6 @@ from fastapi.templating import Jinja2Templates
 from typing import Optional, Any, List
 from pathlib import Path
 from sqlalchemy.orm import Session
-from schemas.AirData import AirData, AirDataCreate, AirDataSearchResults
 from schemas.Measurement import Measurement, MeasurementCreate, MeasurementSearchResults
 from schemas.Campaign import CampaignSearchResults, Campaign, CampaignCreate
 from schemas.Slot import Slot, SlotCreate,SlotSearchResults

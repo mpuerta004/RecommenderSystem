@@ -3,20 +3,20 @@ from typing import Sequence
 from pydantic import BaseModel
 
 
-class AirDataBase(BaseModel):
+class ReadingBase(BaseModel):
     No2: float
     Co2: float
 
 
-class AirDataCreate(AirDataBase):
+class ReadingCreate(ReadingBase):
     pass
 
 
-class AirDataUpdate(AirDataBase):
+class ReadingUpdate(ReadingBase):
     pass
 
 
-class AirDataInDBBase(AirDataBase):
+class ReadingInDBBase(ReadingBase):
     id: int
 
     class Config:
@@ -24,14 +24,14 @@ class AirDataInDBBase(AirDataBase):
 
 
 # Properties to return to client
-class AirData(AirDataInDBBase):
+class Reading(ReadingInDBBase):
     pass
 
 
 # Properties properties stored in DB
-class AirDaraInDB(AirDataInDBBase):
+class AirDaraInDB(ReadingInDBBase):
     pass
 
 
-class AirDataSearchResults(BaseModel):
-    results: Sequence[AirData]
+class ReadingSearchResults(BaseModel):
+    results: Sequence[Reading]
