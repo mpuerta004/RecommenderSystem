@@ -243,6 +243,9 @@ def RL(a:list()):
 async def asignacion_recursos( hive_id:int, 
     campaign_id:int,
     db: Session = Depends(deps.get_db)):
+        """
+        DEMO!
+        """
         mediciones=[]
         cam=crud.campaign.get_campaign(db=db,hive_id=hive_id,campaign_id=campaign_id)
     # SQLALCHEMY_DATABASE_URL = "mysql+mysqlconnector://root:mypasswd@localhost:3306/SocioBee"
