@@ -47,4 +47,5 @@ class CRUDCampaign(CRUDBase[Campaign, CampaignCreate, CampaignUpdate]):
         return db.query(Campaign).all()
       
       
+      
 campaign = CRUDCampaign(Campaign)

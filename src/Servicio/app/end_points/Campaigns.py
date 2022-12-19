@@ -27,7 +27,6 @@ import sys
 import cv2
 import asyncio
 import numpy as np
-from io import BytesIO
 from starlette.responses import StreamingResponse
 from fastapi_events.dispatcher import dispatch
 from fastapi_events.middleware import EventHandlerASGIMiddleware
@@ -62,13 +61,19 @@ def get_all_Campaign_of_hive(
         )
     return {"results": list(Campaigns)[:max_results]}
 
+
+
+
+
 def prioriry_calculation_2(time:datetime, cam:Campaign, db:Session= Depends(deps.get_db)) -> None:
             """
             Create the priorirty based on the measurements
             """
     
             # with sessionmaker.context_session() as db:
-            campaigns = cam #crud.campaign.get_all_campaign(db=db)
+            db.refresh(cam)
+            campaign_new=crud.campaign.get_campaign(db=db,hive_id=cam.hive_id,campaign_id=cam.id)
+            campaigns = campaign_new #crud.campaign.get_all_campaign(db=db)
             # a = datetime.now()
             # print(a)
             # date = datetime(year=a.year, month=a.month, day=a.day,
@@ -172,7 +177,7 @@ async def create_Campaign(
                     #         timedelta(seconds=Campaign.sampling_period - 1)
                     # start_time_slot = Campaign.start_timestamp
         background_tasks.add_task(create_slots, cam=Campaign)
-        background_tasks.add_task(asignacion_recursos,cam=Campaign,db=db)
+        # background_tasks.add_task(asignacion_recursos,cam=Campaign,db=db)
         return Campaign
     else:
         raise HTTPException(
@@ -184,11 +189,10 @@ async def create_Campaign(
 import random
 
 #Todo: no se me queda la base de datos aqui recogida y no tengo claro porque... https://stackoverflow.com/questions/3044580/multiprocessing-vs-threading-python
-async def create_slots(cam: Campaign):
+async def create_slots(cam: Campaign ):
     """
     Create all the slot of each cells of the campaign. 
     """
-    
     await asyncio.sleep(3)
     with sessionmaker.context_session() as db:
         #       campaigns=crud.campaign.get_all_campaign(db=db)
@@ -231,19 +235,26 @@ def reciboUser(cam:Campaign,db: Session = Depends(deps.get_db)):
 def RL(a:list()):
     return random.choice(a)  
  
-async def asignacion_recursos(cam:Campaign,db: Session = Depends(deps.get_db)):
+ 
+ 
+ 
+ 
+@api_router_campaign.post("/{campaign_id}", status_code=201, response_model=None)
+async def asignacion_recursos( hive_id:int, 
+    campaign_id:int,
+    db: Session = Depends(deps.get_db)):
         mediciones=[]
-    
+        cam=crud.campaign.get_campaign(db=db,hive_id=hive_id,campaign_id=campaign_id)
     # SQLALCHEMY_DATABASE_URL = "mysql+mysqlconnector://root:mypasswd@localhost:3306/SocioBee"
     # sessionmaker = FastAPISessionMaker(SQLALCHEMY_DATABASE_URL)
     # with sessionmaker.context_session() as db:
-        a = datetime.now()
-        print(a)
-        # date = datetime(year=a.year, month=a.month, day=a.day,
-        #                 hour=a.hour, minute=a.minute, second=a.second)
-        start = cam.start_timestamp
+        # a = datetime.now()
+        # print(a)
+        # # date = datetime(year=a.year, month=a.month, day=a.day,
+        # #                 hour=a.hour, minute=a.minute, second=a.second)
+        # start = cam.start_timestamp
         
-        await asyncio.sleep((start-a).total_seconds())
+        # await asyncio.sleep(35)
         # await asyncio.sleep(60)
         dur=cam.campaign_duration + 60
         for segundo in range(0,dur,60):
@@ -333,7 +344,7 @@ async def asignacion_recursos(cam:Campaign,db: Session = Depends(deps.get_db)):
                     new.append(mediciones[i])
             mediciones=new
             print(len(mediciones))
-
+        return None
 
 def create_recomendation_2(
     *, 
@@ -587,7 +598,7 @@ def show_a_campaign_2(
             count=count+1
             for j in i.cells:
                 slot=crud.slot.get_slot_time(db=db, cell_id=j.id,time=time)
-                prioridad= crud.priority.get_last(db=db,slot_id=slot.id,time=time)
+                prioridad = crud.priority.get_last(db=db,slot_id=slot.id,time=time)
                 temporal_prioridad=prioridad.temporal_priority
                 
                 if (temporal_prioridad/9)> 0.1: # ROJO

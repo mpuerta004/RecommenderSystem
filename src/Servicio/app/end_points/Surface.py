@@ -31,7 +31,7 @@ from end_points.Campaigns import create_slots
 
 
 
-api_router_surface = APIRouter(prefix="/hives/{hives_id}/campaigns/{campaign_id}/surfaces")
+api_router_surface = APIRouter(prefix="/hives/{hive_id}/campaigns/{campaign_id}/surfaces")
 
 
 @api_router_surface.get("/", status_code=200, response_model=SurfaceSearchResults)
@@ -127,8 +127,35 @@ def create_surface(
             center_y=(coord_y+100-coord_y)/2 + coord_y
             cell_create=CellCreate(surface_id=Surface.id,superior_coord=Point(x=coord_x+mas,y=coord_y), inferior_coord=Point(x=coord_x+100 +mas,y=coord_y+100),center=Point(center_x,center_y))
             cell=crud.cell.create_cell(db=db,obj_in=cell_create, surface_id=Surface.id)
-            
-    background_tasks.add_task(create_slots, cam=Campaign)
+    db.commit()
+    background_tasks.add_task(create_slots_surface, surface=Surface, hive_id=hive_id)
+    db.commit()
     return Surface
-
-
+import asyncio
+from fastapi_utils.session import FastAPISessionMaker
+SQLALCHEMY_DATABASE_URL = "mysql+mysqlconnector://root:mypasswd@localhost:3306/SocioBee"
+sessionmaker = FastAPISessionMaker(SQLALCHEMY_DATABASE_URL)
+async def create_slots_surface(surface: Surface,hive_id:int):
+    """
+    Create all the slot of each cells of the campaign. 
+    """
+    await asyncio.sleep(3)
+    with sessionmaker.context_session() as db:
+        #       campaigns=crud.campaign.get_all_campaign(db=db)
+        #       for cam in campaigns:
+        # if cam.start_timestamp.strftime("%m/%d/%Y, %H:%M:%S")==date_time:
+        cam=crud.campaign.get_campaign(db=db,hive_id=hive_id,campaign_id=surface.campaign_id)
+        n_slot = cam.campaign_duration//cam.sampling_period
+        if cam.campaign_duration % cam.sampling_period != 0:
+            n_slot = n_slot+1
+        for i in range(n_slot):
+            time_extra=i*cam.sampling_period
+            start = cam.start_timestamp + timedelta(seconds=time_extra)
+            end = start + timedelta(seconds=cam.sampling_period)
+            # for sur in cam.surfaces:
+            for cells in surface.cells:
+                    slot_create =  SlotCreate(
+                        cell_id=cells.id, start_timestamp=start, end_timestamp=end)
+                    slot = crud.slot.create_slot_detras(db=db, obj_in=slot_create)
+        db.commit()
+        print("GINISH ----------------------------------------------")

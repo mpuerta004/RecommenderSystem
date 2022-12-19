@@ -96,7 +96,34 @@ def create_cell(
     background_tasks.add_task(create_slots, cam=Campaign)
     return cell
 
-
+# import asyncio
+# from fastapi_utils.session import FastAPISessionMaker
+# SQLALCHEMY_DATABASE_URL = "mysql+mysqlconnector://root:mypasswd@localhost:3306/SocioBee"
+# sessionmaker = FastAPISessionMaker(SQLALCHEMY_DATABASE_URL)
+# async def create_slots_surface(surface: Surface,hive_id:int):
+#     """
+#     Create all the slot of each cells of the campaign. 
+#     """
+#     await asyncio.sleep(3)
+#     with sessionmaker.context_session() as db:
+#         #       campaigns=crud.campaign.get_all_campaign(db=db)
+#         #       for cam in campaigns:
+#         # if cam.start_timestamp.strftime("%m/%d/%Y, %H:%M:%S")==date_time:
+#         cam=crud.campaign.get_campaign(db=db,hive_id=hive_id,campaign_id=surface.campaign_id)
+#         n_slot = cam.campaign_duration//cam.sampling_period
+#         if cam.campaign_duration % cam.sampling_period != 0:
+#             n_slot = n_slot+1
+#         for i in range(n_slot):
+#             time_extra=i*cam.sampling_period
+#             start = cam.start_timestamp + timedelta(seconds=time_extra)
+#             end = start + timedelta(seconds=cam.sampling_period)
+#             for sur in cam.surfaces:
+#                 for cells in sur.cells:
+#                 # for cells in cam.cells:
+#                     slot_create =  SlotCreate(
+#                         cell_id=cells.id, start_timestamp=start, end_timestamp=end)
+#                     slot = crud.slot.create_slot_detras(db=db, obj_in=slot_create)
+#                     db.commit()
 
 @api_router_cell.put("/{cell_id}", status_code=201, response_model=Cell)
 def update_recipe(
