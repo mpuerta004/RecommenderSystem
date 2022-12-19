@@ -128,26 +128,6 @@ def create_surface(
             cell_create=CellCreate(surface_id=Surface.id,superior_coord=Point(x=coord_x+mas,y=coord_y), inferior_coord=Point(x=coord_x+100 +mas,y=coord_y+100),center=Point(center_x,center_y))
             cell=crud.cell.create_cell(db=db,obj_in=cell_create, surface_id=Surface.id)
             
-            # Vamos a crear los slot de tiempo de esta celda. 
-            # end_time_slot= Campaign.start_timestamp + timedelta(seconds=Campaign.sampling_period -1)
-            # start_time_slot= Campaign.start_timestamp
-            # # while start_time_slot < (Campaign.start_timestamp + timedelta(seconds= Campaign.campaign_duration)):
-            # slot_create=SlotCreate(cell_id=cell.id, start_timestamp=Campaign.start_timestamp, end_timestamp=end_time_slot)
-            # slot=crud.slot.create(db=db,obj_in=slot_create)
-               
-            # #     if start_time_slot==Campaign.start_timestamp:
-            # #         #Todo: creo que cuando se crea una celda se deberia generar todos los slot necesarios. 
-            # b = max(2, Campaign.min_samples - 0)
-            # a = max(2, Campaign.min_samples - 0)
-            # result = math.log(a) * math.log(b, 0 + 2)
-            # #         #Maximo de la prioridad temporal -> 8.908297157282622
-            # #         #Minimo -> 0.1820547846864113
-            # #         #Todo:Estas prioridades deben estar al menos bien echas... pilla la formula y carlcula la primera! 
-            # #         # Slot_result= crud.slot.get_slot_time(db=db, cell_id=cell.id, time=Campaign.start_timestamp)
-            # Cell_priority=PriorityCreate(slot_id=slot.id,timestamp=Campaign.start_timestamp,temporal_priority=result,trend_priority=0.0)#,cell_id=cell.id)
-            # priority=crud.priority.create(db=db, obj_in=Cell_priority)    
-            # # start_time_slot= end_time_slot + timedelta(seconds=1)
-            # end_time_slot = end_time_slot + timedelta(seconds=Campaign.sampling_period)
     background_tasks.add_task(create_slots, cam=Campaign)
     return Surface
 

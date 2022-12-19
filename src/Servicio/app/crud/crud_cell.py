@@ -6,6 +6,8 @@ from typing import Any, Dict, Generic, List, Optional, Type, TypeVar, Union
 
 from fastapi.encoders import jsonable_encoder
 from pydantic import BaseModel
+from sqlalchemy import and_, extract
+
 from sqlalchemy.orm import Session
 from sqlalchemy import Integer, String, Column, Boolean, ForeignKey, DateTime, ARRAY, Float
 
@@ -33,13 +35,14 @@ class CRUDCell(CRUDBase[Cell, CellCreate, CellUpdate]):
                  return db.query(Cell).filter((Cell.id == cell_id)).first()
         
         def get_multi_cell(self, db: Session, *, hive_id:int) -> List[Cell]:
-                 return db.query(Cell).join(Surface).join(Campaign).filter( (Cell.surface_id==Surface.id) & (Surface.campaign_id==Campaign.id ) & Campaign.hive_id==hive_id  ).all()
+                 return db.query(Cell).join(Surface).join(Campaign).filter( and_(Cell.surface_id==Surface.id, Surface.campaign_id==Campaign.id, Campaign.hive_id==hive_id, Cell.cell_type!="Dynamic") ).all()
         def get_count_cells(self, db: Session, *, campaign_id:int) -> int:
-                 return db.query(Cell).join(Surface).filter( (Cell.surface_id==Surface.id) & (Surface.campaign_id==campaign_id)).count()
+                 return db.query(Cell).join(Surface).filter( and_(Cell.surface_id==Surface.id,Surface.campaign_id==campaign_id)).count()
+        #Devuelve las celdas dinamicas de una camapaña- 
         def get_cells_campaign(self, db: Session, *, campaign_id:int) -> int:
-                 return db.query(Cell).join(Surface).filter( (Cell.surface_id==Surface.id) & (Surface.campaign_id==campaign_id)).distinct()
+                 return db.query(Cell).join(Surface).filter(and_(Cell.cell_type=="Dynamic",Cell.surface_id==Surface.id,Surface.campaign_id==campaign_id)).distinct()
         def get_statics(self, db:Session, *,campaign_id:int) ->List[Cell]:
-                return db.query(Cell).join(Surface).filter((Cell.cell_type!="Dynamic")&(Cell.surface_id==Surface.id) & (Surface.campaign_id==campaign_id)).all()
+                return db.query(Cell).join(Surface).filter(and_(Cell.cell_type!="Dynamic",Cell.surface_id==Surface.id,Surface.campaign_id==campaign_id)).all()
 
 
 cell = CRUDCell(Cell)
