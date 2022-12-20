@@ -12,10 +12,11 @@ from pydantic import BaseModel, ValidationError
 
 
 class CellBase(BaseModel):
-    inferior_coord:Point
-    superior_coord:Point
+    # inferior_coord:Point
+    # superior_coord:Point
     cell_type:str='Dynamic'
-    center: Point=None
+    center: Point
+    rad:int
 
 class CellCreate(CellBase):
     pass

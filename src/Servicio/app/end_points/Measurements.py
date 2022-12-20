@@ -92,8 +92,11 @@ def create_measurements(
     #Todo: control de errores
     if bool==True:
         slot=crud.slot.get_slot_time(db=db,cell_id=recipe_in.cell_id,time=recipe_in.timestamp)
+        if slot is None: 
+              raise HTTPException(
+            status_code=401, detail=f"In this time the Campaign is not active"
+        )
         cellMeasurement = crud.measurement.create_Measurement(db=db, obj_in=recipe_in,member_id=member_id,slot_id=slot.id)
-        
         return cellMeasurement
 
     else:
@@ -103,7 +106,7 @@ def create_measurements(
 
 
 
-
+#Todo: ¿? aqui deberia preguntar si en el nuevo tiempo la camapaña estaba activa! 
 @api_router_measurements.put("/{measurement_id}", status_code=201, response_model=Measurement)
 def update_recipe(
     *,

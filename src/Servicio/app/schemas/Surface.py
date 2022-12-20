@@ -1,9 +1,11 @@
 from pydantic import BaseModel
 from typing import Sequence
+from schemas.Point import Point
 
 from schemas.Cell import Cell
 class SurfaceBase(BaseModel):
-    pass    
+    center: Point
+    rad:int
 
 class SurfaceCreate(SurfaceBase):
     pass

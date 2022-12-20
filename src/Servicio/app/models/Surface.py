@@ -4,6 +4,7 @@ from sqlalchemy.orm import relationship
 
 
 from db.base_class import Base
+from models.Point import Point
 
 from models.Campaign import Campaign
 
@@ -12,7 +13,8 @@ class Surface(Base):
     __tablename__='Surface'
     id=Column(Integer, unique=True, primary_key=True, index=True, autoincrement=True) 
     campaign_id=Column(Integer,ForeignKey(Campaign.id))
-    
+    center=Column(Point)
+    rad=Column(Integer)
     
     cells = relationship("Cell")
 

@@ -12,9 +12,10 @@ from models.Point import Point
 class Cell(Base):
     __tablename__ = 'Cell'
     id = Column(Integer, unique=True, primary_key=True, index=True, autoincrement=True)
-    inferior_coord = Column(Point)
-    superior_coord = Column(Point)
+    # inferior_coord = Column(Point)
+    # superior_coord = Column(Point)
     center = Column(Point)
+    rad=Column(Integer,default=1)
     cell_type = Column(String, default="Dynamic")
     # campaign_id = Column(Integer, ForeignKey(Campaign.id))
     surface_id = Column(Integer, ForeignKey(Surface.id))

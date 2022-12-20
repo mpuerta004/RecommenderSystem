@@ -97,7 +97,7 @@ def create_surface(
     *, 
     hive_id:int, 
     campaign_id:int, 
-    number_cells:int,
+    obj_in:SurfaceCreate,
     db:Session = Depends(deps.get_db),
     background_tasks: BackgroundTasks
 
@@ -110,26 +110,46 @@ def create_surface(
         raise HTTPException(
             status_code=404, detail=f"Campaign with campaign_id=={campaign_id} and hive_id=={hive_id} not found"
         )
-    Surface=crud.surface.create_sur(db=db, campaign_id=campaign_id)
+    
+    Surface=crud.surface.create_sur(db=db, campaign_id=campaign_id,obj_in=obj_in)
     if Surface is None:
         raise HTTPException(
             status_code=400, detail=f"INVALID REQUEST"
         )
-    count=len(Campaign.surfaces)
-    mas=(count-1)*600
+    # count=len(Campaign.surfaces)
+    # mas=(count-1)*600
+    cx = obj_in.center.x
+    cy = obj_in.center.y
+    num_segmentos=0
+
+    for i in range(0,obj_in.rad,10):
+            radio_concentrico=i
+            num_segmentos= num_segmentos + 4
+
+            angulo = np.linspace(0, 2*np.pi, num_segmentos)
+            x = radio_concentrico * np.cos(angulo) + cx
+            y = radio_concentrico * np.sin(angulo) + cy
+            for j in range(0,len(x)):
+                cell_create = CellCreate(surface_id=Surface.id, center=Point(x=int(x[j]), y=int(y[j])),rad=1)
+                cell = crud.cell.create_cell(
+                            db=db, obj_in=cell_create, surface_id=Surface.id)
+    
+    
     #TODO: Esto iria enlazado con el programa que permite seleccionar las celdas de la campaña pero de momento esto nos vale. 
     # Generar las celdas! Esto no debe ser asi! 
-    for i in range(number_cells):
-            coord_x=((i%5)+1)*100 
-            coord_y=((i//5)+1)*100 
-            center_x= (coord_x+100-coord_x)/2 + coord_x +(count-1)*600
-            center_y=(coord_y+100-coord_y)/2 + coord_y
-            cell_create=CellCreate(surface_id=Surface.id,superior_coord=Point(x=coord_x+mas,y=coord_y), inferior_coord=Point(x=coord_x+100 +mas,y=coord_y+100),center=Point(center_x,center_y))
-            cell=crud.cell.create_cell(db=db,obj_in=cell_create, surface_id=Surface.id)
+    # for i in range(number_cells):
+    #         coord_x=((i%5)+1)*100 
+    #         coord_y=((i//5)+1)*100 
+    #         center_x= (coord_x+100-coord_x)/2 + coord_x +(count-1)*600
+    #         center_y=(coord_y+100-coord_y)/2 + coord_y
+    #         cell_create=CellCreate(surface_id=Surface.id,superior_coord=Point(x=coord_x+mas,y=coord_y), inferior_coord=Point(x=coord_x+100 +mas,y=coord_y+100),center=Point(center_x,center_y))
+    #         cell=crud.cell.create_cell(db=db,obj_in=cell_create, surface_id=Surface.id)
     db.commit()
     background_tasks.add_task(create_slots_surface, surface=Surface, hive_id=hive_id)
     db.commit()
     return Surface
+
+
 import asyncio
 from fastapi_utils.session import FastAPISessionMaker
 SQLALCHEMY_DATABASE_URL = "mysql+mysqlconnector://root:mypasswd@localhost:3306/SocioBee"

@@ -14,8 +14,9 @@ class CRUDSurface(CRUDBase[Surface, SurfaceCreate, SurfaceUpdate]):
      def get_multi_surface_from_campaign_id(self, db: Session, *, campaign_id:int, limit: int = 100, ) -> List[Surface]:
         return db.query(Surface).filter(Surface.campaign_id==campaign_id).limit(limit).all()
      
-     def create_sur(self, db: Session, *, campaign_id:int) -> Surface:
-        db_obj = self.model(campaign_id=campaign_id)  # type: ignore
+     def create_sur(self, db: Session, *, campaign_id:int,obj_in: SurfaceCreate) -> Surface:
+        obj_in_data = jsonable_encoder(obj_in) 
+        db_obj = self.model(**obj_in_data,campaign_id=campaign_id)  # type: ignore
         db.add(db_obj)
         db.commit()
         db.refresh(db_obj)

@@ -61,7 +61,7 @@ CREATE TABLE Campaign (
   creator_id INT NULL DEFAULT NULL,
   city VARCHAR(30) NULL DEFAULT NULL,
   start_timestamp TIMESTAMP NULL DEFAULT NULL,
-  cell_edge INT NULL DEFAULT NULL,
+  #-- cell_edge INT NULL DEFAULT NULL,
   min_samples INT NULL DEFAULT NULL,
   sampling_period INT NULL DEFAULT NULL,
   planning_limit_time INT NULL DEFAULT NULL,
@@ -80,6 +80,8 @@ CREATE TABLE Campaign (
 CREATE TABLE Surface (
   id INT NOT NULL AUTO_INCREMENT,
   campaign_id INT not NULL,
+  center POINT, 
+  rad int, 
   PRIMARY KEY (id, campaign_id),
     FOREIGN KEY (campaign_id)
     REFERENCES Campaign (id));
@@ -104,18 +106,15 @@ CREATE TABLE Boundary (
 -- -----------------------------------------------------
 CREATE TABLE Cell (
   id INT NOT NULL AUTO_INCREMENT,
-  inferior_coord POINT not null,
-  superior_coord POINT not null,
+  # inferior_coord POINT not null,
+  #  -- superior_coord POINT not null,
   center POINT not NULL,
+  rad INT,
   cell_type VARCHAR(30) NULL DEFAULT 'Dynamic',
   surface_id INT not null,
-  #campaign_id INT not null, 
-  #Todo: no estoy segura de esto pero bueno... 
   PRIMARY KEY (id),
     FOREIGN KEY (surface_id)
     REFERENCES Surface (id)#,
-    #FOREIGN KEY (campaign_id)
-    #REFERENCES Campaign (id)
     );
 
 
