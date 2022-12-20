@@ -6,6 +6,7 @@ from crud.base import CRUDBase
 from models.Role import Role
 from schemas.Role import RoleCreate, RoleUpdate, RoleSearchResults
 from fastapi.encoders import jsonable_encoder
+from sqlalchemy import and_, extract
 
 
 class CRUDRole(CRUDBase[Role, RoleCreate, RoleUpdate]):
@@ -23,15 +24,14 @@ class CRUDRole(CRUDBase[Role, RoleCreate, RoleUpdate]):
     #Todo: todos los datos de la campaña 
     
     def get_by_ids(self, db: Session, *, hive_id:int,member_id:int) -> Role:
-         return db.query(Role).filter(Role.hive_id == hive_id).filter( Role.member_id==member_id).first()
+         return db.query(Role).filter(and_(Role.hive_id == hive_id, Role.member_id==member_id)).first()
+                                      
     def get_roles(self, db: Session, *, hive_id:int,member_id:int) -> List[str]:
-        return db.query(Role.role).filter(Role.hive_id == hive_id).filter(Role.member_id==member_id).all()
+        return db.query(Role.role).filter(and_(Role.hive_id == hive_id,Role.member_id==member_id)).all()
     
     def get_member_id(self, db: Session, *, hive_id:int) -> List[str]:
         return db.query(Role.member_id).filter(Role.hive_id == hive_id).distinct()
     
-    def get_Role_of_city(self, db: Session, *, city:str) -> List[ Role]:
-        return db.query(Role).filter(Role.city == city).all()
     
     def update(
         self, db: Session, *, db_obj: Role, obj_in: Union[RoleUpdate, Dict[str, Any]]

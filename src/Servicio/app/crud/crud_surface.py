@@ -25,6 +25,5 @@ class CRUDSurface(CRUDBase[Surface, SurfaceCreate, SurfaceUpdate]):
      def get_surface_by_ids(self, db: Session, *, campaign_id:int, surface_id:int ) ->Surface:
         return db.query(Surface).filter(and_(Surface.campaign_id== campaign_id,Surface.id==surface_id)).first()
      
- 
-
+   
 surface = CRUDSurface(Surface)

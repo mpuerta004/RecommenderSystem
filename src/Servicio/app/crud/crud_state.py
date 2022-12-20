@@ -3,6 +3,7 @@ from models.State import State
 from schemas.State import StateCreate, StateUpdate
 from crud.base import CRUDBase
 from sqlalchemy.orm import Session
+from sqlalchemy import and_, extract
 
 
 from fastapi.encoders import jsonable_encoder

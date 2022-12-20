@@ -12,6 +12,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import Integer, String, Column, Boolean, ForeignKey, DateTime, ARRAY, Float
 
 from db.base_class import Base
+from sqlalchemy import and_, extract
 
 
 from sqlalchemy.orm import Session
@@ -28,7 +29,8 @@ class CRUDRecommendation(CRUDBase[Recommendation, RecommendationCreate, Recommen
                 db.refresh(db_obj)
                 return db_obj
         def get_recommendation(self, db: Session, *, member_id:int, recommendation_id:int) -> Recommendation:
-                  return db.query(Recommendation).filter( (Recommendation.id == recommendation_id) & (Recommendation.member_id==member_id)).first()
+                  return db.query(Recommendation).filter( and_(Recommendation.id == recommendation_id, Recommendation.member_id==member_id)).first()
+        
         def get_All_Recommendation(self, db: Session, *, member_id:int) -> List[Recommendation]:
                  return db.query(Recommendation).filter(Recommendation.member_id==member_id).all()
         

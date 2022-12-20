@@ -33,7 +33,7 @@ CREATE TABLE Member (
   age INT NULL DEFAULT NULL,
   mail  varchar(50) not null,
   city VARCHAR(30) NULL DEFAULT NULL,
-  gender VARCHAR(30) NULL DEFAULT 'I dont want to answer',
+  gender ENUM("NoBinary","Male","Female",'I dont want to answer' ) not null default 'I dont want to answer',
   PRIMARY KEY (id)
   );
 
@@ -61,7 +61,7 @@ CREATE TABLE Campaign (
   creator_id INT NULL DEFAULT NULL,
   city VARCHAR(30) NULL DEFAULT NULL,
   start_timestamp TIMESTAMP NULL DEFAULT NULL,
-  #-- cell_edge INT NULL DEFAULT NULL,
+  cell_edge INT NULL DEFAULT NULL,
   min_samples INT NULL DEFAULT NULL,
   sampling_period INT NULL DEFAULT NULL,
   planning_limit_time INT NULL DEFAULT NULL,

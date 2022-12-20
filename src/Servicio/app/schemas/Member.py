@@ -2,11 +2,12 @@ from typing import Optional, List, Sequence
 from pydantic import BaseModel
 from schemas.Role import Role
 
+
 class MemberBase(BaseModel):
     name: str 
     surname: str=None
     age: int
-    gender: str=None
+    gender:str
     city: str=None
     mail:str
 

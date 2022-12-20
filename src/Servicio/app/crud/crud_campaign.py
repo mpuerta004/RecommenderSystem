@@ -1,5 +1,7 @@
 from crud.base import CRUDBase
 from models.Campaign import Campaign
+from schemas.Surface import Surface
+
 from schemas.Campaign import CampaignCreate, CampaignUpdate
 from typing import Any, Dict, Optional, Union, List
 from fastapi.encoders import jsonable_encoder
@@ -42,6 +44,12 @@ class CRUDCampaign(CRUDBase[Campaign, CampaignCreate, CampaignUpdate]):
         campaign_id:int) ->Campaign:
         return db.query(Campaign).filter(and_(Campaign.hive_id== hive_id,Campaign.id==campaign_id)).first()
 
+      def get_campaign_from_cell(
+        self,
+        db: Session,
+        *, 
+    cell_id=int) ->Campaign:
+        return db.query(Campaign).join(Surface).join(Cell).filter(and_(Campaign.id==Surface.campaign_id,Cell.surface_id==Surface.id,Cell.id==cell_id)).first()
       def get_all_campaign(
         self,        db: Session) ->List[Campaign]:
         return db.query(Campaign).all()

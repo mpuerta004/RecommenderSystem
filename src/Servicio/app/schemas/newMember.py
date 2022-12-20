@@ -11,15 +11,21 @@ class role(str, Enum):
     DroneBee="DroneBee" 
     
 
+class gender_type(str, Enum):
+    NoBinary="NoBinary"
+    Male="Male"
+    Female="Female"
+    IDontWantToAnser='I dont want to answer' 
+   
+    
     
 class NewMemberBase(BaseModel):
     name: str 
     surname: str=None
     age: int
-    gender: str=None
+    gender: gender_type
     city: str=None
     mail:str
-    #Todo: no se poner esto para hacerlo bien 
     role: role #Union["QueenBee" or "Participant"]
  
 class NewRole(BaseModel):

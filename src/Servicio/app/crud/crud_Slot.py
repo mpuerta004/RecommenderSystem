@@ -12,10 +12,13 @@ from crud.base import CRUDBase
 class CRUDSlot(CRUDBase[Slot, SlotCreate, SlotUpdate]):
     def get_first_of_Cell(self, db: Session, *, cell_id:int) -> Slot:
         return db.query(Slot).filter(Slot.cell_id == cell_id).order_by(Slot.end_timestamp.asc()).first()
+    
     def get_slot(self, db: Session, *, slot_id:int) -> Slot:
         return db.query(Slot).filter(Slot.id==slot_id).first()
+    
     def get_slot_time(self, db: Session, *, cell_id:int, time:datetime ) -> Slot:
         return db.query(Slot).filter( and_(Slot.cell_id== cell_id, Slot.start_timestamp<=time, time<Slot.end_timestamp)).first()
+    
     def create_slot_detras(self, db: Session, *, obj_in: SlotCreate) -> Slot:
         obj_in_data = jsonable_encoder(obj_in) 
         db_obj = self.model(**obj_in_data)  # type: ignore

@@ -96,8 +96,14 @@ def create_measurements(
               raise HTTPException(
             status_code=401, detail=f"In this time the Campaign is not active"
         )
-        cellMeasurement = crud.measurement.create_Measurement(db=db, obj_in=recipe_in,member_id=member_id,slot_id=slot.id)
-        return cellMeasurement
+        campaign=crud.campaign.get_campaign_from_cell(db=db,cell_id=recipe_in.cell_id)
+        if recipe_in.timestamp>=campaign.start_timestamp and recipe_in.timestamp<=campaign.start_timestamp +timedelta(seconds=campaign.campaign_duration):
+            cellMeasurement = crud.measurement.create_Measurement(db=db, obj_in=recipe_in,member_id=member_id,slot_id=slot.id)
+            return cellMeasurement
+        else:
+            raise HTTPException(
+                status_code=400, detail=f"This campaign is not active in this moment"
+            )
 
     else:
         raise HTTPException(

@@ -13,6 +13,7 @@ from db.base_class import Base
 
 from sqlalchemy.orm import Session
 from crud.base import CRUDBase
+from sqlalchemy import and_, extract
 
 
 class CRUDHive(CRUDBase[Hive, HiveCreate, HiveUpdate]):

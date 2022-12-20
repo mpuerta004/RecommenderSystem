@@ -51,7 +51,8 @@ def get_members_of_hive(
     List_members=[]
     for i in result:
         user=crud.member.get_by_id(db=db, id=i[0])
-        List_members.append(user)
+        if user!=None:
+            List_members.append(user)
     return {"results": List_members}
 
 @api_router_members.get("/{member_id}", status_code=200, response_model=Member)

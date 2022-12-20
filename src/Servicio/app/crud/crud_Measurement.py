@@ -46,6 +46,5 @@ class CRUDMeasurement(CRUDBase[Measurement, MeasurementCreate, MeasurementUpdate
          
         def get_all_Measurement_from_cell_in_the_current_slot(self, db:Session, *,  cell_id:int, time:DateTime, slot_id:int)-> int:
             return db.query(Measurement).filter( and_(Measurement.cell_id==cell_id, Measurement.timestamp<=time, Measurement.slot_id==slot_id)).count()        
-            # return db.query(Measurement).filter( (Measurement.cell_id==cell_id) & (Measurement.slot_id==slot_id)).count()        
 
 measurement = CRUDMeasurement(Measurement)

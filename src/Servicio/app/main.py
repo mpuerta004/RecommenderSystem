@@ -29,6 +29,7 @@ from end_points import Campaigns
 from end_points import Surface
 from end_points import Measurements
 from end_points import Recommendation
+from end_points import Demo
 from fastapi_utils.tasks import repeat_every
 
 import cv2
@@ -62,6 +63,7 @@ app.include_router(Surface.api_router_surface, tags=["Surfaces"])
 app.include_router(Cells.api_router_cell, tags=["Cells"])
 app.include_router(Measurements.api_router_measurements, tags=["Measurements"])
 app.include_router(Recommendation.api_router_recommendation, tags=["Recommendations"])
+app.include_router(Demo.api_router_demo, tags=["Demo"])
 
 api_router = APIRouter()
 
@@ -80,51 +82,53 @@ sessionmaker = FastAPISessionMaker(SQLALCHEMY_DATABASE_URL)
 #         campaigns = crud.campaign.get_all_campaign(db=db)
 #         a = datetime.now()
 #         print(a)
-#         date = datetime(year=a.year, month=a.month, day=a.day,
+#         time = datetime(year=a.year, month=a.month, day=a.day,
 #                         hour=a.hour, minute=a.minute, second=a.second)
 #         for cam in campaigns:
-#             if date >= cam.start_timestamp and date <= cam.start_timestamp+timedelta(seconds=cam.campaign_duration):
+#              if time >= cam.start_timestamp and time <= cam.start_timestamp+timedelta(seconds=cam.campaign_duration):
 #                 surfaces=crud.surface.get_multi_surface_from_campaign_id(db=db,campaign_id=cam.id,limit=1000)
 #                 for sur in surfaces:
 #                     for cells in sur.cells:
 #                 # for cells in cam.cells:
-#                         print(cam.start_timestamp)
-#                         momento = datetime.now()
-#                         if momento > (cam.start_timestamp+timedelta(seconds=cam.sampling_period)):
+#                         momento = time
+#                         if momento >= (cam.start_timestamp+timedelta(seconds=cam.sampling_period)):
 #                             slot_pasado = crud.slot.get_slot_time(db=db, cell_id=cells.id, time=(
-#                                  momento-timedelta(seconds=cam.sampling_period)))
+#                                  momento - timedelta(seconds=cam.sampling_period)))
 #                             Cardinal_pasado =  crud.measurement.get_all_Measurement_from_cell_in_the_current_slot(
 #                             db=db, cell_id=cells.id, time=slot_pasado.end_timestamp, slot_id=slot_pasado.id)
-#                             print(Cardinal_pasado)
 #                         else:
 #                             Cardinal_pasado = 0
+#                         db.commit()
 #                         slot = crud.slot.get_slot_time(
-#                             db=db, cell_id=cells.id, time=momento)
+#                             db=db, cell_id=cells.id, time=time)
 #                         if slot is None:
 #                             print("Cuidado")
-#                         Cardinal_actual = crud.measurement.get_all_Measurement_from_cell_in_the_current_slot(db=db, cell_id=cells.id, time=momento,slot_id=slot.id)
-#                         print(Cardinal_actual)
+#                             print(time)
+#                             print(f"Tengo id -> cell_id {cells.id} y slot {slot} ")
+#                         Cardinal_actual = crud.measurement.get_all_Measurement_from_cell_in_the_current_slot(db=db, cell_id=cells.id, time=time,slot_id=slot.id)
 #                         b = max(2, cam.min_samples - int(Cardinal_pasado))
 #                         a = max(2, cam.min_samples - int(Cardinal_actual))
 #                         result = math.log(a) * math.log(b, int(Cardinal_actual) + 2)
                         
 #                         total_measurements = crud.measurement.get_all_Measurement_campaign(
-#                             db=db, campaign_id=cam.id, time=momento)
+#                             db=db, campaign_id=cam.id, time=time)
 #                         if total_measurements==0:
 #                             trendy=0.0
 #                         else:
 #                             measurement_of_cell = crud.measurement.get_all_Measurement_from_cell(
-#                                 db=db, cell_id=cells.id,time=momento )                            
+#                                 db=db, cell_id=cells.id,time=time )
+                            
 #                             n_cells = crud.cell.get_count_cells(db=db, campaign_id=cam.id)
 #                             trendy = (measurement_of_cell/total_measurements)*n_cells
-#                         print("calculo popularidad popularidad", trendy)
-#                         print("calculo prioridad", result)
+#                         # print("calculo popularidad popularidad", trendy)
+#                         # print("calculo prioridad", result)
 #                         # Maximo de la prioridad temporal -> 8.908297157282622
 #                         # Minimo -> 0.1820547846864113
 #                         Cell_priority = PriorityCreate(
-#                             slot_id=slot.id, timestamp=momento, temporal_priority=result, trend_priority=trendy)  # ,cell_id=cells.id)
+#                             slot_id=slot.id, timestamp=time, temporal_priority=result, trend_priority=trendy)  # ,cell_id=cells.id)
 #                         priority = crud.priority.create_priority_detras(
 #                             db=db, obj_in=Cell_priority)
+#                         db.commit()
 #     return None
 
 
@@ -135,7 +139,6 @@ sessionmaker = FastAPISessionMaker(SQLALCHEMY_DATABASE_URL)
 #                     slot=crud.slot.get_slot_time(db=db,cell_id=i.id,time=date)
 #                     #Todo: tiene que haber un usuario para los mediciones automaticas. 
 #                     crud.measurement.create_Measurement(db=db, slot_id=slot.id,member_id=)
-
 
 
 
