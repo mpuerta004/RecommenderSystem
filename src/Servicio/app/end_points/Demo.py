@@ -134,7 +134,7 @@ async def asignacion_recursos(
         cam=crud.campaign.get_campaign(db=db,hive_id=hive_id,campaign_id=campaign_id)
    
         dur=cam.campaign_duration + 60
-        for segundo in range(0,dur,60):
+        for segundo in range(60,dur,60):
             # await asyncio.sleep(0.1)
             random.seed()
             print("----------------------------------------------------------------------", segundo)

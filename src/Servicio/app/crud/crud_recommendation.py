@@ -41,6 +41,15 @@ class CRUDRecommendation(CRUDBase[Recommendation, RecommendationCreate, Recommen
                 db.add(db_obj)
                 db.commit()
                 return db_obj
+        def update(
+                self, db: Session, *, db_obj: Recommendation, obj_in: Union[RecommendationUpdate, Dict[str, Any]]
+        ) -> Recommendation:
+                if isinstance(obj_in, dict):
+                        update_data = obj_in
+                else:
+                        update_data = obj_in.dict(exclude_unset=True)
+
+                return super().update(db, db_obj=db_obj, obj_in=update_data)
                 
 
 recommendation = CRUDRecommendation(Recommendation)

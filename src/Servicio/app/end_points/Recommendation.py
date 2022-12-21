@@ -18,7 +18,7 @@ from schemas.Cell import Cell, CellCreate, CellSearchResults, Point
 from schemas.State import State,StateBase,StateCreate,StateSearchResults
 
 
-from schemas.Recommendation import Recommendation, RecommendationCreate, RecommendationSearchResults
+from schemas.Recommendation import Recommendation, RecommendationCreate, RecommendationSearchResults, RecommendationUpdate
 from crud import crud_cell
 from schemas.Surface import SurfaceSearchResults, Surface, SurfaceCreate
 import deps
@@ -98,16 +98,13 @@ def create_recomendation(
             print(campaign)
             
             for j in campaign:
-                #Todo! esto abria que mejroarlo
                 if j.start_timestamp<=time and (j.start_timestamp+timedelta(seconds=j.campaign_duration))>=time:
                     a=crud.cell.get_cells_campaign(db=db,campaign_id=j.id)
-                # a=crud.cell.get_multi_cell(db=db,hive_id=i)
                     if a is not None:
                         for l in a:
                             cells.append(l)
-        # cells=crud.cell.get_cells_campaign(db,campaign_id=cam.id)
         
-        if cells is None: 
+        if cells is []: 
             raise HTTPException(
             status_code=404, detail=f"Cells of campaign {hives} not found."
         )
@@ -164,3 +161,24 @@ def create_recomendation(
         )
 
 
+@api_router_recommendation.put("/{recommendation_id}", status_code=200, response_model=Recommendation)
+def put_a_member(
+    *,
+    recommendation_id:int,
+    member_id:int,
+    recipe_in:RecommendationUpdate,
+    db: Session = Depends(deps.get_db),
+) -> dict:
+    """
+    Update a member
+    """
+    recommendation=crud.recommendation.get_recommendation(db=db,member_id=member_id,recommendation_id=recommendation_id)
+
+    if  recommendation is None:
+        raise HTTPException(
+            status_code=404, detail=f"Recommendation with recommendation_id=={recommendation_id} not found"
+        )
+    updated_recipe = crud.recommendation.update(db=db, db_obj=recommendation, obj_in=recipe_in)
+    db.commit()
+
+    return updated_recipe

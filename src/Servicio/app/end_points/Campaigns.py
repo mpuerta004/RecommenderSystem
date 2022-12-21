@@ -166,6 +166,20 @@ async def create_slots(cam: Campaign ):
                     slot = crud.slot.create_slot_detras(db=db, obj_in=slot_create)
                     print(slot.id,cells.id)
                     db.commit()
+                    if start== cam.start_timestamp:
+                        Cardinal_pasado = 0
+                        db.commit()
+                        Cardinal_actual = 0
+                        b = max(2, cam.min_samples - int(Cardinal_pasado))
+                        a = max(2, cam.min_samples - int(Cardinal_actual))
+                        result = math.log(a) * math.log(b, int(Cardinal_actual) + 2)
+                        
+    
+                        trendy=0.0
+                        Cell_priority = PriorityCreate(
+                            slot_id=slot.id, timestamp=start, temporal_priority=result, trend_priority=trendy)  # ,cell_id=cells.id)
+                        priority = crud.priority.create_priority_detras(
+                            db=db, obj_in=Cell_priority)
                    
 
  
