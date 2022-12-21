@@ -172,21 +172,22 @@ async def asignacion_recursos(
                 n_filas = 1
                 for i in cam.surfaces:
                         a=len(i.cells)
-                        b=(a//5) +1
+                        b=(a//5) + 1
                         if a%5!=0:
                             b=b+1
                         if n_filas<b:
                             n_filas=b
                 n_filas=n_filas+1
-                
+                print("numero de filas finales", n_filas)
                 
                 list_users= reciboUser(cam,db=db)
                 if list_users!=[]:
                     for user in list_users:
                     #Genero las recomendaciones y la que el usuario selecciona y el tiempo que va a tardar en realizar dicho recomendacion. 
                
-                        x=random.randint(0, n_surfaces*700)
+                        x=random.randint(0, n_surfaces*700 - (n_surfaces-1)*100)
                         y=random.randint(150,150+ 100*n_filas)
+                        print("posicion_usuario",x,y)
                         a=RecommendationCreate(recommendation_timestamp=time,member_current_location=Point(x=x,y=y))
                         recomendaciones=create_recomendation_2(db=db,member_id=user.id,recipe_in=a,cam=cam)
                         if recomendaciones is None:
@@ -537,13 +538,9 @@ def show_a_campaign_2(
                         if n_filas<b:
                             n_filas=b
     n_filas=n_filas+1
-                
-                
-               
-               
+                 
     # x=random.randint(100, n_surfaces*700)
     # y=random.randint(100, 100*n_filas)
-
     imagen = 255*np.ones(( 200+100*n_filas , 200+n_surfaces*600,3),dtype=np.uint8)
     # imagen = 255*np.ones((1000,1500,3),dtype=np.uint8)
     campañas_activas= crud.campaign.get_campaign(db=db, hive_id=hive_id, campaign_id=campaign_id)
