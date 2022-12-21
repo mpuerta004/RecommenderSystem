@@ -140,9 +140,9 @@ def create_surface(
     # Generar las celdas! Esto no debe ser asi! 
     for i in range(number_cells):
             coord_x=((i%5)+1)*100 
-            coord_y=((i//5)+1)*100 
+            coord_y=((i//5)+1)*100 +150
             center_x= (coord_x+100-coord_x)/2 + coord_x +(count-1)*600
-            center_y=(coord_y+100-coord_y)/2 + coord_y
+            center_y=(coord_y+100-coord_y)/2 + coord_y 
             cell_create=CellCreate(surface_id=Surface.id,center=Point(center_x,center_y),rad=Campaign.cell_edge)
             cell=crud.cell.create_cell(db=db,obj_in=cell_create, surface_id=Surface.id)
     db.commit()

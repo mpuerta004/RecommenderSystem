@@ -8,7 +8,7 @@ class CampaignBase(BaseModel):
     creator_id:int
     city:str
     start_timestamp:datetime
-    cell_edge:int=10
+    cell_edge:int=50
     min_samples:int=12
     sampling_period:int=3600
     planning_limit_time:int=3600*24*2

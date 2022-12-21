@@ -123,7 +123,7 @@ async def create_Campaign(
         #Como lo calculaba para el dibujo anterior! 
         for i in range(number_cells):   
                     coord_x = ((i % 5)+1)*100
-                    coord_y = ((i//5)+1)*100
+                    coord_y = ((i//5)+1)*100 + 150
                     center_x = (coord_x+100-coord_x)/2 + coord_x
                     center_y = (coord_y+100-coord_y)/2 + coord_y
                     cell_create = CellCreate(surface_id=Surface.id, center=Point(center_x, center_y),rad=Campaign.cell_edge)
@@ -198,8 +198,25 @@ def show_a_campaign(
     """
     Show a campaign
     """
+    n_surfaces=len(campañas_activas.surfaces)
+    n_filas = 1
+    for i in campañas_activas.surfaces:
+                        a=len(i.cells)
+                        b=(a//5) +1
+                        if a%5!=0:
+                            b=b+1
+                        if n_filas<b:
+                            n_filas=b
+    n_filas=n_filas+1
+                
+                
+               
+               
+    # x=random.randint(100, n_surfaces*700)
+    # y=random.randint(100, 100*n_filas)
 
-    imagen = 255*np.ones((1000,1500,3),dtype=np.uint8)
+    imagen = 255*np.ones(( 200+100*n_filas , 200+n_surfaces*600,3),dtype=np.uint8)
+    # imagen = 255*np.ones((1000,1500,3),dtype=np.uint8)
     campañas_activas= crud.campaign.get_campaign(db=db, hive_id=hive_id, campaign_id=campaign_id)
     if campañas_activas is None:
         raise HTTPException(
