@@ -198,61 +198,66 @@ def show_a_campaign(
     """
     Show a campaign
     """
-    n_surfaces=len(campañas_activas.surfaces)
-    n_filas = 1
-    for i in campañas_activas.surfaces:
-                        a=len(i.cells)
-                        b=(a//5) +1
-                        if a%5!=0:
-                            b=b+1
-                        if n_filas<b:
-                            n_filas=b
-    n_filas=n_filas+1
-                
-                
-               
-               
-    # x=random.randint(100, n_surfaces*700)
-    # y=random.randint(100, 100*n_filas)
-
-    imagen = 255*np.ones(( 200+100*n_filas , 200+n_surfaces*600,3),dtype=np.uint8)
-    # imagen = 255*np.ones((1000,1500,3),dtype=np.uint8)
     campañas_activas= crud.campaign.get_campaign(db=db, hive_id=hive_id, campaign_id=campaign_id)
-    if campañas_activas is None:
-        raise HTTPException(
-                status_code=404, detail=f"Campaign with campaign_id== {campaign_id}  and hive_id=={hive_id} not found"
-            )
-    count=0
-    cv2.putText(imagen, f"Campaign: id={campañas_activas.id},", (100+count*600,50), cv2.FONT_HERSHEY_SIMPLEX , 0.75, (0,0,0))
-    cv2.putText(imagen, f"city={campañas_activas.city}", (100+count*600,80), cv2.FONT_HERSHEY_SIMPLEX , 0.75, (0,0,0))
-    cv2.putText(imagen, f"time={time.strftime('%m/%d/%Y, %H:%M:%S')}", (100+1*600,80), cv2.FONT_HERSHEY_SIMPLEX , 0.75, (0,0,0))
-    for i in campañas_activas.surfaces:
-            count=count+1
-            for j in i.cells:
-                slot=crud.slot.get_slot_time(db=db, cell_id=j.id,time=time)
-                prioridad= crud.priority.get_last(db=db,slot_id=slot.id,time=time)
-                temporal_prioridad=prioridad.temporal_priority
-                if temporal_prioridad>2.5: # ROJO
-                    color=(201,191,255)
-                elif temporal_prioridad<1.5: #VERDE
-                    color=(175,243,184)
-                else: #NARANJA
-                    color=(191, 355, 255) 
-                print(temporal_prioridad, j.id)
-                Cardinal_actual = crud.measurement.get_all_Measurement_from_cell_in_the_current_slot(db=db, cell_id=j.id, time=time,slot_id=slot.id)
-                pt1=(int(j.center[0])+j.rad,int(j.center[1])+j.rad)
-                pt2=(int(j.center[0])-j.rad,int(j.center[1])-j.rad)
-                print(pt1, pt2)
-                cv2.rectangle(imagen,pt1=pt1, pt2=pt2,color=color ,thickness = -1)
-                cv2.rectangle(imagen,pt1=pt1, pt2=pt2,color=(0,0,0))   
-                cv2.putText(imagen, str(Cardinal_actual), (int(j.center[0]),int(j.center[1])), cv2.FONT_HERSHEY_SIMPLEX , 0.75, (0,0,0))
-    
-    res, im_png = cv2.imencode(".png", imagen)
-    direcion=f"/home/ubuntu/carpeta_compartida_docker/RecommenderSystem/src/Servicio/app/imagen/{time.strftime('%m-%d-%Y-%H-%M-%S')}.jpeg"
-    print(direcion)
-    cv2.imwrite(direcion, imagen)
+    if time >=campañas_activas.start_timestamp and time<= (campañas_activas.start_timestamp + timedelta(seconds=campañas_activas.campaign_duration) ): 
+        n_surfaces=len(campañas_activas.surfaces)
+        n_filas = 1
+        for i in campañas_activas.surfaces:
+                            a=len(i.cells)
+                            b=(a//5) +1
+                            if a%5!=0:
+                                b=b+1
+                            if n_filas<b:
+                                n_filas=b
+        n_filas=n_filas+1
+                    
+                    
+                
+                
+        # x=random.randint(100, n_surfaces*700)
+        # y=random.randint(100, 100*n_filas)
 
-    return StreamingResponse(BytesIO(im_png.tobytes()), media_type="image/png")
+        imagen = 255*np.ones(( 200+100*n_filas , 200+n_surfaces*600,3),dtype=np.uint8)
+        # imagen = 255*np.ones((1000,1500,3),dtype=np.uint8)
+        if campañas_activas is None:
+            raise HTTPException(
+                    status_code=404, detail=f"Campaign with campaign_id== {campaign_id}  and hive_id=={hive_id} not found"
+                )
+        count=0
+        cv2.putText(imagen, f"Campaign: id={campañas_activas.id},", (100+count*600,50), cv2.FONT_HERSHEY_SIMPLEX , 0.75, (0,0,0))
+        cv2.putText(imagen, f"city={campañas_activas.city}", (100+count*600,80), cv2.FONT_HERSHEY_SIMPLEX , 0.75, (0,0,0))
+        cv2.putText(imagen, f"time={time.strftime('%m/%d/%Y, %H:%M:%S')}", (100+1*600,80), cv2.FONT_HERSHEY_SIMPLEX , 0.75, (0,0,0))
+        for i in campañas_activas.surfaces:
+                count=count+1
+                for j in i.cells:
+                    slot=crud.slot.get_slot_time(db=db, cell_id=j.id,time=time)
+                    prioridad= crud.priority.get_last(db=db,slot_id=slot.id,time=time)
+                    temporal_prioridad=prioridad.temporal_priority
+                    if temporal_prioridad>2.5: # ROJO
+                        color=(201,191,255)
+                    elif temporal_prioridad<1.5: #VERDE
+                        color=(175,243,184)
+                    else: #NARANJA
+                        color=(191, 355, 255) 
+                    print(temporal_prioridad, j.id)
+                    Cardinal_actual = crud.measurement.get_all_Measurement_from_cell_in_the_current_slot(db=db, cell_id=j.id, time=time,slot_id=slot.id)
+                    pt1=(int(j.center[0])+j.rad,int(j.center[1])+j.rad)
+                    pt2=(int(j.center[0])-j.rad,int(j.center[1])-j.rad)
+                    print(pt1, pt2)
+                    cv2.rectangle(imagen,pt1=pt1, pt2=pt2,color=color ,thickness = -1)
+                    cv2.rectangle(imagen,pt1=pt1, pt2=pt2,color=(0,0,0))   
+                    cv2.putText(imagen, str(Cardinal_actual), (int(j.center[0]),int(j.center[1])), cv2.FONT_HERSHEY_SIMPLEX , 0.75, (0,0,0))
+        
+        res, im_png = cv2.imencode(".png", imagen)
+        direcion=f"/home/ubuntu/carpeta_compartida_docker/RecommenderSystem/src/Servicio/app/imagen/{time.strftime('%m-%d-%Y-%H-%M-%S')}.jpeg"
+        print(direcion)
+        cv2.imwrite(direcion, imagen)
+
+        return StreamingResponse(BytesIO(im_png.tobytes()), media_type="image/png")
+    else:
+        raise HTTPException(
+                    status_code=404, detail=f"Campaign with campaign_id== {campaign_id}  and hive_id=={hive_id} is not active fot the time={time}."
+                )
 
 
 @api_router_campaign.put("/{campaign_id}", status_code=201, response_model=Campaign)

@@ -162,7 +162,7 @@ def create_recomendation(
 
 
 @api_router_recommendation.put("/{recommendation_id}", status_code=200, response_model=Recommendation)
-def put_a_member(
+def put_a_recommendation(
     *,
     recommendation_id:int,
     member_id:int,
@@ -170,7 +170,7 @@ def put_a_member(
     db: Session = Depends(deps.get_db),
 ) -> dict:
     """
-    Update a member
+    Update a Recommendation
     """
     recommendation=crud.recommendation.get_recommendation(db=db,member_id=member_id,recommendation_id=recommendation_id)
 
@@ -178,6 +178,7 @@ def put_a_member(
         raise HTTPException(
             status_code=404, detail=f"Recommendation with recommendation_id=={recommendation_id} not found"
         )
+    
     updated_recipe = crud.recommendation.update(db=db, db_obj=recommendation, obj_in=recipe_in)
     db.commit()
 
