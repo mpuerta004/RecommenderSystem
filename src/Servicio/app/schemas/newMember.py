@@ -9,6 +9,7 @@ class role(str, Enum):
     QueenBee="QueenBee" 
     BeeKeeper="BeeKeeper" 
     DroneBee="DroneBee" 
+    Hive="Hive"
     
 
 class gender_type(str, Enum):

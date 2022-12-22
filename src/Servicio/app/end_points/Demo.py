@@ -58,7 +58,7 @@ def prioriry_calculation_2(time:datetime, cam:Campaign, db:Session= Depends(deps
             # date = datetime(year=a.year, month=a.month, day=a.day,
             #                 hour=a.hour, minute=a.minute, second=a.second)
             # for cam in campaigns:
-            if time >= cam.start_timestamp and time < cam.start_timestamp+timedelta(seconds=cam.campaign_duration):
+            if time >= cam.start_timestamp and time <= cam.start_timestamp+timedelta(seconds=cam.campaign_duration):
                 surfaces=crud.surface.get_multi_surface_from_campaign_id(db=db,campaign_id=cam.id,limit=1000)
                 for sur in surfaces:
                     for cells in sur.cells:
@@ -133,23 +133,21 @@ async def asignacion_recursos(
         mediciones=[]
         cam=crud.campaign.get_campaign(db=db,hive_id=hive_id,campaign_id=campaign_id)
    
-        dur=cam.campaign_duration + 60
+        dur=cam.campaign_duration
         for segundo in range(60,dur,60):
-            # await asyncio.sleep(0.1)
             random.seed()
             print("----------------------------------------------------------------------", segundo)
             time = cam.start_timestamp + timedelta(seconds=segundo)
            
-            print(f"a ver que es to {time}")
+            # print(f"a ver que es to {time}")
             prioriry_calculation_2(time=time,db=db,cam=cam)
-            print("----------------------------------------")
+            # print("----------------------------------------")
             # if segundo%120 ==0:
             #     # time = cam.start_timestamp + timedelta(seconds=segundo)
             #     cell_statics=crud.cell.get_statics(db=db, campaign_id=cam.id)   
             #     for i in cell_statics:
             #         Measurementcreate= MeasurementCreate(cell_id=i.id, timestamp=time,location=i.center)
             #         slot=crud.slot.get_slot_time(db=db,cell_id=i.id,time=time)
-            #         #Todo: tiene que haber un usuario para los mediciones automaticas. 
             #         user_static=crud.member.get_static_user(db=db,hive_id=cam.hive_id)
             #         crud.measurement.create_Measurement(db=db, slot_id=slot.id,member_id=user_static.id, obj_in=Measurementcreate)
             #         db.commit()
@@ -178,7 +176,7 @@ async def asignacion_recursos(
                         if n_filas<b:
                             n_filas=b
                 n_filas=n_filas+1
-                print("numero de filas finales", n_filas)
+                # print("numero de filas finales", n_filas)
                 
                 list_users= reciboUser(cam,db=db)
                 if list_users!=[]:
@@ -187,16 +185,15 @@ async def asignacion_recursos(
                
                         x=random.randint(0, n_surfaces*700 - (n_surfaces-1)*100)
                         y=random.randint(150,150+ 100*n_filas)
-                        print("posicion_usuario",x,y)
                         a=RecommendationCreate(recommendation_timestamp=time,member_current_location=Point(x=x,y=y))
                         recomendaciones=create_recomendation_2(db=db,member_id=user.id,recipe_in=a,cam=cam)
-                        if recomendaciones is None:
-                            print("CUIDADO")
-                            pass
-                        else:
-                            recomendacion_polinizar = RL(recomendaciones['results'])
-                            mediciones.append([user, recomendacion_polinizar, random.randint(1,1800)])
-                            show_recomendation(db=db, cam=cam, user=user, result=recomendaciones['results'],time=time,recomendation=recomendacion_polinizar)  
+                        # if recomendaciones is None:
+                        #     print("CUIDADO")
+                        #     pass
+                        # else:
+                        recomendacion_polinizar = RL(recomendaciones['results'])
+                        mediciones.append([user, recomendacion_polinizar, random.randint(1,1800)])
+                        show_recomendation(db=db, cam=cam, user=user, result=recomendaciones['results'],time=time,recomendation=recomendacion_polinizar)  
 
             new=[]
             # print(len(mediciones))
@@ -205,14 +202,14 @@ async def asignacion_recursos(
                 mediciones[i][2]=int(mediciones[i][2]) -60
                 if mediciones[i][2]<=0:
                     time_polinizado = time + timedelta(seconds=mediciones[i][2])
-                    print("Momento de polinizar", time_polinizado)
                     cell=crud.cell.get_Cell(db=db,cell_id=mediciones[i][1].cell_id)
-                    creation=MeasurementCreate(db=db, cell_id=mediciones[i][1].cell_id,location=cell.center,timestamp=time_polinizado)
+                    #Todo! dos device! uno para estaticos con id 1 y otro para dinamicos con id 2! es necesario que esten para que esto funcione
+                    creation=MeasurementCreate(db=db, location=cell.center,timestamp=time_polinizado,device_id=2)
                     slot=crud.slot.get_slot_time(db=db, 
                                                  cell_id=cell.id,time=time)
                     #Todo he intentado que la hora de inserccion sea la correcta!
                     #Ver si se registran bien mas recomendaciones con el id de la medicion correcta. 
-                    measurement=crud.measurement.create_Measurement(db=db,obj_in=creation,member_id=mediciones[i][0].id,slot_id=slot.id)
+                    measurement=crud.measurement.create_Measurement(db=db,obj_in=creation,member_id=mediciones[i][0].id,slot_id=slot.id,cell_id=mediciones[i][1].cell_id)
                     db.commit()
                     recomendation= mediciones[i][1]
 
@@ -225,7 +222,6 @@ async def asignacion_recursos(
                 else:
                     new.append(mediciones[i])
             mediciones=new
-            print(len(mediciones))
         return None
 
 def create_recomendation_2(

@@ -16,9 +16,9 @@ from models.State import State
 
 class Role(Base):
     __tablename__='Role'
-    hive_id=Column(Integer, ForeignKey(Hive.id),primary_key=True)
-    member_id=Column(Integer, ForeignKey(Member.id),primary_key=True)
+    hive_id=Column(Integer, ForeignKey(Hive.id, ondelete="CASCADE"),primary_key=True)
+    member_id=Column(Integer, ForeignKey(Member.id,ondelete="CASCADE"),primary_key=True)
     role=Column(String,primary_key=True)
     
     
-    member=relationship("Member",back_populates="roles")
+    member=relationship("Member",back_populates="roles",cascade="all, delete")

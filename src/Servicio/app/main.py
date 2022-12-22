@@ -8,23 +8,24 @@ from fastapi.templating import Jinja2Templates
 from typing import Optional, Any, List
 from pathlib import Path
 from sqlalchemy.orm import Session
-from schemas.Surface import SurfaceSearchResults, Surface, SurfaceCreate
+# from schemas.Surface import SurfaceSearchResults, Surface, SurfaceCreate
 
-from schemas.Priority import Priority, PriorityCreate, PrioritySearchResults
-from schemas.Slot import Slot, SlotCreate, SlotSearchResults
-from schemas.Recommendation import Recommendation, RecommendationCreate, RecommendationSearchResults
-from schemas.State import State, StateCreate, StateUpdate
-from schemas.Campaign import CampaignSearchResults, Campaign, CampaignCreate
-from schemas.Hive import Hive, HiveCreate, HiveSearchResults
-from schemas.Reading import Reading, ReadingCreate, ReadingSearchResults
-from schemas.Measurement import Measurement, MeasurementCreate, MeasurementSearchResults
-from schemas.Cell import Cell, CellCreate, CellSearchResults, Point
+# from schemas.Priority import Priority, PriorityCreate, PrioritySearchResults
+# from schemas.Slot import Slot, SlotCreate, SlotSearchResults
+# from schemas.Recommendation import Recommendation, RecommendationCreate, RecommendationSearchResults
+# from schemas.State import State, StateCreate, StateUpdate
+# from schemas.Campaign import CampaignSearchResults, Campaign, CampaignCreate
+# from schemas.Hive import Hive, HiveCreate, HiveSearchResults
+# from schemas.Reading import Reading, ReadingCreate, ReadingSearchResults
+# from schemas.Measurement import Measurement, MeasurementCreate, MeasurementSearchResults
+# from schemas.Cell import Cell, CellCreate, CellSearchResults, Point
 import deps
-from fastapi.responses import FileResponse
-import crud
-from end_points import Members
+from end_points import device
 from end_points import Hive
+from end_points import Members
+from end_points import Role
 from end_points import Cells
+from end_points import reading
 from end_points import Campaigns
 from end_points import Surface
 from end_points import Measurements
@@ -58,11 +59,14 @@ app = FastAPI(title="Micro-volunteering Engine",
               version=1.0, openapi_url="/openapi.json")
 app.include_router(Hive.api_router_hive, tags=["Hives"])
 app.include_router(Members.api_router_members, tags=["Members"])
+app.include_router(Role.api_router_role, tags=["Role"])
+app.include_router(device.api_router_device, tags=["Device"])
 app.include_router(Campaigns.api_router_campaign, tags=["Campaigns"])
 app.include_router(Surface.api_router_surface, tags=["Surfaces"])
 app.include_router(Cells.api_router_cell, tags=["Cells"])
 app.include_router(Measurements.api_router_measurements, tags=["Measurements"])
 app.include_router(Recommendation.api_router_recommendation, tags=["Recommendations"])
+app.include_router(reading.api_router_reading, tags=["Readings"])
 app.include_router(Demo.api_router_demo, tags=["Demo"])
 
 api_router = APIRouter()

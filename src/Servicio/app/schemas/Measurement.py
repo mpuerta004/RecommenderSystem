@@ -11,11 +11,11 @@ from schemas.Reading import Reading
 from schemas.Member import Member
 
 class MeasurementBase(BaseModel):    
-    cell_id:int # INT,
     timestamp:datetime=None
     measurement_type:str='AirData' #Varchar(30) default 'AirData', #set('AirData','Sound')
-    airdata_id:int=None# INT,
+    reading_id:int=None# INT,
     location:Point=None
+    device_id:int
     
     
 
@@ -29,6 +29,7 @@ class MeasurementUpdate(MeasurementBase):
 # Properties shared by models stored in DB
 class MeasurementInDBBase(MeasurementBase):
     id:int 
+    cell_id:int # INT,
     slot_id:int
     member_id:int #  INT,
     readings:Sequence[Reading]=None

@@ -25,6 +25,9 @@ class CRUDRole(CRUDBase[Role, RoleCreate, RoleUpdate]):
     
     def get_by_ids(self, db: Session, *, hive_id:int,member_id:int) -> Role:
          return db.query(Role).filter(and_(Role.hive_id == hive_id, Role.member_id==member_id)).first()
+     
+    def get_by_ids_role(self, db: Session, *, hive_id:int,member_id:int,Role_str:str) -> Role:
+         return db.query(Role).filter(and_(Role.hive_id == hive_id, Role.member_id==member_id, Role.role==Role_str)).first()
                                       
     def get_roles(self, db: Session, *, hive_id:int,member_id:int) -> List[str]:
         return db.query(Role.role).filter(and_(Role.hive_id == hive_id,Role.member_id==member_id)).all()
@@ -32,7 +35,12 @@ class CRUDRole(CRUDBase[Role, RoleCreate, RoleUpdate]):
     def get_member_id(self, db: Session, *, hive_id:int) -> List[str]:
         return db.query(Role.member_id).filter(Role.hive_id == hive_id).distinct()
     
-    
+    def remove(self, db: Session, *, role:Role) -> Role:
+        obj = role
+        db.delete(obj)
+        db.commit()
+        return obj
+   
     def update(
         self, db: Session, *, db_obj: Role, obj_in: Union[RoleUpdate, Dict[str, Any]]
     ) -> Role:

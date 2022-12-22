@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 from schemas.Measurement import Measurement, MeasurementCreate, MeasurementSearchResults
 from schemas.Campaign import CampaignSearchResults, Campaign, CampaignCreate
 from schemas.Slot import Slot, SlotCreate,SlotSearchResults
-
+from schemas.Boundary import Boundary, BoundaryCreate, BoundarySearchResults
 from schemas.Priority import Priority, PriorityCreate, PrioritySearchResults
 from datetime import datetime, timedelta
 from schemas.Cell import Cell, CellCreate, CellSearchResults, Point
@@ -71,7 +71,7 @@ def search_a_campaign_by_id(
 
 #Todo: 
 @api_router_surface.put("/{surface_id}", status_code=200, response_model=Surface)
-def put_a_member(
+def put_surface(
     *,
     hive_id:int,
     campaign_id:int, 
@@ -83,14 +83,33 @@ def put_a_member(
     Update a surface
     """
     surface=crud.surface.get_surface_by_ids(db=db,surface_id=surface_id, campaign_id=campaign_id)
-    a=surface.cells
+    
     if  surface is None:
         raise HTTPException(
             status_code=404, detail=f"Member with surface_id=={surface_id} and campaign_id={campaign_id } not found"
         )
+    a=surface.cells
     updated_recipe = crud.surface.update(db=db, db_obj=surface, obj_in=recipe_in)
     db.commit()
     return updated_recipe
+
+@api_router_surface.delete("/{surface_id}", status_code=204)
+def delete_surface(    *,
+    hive_id:int,
+    campaign_id:int, 
+    surface_id:int,
+    db: Session = Depends(deps.get_db),
+) -> dict:
+    """
+    Delete surface in the database.
+    """
+    surface=crud.surface.get_surface_by_ids(db=db,surface_id=surface_id, campaign_id=campaign_id)
+    if  surface is None:
+        raise HTTPException(
+            status_code=404, detail=f"Member with surface_id=={surface_id} and campaign_id={campaign_id } not found"
+        )
+    updated_recipe = crud.surface.remove(db=db, surface=surface)
+    return {"ok": True}
 
 @api_router_surface.post("/", status_code=201, response_model=Surface)
 def create_surface(
@@ -99,6 +118,8 @@ def create_surface(
     campaign_id:int, 
     obj_in:SurfaceCreate,
     number_cells:int,
+    center:Point, 
+    rad:int,
     db:Session = Depends(deps.get_db),
     background_tasks: BackgroundTasks
 
@@ -113,6 +134,8 @@ def create_surface(
         )
     
     Surface=crud.surface.create_sur(db=db, campaign_id=campaign_id,obj_in=obj_in)
+    boundary_create=BoundaryCreate(center=center,rad=rad)
+    boundary = crud.boundary.create_boundary(db=db, surface_id=Surface.id,obj_in=boundary_create)
     if Surface is None:
         raise HTTPException(
             status_code=400, detail=f"INVALID REQUEST"
@@ -136,7 +159,7 @@ def create_surface(
     #                         db=db, obj_in=cell_create, surface_id=Surface.id)
     
     
-    #TODO: Esto iria enlazado con el programa que permite seleccionar las celdas de la campaña pero de momento esto nos vale. 
+    #TODO:  This would be linked to the program that allows to select the cells of the campaign but for the moment this is enough for us.
     # Generar las celdas! Esto no debe ser asi! 
     for i in range(number_cells):
             coord_x=((i%5)+1)*100 
@@ -157,13 +180,10 @@ SQLALCHEMY_DATABASE_URL = "mysql+mysqlconnector://root:mypasswd@localhost:3306/S
 sessionmaker = FastAPISessionMaker(SQLALCHEMY_DATABASE_URL)
 async def create_slots_surface(surface: Surface,hive_id:int):
     """
-    Create all the slot of each cells of the campaign. 
+    Create all the slot of each cells of the surface. 
     """
     await asyncio.sleep(3)
     with sessionmaker.context_session() as db:
-        #       campaigns=crud.campaign.get_all_campaign(db=db)
-        #       for cam in campaigns:
-        # if cam.start_timestamp.strftime("%m/%d/%Y, %H:%M:%S")==date_time:
         cam=crud.campaign.get_campaign(db=db,hive_id=hive_id,campaign_id=surface.campaign_id)
         n_slot = cam.campaign_duration//cam.sampling_period
         if cam.campaign_duration % cam.sampling_period != 0:
@@ -172,10 +192,8 @@ async def create_slots_surface(surface: Surface,hive_id:int):
             time_extra=i*cam.sampling_period
             start = cam.start_timestamp + timedelta(seconds=time_extra)
             end = start + timedelta(seconds=cam.sampling_period)
-            # for sur in cam.surfaces:
             for cells in surface.cells:
                     slot_create =  SlotCreate(
                         cell_id=cells.id, start_timestamp=start, end_timestamp=end)
                     slot = crud.slot.create_slot_detras(db=db, obj_in=slot_create)
         db.commit()
-        print("GINISH ----------------------------------------------")

@@ -10,23 +10,23 @@ from db.base_class import Base
 from models.Reading import Reading
 from models.Point import Point
 from models.Member import Member
-from models.Campaign import Campaign
 from models.Slot import Slot
-
+from models.Device import Device
 
 class Measurement(Base):
     __tablename__='Measurement'
     id=Column(Integer, unique=True, primary_key=True, index=True, autoincrement=True) 
-    cell_id=Column(Integer, ForeignKey(Cell.id))
-    member_id=Column(Integer, ForeignKey(Member.id))
+    cell_id=Column(Integer, ForeignKey(Cell.id, ondelete="CASCADE"))
+    member_id=Column(Integer, ForeignKey(Member.id, ondelete="CASCADE"))
     timestamp=Column(DateTime)
-    slot_id=Column(Integer, ForeignKey(Slot.id),)
+    slot_id=Column(Integer, ForeignKey(Slot.id, ondelete="CASCADE"))
     measurement_type=Column(String)
-    airdata_id=Column(Integer, ForeignKey(Reading.id), nullable=True)
+    reading_id=Column(Integer, ForeignKey(Reading.id, ondelete="CASCADE"), nullable=True)
     location=Column(Point)
-    # campaign_id=Column(Integer, ForeignKey(Campaign.id))
+    device_id=Column(Integer,ForeignKey(Device.id,ondelete="CASCADE"))
     
-    airData= relationship("Reading")
+    
+    readings= relationship("Reading",cascade="all, delete")
     
     # member=relationship(Member)
     

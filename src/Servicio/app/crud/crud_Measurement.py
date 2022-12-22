@@ -24,9 +24,9 @@ class CRUDMeasurement(CRUDBase[Measurement, MeasurementCreate, MeasurementUpdate
         #TODO: el numero de mediciones por  slot!
         # def get_last_of_Cell(self, db: Session, *, cell_id:int) -> Measurement:
         #         return db.query(Measurement).filter(Measurement.cell_id == cell_id ).order_by(Slot.end_timestamp.desc()).first()
-        def create_Measurement(self, db: Session, *, obj_in: MeasurementCreate, member_id:int,slot_id:int) -> Measurement:
+        def create_Measurement(self, db: Session, *, obj_in: MeasurementCreate, member_id:int,slot_id:int,cell_id:int) -> Measurement:
                 obj_in_data = jsonable_encoder(obj_in) 
-                db_obj = self.model(**obj_in_data,member_id=member_id,slot_id=slot_id)  # type: ignore
+                db_obj = self.model(**obj_in_data,member_id=member_id,slot_id=slot_id,cell_id=cell_id)  # type: ignore
                 db.add(db_obj)
                 db.commit()
                 db.refresh(db_obj)
@@ -46,5 +46,9 @@ class CRUDMeasurement(CRUDBase[Measurement, MeasurementCreate, MeasurementUpdate
          
         def get_all_Measurement_from_cell_in_the_current_slot(self, db:Session, *,  cell_id:int, time:DateTime, slot_id:int)-> int:
             return db.query(Measurement).filter( and_(Measurement.cell_id==cell_id, Measurement.timestamp<=time, Measurement.slot_id==slot_id)).count()        
-
+        def remove(self, db: Session, *, measurement:Measurement) -> Measurement:
+            obj = measurement
+            db.delete(obj)
+            db.commit()
+            return obj
 measurement = CRUDMeasurement(Measurement)

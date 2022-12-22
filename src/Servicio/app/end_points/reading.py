@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 from schemas.Measurement import Measurement, MeasurementCreate, MeasurementSearchResults
 from schemas.Campaign import CampaignSearchResults, Campaign, CampaignCreate
 from schemas.Slot import Slot, SlotCreate,SlotSearchResults
-from schemas.Hive import Hive, HiveCreate, HiveSearchResults,HiveUpdate
+from schemas.Reading import Reading, ReadingCreate, ReadingSearchResults,ReadingUpdate
 from schemas.Member import Member,MemberCreate,MemberSearchResults
 
 from schemas.Role import Role,RoleCreate,RoleSearchResults
@@ -32,82 +32,76 @@ from starlette.responses import StreamingResponse
 
 
 
-api_router_hive = APIRouter(prefix="/hives")
+api_router_reading = APIRouter(prefix="/readings")
 
 
 
-@api_router_hive.get("/{hive_id}", status_code=200, response_model=Hive)
-def get_hive(
+@api_router_reading.get("/{reading_id}", status_code=200, response_model=Reading)
+def get_reading(
     *,
-    hive_id: int,
+    reading_id: int,
     db: Session = Depends(deps.get_db),
 ) -> dict:
     """
-    Fetch a single Hive by ID
+    Fetch a single reading by ID
     """
-    result = crud.hive.get(db=db, id=hive_id)
+    result = crud.reading.get(db=db, id=reading_id)
     if  result is None:
         raise HTTPException(
-            status_code=404, detail=f"Hive with   hive_id=={hive_id} not found"
+            status_code=404, detail=f"reading with   reading_id=={reading_id} not found"
         )
     return result
 
 #Todo: control de errores! 
-@api_router_hive.post("/",status_code=201, response_model=Hive)
-def create_hive(
-    *, recipe_in: HiveCreate,db: Session = Depends(deps.get_db)
+@api_router_reading.post("/",status_code=201, response_model=Reading)
+def create_reading(
+    *, recipe_in: ReadingCreate,db: Session = Depends(deps.get_db)
 ) -> dict:
     """
-    Create a new hive in the database.
+    Create a new reading in the database.
     """
-    hive = crud.hive.create(db=db, obj_in=recipe_in)
-    if hive is None:
+    reading = crud.reading.create(db=db, obj_in=recipe_in)
+    if reading is None:
         raise HTTPException(
             status_code=400, detail=f"INVALID REQUEST"
         )
     
-    member=MemberCreate(name="Hive",surname="-",age=0,mail="-",gender='I dont want to answer')
-    member_new= crud.member.create(db=db, obj_in=member)
-    Role= RoleCreate(role="Hive")
-    role_new=crud.role.create_Role(db=db,obj_in=Role, hive_id=hive.id, member_id=member_new.id)
-    return hive
+    return reading
 
 
 
-@api_router_hive.put("/{hive_id}", status_code=201, response_model=Hive)
-def update_hive(    *,
-    recipe_in: HiveUpdate,
-    hive_id:int,
+@api_router_reading.delete("/{reading_id}", status_code=204)
+def delete_reading(    *,
+    reading_id:int,
     db: Session = Depends(deps.get_db),
 ) -> dict:
     """
-    Update recipe in the database.
+    Delete reading in the database.
     """
-    hive = crud.hive.get(db, id=hive_id)
-    if not hive:
+    reading=crud.reading.get(db=db,id=reading_id)
+    if  reading is None:
         raise HTTPException(
-            status_code=400, detail=f"Recipe with ID: {hive_id} not found."
+            status_code=404, detail=f"Reading with  reading_id=={reading_id} not found"
         )
+    updated_recipe = crud.reading.remove(db=db, id=reading_id)
+    return {"ok": True}
 
-    updated_recipe = crud.hive.update(db=db, db_obj=hive, obj_in=recipe_in)
+@api_router_reading.put("/{reading_id}", status_code=200, response_model=Reading)
+def put_surface(
+    *,
+    reading_id:int,
+    recipe_in:ReadingUpdate,
+    db: Session = Depends(deps.get_db),
+) -> dict:
+    """
+    Update a surface
+    """
+    reading=crud.reading.get(db=db, id= reading_id)
+    
+    if  reading_id is None:
+        raise HTTPException(
+            status_code=404, detail=f"Reading with reading_id=={reading_id} not found"
+        )
+    updated_recipe = crud.reading.update(db=db, db_obj=reading, obj_in=recipe_in)
+    db.commit()
     return updated_recipe
-
-
-
-@api_router_hive.delete("/{hive_id}", status_code=204)
-def delete_hive(    *,
-    hive_id:int,
-    db: Session = Depends(deps.get_db),
-) -> dict:
-    """
-    Delete a hive in the database.
-    """
-    hive = crud.hive.get(db, id=hive_id)
-    if not hive:
-        raise HTTPException(
-            status_code=400, detail=f"Recipe with ID: {hive_id} not found."
-        )
-    updated_recipe = crud.hive.remove(db=db, hive=hive)
-    return    {"ok": True}
-
-

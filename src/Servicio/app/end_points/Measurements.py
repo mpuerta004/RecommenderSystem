@@ -70,11 +70,31 @@ def get_measurement(
         )
     return result
 
+@api_router_measurements.delete("/{measurement_id}", status_code=204)
+def delete_measurement(   *,
+    member_id: int,
+    measurement_id:int, 
+    db: Session = Depends(deps.get_db),
+) -> dict:
+    """
+    Delete measurement in the database.
+    """
+    result = crud.measurement.get_Measurement(db=db, measurement_id=measurement_id,member_id=member_id)
+    if  result is None:
+        raise HTTPException(
+            status_code=404, detail=f"Measurement with member_id=={member_id} and measurement_id=={measurement_id} not found"
+        )
+    updated_recipe = crud.measurement.remove(db=db, measurement=result)
+    return {"ok": True}
+
+
+#Todo! mejorar lo de encontrar el cell:id
 @api_router_measurements.post("/",status_code=201, response_model=Measurement)
 def create_measurements(
     *, 
     member_id:int, 
     recipe_in: MeasurementCreate,
+    cell_id:int,
     db: Session = Depends(deps.get_db)
 ) -> dict:
     """
@@ -89,16 +109,17 @@ def create_measurements(
     for i in member.roles:
         if i.role=="WorkerBee":
             bool=True
-    #Todo: control de errores
     if bool==True:
-        slot=crud.slot.get_slot_time(db=db,cell_id=recipe_in.cell_id,time=recipe_in.timestamp)
+        
+        
+        slot=crud.slot.get_slot_time(db=db,cell_id=cell_id,time=recipe_in.timestamp)
         if slot is None: 
               raise HTTPException(
             status_code=401, detail=f"In this time the Campaign is not active"
         )
         campaign=crud.campaign.get_campaign_from_cell(db=db,cell_id=recipe_in.cell_id)
         if recipe_in.timestamp>=campaign.start_timestamp and recipe_in.timestamp<=campaign.start_timestamp +timedelta(seconds=campaign.campaign_duration):
-            cellMeasurement = crud.measurement.create_Measurement(db=db, obj_in=recipe_in,member_id=member_id,slot_id=slot.id)
+            cellMeasurement = crud.measurement.create_Measurement(db=db, obj_in=recipe_in,member_id=member_id,slot_id=slot.id,cell_id=cell_id)
             return cellMeasurement
         else:
             raise HTTPException(
@@ -114,7 +135,7 @@ def create_measurements(
 
 #Todo: ¿? aqui deberia preguntar si en el nuevo tiempo la camapaña estaba activa! 
 @api_router_measurements.put("/{measurement_id}", status_code=201, response_model=Measurement)
-def update_recipe(
+def update_measurement(
     *,
     recipe_in: MeasurementUpdate,
         member_id:int, 

@@ -6,7 +6,6 @@ from sqlalchemy.orm import relationship
 
 from db.base_class import Base
 
-
 class Member(Base):
     __tablename__='Member'
     mail=Column(String, nullable=False)
@@ -16,9 +15,10 @@ class Member(Base):
     surname=Column(String,nullable=True)
     city=Column(String,nullable=True)
     gender=Column(String,default='I dont want to answer')
+    # device_id=Column(Integer,ForeignKey(Device.id, ondelete='CASCADE'))
     
-    Measurements=relationship("Measurement")
-    roles=relationship("Role", back_populates="member")
-    campaign_creator= relationship("Campaign")
+    Measurements=relationship("Measurement",cascade="all, delete")
+    roles=relationship("Role", back_populates="member",cascade="all, delete")
+    # campaign_creator= relationship("Campaign",cascade="all, delete")
 
     

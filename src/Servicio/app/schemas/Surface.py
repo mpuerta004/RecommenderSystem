@@ -4,8 +4,7 @@ from schemas.Point import Point
 
 from schemas.Cell import Cell
 class SurfaceBase(BaseModel):
-    center: Point
-    rad:int
+    pass
 
 class SurfaceCreate(SurfaceBase):
     pass

@@ -5,6 +5,8 @@ from typing import Optional, Any, List
 from pathlib import Path
 from sqlalchemy.orm import Session
 from schemas.Measurement import Measurement, MeasurementCreate, MeasurementSearchResults
+from schemas.Boundary import Boundary, BoundaryCreate, BoundarySearchResults
+
 from schemas.Campaign import CampaignSearchResults, Campaign, CampaignCreate, CampaignUpdate
 from schemas.Slot import Slot, SlotCreate,SlotSearchResults
 from schemas.Recommendation import Recommendation,RecommendationCreate
@@ -83,6 +85,23 @@ def get_campaign(
     return Campaigns
 
 
+@api_router_campaign.delete("/{campaign_id}", status_code=204)
+def delete_campaign(    *,
+     hive_id:int, 
+    campaign_id:int,
+    db: Session = Depends(deps.get_db),
+) -> dict:
+    """
+    Update recipe in the database.
+    """
+    Campaigns = crud.campaign.get_campaign(db=db, hive_id=hive_id, campaign_id=campaign_id)
+    if  Campaigns is None:
+        raise HTTPException(
+            status_code=404, detail=f"Recipe with campaign_id=={campaign_id} and hive_id=={hive_id} not found"
+        )
+    updated_recipe = crud.campaign.remove(db=db, campaign=Campaigns)
+    return  {"ok": True}
+
     
 @api_router_campaign.post("/", status_code=201, response_model=Campaign)
 async def create_Campaign(
@@ -102,8 +121,11 @@ async def create_Campaign(
 
     if ("QueenBee",) in role:
         Campaign = crud.campaign.create_cam(db=db, obj_in=recipe_in, hive_id=hive_id)
-        surface_create=SurfaceCreate(center=center,rad=rad)
+  
+        surface_create=SurfaceCreate()
         Surface = crud.surface.create_sur(db=db, campaign_id=Campaign.id,obj_in=surface_create)
+        boundary_create=BoundaryCreate(center=center,rad=rad)
+        boundary = crud.boundary.create_boundary(db=db, surface_id=Surface.id,obj_in=boundary_create)
         # TODO: Esto iria enlazado con el programa que permite seleccionar las celdas de la campaña pero de momento esto nos vale.
         # cx = center.x
         # cy = center.y
@@ -156,7 +178,7 @@ async def create_slots(cam: Campaign ):
         for i in range(n_slot):
             time_extra=i*cam.sampling_period
             start = cam.start_timestamp + timedelta(seconds=time_extra)
-            end = start + timedelta(seconds=cam.sampling_period)
+            end = start + timedelta(seconds=cam.sampling_period -1)
             print(start)
             for sur in cam.surfaces:
                 for cells in sur.cells:
@@ -180,7 +202,6 @@ async def create_slots(cam: Campaign ):
                             slot_id=slot.id, timestamp=start, temporal_priority=result, trend_priority=trendy)  # ,cell_id=cells.id)
                         priority = crud.priority.create_priority_detras(
                             db=db, obj_in=Cell_priority)
-                   
 
  
  

@@ -20,7 +20,11 @@ class CRUDHive(CRUDBase[Hive, HiveCreate, HiveUpdate]):
         def get_all(self,*, db: Session) -> List[Hive] or Any:
                 return db.query(Hive).all()
     
-
+        def remove(self, db: Session, *, hive:Hive) -> Hive:
+                obj = hive
+                db.delete(obj)
+                db.commit()
+                return obj
         
 
 

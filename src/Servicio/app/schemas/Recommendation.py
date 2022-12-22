@@ -14,7 +14,7 @@ from schemas.State import State
 class RecommendationBase(BaseModel):
     measurement_id:int=None
     recommendation_timestamp:datetime = datetime.now()
-    planning_timestamp:datetime=None
+    # planning_timestamp:datetime=None
     # campaign_id:int
     member_current_location:Point
     

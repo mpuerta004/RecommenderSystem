@@ -152,8 +152,6 @@ def create_recomendation(
                     result.append(recomendation)
                     
       
-
-    
         return {"results": result}
     else:
         raise HTTPException(
@@ -183,3 +181,20 @@ def put_a_recommendation(
     db.commit()
 
     return updated_recipe
+
+@api_router_recommendation.delete("/{recommendation_id}", status_code=204)
+def delete_recommendation(    *,
+    recommendation_id:int,
+    member_id:int,
+    db: Session = Depends(deps.get_db),
+) -> dict:
+    """
+    Delete recommendation in the database.
+    """
+    recommendation=crud.recommendation.get_recommendation(db=db,member_id=member_id,recommendation_id=recommendation_id)
+    if  recommendation is None:
+        raise HTTPException(
+            status_code=404, detail=f"Recommendation with recommendation_id=={recommendation_id} not found"
+        )
+    updated_recipe = crud.recommendation.remove(db=db, recommendation=recommendation)
+    return {"ok": True}

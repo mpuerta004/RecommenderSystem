@@ -73,6 +73,26 @@ def get_cell(
         )
     return result
 
+
+@api_router_cell.delete("/{cell_id}", status_code=204)
+def delete_cell(   *,
+    hive_id:int,
+    campaign_id:int,
+    surface_id:int, 
+    cell_id: int,
+    db: Session = Depends(deps.get_db),
+) -> dict:
+    """
+    Delete a cell in the database.
+    """
+    result = crud.cell.get_Cell(db=db, cell_id=cell_id, surface_id=surface_id, campaign_id=campaign_id)
+    if  result is None:
+        raise HTTPException(
+            status_code=404, detail=f"Cell with cell_id=={cell_id} and campaign_id=={campaign_id} and surface_id=={surface_id} not found"
+        )
+    updated_recipe = crud.cell.remove(db=db, cell=result)
+    return  {"ok": True}
+
 @api_router_cell.post("/",status_code=201, response_model=Cell)
 def create_cell(
     *, 
@@ -88,6 +108,7 @@ def create_cell(
     Create a new cell in the surface_id of the campaign_id of the hive_id
     """
     surface = crud.surface.get_surface_by_ids(db=db, surface_id=surface_id,campaign_id=campaign_id)
+    
     cell = crud.cell.create_cell(db=db, obj_in=recipe_in,surface_id=surface_id)
     #Todo: extepccion si no exite la surface
     # Campaign= crud.campaign.get_campaign(db=db,campaign_id=campaign_id,hive_id=hive_id)

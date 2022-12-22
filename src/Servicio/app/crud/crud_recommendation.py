@@ -28,6 +28,11 @@ class CRUDRecommendation(CRUDBase[Recommendation, RecommendationCreate, Recommen
                 db.commit()
                 db.refresh(db_obj)
                 return db_obj
+        def remove(self, db: Session, *, recommendation:Recommendation) -> Recommendation:
+                obj = recommendation
+                db.delete(obj)
+                db.commit()
+                return obj
         def get_recommendation(self, db: Session, *, member_id:int, recommendation_id:int) -> Recommendation:
                   return db.query(Recommendation).filter( and_(Recommendation.id == recommendation_id, Recommendation.member_id==member_id)).first()
         

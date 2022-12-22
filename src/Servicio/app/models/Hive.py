@@ -14,5 +14,5 @@ class Hive(Base):
     id=Column(Integer, primary_key=True, index=True, unique=True,  autoincrement=True, nullable=False)
     city=Column(String, nullable=False)
     
-    member_role=relationship("Role")
+    member_role=relationship("Role",cascade="all, delete")
        

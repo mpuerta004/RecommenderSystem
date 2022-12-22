@@ -29,11 +29,15 @@ class CRUDMember(CRUDBase[Member, MemberCreate, MemberUpdate]):
     #     return db_obj
     
     def get_by_id(self, db: Session, *, id:int) -> Optional[Member]:
-         return db.query(Member).filter(and_(Member.id == id,Member.name!="Static")).first()
-    
+         return db.query(Member).filter(and_(Member.id == id,Member.name!="Hive")).first()
+    def remove(self, db: Session, *, Member:Member) -> Member:
+        obj = Member
+        db.delete(obj)
+        db.commit()
+        return obj
     
     def get_Member_of_city(self, db: Session, *, city:str) -> List[ Member]:
-        return db.query(Member).filter(and_(Member.city == city,Member.name!="Static")).all()
+        return db.query(Member).filter(and_(Member.city == city,Member.name!="Hive")).all()
     
     def update(
         self, db: Session, *, db_obj: Member, obj_in: Union[MemberUpdate, Dict[str, Any]]

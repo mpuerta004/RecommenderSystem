@@ -54,6 +54,10 @@ class CRUDCampaign(CRUDBase[Campaign, CampaignCreate, CampaignUpdate]):
         self,        db: Session) ->List[Campaign]:
         return db.query(Campaign).all()
       
-      
+      def remove(self, db: Session, *, campaign:Campaign) -> Campaign:
+        obj = campaign
+        db.delete(obj)
+        db.commit()
+        return obj
       
 campaign = CRUDCampaign(Campaign)

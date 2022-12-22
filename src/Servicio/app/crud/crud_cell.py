@@ -31,6 +31,7 @@ class CRUDCell(CRUDBase[Cell, CellCreate, CellUpdate]):
         
         def get_Cell(self, db: Session, *, cell_id:int) -> Cell:
                  return db.query(Cell).filter((Cell.id == cell_id)).first()
+       
         
         def get_multi_cell(self, db: Session, *, hive_id:int) -> List[Cell]:
                  return db.query(Cell).join(Surface).join(Campaign).filter( and_(Cell.surface_id==Surface.id, Surface.campaign_id==Campaign.id, Campaign.hive_id==hive_id, Cell.cell_type!="Dynamic") ).all()
@@ -41,6 +42,11 @@ class CRUDCell(CRUDBase[Cell, CellCreate, CellUpdate]):
                  return db.query(Cell).join(Surface).filter(and_(Cell.cell_type=="Dynamic",Cell.surface_id==Surface.id,Surface.campaign_id==campaign_id)).distinct()
         def get_statics(self, db:Session, *,campaign_id:int) ->List[Cell]:
                 return db.query(Cell).join(Surface).filter(and_(Cell.cell_type!="Dynamic",Cell.surface_id==Surface.id,Surface.campaign_id==campaign_id)).all()
-
+        def remove(self, db: Session, *, cell:Cell) -> Cell:
+                obj = cell
+                db.delete(obj)
+                db.commit()
+                return obj
+   
 
 cell = CRUDCell(Cell)

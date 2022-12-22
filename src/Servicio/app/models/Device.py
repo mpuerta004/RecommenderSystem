@@ -9,15 +9,12 @@ from models.Point import Point
 from models.Campaign import Campaign
 
 
-class Surface(Base):
-    __tablename__='Surface'
+class Device(Base):
+    __tablename__='Device'
     id=Column(Integer, unique=True, primary_key=True, index=True, autoincrement=True) 
-    campaign_id=Column(Integer,ForeignKey(Campaign.id, ondelete="CASCADE"))
-    # center=Column(Point)
-    # rad=Column(Integer)
     
-    cells = relationship("Cell",cascade="all, delete")
-    boundary = relationship("Boundary",cascade="all, delete")
+    
+    # measurement = relationship("Measurement")
 
     #De este modo se define una relacion inversa... no se si seran utiles. 
     #queenBee=relationship("Campaign", back_populates="campaigns")

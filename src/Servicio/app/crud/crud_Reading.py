@@ -9,6 +9,10 @@ from sqlalchemy.orm import Session
 from crud.base import CRUDBase
 
 class CRUDReading(CRUDBase[Reading, ReadingCreate, ReadingUpdate]):
-    pass
+    def remove(self, db: Session, *, reading:Reading) -> Reading:
+        obj = reading
+        db.delete(obj)
+        db.commit()
+        return obj
 
 reading = CRUDReading(Reading)
