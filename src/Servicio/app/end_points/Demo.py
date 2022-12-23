@@ -169,8 +169,8 @@ async def asignacion_recursos(
                 n_surfaces=len(cam.surfaces)
                 posiciones_x=[]
                 posiciones_y=[]
-                for i in range(cam.surfaces):
-                    boundary= crud.boundary.get_Boundary_by_ids(db=db,surface_id=i.id)
+                for i in range(n_surfaces):
+                    boundary= crud.boundary.get_Boundary_by_ids(db=db,surface_id=cam.surfaces[i].id)
                     posiciones_x.append((boundary.center[0]-boundary.rad,boundary.center[0]+boundary.rad))
                     posiciones_y.append((boundary.center[1]-boundary.rad,boundary.center[1]+boundary.rad))
                 #Calculo de posiciones con el cuadrado! 
@@ -190,7 +190,7 @@ async def asignacion_recursos(
                     for user in list_users:
                     #Genero las recomendaciones y la que el usuario selecciona y el tiempo que va a tardar en realizar dicho recomendacion. 
                         n=len(posiciones_y)
-                        surface_number = random.randint(0,n) 
+                        surface_number = random.randint(0,n-1) 
                         #Posiciones con los circulos  y cells cuadradas 
                         x=random.randint(posiciones_x[surface_number][0],posiciones_x[surface_number][1])
                         y=random.randint(posiciones_y[surface_number][0],posiciones_y[surface_number][1])
@@ -273,11 +273,10 @@ def create_recomendation_2(
         for i in cells: 
             centro= i.center
             point= recipe_in.member_current_location
-            #Todo: necesitamos el 
             distancia= math.sqrt((centro[0] - point.x)**2+(centro[1]-point.y)**2)
-            if distancia<250:
+            if distancia<=250:
                 List_cells_cercanas.append(i)
-        # print(List_cells_cercanas)
+        print(len(List_cells_cercanas))
         lista_celdas_ordenas=[]
         if List_cells_cercanas!=[]:
             lista_celdas_ordenas=List_cells_cercanas
@@ -298,6 +297,7 @@ def create_recomendation_2(
                     a=crud.slot.get_slot(db=db, slot_id=cells_and_priority[i][1].slot_id)
                     cell_id=a.cell_id
                     # print(a.cell_id)
+                    print(cell_id)
                     obj_state=StateCreate(db=db)
                     state=crud.state.create_state(db=db,obj_in=obj_state)
                     recomendation=crud.recommendation.create_recommendation_detras(db=db,obj_in=recipe_in,member_id=member_id,state_id=state.id,slot_id=cells_and_priority[i][1].slot_id,cell_id=a.cell_id)
@@ -397,7 +397,7 @@ def show_recomendation(*, cam:Campaign, user:Member, result:list(),time:datetime
                 # print(pt1, pt2)
                 cv2.rectangle(imagen,pt1=pt1, pt2=pt2,color=color ,thickness = -1)
                 cv2.rectangle(imagen,pt1=pt1, pt2=pt2,color=(0,0,0))   
-                cv2.putText(imagen, str(Cardinal_actual), (int(j.center[0]),int(j.center[1])+40), cv2.FONT_HERSHEY_SIMPLEX , 0.75, (0,0,0))
+                cv2.putText(imagen, str(j.id), (int(j.center[0]),int(j.center[1])+40), cv2.FONT_HERSHEY_SIMPLEX , 0.75, (0,0,0))
                 if j.id in Cells_recomendadas:
                     if j.id== cell_elejida:
                         cv2.drawMarker(imagen, position=(int(j.center[0]),int(j.center[1])), color=(151,45,248), markerType=cv2.MARKER_TILTED_CROSS,markerSize= 24, thickness=5)

@@ -129,8 +129,7 @@ async def create_Campaign(
         
         anchura_celdas=(recipe_in.cell_edge)*2
         numero_celdas=rad//anchura_celdas + 1
-        cell_create = CellCreate(surface_id=Surface.id, center=Point(center.x, center.y),rad=Campaign.cell_edge)
-        cell = crud.cell.create_cell(db=db, obj_in=cell_create, surface_id=Surface.id)
+       
         for i in range(0,numero_celdas):
             if i==0:
                 cell_create = CellCreate(surface_id=Surface.id, center=Point(center.x, center.y),rad=Campaign.cell_edge)
