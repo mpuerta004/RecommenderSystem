@@ -108,13 +108,25 @@ def create_cell(
     Create a new cell in the surface_id of the campaign_id of the hive_id
     """
     surface = crud.surface.get_surface_by_ids(db=db, surface_id=surface_id,campaign_id=campaign_id)
+    if  surface is None:
+        raise HTTPException(
+            status_code=404, detail=f"Surface with surface_id=={surface_id} and campaign_id={campaign_id } not found"
+        )
+    boundary=crud.boundary.get_Boundary_by_ids(db=db, surface_id=surface.id)
+    centro=boundary.center
+    point=recipe_in.center
+    distancia= math.sqrt((centro[0] - point.x)**2+(centro[1]-point.y)**2)
+    if distancia<=boundary.rad:
     
-    cell = crud.cell.create_cell(db=db, obj_in=recipe_in,surface_id=surface_id)
-    #Todo: extepccion si no exite la surface
-    # Campaign= crud.campaign.get_campaign(db=db,campaign_id=campaign_id,hive_id=hive_id)
-    
-    background_tasks.add_task(create_slots, surface,hive_id,cell.id)
-    return cell
+        cell = crud.cell.create_cell(db=db, obj_in=recipe_in,surface_id=surface_id)
+        
+        background_tasks.add_task(create_slots, surface,hive_id,cell.id)
+        return cell
+    else:
+        raise HTTPException(
+            status_code=400, detail=f"INVALID REQUEST: The cell does not have the center inside the surface"
+        )
+   
 
 import asyncio
 from fastapi_utils.session import FastAPISessionMaker

@@ -1,6 +1,7 @@
 from pydantic import BaseModel
 from typing import Sequence
 from schemas.Point import Point
+from schemas.Boundary import Boundary
 
 from schemas.Cell import Cell
 class SurfaceBase(BaseModel):
@@ -18,6 +19,7 @@ class SurfaceInDBBase(SurfaceBase):
     id:int 
     campaign_id:int
     cells:Sequence[Cell]
+    # boundary:Sequence[Boundary]
     class Config:
         orm_mode = True
 

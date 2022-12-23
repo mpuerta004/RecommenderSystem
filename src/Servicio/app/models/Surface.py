@@ -17,7 +17,7 @@ class Surface(Base):
     # rad=Column(Integer)
     
     cells = relationship("Cell",cascade="all, delete")
-    boundary = relationship("Boundary",cascade="all, delete")
+    # boundary = relationship("Boundary",cascade="all, delete")
 
     #De este modo se define una relacion inversa... no se si seran utiles. 
     #queenBee=relationship("Campaign", back_populates="campaigns")

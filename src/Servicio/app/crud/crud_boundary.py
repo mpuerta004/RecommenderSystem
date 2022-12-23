@@ -23,8 +23,8 @@ class CRUDBoundary(CRUDBase[Boundary, BoundaryCreate, BoundaryUpdate]):
         return db_obj
     
      
-     def get_Boundary_by_ids(self, db: Session, *, campaign_id:int, Boundary_id:int ) ->Boundary:
-        return db.query(Boundary).filter(and_(Boundary.campaign_id== campaign_id,Boundary.id==Boundary_id)).first()
+     def get_Boundary_by_ids(self, db: Session, *, surface_id:int) ->Boundary:
+        return db.query(Boundary).filter(and_(Boundary.surface_id==surface_id)).first()
      
    
 boundary = CRUDBoundary(Boundary)

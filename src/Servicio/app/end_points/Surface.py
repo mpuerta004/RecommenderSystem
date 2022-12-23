@@ -116,8 +116,6 @@ def create_surface(
     *, 
     hive_id:int, 
     campaign_id:int, 
-    obj_in:SurfaceCreate,
-    number_cells:int,
     center:Point, 
     rad:int,
     db:Session = Depends(deps.get_db),
@@ -132,7 +130,7 @@ def create_surface(
         raise HTTPException(
             status_code=404, detail=f"Campaign with campaign_id=={campaign_id} and hive_id=={hive_id} not found"
         )
-    
+    obj_in=SurfaceCreate()
     Surface=crud.surface.create_sur(db=db, campaign_id=campaign_id,obj_in=obj_in)
     boundary_create=BoundaryCreate(center=center,rad=rad)
     boundary = crud.boundary.create_boundary(db=db, surface_id=Surface.id,obj_in=boundary_create)
@@ -142,6 +140,34 @@ def create_surface(
         )
     count=len(Campaign.surfaces)
     mas=(count-1)*600
+    anchura_celdas=(Campaign.cell_edge)*2
+    numero_celdas=rad//anchura_celdas + 1
+    cell_create = CellCreate(surface_id=Surface.id, center=Point(center.x, center.y),rad=Campaign.cell_edge)
+    cell = crud.cell.create_cell(db=db, obj_in=cell_create, surface_id=Surface.id)
+    for i in range(0,numero_celdas):
+            if i==0:
+                cell_create = CellCreate(surface_id=Surface.id, center=Point(center.x, center.y),rad=Campaign.cell_edge)
+                cell = crud.cell.create_cell(db=db, obj_in=cell_create, surface_id=Surface.id)
+            else:
+                CENTER_CELL_arriba =  Point(center.x,center.y+i*anchura_celdas)
+                center_cell_abajo = Point(center.x,center.y-i*anchura_celdas)
+                center_cell_izq = Point(center.x+i*anchura_celdas,center.y)
+                center_cell_derecha = Point(center.x-i*anchura_celdas,center.y)
+                center_point_list=[CENTER_CELL_arriba,center_cell_abajo,center_cell_izq,   center_cell_derecha ]
+                for poin in center_point_list:
+                    if np.sqrt((poin.x-center.x)**2 + (poin.y-center.y)**2)<=rad:
+                        cell_create = CellCreate(surface_id=Surface.id, center=poin,rad=Campaign.cell_edge)
+                        cell = crud.cell.create_cell(db=db, obj_in=cell_create, surface_id=Surface.id)
+                for j in range(1,numero_celdas):
+                    CENTER_CELL_arriba_lado_1 =  Point(center.x+j*anchura_celdas,center.y+i*anchura_celdas)
+                    CENTER_CELL_arriba_lado_2 =  Point(center.x-j*anchura_celdas,center.y+i*anchura_celdas)
+                    CENTER_CELL_abajo_lado_1 =  Point(center.x+j*anchura_celdas,center.y-i*anchura_celdas)
+                    CENTER_CELL_abajo_lado_2 =  Point(center.x-j*anchura_celdas,center.y-i*anchura_celdas)
+                    center_point_list=[CENTER_CELL_arriba_lado_1,CENTER_CELL_arriba_lado_2,CENTER_CELL_abajo_lado_1,CENTER_CELL_abajo_lado_2]
+                    for poin in center_point_list:
+                        if np.sqrt((poin.x-center.x)**2 + (poin.y-center.y)**2)<=rad:
+                            cell_create = CellCreate(surface_id=Surface.id, center=poin,rad=Campaign.cell_edge)
+                            cell = crud.cell.create_cell(db=db, obj_in=cell_create, surface_id=Surface.id)    
     # cx = obj_in.center.x
     # cy = obj_in.center.y
     # num_segmentos=0
@@ -161,13 +187,13 @@ def create_surface(
     
     #TODO:  This would be linked to the program that allows to select the cells of the campaign but for the moment this is enough for us.
     # Generar las celdas! Esto no debe ser asi! 
-    for i in range(number_cells):
-            coord_x=((i%5)+1)*100 
-            coord_y=((i//5)+1)*100 +150
-            center_x= (coord_x+100-coord_x)/2 + coord_x +(count-1)*600
-            center_y=(coord_y+100-coord_y)/2 + coord_y 
-            cell_create=CellCreate(surface_id=Surface.id,center=Point(center_x,center_y),rad=Campaign.cell_edge)
-            cell=crud.cell.create_cell(db=db,obj_in=cell_create, surface_id=Surface.id)
+    # for i in range(number_cells):
+    #         coord_x=((i%5)+1)*100 
+    #         coord_y=((i//5)+1)*100 +150
+    #         center_x= (coord_x+100-coord_x)/2 + coord_x +(count-1)*600
+    #         center_y=(coord_y+100-coord_y)/2 + coord_y 
+    #         cell_create=CellCreate(surface_id=Surface.id,center=Point(center_x,center_y),rad=Campaign.cell_edge)
+    #         cell=crud.cell.create_cell(db=db,obj_in=cell_create, surface_id=Surface.id)
     db.commit()
     background_tasks.add_task(create_slots_surface, surface=Surface, hive_id=hive_id)
     db.commit()
@@ -196,4 +222,16 @@ async def create_slots_surface(surface: Surface,hive_id:int):
                     slot_create =  SlotCreate(
                         cell_id=cells.id, start_timestamp=start, end_timestamp=end)
                     slot = crud.slot.create_slot_detras(db=db, obj_in=slot_create)
-        db.commit()
+                    db.commit()
+                    if start== cam.start_timestamp:
+                        Cardinal_pasado = 0
+                        db.commit()
+                        Cardinal_actual = 0
+                        b = max(2, cam.min_samples - int(Cardinal_pasado))
+                        a = max(2, cam.min_samples - int(Cardinal_actual))
+                        result = math.log(a) * math.log(b, int(Cardinal_actual) + 2)
+                        trendy=0.0
+                        Cell_priority = PriorityCreate(
+                            slot_id=slot.id, timestamp=start, temporal_priority=result, trend_priority=trendy)  # ,cell_id=cells.id)
+                        priority = crud.priority.create_priority_detras(
+                            db=db, obj_in=Cell_priority)

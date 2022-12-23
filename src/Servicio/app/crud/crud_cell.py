@@ -38,7 +38,7 @@ class CRUDCell(CRUDBase[Cell, CellCreate, CellUpdate]):
         def get_count_cells(self, db: Session, *, campaign_id:int) -> int:
                  return db.query(Cell).join(Surface).filter( and_(Cell.surface_id==Surface.id,Surface.campaign_id==campaign_id)).count()
         #Devuelve las celdas dinamicas de una camapaña- 
-        def get_cells_campaign(self, db: Session, *, campaign_id:int) -> int:
+        def get_cells_campaign(self, db: Session, *, campaign_id:int) -> List[Cell]:
                  return db.query(Cell).join(Surface).filter(and_(Cell.cell_type=="Dynamic",Cell.surface_id==Surface.id,Surface.campaign_id==campaign_id)).distinct()
         def get_statics(self, db:Session, *,campaign_id:int) ->List[Cell]:
                 return db.query(Cell).join(Surface).filter(and_(Cell.cell_type!="Dynamic",Cell.surface_id==Surface.id,Surface.campaign_id==campaign_id)).all()

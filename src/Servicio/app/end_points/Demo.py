@@ -167,24 +167,37 @@ async def asignacion_recursos(
                 # La coordenada x tiene que estar entre 100 y (n_surface*700)
                 #La coordenada y entre 100 y 100*n_filas
                 n_surfaces=len(cam.surfaces)
-                n_filas = 1
-                for i in cam.surfaces:
-                        a=len(i.cells)
-                        b=(a//5) + 1
-                        if a%5!=0:
-                            b=b+1
-                        if n_filas<b:
-                            n_filas=b
-                n_filas=n_filas+1
-                # print("numero de filas finales", n_filas)
+                posiciones_x=[]
+                posiciones_y=[]
+                for i in range(cam.surfaces):
+                    boundary= crud.boundary.get_Boundary_by_ids(db=db,surface_id=i.id)
+                    posiciones_x.append((boundary.center[0]-boundary.rad,boundary.center[0]+boundary.rad))
+                    posiciones_y.append((boundary.center[1]-boundary.rad,boundary.center[1]+boundary.rad))
+                #Calculo de posiciones con el cuadrado! 
+                # n_filas = 1
+                # for i in cam.surfaces:
+                #         a=len(i.cells)
+                #         b=(a//5) + 1
+                #         if a%5!=0:
+                #             b=b+1
+                #         if n_filas<b:
+                #             n_filas=b
+                # n_filas=n_filas+1
+                # # print("numero de filas finales", n_filas)
                 
                 list_users= reciboUser(cam,db=db)
                 if list_users!=[]:
                     for user in list_users:
                     #Genero las recomendaciones y la que el usuario selecciona y el tiempo que va a tardar en realizar dicho recomendacion. 
-               
-                        x=random.randint(0, n_surfaces*700 - (n_surfaces-1)*100)
-                        y=random.randint(150,150+ 100*n_filas)
+                        n=len(posiciones_y)
+                        surface_number = random.randint(0,n) 
+                        #Posiciones con los circulos  y cells cuadradas 
+                        x=random.randint(posiciones_x[surface_number][0],posiciones_x[surface_number][1])
+                        y=random.randint(posiciones_y[surface_number][0],posiciones_y[surface_number][1])
+
+                        # Posiciones con los cuadrados 
+                        # x=random.randint(0, n_surfaces*700 - (n_surfaces-1)*100)
+                        # y=random.randint(150,150+ 100*n_filas)
                         a=RecommendationCreate(recommendation_timestamp=time,member_current_location=Point(x=x,y=y))
                         recomendaciones=create_recomendation_2(db=db,member_id=user.id,recipe_in=a,cam=cam)
                         # if recomendaciones is None:
@@ -207,7 +220,6 @@ async def asignacion_recursos(
                     creation=MeasurementCreate(db=db, location=cell.center,timestamp=time_polinizado,device_id=2)
                     slot=crud.slot.get_slot_time(db=db, 
                                                  cell_id=cell.id,time=time)
-                    #Todo he intentado que la hora de inserccion sea la correcta!
                     #Ver si se registran bien mas recomendaciones con el id de la medicion correcta. 
                     measurement=crud.measurement.create_Measurement(db=db,obj_in=creation,member_id=mediciones[i][0].id,slot_id=slot.id,cell_id=mediciones[i][1].cell_id)
                     db.commit()

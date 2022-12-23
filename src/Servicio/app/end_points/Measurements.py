@@ -94,7 +94,6 @@ def create_measurements(
     *, 
     member_id:int, 
     recipe_in: MeasurementCreate,
-    cell_id:int,
     db: Session = Depends(deps.get_db)
 ) -> dict:
     """
@@ -106,18 +105,38 @@ def create_measurements(
             status_code=404, detail=f"Member with member_id=={member_id} not found"
         )
     bool=False
+    hives=[]
+    
     for i in member.roles:
-        if i.role=="WorkerBee":
-            bool=True
-    if bool==True:
-        
-        
+        if not (i.hive_id in  hives):
+            hives.append(i.hive_id)
+        print(i.role)
+        if i.role =="WorkerBee":
+            admi=True
+    if admi:
+        #encontramos la celda de la medicion
+        cells=[]
+        for i in hives:
+            time=recipe_in.timestamp
+            campaign=crud.campaign.get_campaigns_from_hive_id_active(db=db,hive_id=i,time=time)
+            
+            for j in campaign:
+                if j.start_timestamp<=time and (j.start_timestamp+timedelta(seconds=j.campaign_duration))>=time:
+                    a=crud.cell.get_cells_campaign(db=db,campaign_id=j.id)
+                    if a is not None:
+                        for l in a:
+                            cells.append(l)
+                            if np.sqrt((l.center[0]-recipe_in.location[0])**2 +(l.center[1]==recipe_in.location[1])**2)<=l.rad:
+                                cell_id=l.id
+                                surface=l.surface_id
+                                campaign_finaly=j
+        print(cell_id,surface)
         slot=crud.slot.get_slot_time(db=db,cell_id=cell_id,time=recipe_in.timestamp)
         if slot is None: 
               raise HTTPException(
             status_code=401, detail=f"In this time the Campaign is not active"
         )
-        campaign=crud.campaign.get_campaign_from_cell(db=db,cell_id=recipe_in.cell_id)
+        campaign=campaign_finaly
         if recipe_in.timestamp>=campaign.start_timestamp and recipe_in.timestamp<=campaign.start_timestamp +timedelta(seconds=campaign.campaign_duration):
             cellMeasurement = crud.measurement.create_Measurement(db=db, obj_in=recipe_in,member_id=member_id,slot_id=slot.id,cell_id=cell_id)
             return cellMeasurement
@@ -125,7 +144,6 @@ def create_measurements(
             raise HTTPException(
                 status_code=400, detail=f"This campaign is not active in this moment"
             )
-
     else:
         raise HTTPException(
             status_code=401, detail=f"This memeber is only a QueenBee not a WorkingBee"

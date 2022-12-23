@@ -3,6 +3,8 @@ from models.Slot import Slot
 from schemas.Slot import SlotCreate, SlotUpdate
 from typing import Any, Dict, Optional, Union
 from datetime import datetime, timedelta
+from typing import Any, Dict, Optional, Union, List
+
 from fastapi.encoders import jsonable_encoder
 from sqlalchemy import and_, extract
 
@@ -12,7 +14,13 @@ from crud.base import CRUDBase
 class CRUDSlot(CRUDBase[Slot, SlotCreate, SlotUpdate]):
     def get_first_of_Cell(self, db: Session, *, cell_id:int) -> Slot:
         return db.query(Slot).filter(Slot.cell_id == cell_id).order_by(Slot.end_timestamp.asc()).first()
-    
+    def get_list_of_Cell(self, db: Session, *, cell_id:int) -> List[Slot]:
+        return db.query(Slot).filter(Slot.cell_id == cell_id).all()
+    def remove(self, db: Session, *, slot:Slot) -> Slot:
+        obj = slot
+        db.delete(obj)
+        db.commit()
+        return obj
     def get_slot(self, db: Session, *, slot_id:int) -> Slot:
         return db.query(Slot).filter(Slot.id==slot_id).first()
     

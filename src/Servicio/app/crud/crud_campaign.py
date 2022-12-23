@@ -48,8 +48,18 @@ class CRUDCampaign(CRUDBase[Campaign, CampaignCreate, CampaignUpdate]):
         self,
         db: Session,
         *, 
-    cell_id=int) ->Campaign:
+    cell_id:int) ->Campaign:
         return db.query(Campaign).join(Surface).join(Cell).filter(and_(Campaign.id==Surface.campaign_id,Cell.surface_id==Surface.id,Cell.id==cell_id)).first()
+      
+      def get_campaign_from_surface(
+        self,
+        db: Session,
+        *, 
+        surface_id:int) ->Campaign:
+        return db.query(Campaign).join(Surface).filter(and_(Campaign.id==Surface.campaign_id,Surface.id==surface_id)).first()
+      
+      
+      
       def get_all_campaign(
         self,        db: Session) ->List[Campaign]:
         return db.query(Campaign).all()
