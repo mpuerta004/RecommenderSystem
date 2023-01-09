@@ -116,8 +116,7 @@ def create_surface(
     *, 
     hive_id:int, 
     campaign_id:int, 
-    center:Point, 
-    rad:int,
+    boundary:BoundaryCreate,
     db:Session = Depends(deps.get_db),
     background_tasks: BackgroundTasks
 
@@ -132,12 +131,13 @@ def create_surface(
         )
     obj_in=SurfaceCreate()
     Surface=crud.surface.create_sur(db=db, campaign_id=campaign_id,obj_in=obj_in)
-    boundary_create=BoundaryCreate(center=center,rad=rad)
-    boundary = crud.boundary.create_boundary(db=db, surface_id=Surface.id,obj_in=boundary_create)
+    boundary = crud.boundary.create_boundary(db=db, surface_id=Surface.id,obj_in=boundary)
     if Surface is None:
         raise HTTPException(
             status_code=400, detail=f"INVALID REQUEST"
         )
+    rad=boundary.rad
+    center=boundary.center
     count=len(Campaign.surfaces)
     mas=(count-1)*600
     anchura_celdas=(Campaign.cell_edge)*2
