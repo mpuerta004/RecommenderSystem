@@ -36,7 +36,7 @@ from fastapi_utils.session import FastAPISessionMaker
 from end_points.Recommendation import create_recomendation
 import random
 api_router_demo = APIRouter(prefix="/demos/hives/{hive_id}/campaigns")
-SQLALCHEMY_DATABASE_URL = "mysql+mysqlconnector://root:mypasswd@localhost:3306/SocioBee"
+SQLALCHEMY_DATABASE_URL = "mysql+mysqlconnector://mve:mvepasswd@localhost:3306/SocioBee"
 sessionmaker = FastAPISessionMaker(SQLALCHEMY_DATABASE_URL)
 
 

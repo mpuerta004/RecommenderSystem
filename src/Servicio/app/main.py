@@ -46,7 +46,7 @@ from fastapi_events.handlers.local import local_handler
 from datetime import datetime, timedelta
 import math
 
-SQLALCHEMY_DATABASE_URL = "mysql+mysqlconnector://root:mypasswd@localhost:3306/SocioBee"
+SQLALCHEMY_DATABASE_URL = "mysql+mysqlconnector://mve:mvepasswd@localhost:3306/SocioBee"
 sessionmaker = FastAPISessionMaker(SQLALCHEMY_DATABASE_URL)
 
 
@@ -71,7 +71,7 @@ app.include_router(Demo.api_router_demo, tags=["Demo"])
 
 api_router = APIRouter()
 
-SQLALCHEMY_DATABASE_URL = "mysql+mysqlconnector://root:mypasswd@localhost:3306/SocioBee"
+SQLALCHEMY_DATABASE_URL = "mysql+mysqlconnector://mve:mvepasswd@localhost:3306/SocioBee"
 sessionmaker = FastAPISessionMaker(SQLALCHEMY_DATABASE_URL)
 
 
