@@ -25,19 +25,6 @@
             "database": "SocioBee",
             "username": "root",
             "password": "mypasswd"
-        },
-        {
-            "mysqlOptions": {
-                "authProtocol": "default"
-            },
-            "previewLimit": 50,
-            "server": "localhost",
-            "port": 3307,
-            "driver": "MySQL",
-            "name": "Recommender2",
-            "database": "SocioBee",
-            "username": "user",
-            "password": "mypasswd"
         }
     ]
 }
