@@ -1,5 +1,13 @@
-DROP DATABASE SocioBee;
+/* DELETE 'SocioBee' database*/
+DROP DATABASE IF EXISTS SocioBee;
+/* DELETE USER 'mve' AT LOCAL SERVER*/
+DROP USER IF EXISTS 'mve'@'localhost';
+
 CREATE DATABASE SocioBee;
+
+/* CREATE THE USER 'spq' AT LOCAL SERVER WITH PASSWORD 'spq' */
+CREATE USER IF NOT EXISTS 'mve'@'localhost' IDENTIFIED BY 'mvepasswd';
+
 Use SocioBee;
 
 -- -----------------------------------------------------

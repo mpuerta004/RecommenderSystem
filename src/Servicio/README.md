@@ -1,7 +1,12 @@
 Install mysql and compile latest model /home/ubuntu/shared_folder_docker/RecommenderSystem/Model/Database.v6.sql
 Generate a user with root name and password  mypasswd
 Start mysql service 
-Install the conecgtor mysqlconnector to conect python and mysql. 
+
+Install the conecgtor mysqlconnector to conect python and mysql.
+pip install mysql
+
+mysql -uroot -p < BaseDatos.v6.sql
+ 
 
 1. `pip install poetry` (or safer, follow the instructions: https://python-poetry.org/docs/#installation)
 2. Install dependencies `cd` into the directory where the `pyproject.toml` is located then `poetry install`
