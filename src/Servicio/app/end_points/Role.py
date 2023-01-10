@@ -35,7 +35,7 @@ api_router_role = APIRouter(prefix="/hives/{hive_id}/members/{member_id}/roles")
 
 
 
-@api_router_role.post("/",status_code=201, response_model=Member )
+@api_router_role.post("/",status_code=201, response_model=Role )
 def create_new_role_for_member_of_hive(
     *,    
     hive_id: int,
@@ -59,7 +59,7 @@ def create_new_role_for_member_of_hive(
             )
         else:
             role_new=crud.role.create_Role(db=db,obj_in=obje, hive_id=hive_id, member_id=member_id)
-            return user
+            return role_new
    
 @api_router_role.delete("/{role}", status_code=204)
 def delete_role(    *,

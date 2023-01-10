@@ -3,7 +3,7 @@
 from sqlalchemy import Integer, String, Column, Boolean, ForeignKey
 from sqlalchemy.orm import relationship
 
-
+from models.Device import Device
 from db.base_class import Base
 
 class Member(Base):
@@ -15,7 +15,7 @@ class Member(Base):
     surname=Column(String,nullable=True)
     city=Column(String,nullable=True)
     gender=Column(String,default='I dont want to answer')
-    # device_id=Column(Integer,ForeignKey(Device.id, ondelete='CASCADE'))
+    device_id=Column(Integer,ForeignKey(Device.id, ondelete='CASCADE'))
     
     Measurements=relationship("Measurement",cascade="all, delete")
     roles=relationship("Role", back_populates="member",cascade="all, delete")

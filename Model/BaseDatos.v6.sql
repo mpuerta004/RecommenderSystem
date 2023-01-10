@@ -23,7 +23,11 @@ CREATE TABLE Hive (
 
 Create table Device(
 id int not null AUTO_INCREMENT,
-PRIMARY KEY (id)
+PRIMARY KEY (id),
+description varchar(30) null default null,
+brand varchar(30) null default null,
+model varchar(30) null default null, 
+year varchar(30) null default null
 );
 -- -----------------------------------------------------
 -- Table Reading

@@ -89,49 +89,59 @@ def put_surface(
         raise HTTPException(
             status_code=404, detail=f"Member with surface_id=={surface_id} and campaign_id={campaign_id } not found"
         )
-    center=boundary.center
-    rad=boundary.rad
-    crud.surface.remove(db=db,surface=surface)
-    db.commit()
-    surface_create=SurfaceCreate()
-    Surface = crud.surface.create_sur(db=db, campaign_id=campaign_id,obj_in=surface_create)
-    boundary_create=BoundaryCreate(center=center,rad=rad)
-    boundary = crud.boundary.create_boundary(db=db, surface_id=Surface.id,obj_in=boundary_create)
-    
-    
-    anchura_celdas=(Campaign.cells_distance)*2
-    numero_celdas=rad//anchura_celdas + 1
-    
-    for i in range(0,numero_celdas):
-            if i==0:
-                cell_create = CellCreate(surface_id=Surface.id, center=Point(center.x, center.y),rad=Campaign.cells_distance)
-                cell = crud.cell.create_cell(db=db, obj_in=cell_create, surface_id=Surface.id)
-            else:
-                CENTER_CELL_arriba =  Point(center.x,center.y+i*anchura_celdas)
-                center_cell_abajo = Point(center.x,center.y-i*anchura_celdas)
-                center_cell_izq = Point(center.x+i*anchura_celdas,center.y)
-                center_cell_derecha = Point(center.x-i*anchura_celdas,center.y)
-                center_point_list=[CENTER_CELL_arriba,center_cell_abajo,center_cell_izq,   center_cell_derecha ]
-                for poin in center_point_list:
-                    if np.sqrt((poin.x-center.x)**2 + (poin.y-center.y)**2)<=rad:
-                        cell_create = CellCreate(surface_id=Surface.id, center=poin,rad=Campaign.cells_distance)
-                        cell = crud.cell.create_cell(db=db, obj_in=cell_create, surface_id=Surface.id)
-                for j in range(1,numero_celdas):
-                    CENTER_CELL_arriba_lado_1 =  Point(center.x+j*anchura_celdas,center.y+i*anchura_celdas)
-                    CENTER_CELL_arriba_lado_2 =  Point(center.x-j*anchura_celdas,center.y+i*anchura_celdas)
-                    CENTER_CELL_abajo_lado_1 =  Point(center.x+j*anchura_celdas,center.y-i*anchura_celdas)
-                    CENTER_CELL_abajo_lado_2 =  Point(center.x-j*anchura_celdas,center.y-i*anchura_celdas)
-                    center_point_list=[CENTER_CELL_arriba_lado_1,CENTER_CELL_arriba_lado_2,CENTER_CELL_abajo_lado_1,CENTER_CELL_abajo_lado_2]
+    campaign=crud.campaign.get_campaign_from_surface(db=db,surface_id=surface_id)
+
+    if  surface is None:
+        raise HTTPException(
+            status_code=404, detail=f"Member with surface_id=={surface_id} and campaign_id={campaign_id } not found"
+        )
+    if datetime.now()>campaign.start_timestamp:
+                    raise HTTPException(
+                        status_code=401, detail=f"You cannot modify a surface that has already been started "
+                    )
+    else:
+        center=boundary.center
+        rad=boundary.rad
+        crud.surface.remove(db=db,surface=surface)
+        db.commit()
+        surface_create=SurfaceCreate()
+        Surface = crud.surface.create_sur(db=db, campaign_id=campaign_id,obj_in=surface_create)
+        boundary_create=BoundaryCreate(center=center,rad=rad)
+        boundary = crud.boundary.create_boundary(db=db, surface_id=Surface.id,obj_in=boundary_create)
+
+        anchura_celdas=(Campaign.cells_distance)*2
+        numero_celdas=rad//anchura_celdas + 1
+        
+        for i in range(0,numero_celdas):
+                if i==0:
+                    cell_create = CellCreate(surface_id=Surface.id, center=Point(center.x, center.y),rad=Campaign.cells_distance)
+                    cell = crud.cell.create_cell(db=db, obj_in=cell_create, surface_id=Surface.id)
+                else:
+                    CENTER_CELL_arriba =  Point(center.x,center.y+i*anchura_celdas)
+                    center_cell_abajo = Point(center.x,center.y-i*anchura_celdas)
+                    center_cell_izq = Point(center.x+i*anchura_celdas,center.y)
+                    center_cell_derecha = Point(center.x-i*anchura_celdas,center.y)
+                    center_point_list=[CENTER_CELL_arriba,center_cell_abajo,center_cell_izq,   center_cell_derecha ]
                     for poin in center_point_list:
                         if np.sqrt((poin.x-center.x)**2 + (poin.y-center.y)**2)<=rad:
                             cell_create = CellCreate(surface_id=Surface.id, center=poin,rad=Campaign.cells_distance)
-                            cell = crud.cell.create_cell(db=db, obj_in=cell_create, surface_id=Surface.id)    
-    
-                    
-    updated_recipe = crud.boundary.update(db=db, db_obj=boundary, obj_in=recipe_in)
-    db.commit()
-    surface=crud.surface.get_surface_by_ids(db=db,surface_id=surface_id, campaign_id=campaign_id)
-    return surface
+                            cell = crud.cell.create_cell(db=db, obj_in=cell_create, surface_id=Surface.id)
+                    for j in range(1,numero_celdas):
+                        CENTER_CELL_arriba_lado_1 =  Point(center.x+j*anchura_celdas,center.y+i*anchura_celdas)
+                        CENTER_CELL_arriba_lado_2 =  Point(center.x-j*anchura_celdas,center.y+i*anchura_celdas)
+                        CENTER_CELL_abajo_lado_1 =  Point(center.x+j*anchura_celdas,center.y-i*anchura_celdas)
+                        CENTER_CELL_abajo_lado_2 =  Point(center.x-j*anchura_celdas,center.y-i*anchura_celdas)
+                        center_point_list=[CENTER_CELL_arriba_lado_1,CENTER_CELL_arriba_lado_2,CENTER_CELL_abajo_lado_1,CENTER_CELL_abajo_lado_2]
+                        for poin in center_point_list:
+                            if np.sqrt((poin.x-center.x)**2 + (poin.y-center.y)**2)<=rad:
+                                cell_create = CellCreate(surface_id=Surface.id, center=poin,rad=Campaign.cells_distance)
+                                cell = crud.cell.create_cell(db=db, obj_in=cell_create, surface_id=Surface.id)    
+        
+                        
+        updated_recipe = crud.boundary.update(db=db, db_obj=boundary, obj_in=recipe_in)
+        db.commit()
+        surface=crud.surface.get_surface_by_ids(db=db,surface_id=surface_id, campaign_id=campaign_id)
+        return surface
 
 
 #Todo: Cuando hago esto necesito modificar las celdas y por ende los 
@@ -149,52 +159,58 @@ def parcially_update_surface(
     """
     surface=crud.surface.get_surface_by_ids(db=db,surface_id=surface_id, campaign_id=campaign_id)
     boundary= crud.boundary.get_Boundary_by_ids(db=db,surface_id=surface_id)
+    campaign=crud.campaign.get_campaign_from_surface(db=db,surface_id=surface_id)
     if  surface is None:
         raise HTTPException(
             status_code=404, detail=f"Member with surface_id=={surface_id} and campaign_id={campaign_id } not found"
         )
-    center=boundary.center
-    rad=boundary.rad
-    crud.surface.remove(db=db,surface=surface)
-    db.commit()
-    surface_create=SurfaceCreate()
-    Surface = crud.surface.create_sur(db=db, campaign_id=campaign_id,obj_in=surface_create)
-    boundary_create=BoundaryCreate(center=center,rad=rad)
-    boundary = crud.boundary.create_boundary(db=db, surface_id=Surface.id,obj_in=boundary_create)
+    if datetime.now()>campaign.start_timestamp:
+                    raise HTTPException(
+                        status_code=401, detail=f"You cannot modify a surface that has already been started "
+                    )
+    else:
+        center=boundary.center
+        rad=boundary.rad
+        crud.surface.remove(db=db,surface=surface)
+        db.commit()
+        surface_create=SurfaceCreate()
+        Surface = crud.surface.create_sur(db=db, campaign_id=campaign_id,obj_in=surface_create)
+        boundary_create=BoundaryCreate(center=center,rad=rad)
+        boundary = crud.boundary.create_boundary(db=db, surface_id=Surface.id,obj_in=boundary_create)
 
-    anchura_celdas=(Campaign.cells_distance)*2
-    numero_celdas=rad//anchura_celdas + 1
-    
-    for i in range(0,numero_celdas):
-            if i==0:
-                cell_create = CellCreate(surface_id=Surface.id, center=Point(center.x, center.y),rad=Campaign.cells_distance)
-                cell = crud.cell.create_cell(db=db, obj_in=cell_create, surface_id=Surface.id)
-            else:
-                CENTER_CELL_arriba =  Point(center.x,center.y+i*anchura_celdas)
-                center_cell_abajo = Point(center.x,center.y-i*anchura_celdas)
-                center_cell_izq = Point(center.x+i*anchura_celdas,center.y)
-                center_cell_derecha = Point(center.x-i*anchura_celdas,center.y)
-                center_point_list=[CENTER_CELL_arriba,center_cell_abajo,center_cell_izq,   center_cell_derecha ]
-                for poin in center_point_list:
-                    if np.sqrt((poin.x-center.x)**2 + (poin.y-center.y)**2)<=rad:
-                        cell_create = CellCreate(surface_id=Surface.id, center=poin,rad=Campaign.cells_distance)
-                        cell = crud.cell.create_cell(db=db, obj_in=cell_create, surface_id=Surface.id)
-                for j in range(1,numero_celdas):
-                    CENTER_CELL_arriba_lado_1 =  Point(center.x+j*anchura_celdas,center.y+i*anchura_celdas)
-                    CENTER_CELL_arriba_lado_2 =  Point(center.x-j*anchura_celdas,center.y+i*anchura_celdas)
-                    CENTER_CELL_abajo_lado_1 =  Point(center.x+j*anchura_celdas,center.y-i*anchura_celdas)
-                    CENTER_CELL_abajo_lado_2 =  Point(center.x-j*anchura_celdas,center.y-i*anchura_celdas)
-                    center_point_list=[CENTER_CELL_arriba_lado_1,CENTER_CELL_arriba_lado_2,CENTER_CELL_abajo_lado_1,CENTER_CELL_abajo_lado_2]
+        anchura_celdas=(Campaign.cells_distance)*2
+        numero_celdas=rad//anchura_celdas + 1
+        
+        for i in range(0,numero_celdas):
+                if i==0:
+                    cell_create = CellCreate(surface_id=Surface.id, center=Point(center.x, center.y),rad=Campaign.cells_distance)
+                    cell = crud.cell.create_cell(db=db, obj_in=cell_create, surface_id=Surface.id)
+                else:
+                    CENTER_CELL_arriba =  Point(center.x,center.y+i*anchura_celdas)
+                    center_cell_abajo = Point(center.x,center.y-i*anchura_celdas)
+                    center_cell_izq = Point(center.x+i*anchura_celdas,center.y)
+                    center_cell_derecha = Point(center.x-i*anchura_celdas,center.y)
+                    center_point_list=[CENTER_CELL_arriba,center_cell_abajo,center_cell_izq,   center_cell_derecha ]
                     for poin in center_point_list:
                         if np.sqrt((poin.x-center.x)**2 + (poin.y-center.y)**2)<=rad:
                             cell_create = CellCreate(surface_id=Surface.id, center=poin,rad=Campaign.cells_distance)
-                            cell = crud.cell.create_cell(db=db, obj_in=cell_create, surface_id=Surface.id)    
-    
-                    
-    updated_recipe = crud.boundary.update(db=db, db_obj=boundary, obj_in=recipe_in)
-    db.commit()
-    surface=crud.surface.get_surface_by_ids(db=db,surface_id=surface_id, campaign_id=campaign_id)
-    return surface
+                            cell = crud.cell.create_cell(db=db, obj_in=cell_create, surface_id=Surface.id)
+                    for j in range(1,numero_celdas):
+                        CENTER_CELL_arriba_lado_1 =  Point(center.x+j*anchura_celdas,center.y+i*anchura_celdas)
+                        CENTER_CELL_arriba_lado_2 =  Point(center.x-j*anchura_celdas,center.y+i*anchura_celdas)
+                        CENTER_CELL_abajo_lado_1 =  Point(center.x+j*anchura_celdas,center.y-i*anchura_celdas)
+                        CENTER_CELL_abajo_lado_2 =  Point(center.x-j*anchura_celdas,center.y-i*anchura_celdas)
+                        center_point_list=[CENTER_CELL_arriba_lado_1,CENTER_CELL_arriba_lado_2,CENTER_CELL_abajo_lado_1,CENTER_CELL_abajo_lado_2]
+                        for poin in center_point_list:
+                            if np.sqrt((poin.x-center.x)**2 + (poin.y-center.y)**2)<=rad:
+                                cell_create = CellCreate(surface_id=Surface.id, center=poin,rad=Campaign.cells_distance)
+                                cell = crud.cell.create_cell(db=db, obj_in=cell_create, surface_id=Surface.id)    
+        
+                        
+        updated_recipe = crud.boundary.update(db=db, db_obj=boundary, obj_in=recipe_in)
+        db.commit()
+        surface=crud.surface.get_surface_by_ids(db=db,surface_id=surface_id, campaign_id=campaign_id)
+        return surface
 
 
 @api_router_surface.delete("/{surface_id}", status_code=204)

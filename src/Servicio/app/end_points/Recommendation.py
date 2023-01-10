@@ -93,10 +93,8 @@ def create_recomendation(
         #Calcular las celdas 
         List_cells_cercanas=[]
         cells=[]
-        print(hives)
         for i in hives:
             campaign=crud.campaign.get_campaigns_from_hive_id_active(db=db,hive_id=i,time=time)
-            print(campaign)
             
             for j in campaign:
                 if j.start_timestamp<=time and (j.start_timestamp+timedelta(seconds=j.campaign_duration))>=time:

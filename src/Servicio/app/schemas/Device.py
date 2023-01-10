@@ -9,10 +9,12 @@ from schemas.Slot import Slot
 from pydantic import BaseModel, ValidationError
 
 
-
-
 class DeviceBase(BaseModel):
-   pass
+    description:str
+    brand :str
+    model :str
+    year :str
+   
 
 class DeviceCreate(DeviceBase):
     pass
