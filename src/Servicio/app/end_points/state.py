@@ -53,6 +53,6 @@ def update_state_recommendation(
         raise HTTPException(
             status_code=404, detail=f"Recommendation with recommendation_id=={recommendation_id} not found"
         )
-    updated_recipe = crud.member.update(db=db, db_obj=state, obj_in=recipe_in)
+    updated_recipe = crud.state.update(db=db, db_obj=state, obj_in=recipe_in)
     db.commit()
     return updated_recipe

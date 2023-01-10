@@ -81,10 +81,10 @@ CREATE TABLE Campaign (
   creator_id INT NULL DEFAULT NULL,
   city VARCHAR(30) NULL DEFAULT NULL,
   start_timestamp TIMESTAMP NULL DEFAULT NULL,
-  cell_edge INT NULL DEFAULT NULL,
+  cells_distance INT NULL DEFAULT NULL,
   min_samples INT NULL DEFAULT NULL,
   sampling_period INT NULL DEFAULT NULL,
-  planning_limit_time INT NULL DEFAULT NULL,
+  hypothesis  VARCHAR(70) NULL DEFAULT NULL,
   campaign_duration INT NULL DEFAULT NULL,
   PRIMARY KEY (id, hive_id),
     FOREIGN KEY (creator_id)

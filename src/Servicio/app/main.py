@@ -30,6 +30,7 @@ from end_points import Surface
 from end_points import Measurements
 from end_points import Recommendation
 from end_points import Demo
+from end_points import state
 from fastapi_utils.tasks import repeat_every
 
 from fastapi_utils.session import FastAPISessionMaker
@@ -54,9 +55,9 @@ app.include_router(Surface.api_router_surface, tags=["Surfaces"])
 app.include_router(Cells.api_router_cell, tags=["Cells"])
 app.include_router(Measurements.api_router_measurements, tags=["Measurements"])
 app.include_router(Recommendation.api_router_recommendation, tags=["Recommendations"])
+app.include_router(state.api_router_state,tags=["State of Recommendations"])
 app.include_router(reading.api_router_reading, tags=["Readings"])
 app.include_router(Demo.api_router_demo, tags=["Demo"])
-
 api_router = APIRouter()
 
 SQLALCHEMY_DATABASE_URL = "mysql+mysqlconnector://mve:mvepasswd123@localhost:3306/SocioBee"

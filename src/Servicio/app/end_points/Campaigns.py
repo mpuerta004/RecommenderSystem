@@ -128,12 +128,12 @@ async def create_Campaign(
         boundary = crud.boundary.create_boundary(db=db, surface_id=Surface.id,obj_in=boundary_create)
         # TODO: Esto iria enlazado con el programa que permite seleccionar las celdas de la campaña pero de momento esto nos vale.
         
-        anchura_celdas=(recipe_in.cell_edge)*2
+        anchura_celdas=(recipe_in.cells_distance)*2
         numero_celdas=rad//anchura_celdas + 1
        
         for i in range(0,numero_celdas):
             if i==0:
-                cell_create = CellCreate(surface_id=Surface.id, center=Point(center.x, center.y),rad=Campaign.cell_edge)
+                cell_create = CellCreate(surface_id=Surface.id, center=Point(center.x, center.y),rad=Campaign.cells_distance)
                 cell = crud.cell.create_cell(db=db, obj_in=cell_create, surface_id=Surface.id)
             else:
                 CENTER_CELL_arriba =  Point(center.x,center.y+i*anchura_celdas)
@@ -143,7 +143,7 @@ async def create_Campaign(
                 center_point_list=[CENTER_CELL_arriba,center_cell_abajo,center_cell_izq,   center_cell_derecha ]
                 for poin in center_point_list:
                     if np.sqrt((poin.x-center.x)**2 + (poin.y-center.y)**2)<=rad:
-                        cell_create = CellCreate(surface_id=Surface.id, center=poin,rad=Campaign.cell_edge)
+                        cell_create = CellCreate(surface_id=Surface.id, center=poin,rad=Campaign.cells_distance)
                         cell = crud.cell.create_cell(db=db, obj_in=cell_create, surface_id=Surface.id)
                 for j in range(1,numero_celdas):
                     CENTER_CELL_arriba_lado_1 =  Point(center.x+j*anchura_celdas,center.y+i*anchura_celdas)
@@ -153,7 +153,7 @@ async def create_Campaign(
                     center_point_list=[CENTER_CELL_arriba_lado_1,CENTER_CELL_arriba_lado_2,CENTER_CELL_abajo_lado_1,CENTER_CELL_abajo_lado_2]
                     for poin in center_point_list:
                         if np.sqrt((poin.x-center.x)**2 + (poin.y-center.y)**2)<=rad:
-                            cell_create = CellCreate(surface_id=Surface.id, center=poin,rad=Campaign.cell_edge)
+                            cell_create = CellCreate(surface_id=Surface.id, center=poin,rad=Campaign.cells_distance)
                             cell = crud.cell.create_cell(db=db, obj_in=cell_create, surface_id=Surface.id)
         background_tasks.add_task(create_slots, cam=Campaign)
         # background_tasks.add_task(asignacion_recursos,cam=Campaign,db=db)
@@ -184,7 +184,7 @@ async def create_Campaign(
         #             coord_y = ((i//5)+1)*100 + 150
         #             center_x = (coord_x+100-coord_x)/2 + coord_x
         #             center_y = (coord_y+100-coord_y)/2 + coord_y
-        #             cell_create = CellCreate(surface_id=Surface.id, center=Point(center_x, center_y),rad=Campaign.cell_edge)
+        #             cell_create = CellCreate(surface_id=Surface.id, center=Point(center_x, center_y),rad=Campaign.cells_distance)
         #             cell = crud.cell.create_cell(
         #                     db=db, obj_in=cell_create, surface_id=Surface.id)
        
@@ -321,8 +321,7 @@ def update_campaign(
         raise HTTPException(
             status_code=400, detail=f"Recipe with hive_id=={hive_id} and campaign_id=={campaign_id} not found."
         )
-    #Todo: que hacemos si cambiamos por ejemplo el start time, que altera los slot... ¿? o la duracion¿? 
-    if recipe_in.start_timestamp != campaign.start_timestamp or recipe_in.campaign_duration!=campaign.campaign_duration or recipe_in.cell_edge!=campaign.cell_edge:
+    if recipe_in.start_timestamp != campaign.start_timestamp or recipe_in.campaign_duration!=campaign.campaign_duration or recipe_in.cells_distance!=campaign.cells_distance:
             if datetime.now()>campaign.start_timestamp:
                     raise HTTPException(
                         status_code=401, detail=f"You cannot modify a campaign that has already been started "
@@ -340,13 +339,13 @@ def update_campaign(
                     boundary_create=BoundaryCreate(center=center,rad=rad)
                     boundary = crud.boundary.create_boundary(db=db, surface_id=Surface.id,obj_in=boundary_create)
                     
-                    anchura_celdas=(recipe_in.cell_edge)*2
+                    anchura_celdas=(recipe_in.cells_distance)*2
                     numero_celdas=rad//anchura_celdas + 1
-                    cell_create = CellCreate(surface_id=Surface.id, center=Point(center[0], center[1]),rad=campaign.cell_edge)
+                    cell_create = CellCreate(surface_id=Surface.id, center=Point(center[0], center[1]),rad=campaign.cells_distance)
                     cell = crud.cell.create_cell(db=db, obj_in=cell_create, surface_id=Surface.id)
                     for i in range(0,numero_celdas):
                         if i==0:
-                            cell_create = CellCreate(surface_id=Surface.id, center=Point(center[0], center[1]),rad=campaign.cell_edge)
+                            cell_create = CellCreate(surface_id=Surface.id, center=Point(center[0], center[1]),rad=campaign.cells_distance)
                             cell = crud.cell.create_cell(db=db, obj_in=cell_create, surface_id=Surface.id)
                         else:
                             CENTER_CELL_arriba =  Point(center[0],center[1]+i*anchura_celdas)
@@ -356,7 +355,7 @@ def update_campaign(
                             center_point_list=[CENTER_CELL_arriba,center_cell_abajo,center_cell_izq,   center_cell_derecha ]
                             for poin in center_point_list:
                                 if np.sqrt((poin.x-center[0])**2 + (poin.y-center[1])**2)<=rad:
-                                    cell_create = CellCreate(surface_id=Surface.id, center=poin,rad=campaign.cell_edge)
+                                    cell_create = CellCreate(surface_id=Surface.id, center=poin,rad=campaign.cells_distance)
                                     cell = crud.cell.create_cell(db=db, obj_in=cell_create, surface_id=Surface.id)
                             for j in range(1,numero_celdas):
                                 CENTER_CELL_arriba_lado_1 =  Point(center[0]+j*anchura_celdas,center[1]+i*anchura_celdas)
@@ -366,7 +365,7 @@ def update_campaign(
                                 center_point_list=[CENTER_CELL_arriba_lado_1,CENTER_CELL_arriba_lado_2,CENTER_CELL_abajo_lado_1,CENTER_CELL_abajo_lado_2]
                                 for poin in center_point_list:
                                     if np.sqrt((poin.x-center[0])**2 + (poin.y-center[1])**2)<=rad:
-                                        cell_create = CellCreate(surface_id=Surface.id, center=poin,rad=campaign.cell_edge)
+                                        cell_create = CellCreate(surface_id=Surface.id, center=poin,rad=campaign.cells_distance)
                                         cell = crud.cell.create_cell(db=db, obj_in=cell_create, surface_id=Surface.id)
             background_tasks.add_task(create_slots, cam=campaign)
             
@@ -378,3 +377,74 @@ def update_campaign(
     return updated_recipe
 
 
+@api_router_campaign.patch("/{campaign_id}", status_code=201, response_model=Campaign)
+def partially_update_campaign(
+    *,
+    recipe_in: Union[CampaignUpdate,Dict[str, Any]],
+    hive_id:int,
+    campaign_id:int,
+    background_tasks: BackgroundTasks,
+    db: Session = Depends(deps.get_db)
+) -> dict:
+    """
+    Partially Update Campaign with campaign_id 
+    """
+    campaign = crud.campaign.get_campaign(db=db,hive_id=hive_id,campaign_id=campaign_id)
+    if not campaign:
+        raise HTTPException(
+            status_code=400, detail=f"Recipe with hive_id=={hive_id} and campaign_id=={campaign_id} not found."
+        )
+    if recipe_in.start_timestamp != campaign.start_timestamp or recipe_in.campaign_duration!=campaign.campaign_duration or recipe_in.cells_distance!=campaign.cells_distance:
+            if datetime.now()>campaign.start_timestamp:
+                    raise HTTPException(
+                        status_code=401, detail=f"You cannot modify a campaign that has already been started "
+                    )
+            else:
+                updated_recipe = crud.campaign.update(db=db, db_obj=campaign, obj_in=recipe_in)
+                for i in campaign.surfaces:
+                    boundary=crud.boundary.get_Boundary_by_ids(db=db, surface_id=i.id)
+                    center=boundary.center
+                    rad=boundary.rad
+                    crud.surface.remove(db=db,surface=i)
+                    db.commit()
+                    surface_create=SurfaceCreate()
+                    Surface = crud.surface.create_sur(db=db, campaign_id=campaign.id,obj_in=surface_create)
+                    boundary_create=BoundaryCreate(center=center,rad=rad)
+                    boundary = crud.boundary.create_boundary(db=db, surface_id=Surface.id,obj_in=boundary_create)
+                    
+                    anchura_celdas=(recipe_in.cells_distance)
+                    numero_celdas=rad//anchura_celdas + 1
+                    cell_create = CellCreate(surface_id=Surface.id, center=Point(center[0], center[1]),rad=campaign.cells_distance)
+                    cell = crud.cell.create_cell(db=db, obj_in=cell_create, surface_id=Surface.id)
+                    for i in range(0,numero_celdas):
+                        if i==0:
+                            cell_create = CellCreate(surface_id=Surface.id, center=Point(center[0], center[1]),rad=campaign.cells_distance)
+                            cell = crud.cell.create_cell(db=db, obj_in=cell_create, surface_id=Surface.id)
+                        else:
+                            CENTER_CELL_arriba =  Point(center[0],center[1]+i*anchura_celdas)
+                            center_cell_abajo = Point(center[0],center[1]-i*anchura_celdas)
+                            center_cell_izq = Point(center[0]+i*anchura_celdas,center[1])
+                            center_cell_derecha = Point(center[0]-i*anchura_celdas,center[1])
+                            center_point_list=[CENTER_CELL_arriba,center_cell_abajo,center_cell_izq,   center_cell_derecha ]
+                            for poin in center_point_list:
+                                if np.sqrt((poin.x-center[0])**2 + (poin.y-center[1])**2)<=rad:
+                                    cell_create = CellCreate(surface_id=Surface.id, center=poin,rad=campaign.cells_distance)
+                                    cell = crud.cell.create_cell(db=db, obj_in=cell_create, surface_id=Surface.id)
+                            for j in range(1,numero_celdas):
+                                CENTER_CELL_arriba_lado_1 =  Point(center[0]+j*anchura_celdas,center[1]+i*anchura_celdas)
+                                CENTER_CELL_arriba_lado_2 =  Point(center[0]-j*anchura_celdas,center[1]+i*anchura_celdas)
+                                CENTER_CELL_abajo_lado_1 =  Point(center[0]+j*anchura_celdas,center[1]-i*anchura_celdas)
+                                CENTER_CELL_abajo_lado_2 =  Point(center[0]-j*anchura_celdas,center[1]-i*anchura_celdas)
+                                center_point_list=[CENTER_CELL_arriba_lado_1,CENTER_CELL_arriba_lado_2,CENTER_CELL_abajo_lado_1,CENTER_CELL_abajo_lado_2]
+                                for poin in center_point_list:
+                                    if np.sqrt((poin.x-center[0])**2 + (poin.y-center[1])**2)<=rad:
+                                        cell_create = CellCreate(surface_id=Surface.id, center=poin,rad=campaign.cells_distance)
+                                        cell = crud.cell.create_cell(db=db, obj_in=cell_create, surface_id=Surface.id)
+            background_tasks.add_task(create_slots, cam=campaign)
+            
+            return campaign
+            # background_tasks.add_task(create_slots, cam=campaign)            
+    else:
+        updated_recipe = crud.campaign.update(db=db, db_obj=campaign, obj_in=recipe_in)
+    db.commit()
+    return updated_recipe

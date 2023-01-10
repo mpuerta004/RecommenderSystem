@@ -8,11 +8,11 @@ class CampaignBase(BaseModel):
     creator_id:int
     city:str
     start_timestamp:datetime
-    cell_edge:int=50
+    cells_distance:int=50
     min_samples:int=12
     sampling_period:int=3600
-    planning_limit_time:int=3600*24*2
     campaign_duration:int=3600*24*14
+    hypothesis:str
 
 class CampaignCreate(CampaignBase):
     pass

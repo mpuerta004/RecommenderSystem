@@ -35,7 +35,7 @@ CREATE TABLE Campaign (
   queenBee_id INT NULL DEFAULT NULL,
   city VARCHAR(30) NULL DEFAULT NULL,
   start_timestamp TIMESTAMP NULL DEFAULT NULL,
-  cell_edge INT NULL DEFAULT NULL,
+  cells_distance INT NULL DEFAULT NULL,
   min_samples INT NULL DEFAULT NULL,
   sampling_period INT NULL DEFAULT NULL,
   planning_limit_time INT NULL DEFAULT NULL,
