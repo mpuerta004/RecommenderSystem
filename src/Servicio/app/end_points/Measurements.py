@@ -10,6 +10,7 @@ from schemas.Slot import Slot, SlotCreate,SlotSearchResults
 from schemas.Hive import Hive, HiveCreate, HiveSearchResults
 from schemas.Member import Member,MemberCreate,MemberSearchResults
 from schemas.Reading import Reading, ReadingCreate, ReadingSearchResults
+from typing import Any, Dict, Generic, List, Optional, Type, TypeVar, Union
 
 from schemas.Role import Role,RoleCreate,RoleSearchResults
 from schemas.newMember import NewMemberBase
@@ -151,7 +152,6 @@ def create_measurements(
 
 
 
-#Todo: ¿? aqui deberia preguntar si en el nuevo tiempo la camapaña estaba activa! 
 @api_router_measurements.put("/{measurement_id}", status_code=201, response_model=Measurement)
 def update_measurement(
     *,
@@ -163,17 +163,38 @@ measurement_id:int,
     """
     Update Campaign with campaign_id 
     """
-    cell = crud.measurement.get_Measurement(db=db,member_id=member_id, measurement_id=measurement_id)
-    # .get_campaign(db=db,hive_id=hive_id,campaign_id=campaign_id)
-    if not cell:
+    
+    measurement = crud.measurement.get_Measurement(db=db,member_id=member_id, measurement_id=measurement_id)
+    if not measurement:
         raise HTTPException(
             status_code=400, detail=f"Recipe with member_id=={member_id} and measurement_id=={measurement_id} not found."
         )
-    # if recipe.submitter_id != current_user.id:
-    #     raise HTTPException(
-    #         status_code=403, detail=f"You can only update your recipes."
-    #     )
-    
-    updated_recipe = crud.measurement.update(db=db, db_obj=cell, obj_in=recipe_in)
+  
+    updated_recipe = crud.measurement.update(db=db, db_obj=measurement, obj_in=recipe_in)
     db.commit()
+  
+    return updated_recipe
+
+
+
+@api_router_measurements.patch("/{measurement_id}", status_code=201, response_model=Measurement)
+def partially_update_measurement(
+    *,
+    recipe_in: Union[MeasurementUpdate,Dict[str, Any]],
+    member_id:int, 
+    measurement_id:int,
+    db: Session = Depends(deps.get_db)
+) -> dict:
+    """
+    Parcially Update Campaign with campaign_id 
+    """
+    measurement = crud.measurement.get_Measurement(db=db,member_id=member_id, measurement_id=measurement_id)
+    if not measurement:
+        raise HTTPException(
+            status_code=400, detail=f"Recipe with member_id=={member_id} and measurement_id=={measurement_id} not found."
+        )
+  
+    updated_recipe = crud.measurement.update(db=db, db_obj=measurement, obj_in=recipe_in)
+    db.commit()
+  
     return updated_recipe

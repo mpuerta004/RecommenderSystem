@@ -25,6 +25,7 @@ import numpy as np
 from io import BytesIO
 from starlette.responses import StreamingResponse
 import sys
+from typing import Any, Dict, Generic, List, Optional, Type, TypeVar, Union
 import cv2
 import numpy as np
 from io import BytesIO
@@ -95,6 +96,28 @@ def put_surface(
 ) -> dict:
     """
     Update a surface
+    """
+    reading=crud.reading.get(db=db, id= reading_id)
+    
+    if  reading_id is None:
+        raise HTTPException(
+            status_code=404, detail=f"Reading with reading_id=={reading_id} not found"
+        )
+    updated_recipe = crud.reading.update(db=db, db_obj=reading, obj_in=recipe_in)
+    db.commit()
+    return updated_recipe
+
+
+
+@api_router_reading.patch("/{reading_id}", status_code=200, response_model=Reading)
+def partially_update_surface(
+    *,
+    reading_id:int,
+    recipe_in:Union[ReadingUpdate, Dict[str, Any]],
+    db: Session = Depends(deps.get_db),
+) -> dict:
+    """
+    Partially update a surface
     """
     reading=crud.reading.get(db=db, id= reading_id)
     

@@ -1,5 +1,6 @@
 from fastapi import FastAPI, APIRouter, Query, HTTPException, Request, Depends
 from fastapi.templating import Jinja2Templates
+from typing import Any, Dict, Generic, List, Optional, Type, TypeVar, Union
 
 from typing import Optional, Any, List
 from pathlib import Path
@@ -75,8 +76,26 @@ def create_hive(
 
 
 @api_router_hive.put("/{hive_id}", status_code=201, response_model=Hive)
-def update_hive(    *,
+def update_hive( *,
     recipe_in: HiveUpdate,
+    hive_id:int,
+    db: Session = Depends(deps.get_db),
+) -> dict:
+    """
+    Update recipe in the database.
+    """
+    hive = crud.hive.get(db, id=hive_id)
+    if not hive:
+        raise HTTPException(
+            status_code=400, detail=f"Recipe with ID: {hive_id} not found."
+        )
+    updated_recipe = crud.hive.update(db=db, db_obj=hive, obj_in=recipe_in)
+    return updated_recipe
+
+
+@api_router_hive.patch("/{hive_id}", status_code=201, response_model=Hive)
+def update_parcial_hive(    *,
+    recipe_in: Union[HiveUpdate, Dict[str, Any]],
     hive_id:int,
     db: Session = Depends(deps.get_db),
 ) -> dict:
@@ -92,30 +111,6 @@ def update_hive(    *,
     updated_recipe = crud.hive.update(db=db, db_obj=hive, obj_in=recipe_in)
     return updated_recipe
 
-
-@api_router_hive.patch("/{hive_id}", status_code=200, response_model=Hive)
-def patch_hive(*,
-               hive_id:int, 
-                db: Session = Depends(deps.get_db),
-                hive_new:Hive)-> dict:
-                    
-    """
-    Delete a hive in the database.
-    """
-    hive = crud.hive.get(db, id=hive_id)
-    hive_model = hive(**hive)
-    update_data = hive_new.dict(exclude_unset=True)
-    updated_item = hive_model.copy(update=update_data)
-    hive=jsonable_encoder(updated_item)
-    db.commit() 
-    db.refresh(hive)
-    
-    if not hive:
-        raise HTTPException(
-            status_code=400, detail=f"Recipe with ID: {hive_id} not found."
-        )
-    updated_recipe = crud.hive.remove(db=db, hive=hive)
-    return    hive 
 
             
 

@@ -1,5 +1,6 @@
 from fastapi import FastAPI, APIRouter, Query, HTTPException, Request, Depends
 from fastapi.templating import Jinja2Templates
+from typing import Any, Dict, Generic, List, Optional, Type, TypeVar, Union
 
 from typing import Optional, Any, List
 from pathlib import Path
@@ -126,7 +127,7 @@ def put_a_member(
     *,
     hive_id:int,
     member_id:int,
-    recipe_in:MemberUpdate,
+    recipe_in: MemberUpdate,
     db: Session = Depends(deps.get_db),
 ) -> dict:
     """
@@ -143,3 +144,25 @@ def put_a_member(
 
     return updated_recipe
 
+
+
+@api_router_members.patch("/{member_id}", status_code=201, response_model=Member)
+def put_a_member(
+    *,
+    hive_id:int,
+    member_id:int,
+    recipe_in: Union[MemberUpdate, Dict[str, Any]],
+    db: Session = Depends(deps.get_db),
+) -> dict:
+    """
+    Update a member
+    """
+    user=crud.member.get_by_id(db=db, id=member_id)
+
+    if  user is None:
+        raise HTTPException(
+            status_code=404, detail=f"Member with member_id=={member_id} not found"
+        )
+    updated_recipe = crud.member.update(db=db, db_obj=user, obj_in=recipe_in)
+    db.commit()
+    return updated_recipe

@@ -17,6 +17,7 @@ from datetime import datetime, timedelta
 from schemas.Cell import Cell, CellCreate, CellSearchResults, Point
 from schemas.State import State,StateBase,StateCreate,StateSearchResults
 
+from typing import Any, Dict, Generic, List, Optional, Type, TypeVar, Union
 
 from schemas.Recommendation import Recommendation, RecommendationCreate, RecommendationSearchResults, RecommendationUpdate
 from crud import crud_cell
@@ -160,7 +161,7 @@ def create_recomendation(
 
 
 @api_router_recommendation.put("/{recommendation_id}", status_code=200, response_model=Recommendation)
-def put_a_recommendation(
+def update_recommendation(
     *,
     recommendation_id:int,
     member_id:int,
@@ -169,6 +170,30 @@ def put_a_recommendation(
 ) -> dict:
     """
     Update a Recommendation
+    """
+    recommendation=crud.recommendation.get_recommendation(db=db,member_id=member_id,recommendation_id=recommendation_id)
+
+    if  recommendation is None:
+        raise HTTPException(
+            status_code=404, detail=f"Recommendation with recommendation_id=={recommendation_id} not found"
+        )
+    
+    updated_recipe = crud.recommendation.update(db=db, db_obj=recommendation, obj_in=recipe_in)
+    db.commit()
+
+    return updated_recipe
+
+
+@api_router_recommendation.patch("/{recommendation_id}", status_code=200, response_model=Recommendation)
+def partially_update_recommendation(
+    *,
+    recommendation_id:int,
+    member_id:int,
+    recipe_in:Union[RecommendationUpdate,Dict[str, Any]],
+    db: Session = Depends(deps.get_db),
+) -> dict:
+    """
+    Partially Update a Recommendation
     """
     recommendation=crud.recommendation.get_recommendation(db=db,member_id=member_id,recommendation_id=recommendation_id)
 
