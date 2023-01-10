@@ -9,7 +9,7 @@ from schemas.Campaign import CampaignSearchResults, Campaign, CampaignCreate
 from schemas.Slot import Slot, SlotCreate,SlotSearchResults
 from schemas.Hive import Hive, HiveCreate, HiveSearchResults,HiveUpdate
 from schemas.Member import Member,MemberCreate,MemberSearchResults
-
+from fastapi.encoders import jsonable_encoder
 from schemas.Role import Role,RoleCreate,RoleSearchResults
 from schemas.newMember import NewMemberBase
 from schemas.Priority import Priority, PriorityCreate, PrioritySearchResults
@@ -93,6 +93,31 @@ def update_hive(    *,
     return updated_recipe
 
 
+@api_router_hive.patch("/{hive_id}", status_code=200, response_model=Hive)
+def patch_hive(*,
+               hive_id:int, 
+                db: Session = Depends(deps.get_db),
+                hive_new:Hive)-> dict:
+                    
+    """
+    Delete a hive in the database.
+    """
+    hive = crud.hive.get(db, id=hive_id)
+    hive_model = hive(**hive)
+    update_data = hive_new.dict(exclude_unset=True)
+    updated_item = hive_model.copy(update=update_data)
+    hive=jsonable_encoder(updated_item)
+    db.commit() 
+    db.refresh(hive)
+    
+    if not hive:
+        raise HTTPException(
+            status_code=400, detail=f"Recipe with ID: {hive_id} not found."
+        )
+    updated_recipe = crud.hive.remove(db=db, hive=hive)
+    return    hive 
+
+            
 
 @api_router_hive.delete("/{hive_id}", status_code=204)
 def delete_hive(    *,

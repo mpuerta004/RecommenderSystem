@@ -6,6 +6,12 @@ from pydantic import BaseModel
 class ReadingBase(BaseModel):
     No2: float
     Co2: float
+    O3:float 
+    SO2:float
+    PM10:float 
+    PM25: float 
+    PM2:float 
+    Benzene:float 
 
 
 class ReadingCreate(ReadingBase):

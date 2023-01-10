@@ -1,5 +1,4 @@
 from fastapi import BackgroundTasks, FastAPI
-import asyncio
 from starlette.background import BackgroundTask
 from starlette.responses import JSONResponse
 from starlette.applications import Starlette
@@ -33,20 +32,9 @@ from end_points import Recommendation
 from end_points import Demo
 from fastapi_utils.tasks import repeat_every
 
-import cv2
-import numpy as np
-from io import BytesIO
-from starlette.responses import StreamingResponse
-import sys
-from datetime import datetime, timedelta
 from fastapi_utils.session import FastAPISessionMaker
-from fastapi_events.dispatcher import dispatch
-from fastapi_events.middleware import EventHandlerASGIMiddleware
-from fastapi_events.handlers.local import local_handler
-from datetime import datetime, timedelta
-import math
 
-SQLALCHEMY_DATABASE_URL = "mysql+mysqlconnector://mve:mvepasswd@localhost:3306/SocioBee"
+SQLALCHEMY_DATABASE_URL = "mysql+mysqlconnector://mve:mvepasswd123@localhost:3306/SocioBee"
 sessionmaker = FastAPISessionMaker(SQLALCHEMY_DATABASE_URL)
 
 
@@ -71,7 +59,7 @@ app.include_router(Demo.api_router_demo, tags=["Demo"])
 
 api_router = APIRouter()
 
-SQLALCHEMY_DATABASE_URL = "mysql+mysqlconnector://mve:mvepasswd@localhost:3306/SocioBee"
+SQLALCHEMY_DATABASE_URL = "mysql+mysqlconnector://mve:mvepasswd123@localhost:3306/SocioBee"
 sessionmaker = FastAPISessionMaker(SQLALCHEMY_DATABASE_URL)
 
 
@@ -136,12 +124,15 @@ sessionmaker = FastAPISessionMaker(SQLALCHEMY_DATABASE_URL)
 #     return None
 
 
+
+
+
+
 #Funcion sensores automaticos: 
 # cell_statics=crud.cell.get_statics(db=db, campaign_id=cam.id)                
 #                 for i in cell_statics:
 #                     Measurementcreate= MeasurementCreate(cell_id=i.id, timestamp=date,location=i.center)
 #                     slot=crud.slot.get_slot_time(db=db,cell_id=i.id,time=date)
-#                     #Todo: tiene que haber un usuario para los mediciones automaticas. 
 #                     crud.measurement.create_Measurement(db=db, slot_id=slot.id,member_id=)
 
 

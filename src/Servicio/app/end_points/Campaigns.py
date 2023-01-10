@@ -38,7 +38,7 @@ from fastapi_utils.session import FastAPISessionMaker
 from end_points.Recommendation import create_recomendation
 
 api_router_campaign = APIRouter(prefix="/hives/{hive_id}/campaigns")
-SQLALCHEMY_DATABASE_URL = "mysql+mysqlconnector://mve:mvepasswd@localhost:3306/SocioBee"
+SQLALCHEMY_DATABASE_URL = "mysql+mysqlconnector://mve:mvepasswd123@localhost:3306/SocioBee"
 sessionmaker = FastAPISessionMaker(SQLALCHEMY_DATABASE_URL)
 
 @api_router_campaign.get("/", status_code=200, response_model=CampaignSearchResults)
@@ -338,7 +338,6 @@ def update_campaign(
                     Surface = crud.surface.create_sur(db=db, campaign_id=campaign.id,obj_in=surface_create)
                     boundary_create=BoundaryCreate(center=center,rad=rad)
                     boundary = crud.boundary.create_boundary(db=db, surface_id=Surface.id,obj_in=boundary_create)
-                    # TODO: Esto iria enlazado con el programa que permite seleccionar las celdas de la campaña pero de momento esto nos vale.
                     
                     anchura_celdas=(recipe_in.cell_edge)*2
                     numero_celdas=rad//anchura_celdas + 1

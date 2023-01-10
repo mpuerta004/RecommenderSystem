@@ -12,4 +12,10 @@ class Reading(Base):
     id=Column(Integer, unique=True, primary_key=True, index=True, autoincrement=True,nullable=True) 
     Co2=Column(Float)
     No2=Column(Float)
+    O3=Column(Float)
+    SO2=Column(Float)
+    PM10=Column(Float)
+    PM25=Column(Float)
+    PM1=Column(Float)
+    Benzene=Column(Float)
     
