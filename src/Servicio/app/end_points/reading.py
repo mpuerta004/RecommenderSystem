@@ -75,7 +75,7 @@ def create_reading(
 def delete_reading(    *,
     reading_id:int,
     db: Session = Depends(deps.get_db),
-) -> dict:
+):
     """
     Delete reading in the database.
     """

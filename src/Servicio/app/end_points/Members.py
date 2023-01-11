@@ -78,7 +78,7 @@ def delete_member(    *,
     hive_id:int,
     member_id:int,
     db: Session = Depends(deps.get_db),
-) -> dict:
+):
     """
     Update recipe in the database.
     """

@@ -61,7 +61,7 @@ def create_device(
 def delete_device(    *,
     device_id:int,
     db: Session = Depends(deps.get_db),
-) -> dict:
+):
     """
     Delete device in the database.
     """

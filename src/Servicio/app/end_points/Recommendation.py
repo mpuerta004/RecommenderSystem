@@ -208,7 +208,7 @@ def delete_recommendation(    *,
     recommendation_id:int,
     member_id:int,
     db: Session = Depends(deps.get_db),
-) -> dict:
+):
     """
     Delete recommendation in the database.
     """

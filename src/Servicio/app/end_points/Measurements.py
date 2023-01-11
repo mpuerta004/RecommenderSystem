@@ -76,7 +76,7 @@ def delete_measurement(   *,
     member_id: int,
     measurement_id:int, 
     db: Session = Depends(deps.get_db),
-) -> dict:
+):
     """
     Delete measurement in the database.
     """

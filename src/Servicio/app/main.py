@@ -8,7 +8,6 @@ from typing import Optional, Any, List
 from pathlib import Path
 from sqlalchemy.orm import Session
 # from schemas.Surface import SurfaceSearchResults, Surface, SurfaceCreate
-
 # from schemas.Priority import Priority, PriorityCreate, PrioritySearchResults
 # from schemas.Slot import Slot, SlotCreate, SlotSearchResults
 # from schemas.Recommendation import Recommendation, RecommendationCreate, RecommendationSearchResults
@@ -26,7 +25,6 @@ from end_points import Cells
 from end_points import reading
 from end_points import Campaigns
 from end_points import device
-
 from end_points import Surface
 from end_points import Measurements
 from end_points import Recommendation

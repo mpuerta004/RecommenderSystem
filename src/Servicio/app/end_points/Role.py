@@ -67,7 +67,7 @@ def delete_role(    *,
     member_id:int,
     role:str,
     db: Session = Depends(deps.get_db),
-) -> dict:
+):
     """
     Delete role in the database.
     """

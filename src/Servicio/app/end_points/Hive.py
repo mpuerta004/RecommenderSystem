@@ -118,7 +118,7 @@ def update_parcial_hive(    *,
 def delete_hive(    *,
     hive_id:int,
     db: Session = Depends(deps.get_db),
-) -> dict:
+):
     """
     Delete a hive in the database.
     """

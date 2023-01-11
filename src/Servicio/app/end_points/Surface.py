@@ -219,7 +219,7 @@ def delete_surface(    *,
     campaign_id:int, 
     surface_id:int,
     db: Session = Depends(deps.get_db),
-) -> dict:
+):
     """
     Delete surface in the database.
     """

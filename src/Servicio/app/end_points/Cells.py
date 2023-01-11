@@ -82,7 +82,7 @@ def delete_cell(   *,
     surface_id:int, 
     cell_id: int,
     db: Session = Depends(deps.get_db),
-) -> dict:
+):
     """
     Delete a cell in the database.
     """

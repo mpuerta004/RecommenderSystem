@@ -83,7 +83,7 @@ def delete_campaign(    *,
      hive_id:int, 
     campaign_id:int,
     db: Session = Depends(deps.get_db),
-) -> dict:
+):
     """
     Update recipe in the database.
     """
