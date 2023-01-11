@@ -21,9 +21,7 @@ from sqlalchemy import and_, extract
 
 
 class CRUDMeasurement(CRUDBase[Measurement, MeasurementCreate, MeasurementUpdate]):
-        #TODO: el numero de mediciones por  slot!
-        # def get_last_of_Cell(self, db: Session, *, cell_id:int) -> Measurement:
-        #         return db.query(Measurement).filter(Measurement.cell_id == cell_id ).order_by(Slot.end_timestamp.desc()).first()
+        
         def create_Measurement(self, db: Session, *, obj_in: MeasurementCreate, member_id:int,slot_id:int,cell_id:int) -> Measurement:
                 obj_in_data = jsonable_encoder(obj_in) 
                 db_obj = self.model(**obj_in_data,member_id=member_id,slot_id=slot_id,cell_id=cell_id)  # type: ignore

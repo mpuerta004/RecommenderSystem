@@ -107,28 +107,28 @@ def delete_campaign(    *,
 @api_router_campaign.post("/", status_code=201, response_model=Campaign)
 async def create_Campaign(
     *,
-    recipe_in: CampaignCreate,
+    campaign_create: CampaignCreate,
     hive_id: int,
-    rad:int, 
-    center:Point,
+    boundary:BoundaryCreate,
     db: Session = Depends(deps.get_db),
     background_tasks: BackgroundTasks
 ) -> dict:
     """
      Create a new campaing in the database.
     """
-    role = crud.role.get_roles(db=db, member_id=recipe_in.creator_id, hive_id=hive_id)
+    center=boundary.center
+    rad=boundary.rad
+    role = crud.role.get_roles(db=db, member_id=campaign_create.creator_id, hive_id=hive_id)
 
     if ("QueenBee",) in role:
-        Campaign = crud.campaign.create_cam(db=db, obj_in=recipe_in, hive_id=hive_id)
+        Campaign = crud.campaign.create_cam(db=db, obj_in=campaign_create, hive_id=hive_id)
   
         surface_create=SurfaceCreate()
         Surface = crud.surface.create_sur(db=db, campaign_id=Campaign.id,obj_in=surface_create)
-        boundary_create=BoundaryCreate(center=center,rad=rad)
-        boundary = crud.boundary.create_boundary(db=db, surface_id=Surface.id,obj_in=boundary_create)
+        boundary = crud.boundary.create_boundary(db=db, surface_id=Surface.id,obj_in=boundary)
         # TODO: Esto iria enlazado con el programa que permite seleccionar las celdas de la campaña pero de momento esto nos vale.
         
-        anchura_celdas=(recipe_in.cells_distance)*2
+        anchura_celdas=(campaign_create.cells_distance)*2
         numero_celdas=rad//anchura_celdas + 1
        
         for i in range(0,numero_celdas):

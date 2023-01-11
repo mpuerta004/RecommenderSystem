@@ -10,7 +10,7 @@ class MemberBase(BaseModel):
     gender:str
     city: str=None
     mail:str
-    device_id:int=None
+    # device_id:int=None
 
 #Todo: hacer que member_type tenga dos opcciones solamente. 
 # # Properties to receive via API on creation

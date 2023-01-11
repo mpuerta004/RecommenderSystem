@@ -9,7 +9,6 @@ Use SocioBee;
 /* CREATE THE USER 'spq' AT LOCAL SERVER WITH PASSWORD 'spq' */
 CREATE USER IF NOT EXISTS 'mve'@'localhost' IDENTIFIED BY 'mvepasswd123';
 GRANT ALL PRIVILEGES ON SocioBee.*  TO 'mve'@'localhost';
-FLUSH PRIVILEGES;
 
 -- -----------------------------------------------------
 -- Table Hive

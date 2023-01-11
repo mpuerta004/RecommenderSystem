@@ -41,18 +41,7 @@ class CRUDRole(CRUDBase[Role, RoleCreate, RoleUpdate]):
         db.commit()
         return obj
    
-    def update(
-        self, db: Session, *, db_obj: Role, obj_in: Union[RoleUpdate, Dict[str, Any]]
-    ) -> Role:
-        if isinstance(obj_in, dict):
-            update_data = obj_in
-        else:
-            update_data = obj_in.dict(exclude_unset=True)
-
-        return super().update(db, db_obj=db_obj, obj_in=update_data)
-
-    # def is_superuser(self, user: Role) -> bool:
-    #     return user.is_superuser
-
+   
+    
 
 role = CRUDRole(Role)

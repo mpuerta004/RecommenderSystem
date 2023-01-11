@@ -39,18 +39,7 @@ class CRUDMember(CRUDBase[Member, MemberCreate, MemberUpdate]):
     def get_Member_of_city(self, db: Session, *, city:str) -> List[ Member]:
         return db.query(Member).filter(and_(Member.city == city,Member.name!="Hive")).all()
     
-    def update(
-        self, db: Session, *, db_obj: Member, obj_in: Union[MemberUpdate, Dict[str, Any]]
-    ) -> Member:
-        if isinstance(obj_in, dict):
-            update_data = obj_in
-        else:
-            update_data = obj_in.dict(exclude_unset=True)
-
-        return super().update(db, db_obj=db_obj, obj_in=update_data)
-
-    # def is_superuser(self, user: Member) -> bool:
-    #     return user.is_superuser
+   
 
 
 member = CRUDMember(Member)

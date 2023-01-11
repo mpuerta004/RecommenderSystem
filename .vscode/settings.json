@@ -20,19 +20,6 @@
             "previewLimit": 50,
             "server": "localhost",
             "port": 3306,
-            "driver": "MySQL",
-            "name": "Recommender",
-            "database": "SocioBee",
-            "username": "root",
-            "password": "mypasswd"
-        },
-        {
-            "mysqlOptions": {
-                "authProtocol": "default"
-            },
-            "previewLimit": 50,
-            "server": "localhost",
-            "port": 3306,
             "driver": "MariaDB",
             "name": "Recommender2",
             "database": "SocioBee",
