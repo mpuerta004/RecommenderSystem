@@ -16,6 +16,7 @@ class MeasurementBase(BaseModel):
     reading_id:int=None# INT,
     location:Point=None
     device_id:int
+    recommendation_id:int=None
     
     
 

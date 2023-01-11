@@ -5,7 +5,6 @@ from sqlalchemy.orm import relationship
 from sqlalchemy.types import Float
 from db.base_class import Base
 from models.Slot import Slot
-from models.Measurement import Measurement
 # sys.path.append("/home/ubuntu/carpeta_compartida_docker/RecommenderSystem/src")
 # print(sys.path)
 from models.Cell import Cell

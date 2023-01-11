@@ -4,7 +4,6 @@ from sqlalchemy.orm import relationship
 
 
 from db.base_class import Base
-from models.Point import Point
 
 from models.Campaign import Campaign
 

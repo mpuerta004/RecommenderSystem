@@ -4,9 +4,7 @@ from sqlalchemy.orm import relationship
 
 
 from db.base_class import Base
-from models.Point import Point
 
-from models.Campaign import Campaign
 
 
 class Device(Base):
@@ -17,7 +15,6 @@ class Device(Base):
     brand = Column(String, nullable=True)
     model = Column(String, nullable=True)
     year = Column(String, nullable=True)
-    # measurement = relationship("Measurement")
 
     #De este modo se define una relacion inversa... no se si seran utiles. 
     #queenBee=relationship("Campaign", back_populates="campaigns")

@@ -2,8 +2,6 @@ from fastapi import FastAPI, APIRouter, Query, HTTPException, Request, Depends
 from fastapi.templating import Jinja2Templates
 from typing import Any, Dict, Generic, List, Optional, Type, TypeVar, Union
 
-from typing import Optional, Any, List
-from pathlib import Path
 from sqlalchemy.orm import Session
 from schemas.Measurement import Measurement, MeasurementCreate, MeasurementSearchResults
 from schemas.Boundary import Boundary, BoundaryCreate, BoundarySearchResults
@@ -30,13 +28,7 @@ import cv2
 import asyncio
 import numpy as np
 from starlette.responses import StreamingResponse
-from fastapi_events.dispatcher import dispatch
-from fastapi_events.middleware import EventHandlerASGIMiddleware
-from fastapi_events.handlers.local import local_handler
-
 from fastapi_utils.session import FastAPISessionMaker
-
-from end_points.Recommendation import create_recomendation
 
 api_router_campaign = APIRouter(prefix="/hives/{hive_id}/campaigns")
 SQLALCHEMY_DATABASE_URL = "mysql+mysqlconnector://mve:mvepasswd123@localhost:3306/SocioBee"
@@ -125,9 +117,7 @@ async def create_Campaign(
   
         surface_create=SurfaceCreate()
         Surface = crud.surface.create_sur(db=db, campaign_id=Campaign.id,obj_in=surface_create)
-        boundary = crud.boundary.create_boundary(db=db, surface_id=Surface.id,obj_in=boundary)
-        # TODO: Esto iria enlazado con el programa que permite seleccionar las celdas de la campaña pero de momento esto nos vale.
-        
+        boundary = crud.boundary.create_boundary(db=db, surface_id=Surface.id,obj_in=boundary)        
         anchura_celdas=(campaign_create.cells_distance)*2
         numero_celdas=rad//anchura_celdas + 1
        
@@ -235,7 +225,6 @@ def show_a_campaign(
     hive_id:int,
     campaign_id:int, 
     time:datetime,
-    # request: Request,
     db: Session = Depends(deps.get_db),
 ) -> Any:
     """
@@ -368,9 +357,7 @@ def update_campaign(
                                         cell_create = CellCreate(surface_id=Surface.id, center=poin,rad=campaign.cells_distance)
                                         cell = crud.cell.create_cell(db=db, obj_in=cell_create, surface_id=Surface.id)
             background_tasks.add_task(create_slots, cam=campaign)
-            
             return campaign
-            # background_tasks.add_task(create_slots, cam=campaign)            
     else:
         updated_recipe = crud.campaign.update(db=db, db_obj=campaign, obj_in=recipe_in)
     db.commit()
@@ -443,7 +430,6 @@ def partially_update_campaign(
             background_tasks.add_task(create_slots, cam=campaign)
             
             return campaign
-            # background_tasks.add_task(create_slots, cam=campaign)            
     else:
         updated_recipe = crud.campaign.update(db=db, db_obj=campaign, obj_in=recipe_in)
     db.commit()

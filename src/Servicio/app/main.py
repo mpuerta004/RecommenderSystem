@@ -19,13 +19,14 @@ from sqlalchemy.orm import Session
 # from schemas.Measurement import Measurement, MeasurementCreate, MeasurementSearchResults
 # from schemas.Cell import Cell, CellCreate, CellSearchResults, Point
 import deps
-from end_points import device
 from end_points import Hive
 from end_points import Members
 from end_points import Role
 from end_points import Cells
 from end_points import reading
 from end_points import Campaigns
+from end_points import device
+
 from end_points import Surface
 from end_points import Measurements
 from end_points import Recommendation

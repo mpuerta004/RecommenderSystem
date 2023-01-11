@@ -217,19 +217,13 @@ async def asignacion_recursos(
                     time_polinizado = time + timedelta(seconds=mediciones[i][2])
                     cell=crud.cell.get_Cell(db=db,cell_id=mediciones[i][1].cell_id)
                     #Todo! dos device! uno para estaticos con id 1 y otro para dinamicos con id 2! es necesario que esten para que esto funcione
-                    creation=MeasurementCreate(db=db, location=cell.center,timestamp=time_polinizado,device_id=2)
+                    creation=MeasurementCreate(db=db, location=cell.center,timestamp=time_polinizado,device_id=2, recommendation_id=mediciones[i][1].id)
                     slot=crud.slot.get_slot_time(db=db, 
                                                  cell_id=cell.id,time=time)
                     #Ver si se registran bien mas recomendaciones con el id de la medicion correcta. 
                     measurement=crud.measurement.create_Measurement(db=db,obj_in=creation,member_id=mediciones[i][0].id,slot_id=slot.id,cell_id=mediciones[i][1].cell_id)
                     db.commit()
-                    recomendation= mediciones[i][1]
-
-                    recomendation_create=RecommendationCreate(recommendation_timestamp=recomendation.recommendation_timestamp,
-                                                              member_current_location=recomendation.member_current_location,
-                                                             measurement_id=measurement.id )
                     
-                    updated_recipe = crud.measurement.update(db=db, db_obj=recomendation, obj_in=recomendation_create)
                     db.commit()
                 else:
                     new.append(mediciones[i])

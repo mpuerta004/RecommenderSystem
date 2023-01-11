@@ -25,11 +25,7 @@ import math
 import numpy as np
 from io import BytesIO
 from starlette.responses import StreamingResponse
-import sys
-import cv2
 import numpy as np
-from io import BytesIO
-from starlette.responses import StreamingResponse
 from enum import Enum, IntEnum
 
 api_router_members = APIRouter(prefix="/hives/{hive_id}/members")

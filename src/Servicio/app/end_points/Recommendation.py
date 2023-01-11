@@ -70,7 +70,6 @@ def get_recommendation(
 
 
 #Todo: control de errores! 
-#Todo: la que esta en campaign esta mucho mas lograda que esta! 
 @api_router_recommendation.post("/",status_code=201, response_model=RecommendationSearchResults)
 def create_recomendation(
     *, 
@@ -202,7 +201,6 @@ def partially_update_recommendation(
     
     updated_recipe = crud.recommendation.update(db=db, db_obj=recommendation, obj_in=recipe_in)
     db.commit()
-
     return updated_recipe
 
 @api_router_recommendation.delete("/{recommendation_id}", status_code=204)

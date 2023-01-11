@@ -4,6 +4,7 @@ from sqlalchemy import Integer, String, Column, Boolean, ForeignKey
 from sqlalchemy.orm import relationship
 
 from db.base_class import Base
+from models.Device import Device
 
 class Member(Base):
     __tablename__='Member'

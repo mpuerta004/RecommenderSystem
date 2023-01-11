@@ -175,6 +175,39 @@ Create TABLE State(
    );
    
    
+-- -----------------------------------------------------
+-- Table sociobee.recommendation
+-- -----------------------------------------------------
+CREATE TABLE Recommendation (
+  id int not null auto_increment,
+  cell_id INT NOT NULL,
+  #campaign_id int not null, 
+  member_id INT NOT NULL,
+  recommendation_timestamp TIMESTAMP NOT NULL,
+  #planning_timestamp TIMESTAMP DEFAULT NULL,
+  slot_id int, 
+  member_current_location POINT NULL, 
+   #measurement_id INT NULL DEFAULT NULL,
+  state_id INT, 
+  PRIMARY KEY (id,member_id),
+    FOREIGN KEY (cell_id)
+    REFERENCES Cell (id)
+            ON DELETE CASCADE,
+     #FOREIGN KEY (campaign_id)
+    #REFERENCES Campaign (id),
+    FOREIGN KEY (state_id)
+    REFERENCES State (id)
+    ON DELETE CASCADE,
+    FOREIGN KEY (member_id)
+    REFERENCES Member (id)
+    ON DELETE CASCADE,
+    #FOREIGN KEY (measurement_id)
+    #REFERENCES Measurement (id)
+    #ON DELETE CASCADE,
+    FOREIGN KEY (slot_id)
+    REFERENCES Slot (id)
+    ON DELETE CASCADE
+    );
 
 -- -----------------------------------------------------
 -- Table CellMeasurement
@@ -190,6 +223,7 @@ CREATE TABLE Measurement (
   measurement_type VARCHAR(30) NULL DEFAULT 'AirData',
   reading_id INT DEFAULT NULL,
   location POINT NULL DEFAULT NULL,
+  recommendation_id int null default Null, 
   PRIMARY KEY (id, member_id),
     FOREIGN KEY (cell_id)
     REFERENCES Cell (id)
@@ -208,43 +242,13 @@ CREATE TABLE Measurement (
         ON DELETE CASCADE,
      FOREIGN KEY (device_id)
     REFERENCES Device (id)
-        ON DELETE CASCADE
-    );
-
-
--- -----------------------------------------------------
--- Table sociobee.recommendation
--- -----------------------------------------------------
-CREATE TABLE Recommendation (
-  id int not null auto_increment,
-  cell_id INT NOT NULL,
-  #campaign_id int not null, 
-  member_id INT NOT NULL,
-  recommendation_timestamp TIMESTAMP NOT NULL,
-  #planning_timestamp TIMESTAMP DEFAULT NULL,
-  slot_id int, 
-  member_current_location POINT NULL, 
-  measurement_id INT NULL DEFAULT NULL,
-  state_id INT, 
-  PRIMARY KEY (id,member_id),
-    FOREIGN KEY (cell_id)
-    REFERENCES Cell (id)
-            ON DELETE CASCADE,
-     #FOREIGN KEY (campaign_id)
-    #REFERENCES Campaign (id),
-    FOREIGN KEY (state_id)
-    REFERENCES State (id)
-    ON DELETE CASCADE,
-    FOREIGN KEY (member_id)
-    REFERENCES Member (id)
-    ON DELETE CASCADE,
-    FOREIGN KEY (measurement_id)
-    REFERENCES Measurement (id)
-    ON DELETE CASCADE,
-    FOREIGN KEY (slot_id)
-    REFERENCES Slot (id)
+        ON DELETE CASCADE,
+        FOREIGN KEY (recommendation_id)
+    REFERENCES Recommendation (id)
     ON DELETE CASCADE
     );
+
+
 
 
 -- -----------------------------------------------------

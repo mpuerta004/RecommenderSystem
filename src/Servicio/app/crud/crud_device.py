@@ -14,5 +14,6 @@ class CRUDDevice(CRUDBase[Device, DeviceCreate, DeviceUpdate]):
         db.delete(obj)
         db.commit()
         return obj
-
+ def get(self, db: Session, id: Any) -> Optional[Device]:
+        return db.query(Device).filter(Device.id == id).first()
 device = CRUDDevice(Device)

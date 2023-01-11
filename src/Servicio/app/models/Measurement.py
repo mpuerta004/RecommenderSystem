@@ -12,6 +12,7 @@ from models.Point import Point
 from models.Member import Member
 from models.Slot import Slot
 from models.Device import Device
+from models.Recommendation import Recommendation
 
 class Measurement(Base):
     __tablename__='Measurement'
@@ -24,7 +25,7 @@ class Measurement(Base):
     reading_id=Column(Integer, ForeignKey(Reading.id, ondelete="CASCADE"), nullable=True)
     location=Column(Point)
     device_id=Column(Integer,ForeignKey(Device.id,ondelete="CASCADE"))
-    
+    recommendation_id=Column(Integer,ForeignKey(Recommendation.id,ondelete="CASCADE"))
     
     readings= relationship("Reading",cascade="all, delete")
     
