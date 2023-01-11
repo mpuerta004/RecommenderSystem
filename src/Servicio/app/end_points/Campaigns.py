@@ -400,12 +400,12 @@ def partially_update_campaign(
                     boundary = crud.boundary.create_boundary(db=db, surface_id=Surface.id,obj_in=boundary_create)
                     
                     anchura_celdas=(recipe_in.cells_distance)
+                    
                     numero_celdas=rad//anchura_celdas + 1
-                    cell_create = CellCreate(surface_id=Surface.id, center=Point(center[0], center[1]),rad=campaign.cells_distance)
-                    cell = crud.cell.create_cell(db=db, obj_in=cell_create, surface_id=Surface.id)
+                    
                     for i in range(0,numero_celdas):
                         if i==0:
-                            cell_create = CellCreate(surface_id=Surface.id, center=Point(center[0], center[1]),rad=campaign.cells_distance)
+                            cell_create = CellCreate(surface_id=Surface.id, center=Point(center[0], center[1]),rad=campaign.cells_distance/2)
                             cell = crud.cell.create_cell(db=db, obj_in=cell_create, surface_id=Surface.id)
                         else:
                             CENTER_CELL_arriba =  Point(center[0],center[1]+i*anchura_celdas)
@@ -415,7 +415,7 @@ def partially_update_campaign(
                             center_point_list=[CENTER_CELL_arriba,center_cell_abajo,center_cell_izq,   center_cell_derecha ]
                             for poin in center_point_list:
                                 if np.sqrt((poin.x-center[0])**2 + (poin.y-center[1])**2)<=rad:
-                                    cell_create = CellCreate(surface_id=Surface.id, center=poin,rad=campaign.cells_distance)
+                                    cell_create = CellCreate(surface_id=Surface.id, center=poin,rad=campaign.cells_distance/2)
                                     cell = crud.cell.create_cell(db=db, obj_in=cell_create, surface_id=Surface.id)
                             for j in range(1,numero_celdas):
                                 CENTER_CELL_arriba_lado_1 =  Point(center[0]+j*anchura_celdas,center[1]+i*anchura_celdas)
@@ -425,7 +425,7 @@ def partially_update_campaign(
                                 center_point_list=[CENTER_CELL_arriba_lado_1,CENTER_CELL_arriba_lado_2,CENTER_CELL_abajo_lado_1,CENTER_CELL_abajo_lado_2]
                                 for poin in center_point_list:
                                     if np.sqrt((poin.x-center[0])**2 + (poin.y-center[1])**2)<=rad:
-                                        cell_create = CellCreate(surface_id=Surface.id, center=poin,rad=campaign.cells_distance)
+                                        cell_create = CellCreate(surface_id=Surface.id, center=poin,rad=campaign.cells_distance/2)
                                         cell = crud.cell.create_cell(db=db, obj_in=cell_create, surface_id=Surface.id)
             background_tasks.add_task(create_slots, cam=campaign)
             

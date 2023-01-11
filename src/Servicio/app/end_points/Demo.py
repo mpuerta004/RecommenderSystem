@@ -391,7 +391,7 @@ def show_recomendation(*, cam:Campaign, user:Member, result:list(),time:datetime
                 # print(pt1, pt2)
                 cv2.rectangle(imagen,pt1=pt1, pt2=pt2,color=color ,thickness = -1)
                 cv2.rectangle(imagen,pt1=pt1, pt2=pt2,color=(0,0,0))   
-                cv2.putText(imagen, str(j.id), (int(j.center[0]),int(j.center[1])+40), cv2.FONT_HERSHEY_SIMPLEX , 0.75, (0,0,0))
+                cv2.putText(imagen,  str(Cardinal_actual), (int(j.center[0]),int(j.center[1])+40), cv2.FONT_HERSHEY_SIMPLEX , 0.75, (0,0,0))
                 if j.id in Cells_recomendadas:
                     if j.id== cell_elejida:
                         cv2.drawMarker(imagen, position=(int(j.center[0]),int(j.center[1])), color=(151,45,248), markerType=cv2.MARKER_TILTED_CROSS,markerSize= 24, thickness=5)
