@@ -110,15 +110,15 @@ async def create_Campaign(
     """
     center=boundary.center
     rad=boundary.rad
-    role = crud.role.get_roles(db=db, member_id=campaign_create.creator_id, hive_id=hive_id)
+    role = crud.role.get_roles(db=db, member_id=campaign_metadata.creator_id, hive_id=hive_id)
 
     if ("QueenBee",) in role:
-        Campaign = crud.campaign.create_cam(db=db, obj_in=campaign_create, hive_id=hive_id)
+        Campaign = crud.campaign.create_cam(db=db, obj_in=campaign_metadata, hive_id=hive_id)
   
         surface_create=SurfaceCreate()
         Surface = crud.surface.create_sur(db=db, campaign_id=Campaign.id,obj_in=surface_create)
         boundary = crud.boundary.create_boundary(db=db, surface_id=Surface.id,obj_in=boundary)        
-        anchura_celdas=(campaign_create.cells_distance)*2
+        anchura_celdas=(campaign_metadata.cells_distance)*2
         numero_celdas=rad//anchura_celdas + 1
        
         for i in range(0,numero_celdas):
