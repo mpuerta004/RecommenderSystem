@@ -37,6 +37,7 @@ Use case - Example:
     ![](./Picture_readme/Device_post.PNG)
 
     And we can see the created device: 
+    
     ![](./Picture_readme/Device_result.PNG)
 4. **Create a Campaign:** At http://localhost:8001 in secction Campaign at the endpoint post. 
     ![](./Picture_readme/Campaign_section.PNG)
