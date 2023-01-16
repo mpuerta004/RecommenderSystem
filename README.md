@@ -9,6 +9,18 @@
 7. Open http://localhost:8001/ <!---!> 
 
 
+Use case - Example: 
+
+1. We have to create the hive. At http://localhost:8001 in secction Hives at the endpoint post. 
+![plot](./Picture_readme/Hive_section.PNG)
+Click on Post endpoint and then in "Try it out" botton and complete the Request body (pìcture example) and click execute 
+![plot](./Picture_readme/Hive_post.PNG)
+And we can see the created hive: 
+![plot](./Picture_readme/hive_zaragoza.PNG)
+)
+
+
+
 
 
 

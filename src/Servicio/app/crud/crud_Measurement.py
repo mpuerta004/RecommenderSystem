@@ -36,7 +36,7 @@ class CRUDMeasurement(CRUDBase[Measurement, MeasurementCreate, MeasurementUpdate
                  return db.query(Measurement).filter(Measurement.member_id==member_id).all()
         
         def get_all_Measurement_campaign(self, db:Session, *, campaign_id:int, time:DateTime)-> int:
-            return db.query(Measurement).join(Cell).join(Surface).filter(and_(Measurement.cell_id==Cell.id ,Measurement.timestamp<=time,Cell.surface_id==Surface.id) & (Surface.campaign_id==campaign_id)).count()
+            return db.query(Measurement).join(Cell).join(Surface).filter(and_(Measurement.cell_id==Cell.id ,Measurement.timestamp<=time,Cell.surface_id==Surface.id, Surface.campaign_id==campaign_id)).count()
         
         
         def get_all_Measurement_from_cell(self, db:Session, *,  cell_id:int, time:DateTime)-> int:

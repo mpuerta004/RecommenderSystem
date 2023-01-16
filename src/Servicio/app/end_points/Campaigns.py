@@ -99,7 +99,7 @@ def delete_campaign(    *,
 @api_router_campaign.post("/", status_code=201, response_model=Campaign)
 async def create_Campaign(
     *,
-    campaign_create: CampaignCreate,
+    campaign_metadata: CampaignCreate,
     hive_id: int,
     boundary:BoundaryCreate,
     db: Session = Depends(deps.get_db),

@@ -82,7 +82,11 @@ def prioriry_calculation_2(time:datetime, cam:Campaign, db:Session= Depends(deps
                         b = max(2, cam.min_samples - int(Cardinal_pasado))
                         a = max(2, cam.min_samples - int(Cardinal_actual))
                         result = math.log(a) * math.log(b, int(Cardinal_actual) + 2)
+                        # init=momento  - cam.start_timestamp
                         
+                        # a =  init - timedelta(seconds= ((init).total_seconds()//cam.sampling_period)*cam.sampling_period)
+                        # # result= (-Cardinal_actual + (cam.min_samples*(a.total_seconds()))/cam.sampling_period)/cam.min_samples
+                        # result=-Cardinal_actual/cam.min_samples + a.total_seconds()/cam.sampling_period
                         total_measurements = crud.measurement.get_all_Measurement_campaign(
                             db=db, campaign_id=cam.id, time=time)
                         if total_measurements==0:
@@ -270,7 +274,6 @@ def create_recomendation_2(
             distancia= math.sqrt((centro[0] - point.x)**2+(centro[1]-point.y)**2)
             if distancia<=250:
                 List_cells_cercanas.append(i)
-        print(len(List_cells_cercanas))
         lista_celdas_ordenas=[]
         if List_cells_cercanas!=[]:
             lista_celdas_ordenas=List_cells_cercanas
@@ -284,6 +287,7 @@ def create_recomendation_2(
                 cells_and_priority.append((i,priority, math.sqrt((i.center[0] - point.x)**2+(i.center[1]-point.y)**2) ))
             # priorities.sort(key=lambda Cell: (Cell.temporal_priority),reverse=True)
         cells_and_priority.sort(key=lambda Cell: (Cell[1].temporal_priority, -Cell[2] ),reverse=True)
+
         result=[]
         
         if len(cells_and_priority)>=3:
@@ -291,7 +295,6 @@ def create_recomendation_2(
                     a=crud.slot.get_slot(db=db, slot_id=cells_and_priority[i][1].slot_id)
                     cell_id=a.cell_id
                     # print(a.cell_id)
-                    print(cell_id)
                     obj_state=StateCreate(db=db)
                     state=crud.state.create_state(db=db,obj_in=obj_state)
                     recomendation=crud.recommendation.create_recommendation_detras(db=db,obj_in=recipe_in,member_id=member_id,state_id=state.id,slot_id=cells_and_priority[i][1].slot_id,cell_id=a.cell_id)
@@ -322,29 +325,78 @@ import pandas as pd
 import numpy as np 
 import matplotlib.pyplot as plt
 
+# color_list=[(3, 222, 28),
+# (3, 223, 16),
+# (4, 224, 4),
+# (16, 224, 4),
+# (29, 225, 4),
+# (42, 226, 5),
+# (55, 227, 5),
+# (68, 227, 5),
+# (81, 228, 6),
+# (94, 229, 6),
+# (107, 230, 6),
+# (120, 230, 7),
+# (133, 231, 7),
+# (147, 232, 8),
+# (160, 233, 8),
+# (173, 233, 8),
+# (187, 234, 9),
+# (200, 235, 9),
+# (214, 235, 9),
+# (227, 236, 10),
+# (237, 233, 10),
+# (238, 221, 11),
+# (238, 209, 11),
+# (239, 197, 11),
+# (240, 185, 12),
+# (240, 172, 12),
+# (241, 160, 13),
+# (242, 148, 13),
+# (242, 135, 14),
+# (241, 123, 16),
+# (241, 111, 17),
+# (241, 99, 19),
+# (240, 88, 20),
+# (240, 76, 21),
+# (240, 65, 23),
+# (240, 54, 24),
+# (239, 43, 26),
+# (239, 32, 27)
+# ]
+color_list=[
+(255, 195,195),
+(255,219,167),
+(248,247,187),
+(203,255,190),
+(138,198,131)
+]
+
+
 
 def show_recomendation(*, cam:Campaign, user:Member, result:list(),time:datetime, recomendation:Recommendation,db: Session = Depends(deps.get_db))->Any:
     
     # fig = plt.figure()
     # 
-    n_surfaces=len(cam.surfaces)
-    n_filas = 1
-    for i in cam.surfaces:
-                        a=len(i.cells)
-                        b=(a//5) +1
-                        if a%5!=0:
-                            b=b+1
-                        if n_filas<b:
-                            n_filas=b
-    n_filas=n_filas+1
+    # n_surfaces=len(cam.surfaces)
+    # n_filas = 1
+    # for i in cam.surfaces:
+    #                     a=len(i.cells)
+    #                     b=(a//5) +1
+    #                     if a%5!=0:
+    #                         b=b+1
+    #                     if n_filas<b:
+    #                         n_filas=b
+    # n_filas=n_filas+1
                 
                 
                
                
     # x=random.randint(100, n_surfaces*700)
-    # y=random.randint(100, 100*n_filas)
+    # y=random.randint(100, 100*n_filas
+    imagen = 255*np.ones(( 1500, 1500,3),dtype=np.uint8)
 
-    imagen = 255*np.ones(( 200+100*n_filas , 200+n_surfaces*600,3),dtype=np.uint8)
+    # imagen = 255*np.ones(( 500+100*n_filas , 200+n_surfaces*600,3),dtype=np.uint8)
     # campañas_activas= crud.campaign.get_campaign(db=db, hive_id=hive_id, campaign_id=campaign_id)
     # if campañas_activas is None:
     #     raise HTTPException(
@@ -373,17 +425,26 @@ def show_recomendation(*, cam:Campaign, user:Member, result:list(),time:datetime
             count=count+1
             for j in i.cells:
                 slot=crud.slot.get_slot_time(db=db, cell_id=j.id,time=time)
-                prioridad= crud.priority.get_last(db=db,slot_id=slot.id,time=time)
-                temporal_prioridad=prioridad.temporal_priority
-                if temporal_prioridad>2.5: # ROJO
-                    color=(201,191,255)
-                elif temporal_prioridad<1.5: #VERDE
-                    color=(175,243,184)
-                else: #NARANJA
-                    color=(191, 355, 255) 
-                # print(temporal_prioridad, j.id)
-                Cardinal_actual = crud.measurement.get_all_Measurement_from_cell_in_the_current_slot(db=db, cell_id=j.id, time=time,slot_id=slot.id)
+                # prioridad= crud.priority.get_last(db=db,slot_id=slot.id,time=time)
 
+                # temporal_prioridad=prioridad.temporal_priority
+                
+                # if temporal_prioridad>=0.6666: # ROJO
+                #     color=(201,191,255)
+                #     print("ROJO")
+                # elif temporal_prioridad<=0.3: #VERDE
+                #     color=(175,243,184)
+                #     print("VERDe")
+                # else: #NARANJA
+                #     color=(191, 355, 255) 
+                #     print("Naranja")
+                Cardinal_actual = crud.measurement.get_all_Measurement_from_cell_in_the_current_slot(db=db, cell_id=j.id, time=time,slot_id=slot.id)
+                if Cardinal_actual>=cam.min_samples:
+                    numero=4
+                else:
+                    numero=int((Cardinal_actual/cam.min_samples)//(1/4))
+                
+                color= (color_list[numero][2],color_list[numero][1],color_list[numero][0])
                 pt1=(int(j.center[0])+j.rad,int(j.center[1])+j.rad)
                 pt2=(int(j.center[0])-j.rad,int(j.center[1])-j.rad)
                 # pt1=(int(j.superior_coord[0]),int(j.superior_coord[1]))
@@ -392,6 +453,7 @@ def show_recomendation(*, cam:Campaign, user:Member, result:list(),time:datetime
                 cv2.rectangle(imagen,pt1=pt1, pt2=pt2,color=color ,thickness = -1)
                 cv2.rectangle(imagen,pt1=pt1, pt2=pt2,color=(0,0,0))   
                 cv2.putText(imagen,  str(Cardinal_actual), (int(j.center[0]),int(j.center[1])+40), cv2.FONT_HERSHEY_SIMPLEX , 0.75, (0,0,0))
+
                 if j.id in Cells_recomendadas:
                     if j.id== cell_elejida:
                         cv2.drawMarker(imagen, position=(int(j.center[0]),int(j.center[1])), color=(151,45,248), markerType=cv2.MARKER_TILTED_CROSS,markerSize= 24, thickness=5)
@@ -527,23 +589,25 @@ def show_a_campaign_2(
     """
     Show a campaign
     """
-    campañas_activas= crud.campaign.get_campaign(db=db, hive_id=hive_id, campaign_id=campaign_id)
+    # campañas_activas= crud.campaign.get_campaign(db=db, hive_id=hive_id, campaign_id=campaign_id)
 
     # plt.figure(figsize=(50,50))
-    n_surfaces=len(campañas_activas.surfaces)
-    n_filas = 1
-    for i in campañas_activas.surfaces:
-                        a=len(i.cells)
-                        b=(a//5) +1
-                        if a%5!=0:
-                            b=b+1
-                        if n_filas<b:
-                            n_filas=b
-    n_filas=n_filas+1
+    # n_surfaces=len(campañas_activas.surfaces)
+    # n_filas = 1
+    # for i in campañas_activas.surfaces:
+    #                     a=len(i.cells)
+    #                     b=(a//5) +1
+    #                     if a%5!=0:
+    #                         b=b+1
+    #                     if n_filas<b:
+    #                         n_filas=b
+    # n_filas=n_filas+1
                  
     # x=random.randint(100, n_surfaces*700)
     # y=random.randint(100, 100*n_filas)
-    imagen = 255*np.ones(( 200+100*n_filas , 200+n_surfaces*600,3),dtype=np.uint8)
+    imagen = 255*np.ones(( 1500, 1500,3),dtype=np.uint8)
+
+    # imagen = 255*np.ones(( 200+100*n_filas , 200+n_surfaces*600,3),dtype=np.uint8)
     # imagen = 255*np.ones((1000,1500,3),dtype=np.uint8)
     campañas_activas= crud.campaign.get_campaign(db=db, hive_id=hive_id, campaign_id=campaign_id)
     if campañas_activas is None:
@@ -558,22 +622,31 @@ def show_a_campaign_2(
             count=count+1
             for j in i.cells:
                 slot=crud.slot.get_slot_time(db=db, cell_id=j.id,time=time)
-                prioridad= crud.priority.get_last(db=db,slot_id=slot.id,time=time)
-                temporal_prioridad=prioridad.temporal_priority
-                if temporal_prioridad>2.5: # ROJO
-                    color=(201,191,255)
-                elif temporal_prioridad<1.5: #VERDE
-                    color=(175,243,184)
-                else: #NARANJA
-                    color=(191, 355, 255) 
+                # prioridad= crud.priority.get_last(db=db,slot_id=slot.id,time=time)
+                # temporal_prioridad=prioridad.temporal_priority
+                # numero=int((temporal_prioridad+1)//(2/4))
+
+                # print(numero)
+                # if temporal_prioridad>=0.6666: # ROJO
+                #     color=(201,191,255)
+                # elif temporal_prioridad<=0.3333: #VERDE
+                #     color=(175,243,184)
+                # else: #NARANJA
+                #     color=(191, 355, 255) 
                 # print(temporal_prioridad, j.id)
                 Cardinal_actual = crud.measurement.get_all_Measurement_from_cell_in_the_current_slot(db=db, cell_id=j.id, time=time,slot_id=slot.id)
+                if Cardinal_actual>=campañas_activas.min_samples:
+                    numero=4
+                else:
+                    numero=int((Cardinal_actual/campañas_activas.min_samples)//(1/4))
+                color= (color_list[numero][2],color_list[numero][1],color_list[numero][0])
                 pt1=(int(j.center[0])+j.rad,int(j.center[1])+j.rad)
                 pt2=(int(j.center[0])-j.rad,int(j.center[1])-j.rad)
                 # print(pt1, pt2)
                 cv2.rectangle(imagen,pt1=pt1, pt2=pt2,color=color ,thickness = -1)
                 cv2.rectangle(imagen,pt1=pt1, pt2=pt2,color=(0,0,0))   
                 cv2.putText(imagen, str(Cardinal_actual), (int(j.center[0]),int(j.center[1])), cv2.FONT_HERSHEY_SIMPLEX , 0.75, (0,0,0))
+
     
     # res, im_png = cv2.imencode(".png", imagen)
     direcion=f"/home/ubuntu/carpeta_compartida_docker/RecommenderSystem/src/Servicio/app/Pictures/Measurements/{time.strftime('%m-%d-%Y-%H-%M-%S')}.jpeg"
