@@ -12,25 +12,29 @@
 Use case - Example: 
 
 1. **Create a Hive** At [http://localhost:8001](http://localhost:8001) in secction Hives at the endpoint post. 
-![plot](./Picture_readme/Hive_section.PNG)
-Click on Post endpoint and then in "Try it out" botton and complete the Request body (pìcture example) and click execute 
-![plot](./Picture_readme/Hive_post.PNG)
-And we can see the created hive: 
-![plot](./Picture_readme/hive_zaragoza.PNG)
-2. **Create a QueenBee and two WorkingBee** At http://localhost:8001 in secction Member at the endpoint post. 
-![plot](./Picture_readme/Member_section.PNG)
-For each new member we have to click on Post endpoint and then in "Try it out" botton, complete the hive_id with the od of the previusly created  hive and complete the Request body in the case of QueenBee the role has toi bve QueenBee and for the both WorkerBee, WorkerBee. Click execute.
-![plot](./Picture_readme/Member_post.PNG)
-Using the /hives/{hive_id}/members/ endpoint we can see all the members of the hive. 
-![plot](./Picture_readme/Miembros_result.PNG)
-NOTE: if we want to associeted another role to a pre-created used, we have to use the POST role endpoint using the id of the hive and the id of the user. 
+![](./Picture_readme/Hive_section.PNG)
+Click on Post endpoint and then in the "Try it out" button, complete the Request body (pìcture example) and click execute 
+![](./Picture_readme/Hive_post.PNG)
+We can see the newly created hive: 
+![](./Picture_readme/hive_zaragoza.PNG)
+
+2. **Create a QueenBee and two WorkingBee** At http://localhost:8001 in section Member at the endpoint post. 
+![](./Picture_readme/Member_section.PNG)
+For each new member, we have to click on the POST endpoint and then, in the "Try it out" button, complete the hive_id with the od of the previously created hive and complete the Request body in the case of QueenBee the role has to be QueenBee and for the both WorkerBee, WorkerBee. Click execute.
+![](./Picture_readme/Member_post.PNG)
+Using the /hives/{hive_id}/members/ endpoint, we can see all the members of the hive. 
+![](./Picture_readme/Miembros_result.PNG)
+NOTE: If we want to associate another role to a pre-created user, we have to use the POST endpoint at the role section using the id of the hive and the id of the user. 
 3. **Define two devices:**  At [http://localhost:8001](http://localhost:8001) in secction Devices at the endpoint post. 
-![plot](./Picture_readme/Device_section.PNG)
-Fopr each device, click on Post endpoint and then in "Try it out" botton and complete the Request body (pìcture example) and click execute. 
-![plot](./Picture_readme/Device_post.PNG)
+![](./Picture_readme/Device_section.PNG)
+For each device, click on the POST endpoint and then in the "Try it out" button and complete the Request body (picture example) and click execute. 
+![](./Picture_readme/Device_post.PNG)
 And we can see the created device: 
-![plot](./Picture_readme/Device_result.PNG)
+![](./Picture_readme/Device_result.PNG)
 4. **Create a Campaign:** At http://localhost:8001 in secction Campaign at the endpoint post. 
-![plot](./Picture_readme/Campaign_section.PNG)
-For example, if we want to create a sort campaign with the objetive of get air quality data of a small area. So the estrategy of this campaign is collect as many measurements as possible for the duration of the campaign (which should not be long). Click on Post endpoint and then in "Try it out" botton and complete the Request body (pìcture example). çThe created_id was to be the id of a QueenBee  of the hive.  
-![plot](./Picture_readme/Campaign_post.PNG)
+![](./Picture_readme/Campaign_section.PNG)
+For example, if we want to create a sort campaign to get air quality data for a small area. So the strategy of this campaign is to collect as many measurements as possible for the campaign duration (which should not be long). Click on the POST endpoint and then in the "Try it out" button, and complete the Request body (picture example). The created_id was to be the id of a QueenBee of the hive.  
+![](./Picture_readme/Campaign_post.PNG)
+We can visualize the campaign map with the /hives/{hive_id}/campaigns/{campaign_id}/show endpoint. In this case, the campaign has the next surface: 
+![](./Picture_readme/Campaign_show.PNG)
+5. **DEMO** If we want to visualize how the micro-volunteer engine works, we can execute the demo endpoint in the demo section. The result was allocated to the src/Servicio/app/Pictures/Measurements and src/Servicio/app/Pictures/Recommender folders. 
