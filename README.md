@@ -1,4 +1,4 @@
- 
+You have to follow these steps to be able to launch the Micro-Volunteering Engine (MVE): 
 1. `pip install poetry` (or safer, follow the instructions: https://python-poetry.org/docs/#installation)
 2. Install dependencies `cd` into the directory where the `pyproject.toml` is located then `poetry install`
 3. [UNIX] Run `cd Model` 
@@ -7,6 +7,10 @@
 6. [UNIX]: Run the FastAPI server via poetry with the bash script: `poetry run ./run.sh`
 6. [WINDOWS]: Run the FastAPI server via poetry with the Python command: `poetry run python src/Servicio/app/main.py`
 7. Open http://localhost:8001/docs <!---!> 
+
+The diagram below shows the process that has to be carried out within SOCIO-BEE to set-up a campaign in a pilot where air quality measurements will be gathered in a certain area and time period in order to deliver visualizations and indicators summarizing the air quality situation and evolution in a spatiotemporal manner. 
+
+![](./Picture_readme/Queen Bees workflow.drawio.png)
 
 
 Use case - Example: 
