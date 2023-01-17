@@ -10,8 +10,7 @@ You have to follow these steps to be able to launch the Micro-Volunteering Engin
 
 The diagram below shows the process that has to be carried out within SOCIO-BEE to set-up a campaign in a pilot where air quality measurements will be gathered in a certain area and time period in order to deliver visualizations and indicators summarizing the air quality situation and evolution in a spatiotemporal manner. 
 
-![](./Picture_readme/Queen Bees workflow.drawio.png)
-
+![](./Picture_readme/QueenBeesWorkflow.drawio.png)
 
 Use case - Example: 
 
