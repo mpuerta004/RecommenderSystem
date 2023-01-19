@@ -132,10 +132,7 @@ def reciboUser(cam:Campaign,db: Session = Depends(deps.get_db)):
 def RL(a:list()):
     return random.choice(a)  
  
- 
- 
- 
- 
+
 @api_router_demo.post("/{campaign_id}", status_code=201, response_model=None)
 async def asignacion_recursos( 
                               hive_id:int, 
@@ -187,17 +184,6 @@ async def asignacion_recursos(
                     boundary= crud.boundary.get_Boundary_by_ids(db=db,surface_id=cam.surfaces[i].id)
                     posiciones_x.append((boundary.center[0]-boundary.rad,boundary.center[0]+boundary.rad))
                     posiciones_y.append((boundary.center[1]-boundary.rad,boundary.center[1]+boundary.rad))
-                #Calculo de posiciones con el cuadrado! 
-                # n_filas = 1
-                # for i in cam.surfaces:
-                #         a=len(i.cells)
-                #         b=(a//5) + 1
-                #         if a%5!=0:
-                #             b=b+1
-                #         if n_filas<b:
-                #             n_filas=b
-                # n_filas=n_filas+1
-                # # print("numero de filas finales", n_filas)
                 
                 list_users= reciboUser(cam,db=db)
                 if list_users!=[]:
@@ -215,16 +201,14 @@ async def asignacion_recursos(
                         if recomendaciones['results']!=None:
                             recomendacion_polinizar = RL(recomendaciones['results'])
                             mediciones.append([user, recomendacion_polinizar, random.randint(1,600)])
-                            # mediciones.append([user, recomendacion_polinizar])#, random.randint(1,1800)])
 
-                            #Todo: esto en realidad es una iteracion con el 
+                            #Todo: esto en realidad es una iteracion con el front-end segun la respuesta del usuario. 
                             state=crud.state.get_state_from_recommendation(db=db,recommendation_id=recomendacion_polinizar.id)
                             crud.state.update(db=db,db_obj=state, obj_in={"state":"Acepted"})
                             show_recomendation(db=db, cam=cam, user=user, result=recomendaciones['results'],time=time,recomendation=recomendacion_polinizar)  
 
             new=[]
             for i in range(0,len(mediciones)):
-                # print(mediciones[i]       
                 #Anterior approach cuando declaramos el tiempo que el uusario iba a tardar en realizarlo 
                 mediciones[i][2]=int(mediciones[i][2]) - 60
                 if mediciones[i][2]<=0:
