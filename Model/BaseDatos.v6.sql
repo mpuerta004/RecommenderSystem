@@ -13,7 +13,6 @@ GRANT ALL PRIVILEGES ON SocioBee.*  TO 'mve'@'localhost';
 -- -----------------------------------------------------
 -- Table Member
 -- -----------------------------------------------------
-
 CREATE TABLE Member (
   id INT NOT NULL AUTO_INCREMENT,
   name VARCHAR(30) NULL DEFAULT NULL,
@@ -22,6 +21,7 @@ CREATE TABLE Member (
   mail  varchar(50) not null,
   city VARCHAR(30) NULL DEFAULT NULL,
   gender ENUM("NoBinary","Male","Female",'I dont want to answer' ) not null default 'I dont want to answer',
+  real_user  BOOLEAN,
   PRIMARY KEY (id)
   );
   
@@ -35,6 +35,7 @@ CREATE TABLE  BeeKeeper(
   gender ENUM("NoBinary","Male","Female",'I dont want to answer' ) not null default 'I dont want to answer',
   PRIMARY KEY (id)
   );
+
 
 -- -----------------------------------------------------
 -- Table Hive
@@ -58,6 +59,20 @@ brand varchar(30) null default null,
 model varchar(30) null default null, 
 year varchar(30) null default null
 );
+
+
+Create Table MemberDevice(
+  device_id int default Null,
+  member_id int not null, 
+  primary key(member_id),
+  FOREIGN KEY (member_id)
+    REFERENCES Member (id)
+    ON DELETE CASCADE,
+    FOREIGN KEY (device_id)
+    REFERENCES Device (id)
+    ON DELETE CASCADE
+);
+
 -- -----------------------------------------------------
 -- Table Reading
 -- -----------------------------------------------------

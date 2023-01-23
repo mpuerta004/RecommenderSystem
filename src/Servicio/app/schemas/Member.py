@@ -10,6 +10,7 @@ class MemberBase(BaseModel):
     gender:str
     city: str=None
     mail:str
+    real_user:bool=True
     # device_id:int=None
 
 #Todo: hacer que member_type tenga dos opcciones solamente. 

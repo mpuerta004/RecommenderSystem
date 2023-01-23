@@ -1,6 +1,6 @@
 
 
-from sqlalchemy import Integer, String, Column, Boolean, ForeignKey
+from sqlalchemy import Integer, String, Column, Boolean, ForeignKey,Boolean
 from sqlalchemy.orm import relationship
 
 from db.base_class import Base
@@ -15,6 +15,7 @@ class Member(Base):
     surname=Column(String,nullable=True)
     city=Column(String,nullable=True)
     gender=Column(String,default='I dont want to answer')
+    real_user=Column(Boolean,default=True)
     # device_id=Column(Integer,ForeignKey(Device.id, ondelete='CASCADE'))
     
     Measurements=relationship("Measurement",cascade="all, delete")

@@ -16,7 +16,5 @@ class Device(Base):
     model = Column(String, nullable=True)
     year = Column(String, nullable=True)
 
-    #De este modo se define una relacion inversa... no se si seran utiles. 
-    #queenBee=relationship("Campaign", back_populates="campaigns")
     
 

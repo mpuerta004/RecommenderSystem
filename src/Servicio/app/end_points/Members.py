@@ -13,6 +13,7 @@ from schemas.Member import Member,MemberCreate,MemberSearchResults, MemberUpdate
 
 from schemas.Role import Role,RoleCreate,RoleSearchResults, RoleUpdate
 from schemas.newMember import NewMemberBase, NewRole
+from schemas.MemberDevice import MemberDevice
 from schemas.Priority import Priority, PriorityCreate, PrioritySearchResults
 from datetime import datetime, timedelta
 from schemas.Cell import Cell, CellCreate, CellSearchResults, Point
@@ -99,7 +100,6 @@ def create_member(
     Create a new member of the hive in the database.
     """
     member=MemberCreate(name=recipe_in.name,surname=recipe_in.surname,age=recipe_in.age,city=recipe_in.city,mail=recipe_in.mail,gender=recipe_in.gender)
-   
     try: 
         member_new= crud.member.create(db=db, obj_in=member)
     except:
@@ -110,6 +110,9 @@ def create_member(
     # role_new=crud.role.create_Role(db=db,obj_in=Role, hive_id=hive_id, member_id=member_new.id)
     return member_new
    
+   
+
+
 @api_router_members.post("/hives/{hive_id}/",status_code=201, response_model=Member )
 def create_member_of_hive(
     *,    

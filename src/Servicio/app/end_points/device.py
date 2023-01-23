@@ -57,6 +57,7 @@ def create_device(
 
 
 
+
 @api_router_device.delete("/{device_id}", status_code=204)
 def delete_device(    *,
     device_id:int,
