@@ -146,40 +146,66 @@ async def create_Campaign(
                             cell_create = CellCreate(surface_id=Surface.id, center=poin,rad=Campaign.cells_distance)
                             cell = crud.cell.create_cell(db=db, obj_in=cell_create, surface_id=Surface.id)
         background_tasks.add_task(create_slots, cam=Campaign)
-        # background_tasks.add_task(asignacion_recursos,cam=Campaign,db=db)
         return Campaign
     else:
         raise HTTPException(
                status_code=401, detail=f"The WorkerBee dont have the necesary role to create a hive"
         )
         
-        # cx = center.x
-        # cy = center.y
-        # num_segmentos=0
+    
+@api_router_campaign.post("/points/", status_code=201, response_model=List)
+async def create_points_of_Campaign(
+    *,
+    campaign_metadata: CampaignCreate,
+    hive_id: int,
+    boundary:BoundaryCreate,
+    db: Session = Depends(deps.get_db),
+) -> dict:
+    """
+    Generate the points of a campaign.
+    """
+    center=boundary.center
+    rad=boundary.rad
+    role = crud.role.get_roles(db=db, member_id=campaign_metadata.creator_id, hive_id=hive_id)
 
-        # for i in range(0,rad,10):
-        #     radio_concentrico=i
-        #     num_segmentos= num_segmentos + 4
+    if ("QueenBee",) in role:
+        anchura_celdas=(campaign_metadata.cells_distance)*2
+        numero_celdas=rad//anchura_celdas + 1
+        List_points=[]
+        for i in range(0,numero_celdas):
+            if i==0:
+                List_points.append([center.x, center.y])
+            else:
+                List_points.append([center.x,center.y+i*anchura_celdas])
+                List_points.append([center.x,center.y-i*anchura_celdas])
+                List_points.append([center.x+i*anchura_celdas,center.y])
+                List_points.append([center.x-i*anchura_celdas,center.y])
+                for j in range(1,numero_celdas):
+                    List_points.append([center.x+j*anchura_celdas,center.y+i*anchura_celdas])
+                    List_points.append([center.x-j*anchura_celdas,center.y+i*anchura_celdas])
+                    List_points.append([center.x+j*anchura_celdas,center.y-i*anchura_celdas])
+                    List_points.append([center.x-j*anchura_celdas,center.y-i*anchura_celdas])
+                    
+        return List_points
+    else:
+        raise HTTPException(
+               status_code=401, detail=f"The WorkerBee dont have the necesary role to create a hive"
+        )
 
-        #     angulo = np.linspace(0, 2*np.pi, num_segmentos)
-        #     x = radio_concentrico * np.cos(angulo) + cx
-        #     y = radio_concentrico * np.sin(angulo) + cy
-        #     for j in range(0,len(x)):
-        #         cell_create = CellCreate(surface_id=Surface.id, center=Point(x=int(x[j]), y=int(y[j])),rad=1)
-        #         cell = crud.cell.create_cell(
-        #                     db=db, obj_in=cell_create, surface_id=Surface.id)
-        #Como lo calculaba para el dibujo anterior! 
-        # for i in range(number_cells):   
-        #             coord_x = ((i % 5)+1)*100
-        #             coord_y = ((i//5)+1)*100 + 150
-        #             center_x = (coord_x+100-coord_x)/2 + coord_x
-        #             center_y = (coord_y+100-coord_y)/2 + coord_y
-        #             cell_create = CellCreate(surface_id=Surface.id, center=Point(center_x, center_y),rad=Campaign.cells_distance)
-        #             cell = crud.cell.create_cell(
-        #                     db=db, obj_in=cell_create, surface_id=Surface.id)
-       
-
-
+"""
+Output ( "center": [0,0], "rad": 100):
+[
+  [    0,    0  ],
+  [    0,    100  ],
+  [    0,    -100  ],
+  [    100,    0  ],
+  [    -100,    0  ],
+  [    100,    100  ],
+  [    -100,    100  ],
+  [    100,   -100  ],
+  [    -100,    -100  ]
+]
+"""
 
 
 async def create_slots(cam: Campaign ):
@@ -215,8 +241,6 @@ async def create_slots(cam: Campaign ):
                         priority = crud.priority.create_priority_detras(
                             db=db, obj_in=Cell_priority)
 
- 
- 
 
 
 @api_router_campaign.get("/{campaign_id}/show",status_code=200)
@@ -233,8 +257,7 @@ def show_a_campaign(
     campañas_activas= crud.campaign.get_campaign(db=db, hive_id=hive_id, campaign_id=campaign_id)
     if time >=campañas_activas.start_timestamp and time<= (campañas_activas.start_timestamp + timedelta(seconds=campañas_activas.campaign_duration) ): 
         # crud.surface.get_surface_by_ids(db=db)
-        
-        
+    
         #Para calculo dinamico de la superficio cuadrada! 
         # n_surfaces=len(campañas_activas.surfaces)
         # n_filas = 1
