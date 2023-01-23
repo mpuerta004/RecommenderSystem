@@ -97,7 +97,7 @@ def delete_campaign(    *,
 
     
 @api_router_campaign.post("/", status_code=201, response_model=Campaign)
-async def create_Campaign(
+async def create_campaign(
     *,
     campaign_metadata: CampaignCreate,
     hive_id: int,
@@ -154,7 +154,7 @@ async def create_Campaign(
         
     
 @api_router_campaign.post("/points/", status_code=201, response_model=List)
-async def create_points_of_Campaign(
+async def create_points_of_campaign(
     *,
     campaign_metadata: CampaignCreate,
     hive_id: int,
@@ -272,8 +272,8 @@ def show_a_campaign(
 
         # x=random.randint(100, n_surfaces*700)
         # y=random.randint(100, 100*n_filas)
-
         # imagen = 255*np.ones(( 500 , 1000,3),dtype=np.uint8)
+        
         imagen = 255*np.ones((1000,1500,3),dtype=np.uint8)
         if campañas_activas is None:
             raise HTTPException(
