@@ -11,13 +11,43 @@ CREATE USER IF NOT EXISTS 'mve'@'localhost' IDENTIFIED BY 'mvepasswd123';
 GRANT ALL PRIVILEGES ON SocioBee.*  TO 'mve'@'localhost';
 
 -- -----------------------------------------------------
+-- Table Member
+-- -----------------------------------------------------
+
+CREATE TABLE Member (
+  id INT NOT NULL AUTO_INCREMENT,
+  name VARCHAR(30) NULL DEFAULT NULL,
+  surname VARCHAR(30) NULL DEFAULT NULL,
+  age INT NULL DEFAULT NULL,
+  mail  varchar(50) not null,
+  city VARCHAR(30) NULL DEFAULT NULL,
+  gender ENUM("NoBinary","Male","Female",'I dont want to answer' ) not null default 'I dont want to answer',
+  PRIMARY KEY (id)
+  );
+  
+CREATE TABLE  BeeKeeper(
+  id INT NOT NULL AUTO_INCREMENT,
+  name VARCHAR(30) NULL DEFAULT NULL,
+  surname VARCHAR(30) NULL DEFAULT NULL,
+  age INT NULL DEFAULT NULL,
+  mail  varchar(50) not null,
+  city VARCHAR(30) NULL DEFAULT NULL,
+  gender ENUM("NoBinary","Male","Female",'I dont want to answer' ) not null default 'I dont want to answer',
+  PRIMARY KEY (id)
+  );
+
+-- -----------------------------------------------------
 -- Table Hive
 -- -----------------------------------------------------
 CREATE TABLE Hive (
   id INT NOT NULL AUTO_INCREMENT,
+  BeeKeeper_id INT, 
   city varchar(30) not null,
   # Others?
-  PRIMARY KEY (id)
+  PRIMARY KEY (id),
+   FOREIGN KEY (BeeKeeper_id)
+    REFERENCES BeeKeeper (id)
+    ON DELETE CASCADE
 );
 
 Create table Device(
@@ -44,19 +74,6 @@ CREATE TABLE Reading (
   PRIMARY KEY (id)
 );
 
--- -----------------------------------------------------
--- Table Member
--- -----------------------------------------------------
-CREATE TABLE Member (
-  id INT NOT NULL AUTO_INCREMENT,
-  name VARCHAR(30) NULL DEFAULT NULL,
-  surname VARCHAR(30) NULL DEFAULT NULL,
-  age INT NULL DEFAULT NULL,
-  mail  varchar(50) not null,
-  city VARCHAR(30) NULL DEFAULT NULL,
-  gender ENUM("NoBinary","Male","Female",'I dont want to answer' ) not null default 'I dont want to answer',
-  PRIMARY KEY (id)
-  );
 
 
 -- -----------------------------------------------------
@@ -64,9 +81,9 @@ CREATE TABLE Member (
 -- -----------------------------------------------------
 CREATE TABLE Role (
     hive_id int not null, 
-    role ENUM("WorkerBee","QueenBee","BeeKeeper","DroneBee", "Hive" ) not null default "WorkerBee", 
+    role ENUM("WorkerBee","QueenBee","BeeKeeper","DroneBee" ) not null default "WorkerBee", 
     member_id int not null,
-    PRIMARY KEY (member_id,hive_id, role),
+    PRIMARY KEY (hive_id,role, member_id),
     FOREIGN KEY (hive_id)
     REFERENCES Hive (id)
     ON DELETE CASCADE,

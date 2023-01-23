@@ -28,7 +28,7 @@ from starlette.responses import StreamingResponse
 import numpy as np
 from enum import Enum, IntEnum
 
-api_router_members = APIRouter(prefix="/hives/{hive_id}/members")
+api_router_members = APIRouter(prefix="/members")
 
 
 @api_router_members.get("/", status_code=200, response_model=MemberSearchResults)
@@ -53,9 +53,8 @@ def get_members_of_hive(
     return {"results": List_members}
 
 @api_router_members.get("/{member_id}", status_code=200, response_model=Member)
-def get_a_member_of_hive(
+def get_a_member(
     *,
-    hive_id:int,
     member_id:int,
     db: Session = Depends(deps.get_db),
 ) -> Cell:
@@ -75,7 +74,6 @@ def get_a_member_of_hive(
 
 @api_router_members.delete("/{member_id}", status_code=204)
 def delete_member(    *,
-    hive_id:int,
     member_id:int,
     db: Session = Depends(deps.get_db),
 ):
@@ -92,31 +90,42 @@ def delete_member(    *,
 
 #Todo: esto no se si deberia ir asi... control de errores! 
 @api_router_members.post("/",status_code=201, response_model=Member )
+def create_member(
+    *,    
+    recipe_in: MemberCreate,
+    db: Session = Depends(deps.get_db)
+) -> dict:
+    """
+    Create a new member of the hive in the database.
+    """
+    member=MemberCreate(name=recipe_in.name,surname=recipe_in.surname,age=recipe_in.age,city=recipe_in.city,mail=recipe_in.mail,gender=recipe_in.gender)
+   
+    try: 
+        member_new= crud.member.create(db=db, obj_in=member)
+    except:
+        raise HTTPException(
+            status_code=404, detail=f"The input is not correct."
+        )
+    # Role= RoleCreate(role=recipe_in.role)
+    # role_new=crud.role.create_Role(db=db,obj_in=Role, hive_id=hive_id, member_id=member_new.id)
+    return member_new
+   
+@api_router_members.post("/hives/{hive_id}/",status_code=201, response_model=Member )
 def create_member_of_hive(
     *,    
-    hive_id: int,
+    hive_id:int,
     recipe_in: NewMemberBase,
     db: Session = Depends(deps.get_db)
 ) -> dict:
     """
     Create a new member of the hive in the database.
     """
-    if recipe_in.role=="Hive":
-        raise HTTPException(
-            status_code=404, detail=f"INVALID REQUEST"
-        )
-    else:
-       
-        member=MemberCreate(name=recipe_in.name,surname=recipe_in.surname,age=recipe_in.age,city=recipe_in.city,mail=recipe_in.mail,gender=recipe_in.gender)
-        member_new= crud.member.create(db=db, obj_in=member)
-        Role= RoleCreate(role=recipe_in.role)
-        role_new=crud.role.create_Role(db=db,obj_in=Role, hive_id=hive_id, member_id=member_new.id)
-        return member_new
-   
+    member=MemberCreate(name=recipe_in.name,surname=recipe_in.surname,age=recipe_in.age,city=recipe_in.city,mail=recipe_in.mail,gender=recipe_in.gender)
+    member_new= crud.member.create(db=db, obj_in=member)
+    Role= RoleCreate(role=recipe_in.role)
+    role_new=crud.role.create_Role(db=db,obj_in=Role, hive_id=hive_id, member_id=member_new.id)
+    return member_new
 
-
-
-   
 
 @api_router_members.put("/{member_id}", status_code=201, response_model=Member)
 def put_a_member(

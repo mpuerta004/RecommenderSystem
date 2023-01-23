@@ -53,20 +53,19 @@ def create_new_role_for_member_of_hive(
             status_code=404, detail=f"Member with member_id=={member_id} not found"
         )
     else:
-        if obje=="Hive":
-            raise HTTPException(
-                status_code=404, detail=f"You can't have this role!"
-            )
-        else:
             roles=crud.role.get_roles(db=db,hive_id=hive_id,member_id=member_id)
-            for rol in roles: 
-                if obje.role  in rol:
-                    raise HTTPException(
-                        status_code=404, detail=f"This user already has this role"
-                    )
-                else: 
-                    role_new=crud.role.create_Role(db=db,obj_in=obje, hive_id=hive_id, member_id=member_id)
-                    return role_new
+            if len(roles)==0:
+                role_new=crud.role.create_Role(db=db,obj_in=obje, hive_id=hive_id, member_id=member_id)
+                return role_new
+            else:
+                for rol in roles: 
+                    if obje.role  in rol:
+                        raise HTTPException(
+                            status_code=404, detail=f"This user already has this role"
+                        )
+                    else: 
+                        role_new=crud.role.create_Role(db=db,obj_in=obje, hive_id=hive_id, member_id=member_id)
+                        return role_new
     
 @api_router_role.delete("/{role}", status_code=204)
 def delete_role(    *,

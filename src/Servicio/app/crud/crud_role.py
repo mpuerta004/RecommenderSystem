@@ -18,18 +18,16 @@ class CRUDRole(CRUDBase[Role, RoleCreate, RoleUpdate]):
         db.refresh(db_obj)
         return db_obj
     
-    def get_by_hive_id(self, db: Session, *, hive_id:int) -> List[Role]:
-         return db.query(Role).filter(Role.hive_id == hive_id).all()
-    #Todo: todos los usuario que participan en una campaña 
-    #Todo: todos los datos de la campaña 
+    # def get_by_hive_id(self, db: Session, *, hive_id:int) -> List[Role]:
+    #      return db.query(Role).filter(Role.hive_id == hive_id).all()
     
-    def get_by_ids(self, db: Session, *, hive_id:int,member_id:int) -> Role:
-         return db.query(Role).filter(and_(Role.hive_id == hive_id, Role.member_id==member_id)).first()
+    # def get_by_ids(self, db: Session, *, hive_id:int,member_id:int) -> Role:
+    #      return db.query(Role).filter(and_(Role.hive_id == hive_id, Role.member_id==member_id)).first()
      
     def get_by_ids_role(self, db: Session, *, hive_id:int,member_id:int,Role_str:str) -> Role:
          return db.query(Role).filter(and_(Role.hive_id == hive_id, Role.member_id==member_id, Role.role==Role_str)).first()
                                       
-    def get_roles(self, db: Session, *, hive_id:int,member_id:int) -> List[str]:
+    def get_roles(self, db: Session, *, hive_id:int, member_id:int) -> List[str]:
         return db.query(Role.role).filter(and_(Role.hive_id == hive_id,Role.member_id==member_id)).all()
     
     def get_member_id(self, db: Session, *, hive_id:int) -> List[str]:

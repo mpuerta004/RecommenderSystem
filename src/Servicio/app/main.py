@@ -19,6 +19,7 @@ from sqlalchemy.orm import Session
 # from schemas.Cell import Cell, CellCreate, CellSearchResults, Point
 import deps
 from end_points import Hive
+from end_points import BeeKeeper
 from end_points import Members
 from end_points import Role
 from end_points import Cells
@@ -45,6 +46,7 @@ TEMPLATES = Jinja2Templates(directory=str(BASE_PATH / "templates"))
 
 app = FastAPI(title="Micro-volunteering Engine",
               version=1.0, openapi_url="/openapi.json")
+app.include_router(BeeKeeper.api_router_BeeKeepers, tags=["BeeKeepers"])
 app.include_router(Hive.api_router_hive, tags=["Hives"])
 app.include_router(Members.api_router_members, tags=["Members"])
 app.include_router(Role.api_router_role, tags=["Role"])

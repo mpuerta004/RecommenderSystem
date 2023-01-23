@@ -12,7 +12,7 @@ from schemas.Role import Role
 
 class HiveBase(BaseModel):    
     city:str
-    
+    BeeKeeper_id:int
     
 
 class HiveCreate(HiveBase):

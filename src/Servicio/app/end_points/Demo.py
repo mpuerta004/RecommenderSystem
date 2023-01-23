@@ -196,7 +196,7 @@ async def asignacion_recursos(
                         y=random.randint(posiciones_y[surface_number][0],posiciones_y[surface_number][1])
 
                         a=RecommendationCreate(recommendation_timestamp=time,member_current_location=Point(x=x,y=y))
-                        recomendaciones=create_recomendation_2(db=db,member_id=user.id,recipe_in=a,cam=cam, mediciones=mediciones)
+                        recomendaciones=create_recomendation_2(db=db,member_id=user.id,recipe_in=a,cam=cam)
                         
                         if recomendaciones['results']!=None:
                             recomendacion_polinizar = RL(recomendaciones['results'])
@@ -204,7 +204,8 @@ async def asignacion_recursos(
 
                             #Todo: esto en realidad es una iteracion con el front-end segun la respuesta del usuario. 
                             state=crud.state.get_state_from_recommendation(db=db,recommendation_id=recomendacion_polinizar.id)
-                            crud.state.update(db=db,db_obj=state, obj_in={"state":"Acepted"})
+                            #Todo! no se si esto va a funcionar! 
+                            crud.state.update(db=db,db_obj=state, obj_in={"state":"Acepted","timestamp_update":time})
                             show_recomendation(db=db, cam=cam, user=user, result=recomendaciones['results'],time=time,recomendation=recomendacion_polinizar)  
 
             new=[]
@@ -229,10 +230,9 @@ async def asignacion_recursos(
                         
                         db.commit()
                     else:
-                        #Todo: esto en realidad es una iteracion con el 
+                        #Todo: esto en realidad es una iteracion con el front-end y necesitamos realizar una funcion autiomatica que cada cierto tiempo ponga esto en no realized. 
                         state=crud.state.get_state_from_recommendation(db=db,recommendation_id=mediciones[i][1].id)
                         crud.state.update(db=db,db_obj=state, obj_in={"state":"No Realized"})
-                    
                         db.commit()
                 else:
                     new.append(mediciones[i])
@@ -244,8 +244,7 @@ def create_recomendation_2(
     member_id:int, 
     cam:Campaign,
     recipe_in: RecommendationCreate,
-    db: Session = Depends(deps.get_db),
-    mediciones:List
+    db: Session = Depends(deps.get_db)
 ) -> dict:
     """
     Create a new recommendation
@@ -292,9 +291,11 @@ def create_recomendation_2(
                 priority=crud.priority.get_last(db=db,slot_id=slot.id,time=time)
                 Cardinal_actual = crud.measurement.get_all_Measurement_from_cell_in_the_current_slot(db=db, cell_id=i.id, time=time,slot_id=slot.id)
                 Cardinal_esperado = Cardinal_actual
-                for l in mediciones:
-                    if l[1].cell_id== i.id:
-                        Cardinal_esperado=Cardinal_esperado+1
+                recommendation_accepted= crud.state.get_aceptance_state_of_cell(db=db, cell_id=i.id)
+                Cardinal_esperado=Cardinal_esperado+ len(recommendation_accepted)
+                # for l in mediciones:
+                #     if l[1].cell_id== i.id:
+                #         Cardinal_esperado=Cardinal_esperado+1
                 if Cardinal_esperado < cam.min_samples:
                     cells_and_priority.append((i,priority, math.sqrt((i.center[0] - point.x)**2+(i.center[1]-point.y)**2),priority.temporal_priority,Cardinal_esperado,Cardinal_actual))
         cells_and_priority.sort(key=lambda Cell: (-Cell[4], Cell[1].temporal_priority, -Cell[2] ),reverse=True)

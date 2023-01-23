@@ -67,10 +67,6 @@ def create_hive(
             status_code=400, detail=f"INVALID REQUEST"
         )
     
-    member=MemberCreate(name="Hive",surname="-",age=0,mail="-",gender='I dont want to answer')
-    member_new= crud.member.create(db=db, obj_in=member)
-    Role= RoleCreate(role="Hive")
-    role_new=crud.role.create_Role(db=db,obj_in=Role, hive_id=hive.id, member_id=member_new.id)
     return hive
 
 
