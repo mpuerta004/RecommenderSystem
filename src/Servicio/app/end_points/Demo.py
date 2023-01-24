@@ -182,8 +182,8 @@ async def asignacion_recursos(
                 posiciones_y=[]
                 for i in range(n_surfaces):
                     boundary= cam.surfaces[i].boundary
-                    posiciones_x.append((boundary.center[0]-boundary.rad,boundary.center[0]+boundary.rad))
-                    posiciones_y.append((boundary.center[1]-boundary.rad,boundary.center[1]+boundary.rad))
+                    posiciones_x.append((boundary.center['lgn']-boundary.rad,boundary.center['lgn']+boundary.rad))
+                    posiciones_y.append((boundary.center['lat']-boundary.rad,boundary.center['lat']+boundary.rad))
                 
                 list_users= reciboUser(cam,db=db)
                 if list_users!=[]:
@@ -195,7 +195,7 @@ async def asignacion_recursos(
                         x=random.randint(posiciones_x[surface_number][0],posiciones_x[surface_number][1])
                         y=random.randint(posiciones_y[surface_number][0],posiciones_y[surface_number][1])
 
-                        a=RecommendationCreate(member_current_location=Point(x=x,y=y),recommendation_timestamp=time)
+                        a=RecommendationCreate(member_current_location={'lgn':x,'lat':y},recommendation_timestamp=time)
                         recomendaciones=create_recomendation_2(db=db,member_id=user.id,recipe_in=a,cam=cam)
                         
                         if len(recomendaciones['results'])>0:
@@ -230,6 +230,7 @@ async def asignacion_recursos(
                         
                         db.commit()
                     else:
+                        time_polinizado = time
                         #Todo: esto en realidad es una iteracion con el front-end y necesitamos realizar una funcion autiomatica que cada cierto tiempo ponga esto en no realized. 
                         # state=crud.state.get_state_from_recommendation(db=db,recommendation_id=mediciones[i][1].id)
                         crud.recommendation.update(db=db,db_obj=mediciones[i][1], obj_in={"state":"NON_REALIZED","timestamp_update":time_polinizado})
@@ -299,7 +300,7 @@ def create_recomendation_2(
                 #     if l[1].cell_id== i.id:
                 #         Cardinal_esperado=Cardinal_esperado+1
                 if Cardinal_esperado < cam.min_samples:
-                    cells_and_priority.append((i,priority, math.sqrt((i.center['lgn'] - point['lgn'])**2+(i.center['lat']-point['lat]'])**2),priority.temporal_priority,Cardinal_esperado,Cardinal_actual))
+                    cells_and_priority.append((i,priority, math.sqrt((i.center['lgn'] - point['lgn'])**2+(i.center['lat']-point['lat'])**2),priority.temporal_priority,Cardinal_esperado,Cardinal_actual))
         cells_and_priority.sort(key=lambda Cell: (-Cell[4], Cell[1].temporal_priority, -Cell[2] ),reverse=True)
         result=[]
         
@@ -309,7 +310,7 @@ def create_recomendation_2(
                     # print(a.cell_id)
                     # obj_state=StateCreate(db=db)
                     # state=crud.state.create_state(db=db,obj_in=obj_state)
-                    recomendation=crud.recommendation.create_recommendation_detras(db=db,obj_in=recipe_in,member_id=member_id,slot_id=cells_and_priority[i][1].slot_id,cell_id=a.cell_id,sate="NOTIFIED",timestamp_update=time)
+                    recomendation=crud.recommendation.create_recommendation_detras(db=db,obj_in=recipe_in,member_id=member_id,slot_id=cells_and_priority[i][1].slot_id,cell_id=a.cell_id,state="NOTIFIED",timestamp_update=time)
                     result.append(recomendation)
 
         elif  len(cells_and_priority)!=0:
@@ -392,21 +393,21 @@ def show_recomendation(*, cam:Campaign, user:Member, result:list(),time:datetime
                     numero=int((Cardinal_actual/cam.min_samples)//(1/4))
                 
                 color= (color_list[numero][2],color_list[numero][1],color_list[numero][0])
-                pt1=(int(j.center[0])+j.rad,int(j.center[1])+j.rad)
-                pt2=(int(j.center[0])-j.rad,int(j.center[1])-j.rad)
+                pt1=(int(j.center['lgn'])+j.rad,int(j.center['lat'])+j.rad)
+                pt2=(int(j.center['lgn'])-j.rad,int(j.center['lat'])-j.rad)
                 cv2.rectangle(imagen,pt1=pt1, pt2=pt2,color=color ,thickness = -1)
                 cv2.rectangle(imagen,pt1=pt1, pt2=pt2,color=(0,0,0))   
-                cv2.putText(imagen,  str(Cardinal_actual), (int(j.center[0]),int(j.center[1])+40), cv2.FONT_HERSHEY_SIMPLEX , 0.75, (0,0,0))
+                cv2.putText(imagen,  str(Cardinal_actual), (int(j.center['lgn']),int(j.center['lat'])+40), cv2.FONT_HERSHEY_SIMPLEX , 0.75, (0,0,0))
 
                 if j.id in Cells_recomendadas:
                     if j.id== cell_elejida:
-                        cv2.drawMarker(imagen, position=(int(j.center[0]),int(j.center[1])), color=(151,45,248), markerType=cv2.MARKER_TILTED_CROSS,markerSize= 24, thickness=5)
-                        cv2.drawMarker(imagen, position=(int(j.center[0]),int(j.center[1])), color=(255,0,0), markerType=cv2.MARKER_SQUARE, markerSize= 20, thickness=2)
+                        cv2.drawMarker(imagen, position=(int(j.center['lgn']),int(j.center['lat'])), color=(151,45,248), markerType=cv2.MARKER_TILTED_CROSS,markerSize= 24, thickness=5)
+                        cv2.drawMarker(imagen, position=(int(j.center['lgn']),int(j.center['lat'])), color=(255,0,0), markerType=cv2.MARKER_SQUARE, markerSize= 20, thickness=2)
 
                     else:
-                        cv2.drawMarker(imagen, position=(int(j.center[0]),int(j.center[1])), color=(255,0,0), markerType=cv2.MARKER_SQUARE, markerSize= 20, thickness=2)
+                        cv2.drawMarker(imagen, position=(int(j.center['lgn']),int(j.center['lat'])), color=(255,0,0), markerType=cv2.MARKER_SQUARE, markerSize= 20, thickness=2)
 
-    cv2.circle(imagen,color=(0,0,0),center=(int(user_position[0]),int(user_position[1])), radius=10,thickness=-1) 
+    cv2.circle(imagen,color=(0,0,0),center=(int(user_position['lgn']),int(user_position['lat'])), radius=10,thickness=-1) 
     # res, im_png = cv2.imencode(".png", imagen)
     direcion=f"/home/ubuntu/carpeta_compartida_docker/RecommenderSystem/src/Servicio/app/Pictures/Recomendaciones/{time.strftime('%m-%d-%Y-%H-%M-%S')}User_id{user.id}.jpeg"
     # print(direcion)
@@ -584,12 +585,12 @@ def show_a_campaign_2(
                 else:
                     numero=int((Cardinal_actual/campañas_activas.min_samples)//(1/4))
                 color= (color_list[numero][2],color_list[numero][1],color_list[numero][0])
-                pt1=(int(j.center[0])+j.rad,int(j.center[1])+j.rad)
-                pt2=(int(j.center[0])-j.rad,int(j.center[1])-j.rad)
+                pt1=(int(j.center['lgn'])+j.rad,int(j.center['lat'])+j.rad)
+                pt2=(int(j.center['lgn'])-j.rad,int(j.center['lat'])-j.rad)
                 # print(pt1, pt2)
                 cv2.rectangle(imagen,pt1=pt1, pt2=pt2,color=color ,thickness = -1)
                 cv2.rectangle(imagen,pt1=pt1, pt2=pt2,color=(0,0,0))   
-                cv2.putText(imagen, str(Cardinal_actual), (int(j.center[0]),int(j.center[1])), cv2.FONT_HERSHEY_SIMPLEX , 0.75, (0,0,0))
+                cv2.putText(imagen, str(Cardinal_actual), (int(j.center['lgn']),int(j.center['lat'])), cv2.FONT_HERSHEY_SIMPLEX , 0.75, (0,0,0))
 
     
     # res, im_png = cv2.imencode(".png", imagen)
