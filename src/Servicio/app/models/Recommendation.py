@@ -11,6 +11,15 @@ from models.Member import Member
 from models.Point import Point
 from models.Slot import Slot
 
+from sqlalchemy import Integer, Enum
+
+# class State(enum.Enum):
+#     NOTIFIED="NOTIFIED"
+#     ACCEPTED="ACCEPTED"
+#     REALIZED="REALIZED"
+#     NON_REALIZED="NON_REALIZED"
+
+
 
 class Recommendation(Base):
     __tablename__='Recommendation'
@@ -23,7 +32,7 @@ class Recommendation(Base):
     id=Column(Integer,primary_key=True,  autoincrement=True, nullable=False )
     member_current_location=Column(Point)
     slot_id=Column(Integer,ForeignKey(Slot.id, ondelete="CASCADE"))
-    state=Column(String,nullable=False, default="NOTIFIED")
+    state=Column(Enum('NOTIFIED', 'ACCEPTED', 'REALIZED', 'NON_REALIZED'),nullable=False)
     timestamp_update=Column(DateTime)
     
     

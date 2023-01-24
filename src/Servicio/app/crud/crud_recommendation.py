@@ -14,7 +14,6 @@ from sqlalchemy import Integer, String, Column, Boolean, ForeignKey, DateTime, A
 from db.base_class import Base
 from sqlalchemy import and_, extract
 
-from schemas.Cell import Cell
 from sqlalchemy.orm import Session
 
 from crud.base import CRUDBase
@@ -50,7 +49,7 @@ class CRUDRecommendation(CRUDBase[Recommendation, RecommendationCreate, Recommen
        
 
         def get_aceptance_state_of_cell(self,db: Session, *, cell_id:int, )-> List[Recommendation]:
-                return db.query(Recommendation).join(Cell).filter(and_(Recommendation.state=="ACCEPTED", Recommendation.cell_id == cell_id)).all()
+                return db.query(Recommendation).filter(and_(Recommendation.state=="ACCEPTED", Recommendation.cell_id == cell_id)).all()
                         
 
 recommendation = CRUDRecommendation(Recommendation)

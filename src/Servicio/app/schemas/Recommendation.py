@@ -27,7 +27,7 @@ class state(str, Enum):
 class RecommendationBase(BaseModel):
     recommendation_timestamp:datetime = datetime.now()
     member_current_location:Point
-    state:state = state.NOTIFIED
+    state:state
     timestamp_update:datetime=datetime.now()
     
     

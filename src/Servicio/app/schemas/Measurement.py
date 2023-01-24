@@ -12,7 +12,7 @@ from schemas.Member import Member
 
 class MeasurementBase(BaseModel):    
     timestamp:datetime=None
-    measurement_type:str='AirData' #Varchar(30) default 'AirData', #set('AirData','Sound')
+    measurement_type:str='AIRDATA' 
     reading_id:int=None# INT,
     location:Point=None
     device_id:int

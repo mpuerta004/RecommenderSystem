@@ -21,7 +21,7 @@ class Measurement(Base):
     member_id=Column(Integer, ForeignKey(Member.id, ondelete="CASCADE"))
     timestamp=Column(DateTime)
     slot_id=Column(Integer, ForeignKey(Slot.id, ondelete="CASCADE"))
-    measurement_type=Column(String)
+    measurement_type=Column(String,default="AIRDATA")
     reading_id=Column(Integer, ForeignKey(Reading.id, ondelete="CASCADE"), nullable=True)
     location=Column(Point)
     device_id=Column(Integer,ForeignKey(Device.id,ondelete="CASCADE"))

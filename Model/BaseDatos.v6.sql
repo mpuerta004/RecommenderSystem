@@ -20,7 +20,9 @@ CREATE TABLE Member (
   age INT NULL DEFAULT NULL,
   mail  varchar(50) not null,
   city VARCHAR(30) NULL DEFAULT NULL,
-  gender ENUM("NoBinary","Male","Female",'I dont want to answer' ) not null default 'I dont want to answer',
+  gender Varchar(30) default 'I dont want to answer',
+  CONSTRAINT gender_type CHECK (gender IN ("NoBinary","Male","Female",'I dont want to answer')),
+
   real_user  BOOLEAN,
   PRIMARY KEY (id)
   );
@@ -32,7 +34,9 @@ CREATE TABLE  BeeKeeper(
   age INT NULL DEFAULT NULL,
   mail  varchar(50) not null,
   city VARCHAR(30) NULL DEFAULT NULL,
-  gender ENUM("NoBinary","Male","Female",'I dont want to answer' ) not null default 'I dont want to answer',
+  gender Varchar(30) not null default 'I dont want to answer',
+  CONSTRAINT gender_type_beekeeper CHECK (gender IN ("NoBinary","Male","Female",'I dont want to answer')),
+
   PRIMARY KEY (id)
   );
 
@@ -96,7 +100,8 @@ CREATE TABLE Reading (
 -- -----------------------------------------------------
 CREATE TABLE Role (
     hive_id int not null, 
-    role ENUM("WorkerBee","QueenBee","BeeKeeper","DroneBee" ) not null default "WorkerBee", 
+    role VARCHAR(30) not null default "WorkerBee", 
+    CONSTRAINT role_type CHECK (role IN ("WorkerBee","QueenBee","BeeKeeper","DroneBee")),
     member_id int not null,
     PRIMARY KEY (hive_id,role, member_id),
     FOREIGN KEY (hive_id)
@@ -170,8 +175,10 @@ CREATE TABLE Cell (
   #  -- superior_coord POINT not null,
   center POINT not NULL,
   rad INT,
-  cell_type VARCHAR(30) NULL DEFAULT 'Dynamic',
+  cell_type VARCHAR(30) DEFAULT 'Dynamic',
   surface_id INT not null,
+  CONSTRAINT cell_type CHECK (cell_type IN ("DYNAMIC","STATIC")),
+
   PRIMARY KEY (id),
     FOREIGN KEY (surface_id)
     REFERENCES Surface (id)
@@ -203,10 +210,11 @@ CREATE TABLE Recommendation (
   cell_id INT NOT NULL,
   member_id INT NOT NULL,
   recommendation_timestamp TIMESTAMP NOT NULL,
-  state  ENUM("NOTIFIED","ACCEPTED","REALIZED","NON_REALIZED") not null default "NOTIFIED", 
+  state  VARCHAR(15),
   timestamp_update timestamp,
   slot_id int, 
   member_current_location POINT NULL, 
+  CONSTRAINT state_type CHECK (state IN ("NOTIFIED","ACCEPTED","REALIZED","NON_REALIZED")),
   PRIMARY KEY (id,member_id),
     FOREIGN KEY (cell_id)
     REFERENCES Cell (id)
@@ -230,7 +238,7 @@ CREATE TABLE Measurement (
   device_id int default null, 
   timestamp TIMESTAMP NULL DEFAULT NULL,
   slot_id int not null, 
-  measurement_type VARCHAR(30) NULL DEFAULT 'AirData',
+  measurement_type VARCHAR(30) DEFAULT 'AIRDATA',
   reading_id INT DEFAULT NULL,
   location POINT NULL DEFAULT NULL,
   recommendation_id int null default Null, 
