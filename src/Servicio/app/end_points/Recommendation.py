@@ -80,7 +80,6 @@ def create_recomendation(
     user=crud.member.get_by_id(db=db,id=member_id)
     admi=False
     hives=[]
-    
     for i in user.roles:
         if not (i.hive_id in  hives):
             hives.append(i.hive_id)
@@ -99,14 +98,14 @@ def create_recomendation(
                     a=crud.cell.get_cells_campaign(db=db,campaign_id=j.id)
                     if a is not None:
                         for l in a:
-                            cells.append(l)
+                            cells.append([l,j])
         
         if cells is []: 
             raise HTTPException(
             status_code=404, detail=f"Cells of campaign {cam.id} not found."
         )
         for i in cells: 
-            centro= i.center
+            centro= i[0].center
             point= recipe_in.member_current_location
             distancia= math.sqrt((centro['lgn'] - point['lgn'])**2+(centro['lat']-point['lat'])**2)
             if distancia<=250:
@@ -120,18 +119,18 @@ def create_recomendation(
             
         cells_and_priority=[]
         for i in lista_celdas_ordenas:
-                cam = crud.campaign.get_campaign_from_cell(db=db,cell_id=i.id)
-                slot=crud.slot.get_slot_time(db=db,cell_id=i.id,time=time)                
+                cam = i[1]
+                slot=crud.slot.get_slot_time(db=db,cell_id=i[0].id,time=time)                
                 priority=crud.priority.get_last(db=db,slot_id=slot.id,time=time)
-                Cardinal_actual = crud.measurement.get_all_Measurement_from_cell_in_the_current_slot(db=db, cell_id=i.id, time=time,slot_id=slot.id)
+                Cardinal_actual = crud.measurement.get_all_Measurement_from_cell_in_the_current_slot(db=db, cell_id=i[0].id, time=time,slot_id=slot.id)
                 Cardinal_esperado = Cardinal_actual
-                recommendation_accepted= crud.recommendation.get_aceptance_state_of_cell(db=db, cell_id=i.id)
+                recommendation_accepted= crud.recommendation.get_aceptance_state_of_cell(db=db, cell_id=i[0].id)
                 Cardinal_esperado=Cardinal_esperado+ len(recommendation_accepted)
                 # for l in mediciones:
                 #     if l[1].cell_id== i.id:
                 #         Cardinal_esperado=Cardinal_esperado+1
                 if Cardinal_esperado < cam.min_samples:
-                    cells_and_priority.append((i,priority, math.sqrt((i.center['lgn'] - point['lgn'])**2+(i.center['lat']-point['lat'])**2),priority.temporal_priority,Cardinal_esperado,Cardinal_actual))
+                    cells_and_priority.append((i[0],priority, math.sqrt((i[0].center['lgn'] - point['lgn'])**2+(i[0].center['lat']-point['lat'])**2),priority.temporal_priority,Cardinal_esperado,Cardinal_actual))
         cells_and_priority.sort(key=lambda Cell: (-Cell[4], Cell[1].temporal_priority, -Cell[2] ),reverse=True)
         result=[]
         
@@ -141,7 +140,7 @@ def create_recomendation(
                     # print(a.cell_id)
                     # obj_state=StateCreate(db=db)
                     # state=crud.state.create_state(db=db,obj_in=obj_state)
-                    recomendation=crud.recommendation.create_recommendation_detras(db=db,obj_in=recipe_in,member_id=member_id,slot_id=cells_and_priority[i][1].slot_id,cell_id=a.cell_id,sate="NOTIFIED",timestamp_update=time)
+                    recomendation=crud.recommendation.create_recommendation_detras(db=db,obj_in=recipe_in,member_id=member_id,slot_id=cells_and_priority[i][1].slot_id,cell_id=a.cell_id,state="NOTIFIED",timestamp_update=time)
                     result.append(recomendation)
 
         elif  len(cells_and_priority)!=0:
@@ -151,11 +150,11 @@ def create_recomendation(
                     # # print(a.cell_id)
                     # obj_state=StateCreate(db=db)
                     # state=crud.state.create_state(db=db,obj_in=obj_state)
-                    recomendation=crud.recommendation.create_recommendation_detras(db=db,obj_in=recipe_in,member_id=member_id,slot_id=cells_and_priority[i][1].slot_id,cell_id=a.cell_id,sate="NOTIFIED",timestamp_update=time)
+                    recomendation=crud.recommendation.create_recommendation_detras(db=db,obj_in=recipe_in,member_id=member_id,slot_id=cells_and_priority[i][1].slot_id,cell_id=a.cell_id,state="NOTIFIED",timestamp_update=time)
                     result.append(recomendation)
         
         if len(cells_and_priority)==0:
-            return {"results": None}
+            return {"results": []}
         return {"results": result}
     else:
         raise HTTPException(

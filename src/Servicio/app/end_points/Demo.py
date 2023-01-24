@@ -195,10 +195,10 @@ async def asignacion_recursos(
                         x=random.randint(posiciones_x[surface_number][0],posiciones_x[surface_number][1])
                         y=random.randint(posiciones_y[surface_number][0],posiciones_y[surface_number][1])
 
-                        a=RecommendationCreate(recommendation_timestamp=time,member_current_location=Point(x=x,y=y))
+                        a=RecommendationCreate(member_current_location=Point(x=x,y=y),recommendation_timestamp=time)
                         recomendaciones=create_recomendation_2(db=db,member_id=user.id,recipe_in=a,cam=cam)
                         
-                        if recomendaciones['results']!=None:
+                        if len(recomendaciones['results'])>0:
                             recomendacion_polinizar = RL(recomendaciones['results'])
                             mediciones.append([user, recomendacion_polinizar, random.randint(1,600)])
 
@@ -319,7 +319,7 @@ def create_recomendation_2(
                     # # print(a.cell_id)
                     # obj_state=StateCreate(db=db)
                     # state=crud.state.create_state(db=db,obj_in=obj_state)
-                    recomendation=crud.recommendation.create_recommendation_detras(db=db,obj_in=recipe_in,member_id=member_id,slot_id=cells_and_priority[i][1].slot_id,cell_id=a.cell_id,sate="NOTIFIED",timestamp_update=time)
+                    recomendation=crud.recommendation.create_recommendation_detras(db=db,obj_in=recipe_in,member_id=member_id,slot_id=cells_and_priority[i][1].slot_id,cell_id=a.cell_id,state="NOTIFIED",timestamp_update=time)
                     result.append(recomendation)
         
         if len(cells_and_priority)==0:

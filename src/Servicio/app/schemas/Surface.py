@@ -5,7 +5,6 @@ from schemas.Boundary import Boundary
 
 from schemas.Cell import Cell
 class SurfaceBase(BaseModel):
-    #TODO mirar esto! 
     boundary_id:int
 
     pass

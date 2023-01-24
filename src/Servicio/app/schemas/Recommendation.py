@@ -25,11 +25,9 @@ class state(str, Enum):
    
 
 class RecommendationBase(BaseModel):
-    recommendation_timestamp:datetime = datetime.now()
     member_current_location:Point
-    state:state
-    timestamp_update:datetime=datetime.now()
-    
+    recommendation_timestamp:datetime = datetime.now()
+
     
 
 class RecommendationCreate(RecommendationBase):
@@ -42,6 +40,10 @@ class RecommendationUpdate(RecommendationBase):
 # Properties shared by models stored in DB
 class RecommendationInDBBase(RecommendationBase):
     member_id:int
+    state:state
+    timestamp_update:datetime=datetime.now()
+
+
     # state_id:int
     id:int
     slot_id:int
