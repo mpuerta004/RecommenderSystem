@@ -113,23 +113,6 @@ def create_member(
    
 
 
-@api_router_members.post("/hives/{hive_id}/",status_code=201, response_model=Member )
-def create_member_of_hive(
-    *,    
-    hive_id:int,
-    recipe_in: NewMemberBase,
-    db: Session = Depends(deps.get_db)
-) -> dict:
-    """
-    Create a new member of the hive in the database.
-    """
-    member=MemberCreate(name=recipe_in.name,surname=recipe_in.surname,age=recipe_in.age,city=recipe_in.city,mail=recipe_in.mail,gender=recipe_in.gender)
-    member_new= crud.member.create(db=db, obj_in=member)
-    Role= RoleCreate(role=recipe_in.role)
-    role_new=crud.role.create_Role(db=db,obj_in=Role, hive_id=hive_id, member_id=member_new.id)
-    return member_new
-
-
 @api_router_members.put("/{member_id}", status_code=201, response_model=Member)
 def put_a_member(
     *,

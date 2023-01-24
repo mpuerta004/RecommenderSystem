@@ -62,7 +62,7 @@ year varchar(30) null default null
 
 
 Create Table MemberDevice(
-  device_id int default Null,
+  device_id int Unique default Null,
   member_id int not null, 
   primary key(member_id),
   FOREIGN KEY (member_id)

@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session
 # from schemas.Campaign import CampaignSearchResults, Campaign, CampaignCreate
 # from schemas.Slot import Slot, SlotCreate,SlotSearchResults
 from schemas.Device import Device, DeviceCreate, DeviceSearchResults,DeviceUpdate
+from schemas.MemberDevice import MemberDevice
 # from schemas.Member import Member,MemberCreate,MemberSearchResults
 
 # from schemas.Role import Role,RoleCreate,RoleSearchResults
@@ -16,8 +17,8 @@ from schemas.Device import Device, DeviceCreate, DeviceSearchResults,DeviceUpdat
 # from schemas.Cell import Cell, CellCreate, CellSearchResults, Point
 # from schemas.Surface import SurfaceSearchResults, Surface, SurfaceCreate
 import deps
-from crud.crud_device import device as crud_device
-
+#from crud.crud_device import device as crud_device
+import crud
 
 api_router_device = APIRouter(prefix="/devices")
 
@@ -32,7 +33,7 @@ def get_device(
     """
     Fetch a single device by ID
     """
-    result = crud_device.get(db=db, id=device_id)
+    result = crud.device.get(db=db, id=device_id)
     if  result is None:
         raise HTTPException(
             status_code=404, detail=f"device with   device_id=={device_id} not found"
@@ -47,15 +48,30 @@ def create_device(
     """
     Create a new device in the database.
     """
-    device = crud_device.create(db=db, obj_in=recipe_in)
+    device = crud.device.create(db=db, obj_in=recipe_in)
     if device is None:
         raise HTTPException(
             status_code=400, detail=f"INVALID REQUEST"
         )
-    
     return device
 
 
+@api_router_device.get("/{device_id}/members/", status_code=200, response_model=MemberDevice)
+def get_Memberdevice(
+    *,
+    device_id: int,
+    db: Session = Depends(deps.get_db),
+) -> dict:
+    """
+    Fetch a single Memberdevice by ID
+    """
+    
+    result = crud.memberdevice.get_by_device_id(db=db,device_id=device_id)
+    if  result is None:
+        raise HTTPException(
+            status_code=404, detail=f"The user associeted with  the device with device_id=={device_id} not found"
+        )
+    return result
 
 
 @api_router_device.delete("/{device_id}", status_code=204)
@@ -66,11 +82,11 @@ def delete_device(    *,
     """
     Delete device in the database.
     """
-    device=crud_device.get(db=db,id=device_id)
+    device=crud.device.get(db=db,id=device_id)
     if  device is None:
         raise HTTPException(
             status_code=404, detail=f"Device with  device_id=={device_id} not found"
         )
-    updated_recipe = crud_device.remove(db=db, device=device)
+    updated_recipe = crud.device.remove(db=db, device=device)
     return  {"ok": True}
 

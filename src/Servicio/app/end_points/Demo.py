@@ -217,10 +217,9 @@ async def asignacion_recursos(
                     if aletorio>0.4:
                         time_polinizado = time
                         cell=crud.cell.get_Cell(db=db,cell_id=mediciones[i][1].cell_id)
-                        #Todo! dos device! uno para estaticos con id 1 y otro para dinamicos con id 2! es necesario que esten para que esto funcione
-                        creation=MeasurementCreate(db=db, location=cell.center,timestamp=time_polinizado,device_id=2, recommendation_id=mediciones[i][1].id)
-                        slot=crud.slot.get_slot_time(db=db, 
-                                                    cell_id=cell.id,time=time)
+                        MemberDevice_user=crud.memberdevice.get_by_member_id(db=db,member_id=mediciones[i][0].id)
+                        creation=MeasurementCreate(db=db, location=cell.center,timestamp=time_polinizado,device_id=MemberDevice_user.device_id, recommendation_id=mediciones[i][1].id)
+                        slot=crud.slot.get_slot_time(db=db, cell_id=cell.id,time=time)
                         #Ver si se registran bien mas recomendaciones con el id de la medicion correcta. 
                         measurement=crud.measurement.create_Measurement(db=db,obj_in=creation,member_id=mediciones[i][0].id,slot_id=slot.id,cell_id=mediciones[i][1].cell_id)
                         #Todo: esto en realidad es una iteracion con el 

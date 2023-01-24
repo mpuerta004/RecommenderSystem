@@ -33,13 +33,13 @@ def get_Memberdevice(
     """
     Fetch a single Memberdevice by ID
     """
-    result = crud.memberdevice.get_by_memberId(db=db, member_id=member_id)
+    result = crud.memberdevice.get_by_member_id(db=db, member_id=member_id)
     if  result is None:
         raise HTTPException(
-            #TODO! 
-            status_code=404, detail=f"Association with  rdevice_id=={member_id} not found"
+            status_code=404, detail=f"The device associeted with member with member_id={member_id} not found."
         )
     return result
+
 
 #Todo: control de errores! 
 @api_router_Memberdevice.post("/",status_code=201, response_model=MemberDevice)
@@ -50,28 +50,36 @@ def create_Memberdevice(
     """
     Create a new Memberdevice in the database.
     """
-    Memberdevice = crud.memberdevice.create(db=db, obj_in=recipe_in)
-    if Memberdevice is None:
+    memberDevice= crud.memberdevice.get_by_member_id(db=db,member_id=recipe_in.member_id)
+    if memberDevice is not None:
+        
+        Memberdevice = crud.memberdevice.create(db=db, obj_in=recipe_in)
+        if Memberdevice is None:
+            raise HTTPException(
+                status_code=400, detail=f"INVALID REQUEST"
+            )
+        return Memberdevice
+    else: 
+        #We dont want to associete with several devices. Only one! 
         raise HTTPException(
-            status_code=400, detail=f"INVALID REQUEST"
-        )
-    return Memberdevice
+                status_code=404, detail=f"This member already has an associated device."
+            )
 
-
-
-
-@api_router_Memberdevice.delete("/{Memberdevice_id}", status_code=204)
+@api_router_Memberdevice.delete("/members/{Member_id}/devices/{device_id}", status_code=204)
 def delete_Memberdevice(    *,
-    Memberdevice_id:int,
+    member_id:int,
+    device_id:int,
     db: Session = Depends(deps.get_db),
 ):
     """
     Delete Memberdevice in the database.
     """
-    Memberdevice=crud.memberdevice.get(db=db,id=Memberdevice_id)
+    
+    Memberdevice=crud.memberdevice.get_by_member_id(db=db, member_id=member_id)
+
     if  Memberdevice is None:
         raise HTTPException(
-            status_code=404, detail=f"MemberDevice with  Memberdevice_id=={Memberdevice_id} not found"
+            status_code=404, detail=f"The assosiation of device with device_id={device_id} with a member with memeber_id={member_id} is not found."
         )
     updated_recipe = crud.memberdevice.remove(db=db, Memberdevice=Memberdevice)
     return  {"ok": True}

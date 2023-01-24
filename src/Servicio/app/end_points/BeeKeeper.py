@@ -27,45 +27,45 @@ from starlette.responses import StreamingResponse
 import numpy as np
 from enum import Enum, IntEnum
 
-api_router_BeeKeepers = APIRouter(prefix="/BeeKeepers")
+api_router_BeeKeepers = APIRouter(prefix="/beekeepers")
 
 
 
 
-@api_router_BeeKeepers.get("/{BeeKeeper_id}", status_code=200, response_model=BeeKeeper)
+@api_router_BeeKeepers.get("/{beekeeper_id}", status_code=200, response_model=BeeKeeper)
 def get_a_BeeKeeper(
     *,
-    BeeKeeper_id:int,
+    Beekeeper_id:int,
     db: Session = Depends(deps.get_db),
 ) -> Cell:
     """
     Get a BeeKeeper of the hive
     """
     
-    user=crud.beekeeper.get_by_id(db=db, id=BeeKeeper_id)
+    user=crud.beekeeper.get_by_id(db=db, id=Beekeeper_id)
 
     if  user is None:
         raise HTTPException(
-            status_code=404, detail=f"BeeKeeper with BeeKeeper_id=={BeeKeeper_id} not found"
+            status_code=404, detail=f"BeeKeeper with BeeKeeper_id=={Beekeeper_id} not found"
         )
     return user
 
 
 
-@api_router_BeeKeepers.delete("/{BeeKeeper_id}", status_code=204)
+@api_router_BeeKeepers.delete("/{beekeeper_id}", status_code=204)
 def delete_BeeKeeper(    *,
-    BeeKeeper_id:int,
+    beekeeper_id:int,
     db: Session = Depends(deps.get_db),
 ):
     """
     Update recipe in the database.
     """
-    user=crud.BeeKeeper.get_by_id(db=db, id=BeeKeeper_id)
+    user=crud.beekeeper.get_by_id(db=db, id=beekeeper_id)
     if  user is None:
         raise HTTPException(
-            status_code=404, detail=f"BeeKeeper with BeeKeeper_id=={BeeKeeper_id} not found"
+            status_code=404, detail=f"BeeKeeper with BeeKeeper_id=={beekeeper_id} not found"
         )
-    updated_recipe = crud.BeeKeeper.remove(db=db, BeeKeeper=user)
+    updated_recipe = crud.beekeeper.remove(db=db, beekeeper=user)
     return {"ok": True}
 
 #Todo: esto no se si deberia ir asi... control de errores! 
@@ -88,21 +88,21 @@ def create_BeeKeeper(
     return BeeKeeper_new
    
 
-@api_router_BeeKeepers.put("/{BeeKeeper_id}", status_code=201, response_model=BeeKeeper)
+@api_router_BeeKeepers.put("/{beekeeper_id}", status_code=201, response_model=BeeKeeper)
 def put_a_BeeKeeper(
     *,
-    BeeKeeper_id:int,
+    beekeeper_id:int,
     recipe_in: BeeKeeperUpdate,
     db: Session = Depends(deps.get_db),
 ) -> dict:
     """
     Update a BeeKeeper
     """
-    user=crud.beekeeper.get_by_id(db=db, id=BeeKeeper_id)
+    user=crud.beekeeper.get_by_id(db=db, id=beekeeper_id)
 
     if  user is None:
         raise HTTPException(
-            status_code=404, detail=f"BeeKeeper with BeeKeeper_id=={BeeKeeper_id} not found"
+            status_code=404, detail=f"BeeKeeper with BeeKeeper_id=={beekeeper_id} not found"
         )
     updated_recipe = crud.beekeeper.update(db=db, db_obj=user, obj_in=recipe_in)
     db.commit()
@@ -111,21 +111,21 @@ def put_a_BeeKeeper(
 
 
 
-@api_router_BeeKeepers.patch("/{BeeKeeper_id}", status_code=201, response_model=BeeKeeper)
+@api_router_BeeKeepers.patch("/{beekeeper_id}", status_code=201, response_model=BeeKeeper)
 def put_a_BeeKeeper(
     *,
-    BeeKeeper_id:int,
+    beekeeper_id:int,
     recipe_in: Union[BeeKeeperUpdate, Dict[str, Any]],
     db: Session = Depends(deps.get_db),
 ) -> dict:
     """
     Update a BeeKeeper
     """
-    user=crud.beekeeper.get_by_id(db=db, id=BeeKeeper_id)
+    user=crud.beekeeper.get_by_id(db=db, id=beekeeper_id)
 
     if  user is None:
         raise HTTPException(
-            status_code=404, detail=f"BeeKeeper with BeeKeeper_id=={BeeKeeper_id} not found"
+            status_code=404, detail=f"BeeKeeper with BeeKeeper_id=={beekeeper_id} not found"
         )
     updated_recipe = crud.beekeeper.update(db=db, db_obj=user, obj_in=recipe_in)
     db.commit()
