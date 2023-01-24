@@ -10,7 +10,7 @@ from models.Member import Member
 
 class MemberDevice(Base):
     __tablename__='MemberDevice'
-    device_id = Column(Integer,ForeignKey(Device.id, ondelete="CASCADE"))
-    member_id=Column(Integer,ForeignKey(Member.id, ondelete="CASCADE"),primary_key=True)
+    device_id = Column(Integer,ForeignKey(Device.id, ondelete="RESTRICT"))
+    member_id=Column(Integer,ForeignKey(Member.id, ondelete="RESTRICT"),primary_key=True)
     
 

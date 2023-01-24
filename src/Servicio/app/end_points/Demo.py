@@ -224,15 +224,12 @@ async def asignacion_recursos(
                         measurement=crud.measurement.create_Measurement(db=db,obj_in=creation,member_id=mediciones[i][0].id,slot_id=slot.id,cell_id=mediciones[i][1].cell_id)
                         #Todo: esto en realidad es una iteracion con el 
                         crud.recommendation.update(db=db,db_obj=mediciones[i][1], obj_in={"state":"REALIZED","timestamp_update":time_polinizado})
-                        # state=crud.state.get_state_from_recommendation(db=db,recommendation_id=mediciones[i][1].id)
-                        # crud.state.update(db=db,db_obj=state, obj_in={"state":"Realized"})
                         db.commit()
                         
                         db.commit()
                     else:
                         time_polinizado = time
                         #Todo: esto en realidad es una iteracion con el front-end y necesitamos realizar una funcion autiomatica que cada cierto tiempo ponga esto en no realized. 
-                        # state=crud.state.get_state_from_recommendation(db=db,recommendation_id=mediciones[i][1].id)
                         crud.recommendation.update(db=db,db_obj=mediciones[i][1], obj_in={"state":"NON_REALIZED","timestamp_update":time_polinizado})
                         db.commit()
                 else:

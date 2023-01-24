@@ -15,9 +15,9 @@ from sqlalchemy import Integer, Enum
 
 class Role(Base):
     __tablename__='Role'
-    hive_id=Column(Integer, ForeignKey(Hive.id, ondelete="CASCADE"),primary_key=True)
-    member_id=Column(Integer, ForeignKey(Member.id,ondelete="CASCADE"),primary_key=True)
+    hive_id=Column(Integer, ForeignKey(Hive.id, ondelete="RESTRICT"),primary_key=True)
+    member_id=Column(Integer, ForeignKey(Member.id,ondelete="RESTRICT"),primary_key=True)
     role=Column(Enum("WorkerBee","QueenBee","BeeKeeper","DroneBee" ),primary_key=True)
 
     
-    member=relationship("Member",back_populates="roles",cascade="all, delete")
+    member=relationship("Member",back_populates="roles")

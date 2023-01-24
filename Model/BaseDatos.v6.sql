@@ -71,10 +71,10 @@ Create Table MemberDevice(
   primary key(member_id),
   FOREIGN KEY (member_id)
     REFERENCES Member (id)
-    ON DELETE CASCADE,
+    ON DELETE RESTRICT,
     FOREIGN KEY (device_id)
     REFERENCES Device (id)
-    ON DELETE CASCADE
+    ON DELETE RESTRICT
 );
 
 -- -----------------------------------------------------
@@ -106,10 +106,10 @@ CREATE TABLE Role (
     PRIMARY KEY (hive_id,role, member_id),
     FOREIGN KEY (hive_id)
     REFERENCES Hive (id)
-    ON DELETE CASCADE,
+    ON DELETE RESTRICT,
     FOREIGN KEY (member_id)
     REFERENCES Member (id)
-    ON DELETE CASCADE
+    ON DELETE RESTRICT
 );
 
 -- -----------------------------------------------------
