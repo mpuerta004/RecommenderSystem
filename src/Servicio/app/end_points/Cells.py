@@ -113,11 +113,11 @@ def create_cell(
         raise HTTPException(
             status_code=404, detail=f"Surface with surface_id=={surface_id} and campaign_id={campaign_id } not found"
         )
-    boundary=crud.boundary.get_Boundary_by_ids(db=db, surface_id=surface.id)
-    centro=boundary.center
+    # boundary=crud.boundary.get_Boundary_by_ids(db=db, surface_id=surface.id)
+    centro=surface.boundary.center
     point=recipe_in.center
     distancia= math.sqrt((centro[0] - point.x)**2+(centro[1]-point.y)**2)
-    if distancia<=boundary.rad:
+    if distancia<=surface.boundary.rad:
     
         cell = crud.cell.create_cell(db=db, obj_in=recipe_in,surface_id=surface_id)
         

@@ -14,17 +14,17 @@ class CRUDBoundary(CRUDBase[Boundary, BoundaryCreate, BoundaryUpdate]):
     #  def get_multi_Boundary_from_campaign_id(self, db: Session, *, campaign_id:int, limit: int = 100, ) -> List[Boundary]:
     #     return db.query(Boundary).filter(Boundary.campaign_id==campaign_id).limit(limit).all()
      
-     def create_boundary(self, db: Session, *, surface_id:int,obj_in: BoundaryCreate) -> Boundary:
+     def create_boundary(self, db: Session, *,obj_in: BoundaryCreate) -> Boundary:
         obj_in_data = jsonable_encoder(obj_in) 
-        db_obj = self.model(**obj_in_data,surface_id=surface_id)  # type: ignore
+        db_obj = self.model(**obj_in_data)  # type: ignore
         db.add(db_obj)
         db.commit()
         db.refresh(db_obj)
         return db_obj
     
      
-     def get_Boundary_by_ids(self, db: Session, *, surface_id:int) ->Boundary:
-        return db.query(Boundary).filter(and_(Boundary.surface_id==surface_id)).first()
+     def get_Boundary_by_id(self, db: Session, *, id:int) ->Boundary:
+        return db.query(Boundary).filter(and_(Boundary.id==id)).first()
      
    
 boundary = CRUDBoundary(Boundary)

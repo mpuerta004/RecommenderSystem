@@ -6,19 +6,17 @@ from sqlalchemy.orm import relationship
 from db.base_class import Base
 
 from models.Campaign import Campaign
+from models.Boundary import Boundary
 
 
 class Surface(Base):
     __tablename__='Surface'
     id=Column(Integer, unique=True, primary_key=True, index=True, autoincrement=True) 
     campaign_id=Column(Integer,ForeignKey(Campaign.id, ondelete="CASCADE"))
-    # center=Column(Point)
-    # rad=Column(Integer)
-    
-    cells = relationship("Cell",cascade="all, delete")
-    # boundary = relationship("Boundary",cascade="all, delete")
+    boundary_id=Column(Integer,ForeignKey(Boundary.id, ondelete="CASCADE"))
+    boundary = relationship("Boundary",cascade="all, delete")
 
-    #De este modo se define una relacion inversa... no se si seran utiles. 
-    #queenBee=relationship("Campaign", back_populates="campaigns")
+    cells = relationship("Cell",cascade="all, delete")
+
     
 

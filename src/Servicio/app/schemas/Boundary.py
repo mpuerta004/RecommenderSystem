@@ -17,7 +17,6 @@ class BoundaryUpdate(BoundaryBase):
 # Properties shared by models stored in DB
 class BoundaryInDBBase(BoundaryBase):
     id:int 
-    Boundary_id:int
     # cells:Sequence[Cell]
     class Config:
         orm_mode = True

@@ -15,8 +15,8 @@ from enum import Enum
     
 
 class gender_type(str, Enum):
-    NoBinary="NoBinary"
     Male="Male"
+    NoBinary="NoBinary"
     Female="Female"
     IDontWantToAnser='I dont want to answer' 
 

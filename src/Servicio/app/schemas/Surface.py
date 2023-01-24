@@ -5,6 +5,9 @@ from schemas.Boundary import Boundary
 
 from schemas.Cell import Cell
 class SurfaceBase(BaseModel):
+    #TODO mirar esto! 
+    boundary_id:int
+
     pass
 
 class SurfaceCreate(SurfaceBase):
@@ -19,7 +22,7 @@ class SurfaceInDBBase(SurfaceBase):
     id:int 
     campaign_id:int
     cells:Sequence[Cell]
-    # boundary:Sequence[Boundary]
+    boundary:Boundary
     class Config:
         orm_mode = True
 

@@ -1,13 +1,20 @@
 from typing import Optional, List, Sequence
 from pydantic import BaseModel
 from schemas.Role import Role
+from enum import Enum
 
-
+class gender_type(str, Enum):
+    Male="Male"
+    NoBinary="NoBinary"
+    Female="Female"
+    IDontWantToAnser='I dont want to answer' 
+    
+    
 class BeeKeeperBase(BaseModel):
     name: str 
     surname: str=None
     age: int
-    gender:str
+    gender:gender_type
     city: str=None
     mail:str
     # device_id:int=None

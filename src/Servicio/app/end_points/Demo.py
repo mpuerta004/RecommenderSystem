@@ -181,7 +181,7 @@ async def asignacion_recursos(
                 posiciones_x=[]
                 posiciones_y=[]
                 for i in range(n_surfaces):
-                    boundary= crud.boundary.get_Boundary_by_ids(db=db,surface_id=cam.surfaces[i].id)
+                    boundary= cam.surfaces[i].boundary
                     posiciones_x.append((boundary.center[0]-boundary.rad,boundary.center[0]+boundary.rad))
                     posiciones_y.append((boundary.center[1]-boundary.rad,boundary.center[1]+boundary.rad))
                 

@@ -101,23 +101,23 @@ async def create_campaign(
     *,
     campaign_metadata: CampaignCreate,
     hive_id: int,
-    boundary:BoundaryCreate,
+    boundary_campaign:BoundaryCreate,
     db: Session = Depends(deps.get_db),
     background_tasks: BackgroundTasks
 ) -> dict:
     """
      Create a new campaing in the database.
     """
-    center=boundary.center
-    rad=boundary.rad
+    center=boundary_campaign.center
+    rad=boundary_campaign.rad
     role = crud.role.get_roles(db=db, member_id=campaign_metadata.creator_id, hive_id=hive_id)
 
     if ("QueenBee",) in role:
         Campaign = crud.campaign.create_cam(db=db, obj_in=campaign_metadata, hive_id=hive_id)
-  
-        surface_create=SurfaceCreate()
+        boundary_campaign = crud.boundary.create_boundary(db=db, obj_in=boundary_campaign)  
+        surface_create=SurfaceCreate(   boundary_id=boundary_campaign.id)
         Surface = crud.surface.create_sur(db=db, campaign_id=Campaign.id,obj_in=surface_create)
-        boundary = crud.boundary.create_boundary(db=db, surface_id=Surface.id,obj_in=boundary)        
+              
         anchura_celdas=(campaign_metadata.cells_distance)*2
         numero_celdas=rad//anchura_celdas + 1
        
@@ -341,15 +341,15 @@ def update_campaign(
             else:
                 updated_recipe = crud.campaign.update(db=db, db_obj=campaign, obj_in=recipe_in)
                 for i in campaign.surfaces:
-                    boundary=crud.boundary.get_Boundary_by_ids(db=db, surface_id=i.id)
-                    center=boundary.center
-                    rad=boundary.rad
+                    center=i.boundary.center
+                    rad=i.boundary.rad
                     crud.surface.remove(db=db,surface=i)
-                    db.commit()
-                    surface_create=SurfaceCreate()
-                    Surface = crud.surface.create_sur(db=db, campaign_id=campaign.id,obj_in=surface_create)
+                    db.commit()                   
                     boundary_create=BoundaryCreate(center=center,rad=rad)
-                    boundary = crud.boundary.create_boundary(db=db, surface_id=Surface.id,obj_in=boundary_create)
+                    boundary = crud.boundary.create_boundary(db=db, obj_in=boundary_create)
+
+                    surface_create=SurfaceCreate(boundary_id=boundary.id)
+                    Surface = crud.surface.create_sur(db=db, campaign_id=campaign.id,obj_in=surface_create)
                     
                     anchura_celdas=(recipe_in.cells_distance)*2
                     numero_celdas=rad//anchura_celdas + 1
@@ -412,15 +412,16 @@ def partially_update_campaign(
             else:
                 updated_recipe = crud.campaign.update(db=db, db_obj=campaign, obj_in=recipe_in)
                 for i in campaign.surfaces:
-                    boundary=crud.boundary.get_Boundary_by_ids(db=db, surface_id=i.id)
-                    center=boundary.center
-                    rad=boundary.rad
+                    # boundary=crud.boundary.get_Boundary_by_id(db=db, id=i.boundary_id)
+                    center=i.boundary.center
+                    rad=i.boundary.rad
                     crud.surface.remove(db=db,surface=i)
                     db.commit()
-                    surface_create=SurfaceCreate()
-                    Surface = crud.surface.create_sur(db=db, campaign_id=campaign.id,obj_in=surface_create)
                     boundary_create=BoundaryCreate(center=center,rad=rad)
-                    boundary = crud.boundary.create_boundary(db=db, surface_id=Surface.id,obj_in=boundary_create)
+                    boundary = crud.boundary.create_boundary(db=db, obj_in=boundary_create)
+                    
+                    surface_create=SurfaceCreate(boundary_id=boundary.id)
+                    Surface = crud.surface.create_sur(db=db, campaign_id=campaign.id,obj_in=surface_create)
                     
                     anchura_celdas=(recipe_in.cells_distance)
                     

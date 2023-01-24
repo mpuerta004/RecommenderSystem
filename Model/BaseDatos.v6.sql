@@ -137,33 +137,35 @@ CREATE TABLE Campaign (
 
 
 -- -----------------------------------------------------
--- Table Surface
--- -----------------------------------------------------
-CREATE TABLE Surface (
-  id INT NOT NULL AUTO_INCREMENT,
-  campaign_id INT not NULL,
-  PRIMARY KEY (id, campaign_id),
-    FOREIGN KEY (campaign_id)
-    REFERENCES Campaign (id)
-    ON DELETE CASCADE
-    );
-
-
--- -----------------------------------------------------
 -- Table Boundary
 -- -----------------------------------------------------
 
 CREATE TABLE Boundary (
     id INT NOT NULL AUTO_INCREMENT,
-    surface_id INT NOT NULL,
     rad INT,
     center POINT,
-    PRIMARY KEY (id, surface_id),
-    FOREIGN KEY (surface_id)
-        REFERENCES Surface (id)
-        ON DELETE CASCADE
-)
+    PRIMARY KEY (id))
 ;
+
+
+-- -----------------------------------------------------
+-- Table Surface
+-- -----------------------------------------------------
+CREATE TABLE Surface (
+  id INT NOT NULL AUTO_INCREMENT,
+  campaign_id INT not NULL,
+  boundary_id INT not null,
+  PRIMARY KEY (id, campaign_id),
+    FOREIGN KEY (campaign_id)
+    REFERENCES Campaign (id)
+    ON DELETE CASCADE,
+     FOREIGN KEY (boundary_id)
+    REFERENCES Boundary (id)
+    ON DELETE CASCADE
+    );
+
+
+
 
 
 -- -----------------------------------------------------

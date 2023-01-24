@@ -51,7 +51,7 @@ def create_Memberdevice(
     Create a new Memberdevice in the database.
     """
     memberDevice= crud.memberdevice.get_by_member_id(db=db,member_id=recipe_in.member_id)
-    if memberDevice is not None:
+    if memberDevice is None:
         
         Memberdevice = crud.memberdevice.create(db=db, obj_in=recipe_in)
         if Memberdevice is None:

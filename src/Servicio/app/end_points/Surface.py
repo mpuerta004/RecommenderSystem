@@ -84,7 +84,7 @@ def put_surface(
     Update a surface
     """
     surface=crud.surface.get_surface_by_ids(db=db,surface_id=surface_id, campaign_id=campaign_id)
-    boundary= crud.boundary.get_Boundary_by_ids(db=db,surface_id=surface_id)
+    boundary= surface.boundary
     if  surface is None:
         raise HTTPException(
             status_code=404, detail=f"Member with surface_id=={surface_id} and campaign_id={campaign_id } not found"
@@ -104,11 +104,12 @@ def put_surface(
         rad=boundary.rad
         crud.surface.remove(db=db,surface=surface)
         db.commit()
-        surface_create=SurfaceCreate()
-        Surface = crud.surface.create_sur(db=db, campaign_id=campaign_id,obj_in=surface_create)
         boundary_create=BoundaryCreate(center=center,rad=rad)
-        boundary = crud.boundary.create_boundary(db=db, surface_id=Surface.id,obj_in=boundary_create)
+        boundary = crud.boundary.create_boundary(db=db, obj_in=boundary_create)
 
+        surface_create=SurfaceCreate(boundary_id=boundary.id)
+        Surface = crud.surface.create_sur(db=db, campaign_id=campaign_id,obj_in=surface_create)
+        
         anchura_celdas=(campaign.cells_distance)
         cell_rad=(campaign.cells_distance)/2
         
@@ -160,7 +161,7 @@ def parcially_update_surface(
     Partially Update a surface
     """
     surface=crud.surface.get_surface_by_ids(db=db,surface_id=surface_id, campaign_id=campaign_id)
-    boundary= crud.boundary.get_Boundary_by_ids(db=db,surface_id=surface_id)
+    boundary= surface.boundary
     campaign=crud.campaign.get_campaign_from_surface(db=db,surface_id=surface_id)
     if  surface is None:
         raise HTTPException(
@@ -175,10 +176,11 @@ def parcially_update_surface(
         rad=boundary.rad
         crud.surface.remove(db=db,surface=surface)
         db.commit()
-        surface_create=SurfaceCreate()
-        Surface = crud.surface.create_sur(db=db, campaign_id=campaign_id,obj_in=surface_create)
         boundary_create=BoundaryCreate(center=center,rad=rad)
-        boundary = crud.boundary.create_boundary(db=db, surface_id=Surface.id,obj_in=boundary_create)
+        boundary = crud.boundary.create_boundary(db=db, obj_in=boundary_create)
+        surface_create=SurfaceCreate(boundary_id=boundary.id)
+        Surface = crud.surface.create_sur(db=db, campaign_id=campaign_id,obj_in=surface_create)
+        
 
         anchura_celdas=(Campaign.cells_distance)*2
         numero_celdas=rad//anchura_celdas + 1
@@ -251,9 +253,9 @@ def create_surface(
         raise HTTPException(
             status_code=404, detail=f"Campaign with campaign_id=={campaign_id} and hive_id=={hive_id} not found"
         )
-    obj_in=SurfaceCreate()
+    boundary = crud.boundary.create_boundary(db=db, obj_in=boundary)
+    obj_in=SurfaceCreate(boundary_id=boundary.id)
     Surface=crud.surface.create_sur(db=db, campaign_id=campaign_id,obj_in=obj_in)
-    boundary = crud.boundary.create_boundary(db=db, surface_id=Surface.id,obj_in=boundary)
     if Surface is None:
         raise HTTPException(
             status_code=400, detail=f"INVALID REQUEST"
