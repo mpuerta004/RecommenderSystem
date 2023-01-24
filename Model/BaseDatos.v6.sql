@@ -194,48 +194,26 @@ FOREIGN KEY (cell_id)
 );
 
 
--- -----------------------------------------------------
--- Table State
--- -----------------------------------------------------
-Create TABLE State(
-   id INT NOT NULL AUTO_INCREMENT,
-   state varchar(20) not null default 'created', 
-   # created, send, open, acepted, planningm realized
-   initiative_human boolean default False,
-   timestamp_update timestamp,
-   PRIMARY KEY (id)
-   );
-   
-   
+
 -- -----------------------------------------------------
 -- Table sociobee.recommendation
 -- -----------------------------------------------------
 CREATE TABLE Recommendation (
   id int not null auto_increment,
   cell_id INT NOT NULL,
-  #campaign_id int not null, 
   member_id INT NOT NULL,
   recommendation_timestamp TIMESTAMP NOT NULL,
-  #planning_timestamp TIMESTAMP DEFAULT NULL,
+  state  ENUM("NOTIFIED","ACCEPTED","REALIZED","NON_REALIZED") not null default "NOTIFIED", 
+  timestamp_update timestamp,
   slot_id int, 
   member_current_location POINT NULL, 
-   #measurement_id INT NULL DEFAULT NULL,
-  state_id INT, 
   PRIMARY KEY (id,member_id),
     FOREIGN KEY (cell_id)
     REFERENCES Cell (id)
             ON DELETE CASCADE,
-     #FOREIGN KEY (campaign_id)
-    #REFERENCES Campaign (id),
-    FOREIGN KEY (state_id)
-    REFERENCES State (id)
-    ON DELETE CASCADE,
     FOREIGN KEY (member_id)
     REFERENCES Member (id)
     ON DELETE CASCADE,
-    #FOREIGN KEY (measurement_id)
-    #REFERENCES Measurement (id)
-    #ON DELETE CASCADE,
     FOREIGN KEY (slot_id)
     REFERENCES Slot (id)
     ON DELETE CASCADE

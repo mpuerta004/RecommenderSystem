@@ -9,14 +9,26 @@ from pydantic import BaseModel, ValidationError
 from datetime import datetime, time, timedelta
 from schemas.Point import Point
 from schemas.Cell import Cell
-from schemas.State import State
+# from schemas.State import State
+
+from enum import Enum
+
+
+
+
+class state(str, Enum):
+    NOTIFIED="NOTIFIED"
+    ACCEPTED="ACCEPTED"
+    REALIZED="REALIZED"
+    NON_REALIZED="NON_REALIZED"
+    
+   
 
 class RecommendationBase(BaseModel):
-    # measurement_id:int=None
     recommendation_timestamp:datetime = datetime.now()
-    # planning_timestamp:datetime=None
-    # campaign_id:int
     member_current_location:Point
+    state:state = state.NOTIFIED
+    timestamp_update:datetime=datetime.now()
     
     
 
@@ -30,11 +42,11 @@ class RecommendationUpdate(RecommendationBase):
 # Properties shared by models stored in DB
 class RecommendationInDBBase(RecommendationBase):
     member_id:int
-    state_id:int
+    # state_id:int
     id:int
     slot_id:int
     cell_id:int
-    state:State=None
+    # state:State=None
     cell:Cell=None
     class Config:
         orm_mode = True
@@ -43,7 +55,7 @@ class RecommendationInDBBase(RecommendationBase):
 # Properties to return to client
 class Recommendation(RecommendationInDBBase):
     member_id:int
-    state_id:int
+    # state_id:int
     id:int
     slot_id:int
     cell_id:int

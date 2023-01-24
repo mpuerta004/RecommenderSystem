@@ -7,7 +7,7 @@ from db.base_class import Base
 
 from models.Cell import Cell
 from models.Member import Member
-from models.State import State
+# from models.State import State
 from models.Point import Point
 from models.Slot import Slot
 
@@ -19,14 +19,15 @@ class Recommendation(Base):
     recommendation_timestamp=Column(DateTime)
     # planning_timestamp=Column(DateTime,nullable=True)
     #measurement_id=Column(Integer, ForeignKey(Measurement.id, ondelete="CASCADE"),nullable=True)
-    state_id=Column(Integer,ForeignKey(State.id, ondelete="CASCADE"))
     # campaign_id=Column(Integer, ForeignKey(Campaign.id))
     id=Column(Integer,primary_key=True,  autoincrement=True, nullable=False )
     member_current_location=Column(Point)
     slot_id=Column(Integer,ForeignKey(Slot.id, ondelete="CASCADE"))
+    state=Column(String,nullable=False, default="NOTIFIED")
+    timestamp_update=Column(DateTime)
     
     
-    state=relationship("State",cascade="all, delete")
+    # state=relationship("State",cascade="all, delete")
     cell=relationship("Cell",cascade="all, delete")
     
     

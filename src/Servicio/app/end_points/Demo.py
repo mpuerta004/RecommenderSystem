@@ -8,7 +8,7 @@ from schemas.Measurement import Measurement, MeasurementCreate, MeasurementSearc
 from schemas.Campaign import CampaignSearchResults, Campaign, CampaignCreate, CampaignUpdate
 from schemas.Slot import Slot, SlotCreate,SlotSearchResults
 from schemas.Recommendation import Recommendation,RecommendationCreate
-from schemas.State import State,StateCreate
+# from schemas.State import State,StateCreate
 from schemas.Member import Member
 from schemas.Priority import Priority, PriorityCreate, PrioritySearchResults
 from schemas.Cell import Cell, CellCreate, CellSearchResults, Point
@@ -203,9 +203,9 @@ async def asignacion_recursos(
                             mediciones.append([user, recomendacion_polinizar, random.randint(1,600)])
 
                             #Todo: esto en realidad es una iteracion con el front-end segun la respuesta del usuario. 
-                            state=crud.state.get_state_from_recommendation(db=db,recommendation_id=recomendacion_polinizar.id)
+                            # state=crud.state.get_state_from_recommendation(db=db,recommendation_id=recomendacion_polinizar.id)
                             #Todo! no se si esto va a funcionar! 
-                            crud.state.update(db=db,db_obj=state, obj_in={"state":"Acepted","timestamp_update":time})
+                            crud.recommendation.update(db=db,db_obj=recomendacion_polinizar, obj_in={"state":"ACCEPTED","timestamp_update":time})
                             show_recomendation(db=db, cam=cam, user=user, result=recomendaciones['results'],time=time,recomendation=recomendacion_polinizar)  
 
             new=[]
@@ -223,15 +223,16 @@ async def asignacion_recursos(
                         #Ver si se registran bien mas recomendaciones con el id de la medicion correcta. 
                         measurement=crud.measurement.create_Measurement(db=db,obj_in=creation,member_id=mediciones[i][0].id,slot_id=slot.id,cell_id=mediciones[i][1].cell_id)
                         #Todo: esto en realidad es una iteracion con el 
-                        state=crud.state.get_state_from_recommendation(db=db,recommendation_id=mediciones[i][1].id)
-                        crud.state.update(db=db,db_obj=state, obj_in={"state":"Realized"})
+                        crud.recommendation.update(db=db,db_obj=mediciones[i][1], obj_in={"state":"REALIZED","timestamp_update":time_polinizado})
+                        # state=crud.state.get_state_from_recommendation(db=db,recommendation_id=mediciones[i][1].id)
+                        # crud.state.update(db=db,db_obj=state, obj_in={"state":"Realized"})
                         db.commit()
                         
                         db.commit()
                     else:
                         #Todo: esto en realidad es una iteracion con el front-end y necesitamos realizar una funcion autiomatica que cada cierto tiempo ponga esto en no realized. 
-                        state=crud.state.get_state_from_recommendation(db=db,recommendation_id=mediciones[i][1].id)
-                        crud.state.update(db=db,db_obj=state, obj_in={"state":"No Realized"})
+                        # state=crud.state.get_state_from_recommendation(db=db,recommendation_id=mediciones[i][1].id)
+                        crud.recommendation.update(db=db,db_obj=mediciones[i][1], obj_in={"state":"NON_REALIZED","timestamp_update":time_polinizado})
                         db.commit()
                 else:
                     new.append(mediciones[i])
@@ -255,7 +256,7 @@ def create_recomendation_2(
     for i in user.roles:
         if not (i.hive_id in  hives):
             hives.append(i.hive_id)
-        if i.role=="WorkerBee":
+        if i.role=="WorkerBee"  or i.role=="QueenBee":
             admi=True
     if admi:
         #Calcular las celdas mas cercanas. 
@@ -267,7 +268,9 @@ def create_recomendation_2(
         #         for l in a:
         #             cells.append(l)
         cells=crud.cell.get_cells_campaign(db,campaign_id=cam.id)
-        if cells is None: 
+        
+        
+        if cells is []: 
             raise HTTPException(
             status_code=404, detail=f"Cells of campaign {cam.id} not found."
         )
@@ -290,7 +293,7 @@ def create_recomendation_2(
                 priority=crud.priority.get_last(db=db,slot_id=slot.id,time=time)
                 Cardinal_actual = crud.measurement.get_all_Measurement_from_cell_in_the_current_slot(db=db, cell_id=i.id, time=time,slot_id=slot.id)
                 Cardinal_esperado = Cardinal_actual
-                recommendation_accepted= crud.state.get_aceptance_state_of_cell(db=db, cell_id=i.id)
+                recommendation_accepted= crud.recommendation.get_aceptance_state_of_cell(db=db, cell_id=i.id)
                 Cardinal_esperado=Cardinal_esperado+ len(recommendation_accepted)
                 # for l in mediciones:
                 #     if l[1].cell_id== i.id:
@@ -304,20 +307,19 @@ def create_recomendation_2(
                 for i in range(0,3):
                     a=crud.slot.get_slot(db=db, slot_id=cells_and_priority[i][1].slot_id)
                     # print(a.cell_id)
-                    obj_state=StateCreate(db=db)
-                    state=crud.state.create_state(db=db,obj_in=obj_state)
-                    recomendation=crud.recommendation.create_recommendation_detras(db=db,obj_in=recipe_in,member_id=member_id,state_id=state.id,slot_id=cells_and_priority[i][1].slot_id,cell_id=a.cell_id)
+                    # obj_state=StateCreate(db=db)
+                    # state=crud.state.create_state(db=db,obj_in=obj_state)
+                    recomendation=crud.recommendation.create_recommendation_detras(db=db,obj_in=recipe_in,member_id=member_id,slot_id=cells_and_priority[i][1].slot_id,cell_id=a.cell_id,sate="NOTIFIED",timestamp_update=time)
                     result.append(recomendation)
 
         elif  len(cells_and_priority)!=0:
                 for i in range(0,len(cells_and_priority)):
                     a=crud.slot.get_slot(db=db, slot_id=cells_and_priority[i][1].slot_id)
                     cell_id=a.cell_id
-                    
-                    # print(a.cell_id)
-                    obj_state=StateCreate(db=db)
-                    state=crud.state.create_state(db=db,obj_in=obj_state)
-                    recomendation=crud.recommendation.create_recommendation_detras(db=db,obj_in=recipe_in,member_id=member_id,state_id=state.id,slot_id=cells_and_priority[i][1].slot_id,cell_id=a.cell_id)
+                    # # print(a.cell_id)
+                    # obj_state=StateCreate(db=db)
+                    # state=crud.state.create_state(db=db,obj_in=obj_state)
+                    recomendation=crud.recommendation.create_recommendation_detras(db=db,obj_in=recipe_in,member_id=member_id,slot_id=cells_and_priority[i][1].slot_id,cell_id=a.cell_id,sate="NOTIFIED",timestamp_update=time)
                     result.append(recomendation)
         
         if len(cells_and_priority)==0:

@@ -15,7 +15,6 @@ from schemas.newMember import NewMemberBase
 from schemas.Priority import Priority, PriorityCreate, PrioritySearchResults
 from datetime import datetime, timedelta
 from schemas.Cell import Cell, CellCreate, CellSearchResults, Point
-from schemas.State import State,StateBase,StateCreate,StateSearchResults
 
 from typing import Any, Dict, Generic, List, Optional, Type, TypeVar, Union
 
@@ -86,7 +85,7 @@ def create_recomendation(
         if not (i.hive_id in  hives):
             hives.append(i.hive_id)
         print(i.role)
-        if i.role =="WorkerBee":
+        if i.role =="WorkerBee" or i.role=="QueenBee":
             admi=True
     if admi:
         #Calcular las celdas 
@@ -104,57 +103,65 @@ def create_recomendation(
         
         if cells is []: 
             raise HTTPException(
-            status_code=404, detail=f"Cells of campaign {hives} not found."
+            status_code=404, detail=f"Cells of campaign {cam.id} not found."
         )
         for i in cells: 
             centro= i.center
             point= recipe_in.member_current_location
             distancia= math.sqrt((centro[0] - point.x)**2+(centro[1]-point.y)**2)
-            if distancia<253:
+            if distancia<=250:
                 List_cells_cercanas.append(i)
-            
-        # print(List_cells_cercanas)
         lista_celdas_ordenas=[]
         if List_cells_cercanas!=[]:
             lista_celdas_ordenas=List_cells_cercanas
+        #Todo: imporve this else! 
         else:
             lista_celdas_ordenas=cells
             
         cells_and_priority=[]
         for i in lista_celdas_ordenas:
+                cam = crud.campaign.get_campaign_from_cell(db=db,cell_id=i.id)
                 slot=crud.slot.get_slot_time(db=db,cell_id=i.id,time=time)                
                 priority=crud.priority.get_last(db=db,slot_id=slot.id,time=time)
-                cells_and_priority.append((i,priority, math.sqrt((i.center[0] - point.x)**2+(i.center[1]-point.y)**2) ))
-        cells_and_priority.sort(key=lambda Cell: (Cell[1].temporal_priority, -Cell[2] ),reverse=True)
+                Cardinal_actual = crud.measurement.get_all_Measurement_from_cell_in_the_current_slot(db=db, cell_id=i.id, time=time,slot_id=slot.id)
+                Cardinal_esperado = Cardinal_actual
+                recommendation_accepted= crud.recommendation.get_aceptance_state_of_cell(db=db, cell_id=i.id)
+                Cardinal_esperado=Cardinal_esperado+ len(recommendation_accepted)
+                # for l in mediciones:
+                #     if l[1].cell_id== i.id:
+                #         Cardinal_esperado=Cardinal_esperado+1
+                if Cardinal_esperado < cam.min_samples:
+                    cells_and_priority.append((i,priority, math.sqrt((i.center[0] - point.x)**2+(i.center[1]-point.y)**2),priority.temporal_priority,Cardinal_esperado,Cardinal_actual))
+        cells_and_priority.sort(key=lambda Cell: (-Cell[4], Cell[1].temporal_priority, -Cell[2] ),reverse=True)
         result=[]
         
         if len(cells_and_priority)>=3:
                 for i in range(0,3):
                     a=crud.slot.get_slot(db=db, slot_id=cells_and_priority[i][1].slot_id)
-                    cell_id=a.cell_id
                     # print(a.cell_id)
-                    obj_state=StateCreate(db=db)
-                    state=crud.state.create_state(db=db,obj_in=obj_state)
-                    recomendation=crud.recommendation.create_recommendation_detras(db=db,obj_in=recipe_in,member_id=member_id,state_id=state.id,slot_id=cells_and_priority[i][1].slot_id,cell_id=a.cell_id)
+                    # obj_state=StateCreate(db=db)
+                    # state=crud.state.create_state(db=db,obj_in=obj_state)
+                    recomendation=crud.recommendation.create_recommendation_detras(db=db,obj_in=recipe_in,member_id=member_id,slot_id=cells_and_priority[i][1].slot_id,cell_id=a.cell_id,sate="NOTIFIED",timestamp_update=time)
                     result.append(recomendation)
 
         elif  len(cells_and_priority)!=0:
                 for i in range(0,len(cells_and_priority)):
                     a=crud.slot.get_slot(db=db, slot_id=cells_and_priority[i][1].slot_id)
                     cell_id=a.cell_id
-                    
-                    # print(a.cell_id)
-                    obj_state=StateCreate(db=db)
-                    state=crud.state.create_state(db=db,obj_in=obj_state)
-                    recomendation=crud.recommendation.create_recommendation_detras(db=db,obj_in=recipe_in,member_id=member_id,state_id=state.id,slot_id=cells_and_priority[i][1].slot_id,cell_id=a.cell_id)
+                    # # print(a.cell_id)
+                    # obj_state=StateCreate(db=db)
+                    # state=crud.state.create_state(db=db,obj_in=obj_state)
+                    recomendation=crud.recommendation.create_recommendation_detras(db=db,obj_in=recipe_in,member_id=member_id,slot_id=cells_and_priority[i][1].slot_id,cell_id=a.cell_id,sate="NOTIFIED",timestamp_update=time)
                     result.append(recomendation)
-                    
-      
+        
+        if len(cells_and_priority)==0:
+            return {"results": None}
         return {"results": result}
     else:
         raise HTTPException(
                 status_code=401, detail=f"This member is not a WorkingBee"
         )
+
 
 
 @api_router_recommendation.put("/{recommendation_id}", status_code=200, response_model=Recommendation)
