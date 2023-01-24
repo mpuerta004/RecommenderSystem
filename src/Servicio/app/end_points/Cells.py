@@ -116,12 +116,12 @@ def create_cell(
     # boundary=crud.boundary.get_Boundary_by_ids(db=db, surface_id=surface.id)
     centro=surface.boundary.center
     point=recipe_in.center
-    distancia= math.sqrt((centro[0] - point.x)**2+(centro[1]-point.y)**2)
+    distancia= math.sqrt((centro['lgn'] - point['lgn'])**2+(centro['lat']-point['lat'])**2)
     if distancia<=surface.boundary.rad:
     
         cell = crud.cell.create_cell(db=db, obj_in=recipe_in,surface_id=surface_id)
         
-        background_tasks.add_task(create_slots, surface,hive_id,cell.id)
+        background_tasks.add_task(create_slots_cell, surface,hive_id,cell.id)
         return cell
     else:
         raise HTTPException(
@@ -139,7 +139,6 @@ async def create_slots_cell(surface: Surface,hive_id:int,cell_id:int):
     """
     await asyncio.sleep(3)
     with sessionmaker.context_session() as db:
-        surface=crud.surface
         #       campaigns=crud.campaign.get_all_campaign(db=db)
         #       for cam in campaigns:
         # if cam.start_timestamp.strftime("%m/%d/%Y, %H:%M:%S")==date_time:

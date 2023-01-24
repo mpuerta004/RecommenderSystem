@@ -8,6 +8,7 @@ from typing import NamedTuple
 from schemas.Slot import Slot
 from pydantic import BaseModel, ValidationError
 
+from typing_extensions import TypedDict
 
 
 
@@ -28,10 +29,8 @@ class CellUpdate(CellBase):
 # Properties shared by models stored in DB
 class CellInDBBase(CellBase):
     id:int 
-    # campaign_id:int
     surface_id:int
 
-    # slots:Sequence[Slot]
     class Config:
         orm_mode = True
 

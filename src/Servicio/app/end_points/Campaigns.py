@@ -123,26 +123,26 @@ async def create_campaign(
        
         for i in range(0,numero_celdas):
             if i==0:
-                cell_create = CellCreate(surface_id=Surface.id, center=Point(center.x, center.y),rad=Campaign.cells_distance)
+                cell_create = CellCreate(surface_id=Surface.id, center=Point(center['lgn'], center['lat']),rad=Campaign.cells_distance)
                 cell = crud.cell.create_cell(db=db, obj_in=cell_create, surface_id=Surface.id)
             else:
-                CENTER_CELL_arriba =  Point(center.x,center.y+i*anchura_celdas)
-                center_cell_abajo = Point(center.x,center.y-i*anchura_celdas)
-                center_cell_izq = Point(center.x+i*anchura_celdas,center.y)
-                center_cell_derecha = Point(center.x-i*anchura_celdas,center.y)
+                CENTER_CELL_arriba =  Point(center['lgn'],center['lat']+i*anchura_celdas)
+                center_cell_abajo = Point(center['lgn'],center['lat']-i*anchura_celdas)
+                center_cell_izq = Point(center['lgn']+i*anchura_celdas,center['lat'])
+                center_cell_derecha = Point(center['lgn']-i*anchura_celdas,center['lat'])
                 center_point_list=[CENTER_CELL_arriba,center_cell_abajo,center_cell_izq,   center_cell_derecha ]
                 for poin in center_point_list:
-                    if np.sqrt((poin.x-center.x)**2 + (poin.y-center.y)**2)<=rad:
+                    if np.sqrt((poin['lgn']-center['lgn'])**2 + (poin['lat']-center['lat'])**2)<=rad:
                         cell_create = CellCreate(surface_id=Surface.id, center=poin,rad=Campaign.cells_distance)
                         cell = crud.cell.create_cell(db=db, obj_in=cell_create, surface_id=Surface.id)
                 for j in range(1,numero_celdas):
-                    CENTER_CELL_arriba_lado_1 =  Point(center.x+j*anchura_celdas,center.y+i*anchura_celdas)
-                    CENTER_CELL_arriba_lado_2 =  Point(center.x-j*anchura_celdas,center.y+i*anchura_celdas)
-                    CENTER_CELL_abajo_lado_1 =  Point(center.x+j*anchura_celdas,center.y-i*anchura_celdas)
-                    CENTER_CELL_abajo_lado_2 =  Point(center.x-j*anchura_celdas,center.y-i*anchura_celdas)
+                    CENTER_CELL_arriba_lado_1 =  Point(center['lgn']+j*anchura_celdas,center['lat']+i*anchura_celdas)
+                    CENTER_CELL_arriba_lado_2 =  Point(center['lgn']-j*anchura_celdas,center['lat']+i*anchura_celdas)
+                    CENTER_CELL_abajo_lado_1 =  Point(center['lgn']+j*anchura_celdas,center['lat']-i*anchura_celdas)
+                    CENTER_CELL_abajo_lado_2 =  Point(center['lgn']-j*anchura_celdas,center['lat']-i*anchura_celdas)
                     center_point_list=[CENTER_CELL_arriba_lado_1,CENTER_CELL_arriba_lado_2,CENTER_CELL_abajo_lado_1,CENTER_CELL_abajo_lado_2]
                     for poin in center_point_list:
-                        if np.sqrt((poin.x-center.x)**2 + (poin.y-center.y)**2)<=rad:
+                        if np.sqrt((poin['lgn']-center['lgn'])**2 + (poin['lat']-center['lat'])**2)<=rad:
                             cell_create = CellCreate(surface_id=Surface.id, center=poin,rad=Campaign.cells_distance)
                             cell = crud.cell.create_cell(db=db, obj_in=cell_create, surface_id=Surface.id)
         background_tasks.add_task(create_slots, cam=Campaign)
@@ -174,17 +174,17 @@ async def create_points_of_campaign(
         List_points=[]
         for i in range(0,numero_celdas):
             if i==0:
-                List_points.append([center.x, center.y])
+                List_points.append([center['lgn'], center['lat']])
             else:
-                List_points.append([center.x,center.y+i*anchura_celdas])
-                List_points.append([center.x,center.y-i*anchura_celdas])
-                List_points.append([center.x+i*anchura_celdas,center.y])
-                List_points.append([center.x-i*anchura_celdas,center.y])
+                List_points.append([center['lgn'],center['lat']+i*anchura_celdas])
+                List_points.append([center['lgn'],center['lat']-i*anchura_celdas])
+                List_points.append([center['lgn']+i*anchura_celdas,center['lat']])
+                List_points.append([center['lgn']-i*anchura_celdas,center['lat']])
                 for j in range(1,numero_celdas):
-                    List_points.append([center.x+j*anchura_celdas,center.y+i*anchura_celdas])
-                    List_points.append([center.x-j*anchura_celdas,center.y+i*anchura_celdas])
-                    List_points.append([center.x+j*anchura_celdas,center.y-i*anchura_celdas])
-                    List_points.append([center.x-j*anchura_celdas,center.y-i*anchura_celdas])
+                    List_points.append([center['lgn']+j*anchura_celdas,center['lat']+i*anchura_celdas])
+                    List_points.append([center['lgn']-j*anchura_celdas,center['lat']+i*anchura_celdas])
+                    List_points.append([center['lgn']+j*anchura_celdas,center['lat']-i*anchura_celdas])
+                    List_points.append([center['lgn']-j*anchura_celdas,center['lat']-i*anchura_celdas])
                     
         return List_points
     else:
@@ -366,7 +366,7 @@ def update_campaign(
                             center_cell_derecha = Point(center[0]-i*anchura_celdas,center[1])
                             center_point_list=[CENTER_CELL_arriba,center_cell_abajo,center_cell_izq,   center_cell_derecha ]
                             for poin in center_point_list:
-                                if np.sqrt((poin.x-center[0])**2 + (poin.y-center[1])**2)<=rad:
+                                if np.sqrt((poin['lgn']-center[0])**2 + (poin['lat']-center[1])**2)<=rad:
                                     cell_create = CellCreate(surface_id=Surface.id, center=poin,rad=campaign.cells_distance)
                                     cell = crud.cell.create_cell(db=db, obj_in=cell_create, surface_id=Surface.id)
                             for j in range(1,numero_celdas):
@@ -376,7 +376,7 @@ def update_campaign(
                                 CENTER_CELL_abajo_lado_2 =  Point(center[0]-j*anchura_celdas,center[1]-i*anchura_celdas)
                                 center_point_list=[CENTER_CELL_arriba_lado_1,CENTER_CELL_arriba_lado_2,CENTER_CELL_abajo_lado_1,CENTER_CELL_abajo_lado_2]
                                 for poin in center_point_list:
-                                    if np.sqrt((poin.x-center[0])**2 + (poin.y-center[1])**2)<=rad:
+                                    if np.sqrt((poin['lgn']-center[0])**2 + (poin['lat']-center[1])**2)<=rad:
                                         cell_create = CellCreate(surface_id=Surface.id, center=poin,rad=campaign.cells_distance)
                                         cell = crud.cell.create_cell(db=db, obj_in=cell_create, surface_id=Surface.id)
             background_tasks.add_task(create_slots, cam=campaign)
@@ -438,7 +438,7 @@ def partially_update_campaign(
                             center_cell_derecha = Point(center[0]-i*anchura_celdas,center[1])
                             center_point_list=[CENTER_CELL_arriba,center_cell_abajo,center_cell_izq,   center_cell_derecha ]
                             for poin in center_point_list:
-                                if np.sqrt((poin.x-center[0])**2 + (poin.y-center[1])**2)<=rad:
+                                if np.sqrt((poin['lgn']-center[0])**2 + (poin['lat']-center[1])**2)<=rad:
                                     cell_create = CellCreate(surface_id=Surface.id, center=poin,rad=campaign.cells_distance/2)
                                     cell = crud.cell.create_cell(db=db, obj_in=cell_create, surface_id=Surface.id)
                             for j in range(1,numero_celdas):
@@ -448,7 +448,7 @@ def partially_update_campaign(
                                 CENTER_CELL_abajo_lado_2 =  Point(center[0]-j*anchura_celdas,center[1]-i*anchura_celdas)
                                 center_point_list=[CENTER_CELL_arriba_lado_1,CENTER_CELL_arriba_lado_2,CENTER_CELL_abajo_lado_1,CENTER_CELL_abajo_lado_2]
                                 for poin in center_point_list:
-                                    if np.sqrt((poin.x-center[0])**2 + (poin.y-center[1])**2)<=rad:
+                                    if np.sqrt((poin['lgn']-center[0])**2 + (poin['lat']-center[1])**2)<=rad:
                                         cell_create = CellCreate(surface_id=Surface.id, center=poin,rad=campaign.cells_distance/2)
                                         cell = crud.cell.create_cell(db=db, obj_in=cell_create, surface_id=Surface.id)
             background_tasks.add_task(create_slots, cam=campaign)

@@ -108,7 +108,7 @@ def create_recomendation(
         for i in cells: 
             centro= i.center
             point= recipe_in.member_current_location
-            distancia= math.sqrt((centro[0] - point.x)**2+(centro[1]-point.y)**2)
+            distancia= math.sqrt((centro['lgn'] - point['lgn'])**2+(centro['lat']-point['lat'])**2)
             if distancia<=250:
                 List_cells_cercanas.append(i)
         lista_celdas_ordenas=[]
@@ -131,7 +131,7 @@ def create_recomendation(
                 #     if l[1].cell_id== i.id:
                 #         Cardinal_esperado=Cardinal_esperado+1
                 if Cardinal_esperado < cam.min_samples:
-                    cells_and_priority.append((i,priority, math.sqrt((i.center[0] - point.x)**2+(i.center[1]-point.y)**2),priority.temporal_priority,Cardinal_esperado,Cardinal_actual))
+                    cells_and_priority.append((i,priority, math.sqrt((i.center['lgn'] - point['lgn'])**2+(i.center['lat']-point['lat'])**2),priority.temporal_priority,Cardinal_esperado,Cardinal_actual))
         cells_and_priority.sort(key=lambda Cell: (-Cell[4], Cell[1].temporal_priority, -Cell[2] ),reverse=True)
         result=[]
         
