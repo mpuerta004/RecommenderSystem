@@ -8,6 +8,8 @@ from schemas.Boundary import Boundary, BoundaryCreate, BoundarySearchResults
 
 from schemas.Campaign import CampaignSearchResults, Campaign, CampaignCreate, CampaignUpdate
 from schemas.Slot import Slot, SlotCreate,SlotSearchResults
+from schemas.Role import Role, RoleCreate
+
 from schemas.Recommendation import Recommendation,RecommendationCreate
 # from schemas.State import State,StateCreate
 from schemas.Member import Member
@@ -111,18 +113,30 @@ async def create_campaign(
     """
     center=boundary_campaign.center
     rad=boundary_campaign.rad
-    role = crud.role.get_roles(db=db, member_id=campaign_metadata.creator_id, hive_id=hive_id)
+    
+    
+    
+    
+    role = crud.role.get_role_in_campaign(db=db, member_id=campaign_metadata.creator_id, hive_id=hive_id)
 
-    if ("QueenBee",) in role:
-        Campaign = crud.campaign.create_cam(db=db, obj_in=campaign_metadata, hive_id=hive_id)
-        boundary_campaign = crud.boundary.create_boundary(db=db, obj_in=boundary_campaign)  
-        surface_create=SurfaceCreate(   boundary_id=boundary_campaign.id)
-        Surface = crud.surface.create_sur(db=db, campaign_id=Campaign.id,obj_in=surface_create)
+    
+    Campaign = crud.campaign.create_cam(db=db, obj_in=campaign_metadata, hive_id=hive_id)
+    role=RoleCreate(role="QueenBee")
+    role_queenBee= crud.role.create_Role(db=db, obj_in=role, campaign_id=Campaign.id, member_id=Campaign.creator_id)
+    hivemembers=crud.hivemember.get_by_hive_id(db=db, hive_id=Campaign.hive_id)
+    for i in hivemembers:
+        if i.member_id!=Campaign.creator_id:
+            role=RoleCreate(role="WorkerBee")
+            role_WB= crud.role.create_Role(db=db, obj_in=role, campaign_id=Campaign.id, member_id=i.member_id)
+        
+    boundary_campaign = crud.boundary.create_boundary(db=db, obj_in=boundary_campaign)  
+    surface_create=SurfaceCreate(   boundary_id=boundary_campaign.id)
+    Surface = crud.surface.create_sur(db=db, campaign_id=Campaign.id,obj_in=surface_create)
               
-        anchura_celdas=(campaign_metadata.cells_distance)*2
-        numero_celdas=rad//anchura_celdas + 1
+    anchura_celdas=(campaign_metadata.cells_distance)*2
+    numero_celdas=rad//anchura_celdas + 1
        
-        for i in range(0,numero_celdas):
+    for i in range(0,numero_celdas):
             if i==0:
                 cell_create = CellCreate(surface_id=Surface.id, center={'lgn':center['lgn'],'lat':center['lat']},rad=Campaign.cells_distance)
                 cell = crud.cell.create_cell(db=db, obj_in=cell_create, surface_id=Surface.id)
@@ -146,12 +160,9 @@ async def create_campaign(
                         if np.sqrt((poin['lgn']-center['lgn'])**2 + (poin['lat']-center['lat'])**2)<=rad:
                             cell_create = CellCreate(surface_id=Surface.id, center=poin,rad=Campaign.cells_distance)
                             cell = crud.cell.create_cell(db=db, obj_in=cell_create, surface_id=Surface.id)
-        background_tasks.add_task(create_slots, cam=Campaign)
-        return Campaign
-    else:
-        raise HTTPException(
-               status_code=401, detail=f"The WorkerBee dont have the necesary role to create a hive"
-        )
+    background_tasks.add_task(create_slots, cam=Campaign)
+    return Campaign
+
         
     
 @api_router_campaign.post("/points/", status_code=201, response_model=List)

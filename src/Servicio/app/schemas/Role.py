@@ -3,8 +3,19 @@ from pydantic import BaseModel
 
 from enum import Enum, IntEnum
 from schemas.newMember import role
+
+
+
+class role(str, Enum):
+    WorkerBee="WorkerBee" 
+    QueenBee="QueenBee" 
+    BeeKeeper="BeeKeeper" 
+    DroneBee="DroneBee" 
+    Hive="Hive"
+
+
 class RoleBase(BaseModel):
-    role:str  #Union["QueenBee" or "Participant"]
+    role:role  #Union["QueenBee" or "Participant"]
     
 # Properties to receive via API on creation
 class RoleCreate(RoleBase):

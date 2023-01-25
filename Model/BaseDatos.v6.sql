@@ -56,6 +56,19 @@ CREATE TABLE Hive (
     ON DELETE CASCADE
 );
 
+
+CREATE TABLE HiveMember(
+  hive_id int not null,
+  member_id int not null,
+  primary key (hive_id,member_id),
+   FOREIGN KEY (member_id)
+    REFERENCES Member (id)
+    ON DELETE RESTRICT,
+    FOREIGN KEY (hive_id)
+    REFERENCES Hive (id)
+    ON DELETE RESTRICT
+);
+
 Create table Device(
 id int not null AUTO_INCREMENT,
 PRIMARY KEY (id),

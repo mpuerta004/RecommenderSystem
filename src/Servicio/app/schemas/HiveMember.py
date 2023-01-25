@@ -10,37 +10,34 @@ from datetime import datetime, time, timedelta
 from schemas.Role import Role
 
 
-class HiveBase(BaseModel):    
-    city:str
-    beekeeper_id:int
+class HiveMemberBase(BaseModel):    
+    hive_id:int
+    member_id:int
     
-
-class HiveCreate(HiveBase):
+class HiveMemberCreate(HiveMemberBase):
     pass
 
 
-class HiveUpdate(HiveBase):
+class HiveMemberUpdate(HiveMemberBase):
     pass
 
 # Properties shared by models stored in DB
-class HiveInDBBase(HiveBase):
-    id:int 
-    
+class HiveMemberInDBBase(HiveMemberBase):
+    pass    
     class Config:
         orm_mode = True
 
 
 # Properties to return to client
-class Hive(HiveInDBBase):
-    id:int 
+class HiveMember(HiveMemberInDBBase):
 
     class Config:
         orm_mode = True
 
 # Properties properties stored in DB
-class RecipeInDB(HiveInDBBase):
+class RecipeInDB(HiveMemberInDBBase):
     pass
 
 
-class HiveSearchResults(BaseModel):
-    results: Sequence[Hive]
+class HiveMemberSearchResults(BaseModel):
+    results: Sequence[HiveMember]

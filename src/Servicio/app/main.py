@@ -9,6 +9,7 @@ from pathlib import Path
 from sqlalchemy.orm import Session
 import deps
 from end_points import Hive
+from end_points import HiveMember
 from end_points import BeeKeeper
 from end_points import Members
 from end_points import Role
@@ -16,6 +17,9 @@ from end_points import Cells
 from end_points import reading
 from end_points import Campaigns
 from end_points import device
+
+from end_points import MemberDevice
+
 from end_points import Surface
 from end_points import Measurements
 from end_points import Recommendation
@@ -37,8 +41,12 @@ app = FastAPI(title="Micro-volunteering Engine",
               version=1.0, openapi_url="/openapi.json")
 app.include_router(BeeKeeper.api_router_BeeKeepers, tags=["BeeKeepers"])
 app.include_router(Hive.api_router_hive, tags=["Hives"])
+app.include_router(HiveMember.api_router_hivemember, tags=["Hive - Member"])
+
 app.include_router(Members.api_router_members, tags=["Members"])
 app.include_router(device.api_router_device, tags=["Device"])
+app.include_router(MemberDevice.api_router_membersDevice, tags=["Member - Device "])
+
 app.include_router(Campaigns.api_router_campaign, tags=["Campaigns"])
 app.include_router(Role.api_router_role, tags=["Role"])
 app.include_router(Surface.api_router_surface, tags=["Surfaces"])

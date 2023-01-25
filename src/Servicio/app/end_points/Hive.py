@@ -12,6 +12,8 @@ from schemas.Hive import Hive, HiveCreate, HiveSearchResults,HiveUpdate
 from schemas.Member import Member,MemberCreate,MemberSearchResults
 from fastapi.encoders import jsonable_encoder
 from schemas.Role import Role,RoleCreate,RoleSearchResults
+
+from schemas.HiveMember import  HiveMember, HiveMemberCreate
 from schemas.newMember import NewMemberBase
 from schemas.Priority import Priority, PriorityCreate, PrioritySearchResults
 from datetime import datetime, timedelta
@@ -66,57 +68,8 @@ def create_hive(
         raise HTTPException(
             status_code=400, detail=f"INVALID REQUEST"
         )
-    
     return hive
 
-
-@api_router_hive.post("/{hive_id}/members",status_code=201, response_model=Member )
-def create_member_of_hive(
-    *,    
-    hive_id:int,
-    recipe_in: NewMemberBase,
-    db: Session = Depends(deps.get_db)
-) -> dict:
-    """
-    Create a new member of the hive in the database with a specific role. 
-    """
-    member=MemberCreate(name=recipe_in.name,surname=recipe_in.surname,age=recipe_in.age,city=recipe_in.city,mail=recipe_in.mail,gender=recipe_in.gender,real_user=recipe_in.real_user)
-    member_new= crud.member.create(db=db, obj_in=member)
-    Role= RoleCreate(role=recipe_in.role)
-    role_new=crud.role.create_Role(db=db,obj_in=Role, hive_id=hive_id, member_id=member_new.id)
-    return member_new
-
-
-
-@api_router_hive.get("/{hive_id}/members", status_code=200, response_model=MemberSearchResults)
-def get_members_of_hive(
-    *,
-    hive_id: int,
-    db: Session = Depends(deps.get_db),
-) -> Cell:
-    """
-    Fetch all members of the Hive
-    """
-
-    campaigns_list=crud.campaign.get_campaigns_from_hive_id(db=db,hive_id=hive_id)
-    result=[]
-    for i in campaigns_list:
-        list_member_id=crud.role.get_role_of_member(db=db, campaign_id=i.id)
-        for j in list_member_id:
-            if j not in result:
-                result.append(j)
-        
-    if  result is []:
-        raise HTTPException(
-            status_code=404, detail=f"Members with hive_id=={hive_id} not found"
-        )
-        
-    List_members=[]
-    for i in result:
-        user=crud.member.get_by_id(db=db, id=i[0])
-        if user!=None:
-            List_members.append(user)
-    return {"results": List_members}
 
 
 @api_router_hive.put("/{hive_id}", status_code=201, response_model=Hive)
@@ -173,5 +126,6 @@ def delete_hive(    *,
         )
     updated_recipe = crud.hive.remove(db=db, hive=hive)
     return    {"ok": True}
+
 
 
