@@ -86,6 +86,8 @@ def create_member_of_hive(
     role_new=crud.role.create_Role(db=db,obj_in=Role, hive_id=hive_id, member_id=member_new.id)
     return member_new
 
+
+
 @api_router_hive.get("/{hive_id}/members", status_code=200, response_model=MemberSearchResults)
 def get_members_of_hive(
     *,
@@ -95,11 +97,20 @@ def get_members_of_hive(
     """
     Fetch all members of the Hive
     """
-    result = crud.role.get_member_id(db=db, hive_id=hive_id)
-    if not result:
+
+    campaigns_list=crud.campaign.get_campaigns_from_hive_id(db=db,hive_id=hive_id)
+    result=[]
+    for i in campaigns_list:
+        list_member_id=crud.role.get_role_of_member(db=db, campaign_id=i.id)
+        for j in list_member_id:
+            if j not in result:
+                result.append(j)
+        
+    if  result is []:
         raise HTTPException(
             status_code=404, detail=f"Members with hive_id=={hive_id} not found"
         )
+        
     List_members=[]
     for i in result:
         user=crud.member.get_by_id(db=db, id=i[0])

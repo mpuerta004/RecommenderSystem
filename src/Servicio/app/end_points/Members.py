@@ -138,7 +138,7 @@ def put_a_member(
     db.commit()
     return updated_recipe
 
-@api_router_members.get("/{member_id}/devices", status_code=200, response_model=Device)
+@api_router_members.get("/{member_id}/devices",  status_code=200, response_model=Device)
 def get_Memberdevice(
     *,
     member_id: int,
@@ -156,7 +156,7 @@ def get_Memberdevice(
     return device
 
 
-@api_router_members.patch("/{member_id}/devices/", status_code=201, response_model=MemberDevice)
+@api_router_members.patch("/{member_id}/devices/",status_code=201, response_model=MemberDevice)
 def put_a_member(
     *,
     
@@ -178,7 +178,7 @@ def put_a_member(
     return updated_recipe
 
 #Todo: control de errores! 
-@api_router_members.post("/{member_id}/devices/{device_id}",status_code=201, response_model=MemberDevice)
+@api_router_members.post("/{member_id}/devices/{device_id}", status_code=201, response_model=MemberDevice)
 def create_Memberdevice(
     *, member_id:int, device_id:int ,
     db: Session = Depends(deps.get_db)
@@ -205,7 +205,7 @@ def create_Memberdevice(
 
 
 
-@api_router_members.delete("/{member_id}/devices/{device_id}", status_code=204)
+@api_router_members.delete("/{member_id}/devices/{device_id}",status_code=204)
 def delete_Memberdevice(    *,
     member_id:int,
     device_id:int,

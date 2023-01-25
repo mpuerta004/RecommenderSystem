@@ -93,26 +93,6 @@ CREATE TABLE Reading (
   Benzene DOUBLE NULL DEFAULT NULL,
   PRIMARY KEY (id)
 );
-
-
-
--- -----------------------------------------------------
--- Table role
--- -----------------------------------------------------
-CREATE TABLE Role (
-    hive_id int not null, 
-    role VARCHAR(30) not null default "WorkerBee", 
-    CONSTRAINT role_type CHECK (role IN ("WorkerBee","QueenBee","BeeKeeper","DroneBee")),
-    member_id int not null,
-    PRIMARY KEY (hive_id,role, member_id),
-    FOREIGN KEY (hive_id)
-    REFERENCES Hive (id)
-    ON DELETE RESTRICT,
-    FOREIGN KEY (member_id)
-    REFERENCES Member (id)
-    ON DELETE RESTRICT
-);
-
 -- -----------------------------------------------------
 -- Table Campaign
 -- -----------------------------------------------------
@@ -135,6 +115,26 @@ CREATE TABLE Campaign (
     REFERENCES Hive (id)
     ON DELETE CASCADE
    );
+
+
+
+
+-- -----------------------------------------------------
+-- Table role
+-- -----------------------------------------------------
+CREATE TABLE Role (
+    campaign_id int not null, 
+    role VARCHAR(30) not null default "WorkerBee", 
+    CONSTRAINT role_type CHECK (role IN ("WorkerBee","QueenBee","BeeKeeper","DroneBee")),
+    member_id int not null,
+    PRIMARY KEY (campaign_id, member_id),
+    FOREIGN KEY (campaign_id)
+    REFERENCES Campaign (id)
+    ON DELETE RESTRICT,
+    FOREIGN KEY (member_id)
+    REFERENCES Member (id)
+    ON DELETE RESTRICT
+);
 
 
 -- -----------------------------------------------------

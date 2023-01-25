@@ -16,7 +16,7 @@ class RoleUpdate(RoleBase):
 
 
 class RoleInDBBase(RoleBase):
-    hive_id:int
+    campaign_id:int
     member_id: int = None
      
     class Config:
@@ -25,7 +25,7 @@ class RoleInDBBase(RoleBase):
 
 # Additional properties to return via API
 class Role(RoleInDBBase):
-    hive_id:int
+    campaign_id:int
     member_id: int = None
     # member:Sequence[Member]=None
     #campaigns:Sequence[Campaign]

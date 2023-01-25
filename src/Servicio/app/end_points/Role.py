@@ -31,17 +31,16 @@ from io import BytesIO
 from starlette.responses import StreamingResponse
 from enum import Enum, IntEnum
 
-api_router_role = APIRouter(prefix="/hives/{hive_id}/members/{member_id}/roles")
+api_router_role = APIRouter(prefix="/members/{member_id}/campaigns/{campaign_id}/roles")
 
 
 
 @api_router_role.post("/",status_code=201, response_model=Role )
-def create_new_role_for_member_of_hive(
+def create_new_role_for_member_in_campaign(
     *,    
-    hive_id: int,
     member_id:int,
+    campaign_id:int,
     obje:NewRole,
-    #Todo: Aqui lo de member_tipe no esta bien 
     db: Session = Depends(deps.get_db)
 ) -> dict:
     """
@@ -53,23 +52,18 @@ def create_new_role_for_member_of_hive(
             status_code=404, detail=f"Member with member_id=={member_id} not found"
         )
     else:
-            roles=crud.role.get_roles(db=db,hive_id=hive_id,member_id=member_id)
+            roles=crud.role.get_role_in_campaign(db=db,campaign_id=campaign_id,member_id=member_id)
             if len(roles)==0:
-                role_new=crud.role.create_Role(db=db,obj_in=obje, hive_id=hive_id, member_id=member_id)
+                role_new=crud.role.create_Role(db=db,obj_in=obje, campaign_id=campaign_id, member_id=member_id)
                 return role_new
             else:
-                for rol in roles: 
-                    if obje.role  in rol:
-                        raise HTTPException(
-                            status_code=404, detail=f"This user already has this role"
+                    raise HTTPException(
+                            status_code=404, detail=f"This user already has a role in campaign"
                         )
-                    else: 
-                        role_new=crud.role.create_Role(db=db,obj_in=obje, hive_id=hive_id, member_id=member_id)
-                        return role_new
     
 @api_router_role.delete("/{role}", status_code=204)
 def delete_role(    *,
-    hive_id: int,
+    campaign_id: int,
     member_id:int,
     role:str,
     db: Session = Depends(deps.get_db),
@@ -77,10 +71,10 @@ def delete_role(    *,
     """
     Delete role in the database.
     """
-    result = crud.role.get_by_ids_role(db=db, hive_id=hive_id,member_id=member_id,Role_str=role)
+    result = crud.role.get_by_ids_role(db=db, campaign_id=campaign_id,member_id=member_id,Role_str=role)
     if  result is None:
         raise HTTPException(
-            status_code=404, detail=f"Role with member_id=={member_id}, hive_id={hive_id} and role={role} not found"
+            status_code=404, detail=f"Role with member_id=={member_id}, campaign_id={campaign_id} and role={role} not found"
         )
     updated_recipe = crud.role.remove(db=db, role=result)
     return {"ok": True}
@@ -91,16 +85,16 @@ def delete_role(    *,
 @api_router_role.put("/{role}", status_code=201, response_model=Role)
 def put_role(
     *,
-    hive_id:int,
+    campaign_id:int,
     member_id:int,
     role:str,
-    roleUpdate:NewRole,
+    roleUpdate:RoleUpdate,
     db: Session = Depends(deps.get_db),
 ) -> dict:
     """
     Update a member
     """
-    result = crud.role.get_by_ids_role(db=db, hive_id=hive_id,member_id=member_id,Role_str=role)
+    result = crud.role.get_by_ids_role(db=db,campaign_id=campaign_id,member_id=member_id,Role_str=role)
 
     if  result is None:
         raise HTTPException(
