@@ -14,6 +14,8 @@ class BeeKeeper(Base):
     age=Column(Integer,nullable=True)
     surname=Column(String,nullable=True)
     city=Column(String,nullable=True)
+    real_user=Column(Boolean,default=True)
+
     gender=Column(Enum("NoBinary","Male","Female",'I dont want to answer'),nullable=False)
     
     # device_id=Column(Integer,ForeignKey(Device.id, ondelete='CASCADE'))

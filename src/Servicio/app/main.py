@@ -7,16 +7,6 @@ from fastapi.templating import Jinja2Templates
 from typing import Optional, Any, List
 from pathlib import Path
 from sqlalchemy.orm import Session
-# from schemas.Surface import SurfaceSearchResults, Surface, SurfaceCreate
-# from schemas.Priority import Priority, PriorityCreate, PrioritySearchResults
-# from schemas.Slot import Slot, SlotCreate, SlotSearchResults
-# from schemas.Recommendation import Recommendation, RecommendationCreate, RecommendationSearchResults
-# from schemas.State import State, StateCreate, StateUpdate
-# from schemas.Campaign import CampaignSearchResults, Campaign, CampaignCreate
-# from schemas.Hive import Hive, HiveCreate, HiveSearchResults
-# from schemas.Reading import Reading, ReadingCreate, ReadingSearchResults
-# from schemas.Measurement import Measurement, MeasurementCreate, MeasurementSearchResults
-# from schemas.Cell import Cell, CellCreate, CellSearchResults, Point
 import deps
 from end_points import Hive
 from end_points import BeeKeeper
@@ -26,12 +16,10 @@ from end_points import Cells
 from end_points import reading
 from end_points import Campaigns
 from end_points import device
-from end_points import MemberDevice
 from end_points import Surface
 from end_points import Measurements
 from end_points import Recommendation
 from end_points import Demo
-# from end_points import state
 from fastapi_utils.tasks import repeat_every
 
 from fastapi_utils.session import FastAPISessionMaker
@@ -52,13 +40,11 @@ app.include_router(Hive.api_router_hive, tags=["Hives"])
 app.include_router(Members.api_router_members, tags=["Members"])
 app.include_router(Role.api_router_role, tags=["Role"])
 app.include_router(device.api_router_device, tags=["Device"])
-app.include_router(MemberDevice.api_router_Memberdevice, tags=["MemberDevice"])
 app.include_router(Campaigns.api_router_campaign, tags=["Campaigns"])
 app.include_router(Surface.api_router_surface, tags=["Surfaces"])
 app.include_router(Cells.api_router_cell, tags=["Cells"])
 app.include_router(Measurements.api_router_measurements, tags=["Measurements"])
 app.include_router(Recommendation.api_router_recommendation, tags=["Recommendations"])
-# app.include_router(state.api_router_state,tags=["State of Recommendations"])
 app.include_router(reading.api_router_reading, tags=["Readings"])
 app.include_router(Demo.api_router_demo, tags=["Demo"])
 api_router = APIRouter()
@@ -112,8 +98,7 @@ sessionmaker = FastAPISessionMaker(SQLALCHEMY_DATABASE_URL)
 #                             trendy=0.0
 #                         else:
 #                             measurement_of_cell = crud.measurement.get_all_Measurement_from_cell(
-#                                 db=db, cell_id=cells.id,time=time )
-                            
+#                                 db=db, cell_id=cells.id,time=time )               
 #                             n_cells = crud.cell.get_count_cells(db=db, campaign_id=cam.id)
 #                             trendy = (measurement_of_cell/total_measurements)*n_cells
 #                         # print("calculo popularidad popularidad", trendy)

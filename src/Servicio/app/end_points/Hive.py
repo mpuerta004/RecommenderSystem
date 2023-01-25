@@ -80,12 +80,32 @@ def create_member_of_hive(
     """
     Create a new member of the hive in the database with a specific role. 
     """
-    member=MemberCreate(name=recipe_in.name,surname=recipe_in.surname,age=recipe_in.age,city=recipe_in.city,mail=recipe_in.mail,gender=recipe_in.gender)
+    member=MemberCreate(name=recipe_in.name,surname=recipe_in.surname,age=recipe_in.age,city=recipe_in.city,mail=recipe_in.mail,gender=recipe_in.gender,real_user=recipe_in.real_user)
     member_new= crud.member.create(db=db, obj_in=member)
     Role= RoleCreate(role=recipe_in.role)
     role_new=crud.role.create_Role(db=db,obj_in=Role, hive_id=hive_id, member_id=member_new.id)
     return member_new
 
+@api_router_hive.get("/{hive_id}/members", status_code=200, response_model=MemberSearchResults)
+def get_members_of_hive(
+    *,
+    hive_id: int,
+    db: Session = Depends(deps.get_db),
+) -> Cell:
+    """
+    Fetch all members of the Hive
+    """
+    result = crud.role.get_member_id(db=db, hive_id=hive_id)
+    if not result:
+        raise HTTPException(
+            status_code=404, detail=f"Members with hive_id=={hive_id} not found"
+        )
+    List_members=[]
+    for i in result:
+        user=crud.member.get_by_id(db=db, id=i[0])
+        if user!=None:
+            List_members.append(user)
+    return {"results": List_members}
 
 
 @api_router_hive.put("/{hive_id}", status_code=201, response_model=Hive)

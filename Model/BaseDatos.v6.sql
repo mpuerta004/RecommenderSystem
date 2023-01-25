@@ -22,7 +22,6 @@ CREATE TABLE Member (
   city VARCHAR(30) NULL DEFAULT NULL,
   gender Varchar(30) default 'I dont want to answer',
   CONSTRAINT gender_type CHECK (gender IN ("NoBinary","Male","Female",'I dont want to answer')),
-
   real_user  BOOLEAN,
   PRIMARY KEY (id)
   );
@@ -35,6 +34,8 @@ CREATE TABLE  BeeKeeper(
   mail  varchar(50) not null,
   city VARCHAR(30) NULL DEFAULT NULL,
   gender Varchar(30) not null default 'I dont want to answer',
+  real_user  BOOLEAN,
+
   CONSTRAINT gender_type_beekeeper CHECK (gender IN ("NoBinary","Male","Female",'I dont want to answer')),
 
   PRIMARY KEY (id)
@@ -46,11 +47,11 @@ CREATE TABLE  BeeKeeper(
 -- -----------------------------------------------------
 CREATE TABLE Hive (
   id INT NOT NULL AUTO_INCREMENT,
-  BeeKeeper_id INT, 
+  beekeeper_id INT, 
   city varchar(30) not null,
   # Others?
   PRIMARY KEY (id),
-   FOREIGN KEY (BeeKeeper_id)
+   FOREIGN KEY (beekeeper_id)
     REFERENCES BeeKeeper (id)
     ON DELETE CASCADE
 );

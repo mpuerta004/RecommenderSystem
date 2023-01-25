@@ -27,6 +27,7 @@ class NewMemberBase(BaseModel):
     gender: gender_type
     city: str=None
     mail:str
+    real_user:bool=True
     role: role #Union["QueenBee" or "Participant"]
  
 class NewRole(BaseModel):

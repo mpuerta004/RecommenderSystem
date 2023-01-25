@@ -13,7 +13,7 @@ class Hive(Base):
     __tablename__='Hive'
     id=Column(Integer, primary_key=True, index=True, unique=True,  autoincrement=True, nullable=False)
     city=Column(String, nullable=False)
-    BeeKeeper_id=Column(Integer, ForeignKey(BeeKeeper.id, ondelete="CASCADE"))
+    beekeeper_id=Column(Integer, ForeignKey(BeeKeeper.id, ondelete="CASCADE"))
     
     # member_role=relationship("Role",cascade="all, delete")
        

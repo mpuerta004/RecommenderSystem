@@ -78,7 +78,7 @@ def create_BeeKeeper(
     """
     Create a new BeeKeeper of the hive in the database.
     """
-    BeeKeeper=BeeKeeperCreate(name=recipe_in.name,surname=recipe_in.surname,age=recipe_in.age,city=recipe_in.city,mail=recipe_in.mail,gender=recipe_in.gender)
+    BeeKeeper=BeeKeeperCreate(name=recipe_in.name,surname=recipe_in.surname,age=recipe_in.age,city=recipe_in.city,mail=recipe_in.mail,gender=recipe_in.gender,real_user=recipe_in.real_user)
     try: 
         BeeKeeper_new= crud.beekeeper.create(db=db, obj_in=BeeKeeper)
     except:

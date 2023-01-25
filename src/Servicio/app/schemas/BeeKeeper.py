@@ -17,6 +17,9 @@ class BeeKeeperBase(BaseModel):
     gender:gender_type
     city: str=None
     mail:str
+    real_user:bool=True
+
+    
     # device_id:int=None
 
 # # Properties to receive via API on creation
