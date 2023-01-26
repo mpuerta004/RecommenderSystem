@@ -1,18 +1,9 @@
 from fastapi import FastAPI, APIRouter, Query, HTTPException, Request, Depends
-from fastapi.templating import Jinja2Templates
 from typing import Any, Dict, Generic, List, Optional, Type, TypeVar, Union, Optional
 from sqlalchemy.orm import Session
-from schemas.Hive import Hive, HiveCreate, HiveSearchResults,HiveUpdate
-from schemas.HiveMember import  HiveMember, HiveMemberCreate
-from schemas.newMember import NewMemberBase
-from schemas.Priority import Priority, PriorityCreate, PrioritySearchResults
-from datetime import datetime, timedelta
-from schemas.Cell import Cell, CellCreate, CellSearchResults, Point
-from schemas.Surface import SurfaceSearchResults, Surface, SurfaceCreate
+from schemas.Hive import Hive, HiveCreate, HiveSearchResults, HiveUpdate
 import deps
 import crud
-
-
 
 
 api_router_hive = APIRouter(prefix="/hives")
@@ -28,17 +19,18 @@ def get_hive(
     Fetch a single Hive by ID
     """
     result = crud.hive.get(db=db, id=hive_id)
-    if  result is None:
+    if result is None:
         raise HTTPException(
             status_code=404, detail=f"Hive with id=={hive_id} not found"
         )
     return result
 
-@api_router_hive.post("/",status_code=201, response_model=Hive)
-def create_hive(  *, 
-            recipe_in: HiveCreate,
-            db: Session = Depends(deps.get_db)
-            ) -> dict:
+
+@api_router_hive.post("/", status_code=201, response_model=Hive)
+def create_hive(*,
+                recipe_in: HiveCreate,
+                db: Session = Depends(deps.get_db)
+                ) -> dict:
     """
     Create a new hive in the database.
     """
@@ -52,11 +44,11 @@ def create_hive(  *,
 
 
 @api_router_hive.put("/{hive_id}", status_code=201, response_model=Hive)
-def update_hive( *,
-            recipe_in: HiveUpdate,
-            hive_id:int,
-            db: Session = Depends(deps.get_db),
-        ) -> dict:
+def update_hive(*,
+                recipe_in: HiveUpdate,
+                hive_id: int,
+                db: Session = Depends(deps.get_db),
+                ) -> dict:
     """
     Update Hive in the database.
     """
@@ -66,20 +58,20 @@ def update_hive( *,
             status_code=404, detail=f"Hive with id={hive_id} not found."
         )
     try:
-        updated_recipe = crud.hive.update(db=db, db_obj=hive, obj_in=recipe_in)
+        updated_hive = crud.hive.update(db=db, db_obj=hive, obj_in=recipe_in)
     except Exception as e:
         raise HTTPException(
             status_code=500, detail=f"Error updaiting the Hive: {e}"
         )
-    return updated_recipe
+    return updated_hive
 
 
 @api_router_hive.patch("/{hive_id}", status_code=201, response_model=Hive)
-def update_parcial_hive(    *,
-            recipe_in: Union[HiveUpdate, Dict[str, Any]],
-            hive_id:int,
-            db: Session = Depends(deps.get_db),
-        ) -> dict:
+def update_parcial_hive(*,
+                        recipe_in: Union[HiveUpdate, Dict[str, Any]],
+                        hive_id: int,
+                        db: Session = Depends(deps.get_db),
+                        ) -> dict:
     """
     Update recipe in the database.
     """
@@ -89,21 +81,19 @@ def update_parcial_hive(    *,
             status_code=404, detail=f"Recipe with ID: {hive_id} not found."
         )
     try:
-        updated_recipe = crud.hive.update(db=db, db_obj=hive, obj_in=recipe_in)
+        updated_hive = crud.hive.update(db=db, db_obj=hive, obj_in=recipe_in)
     except Exception as e:
         raise HTTPException(
             status_code=500, detail=f"Error updaiting the Hive: {e}"
         )
-    return updated_recipe
+    return updated_hive
 
-
-            
 
 @api_router_hive.delete("/{hive_id}", status_code=204)
-def delete_hive(    *,
-    hive_id:int,
-    db: Session = Depends(deps.get_db),
-):
+def delete_hive(*,
+                hive_id: int,
+                db: Session = Depends(deps.get_db),
+                ):
     """
     Delete a hive in the database.
     """
@@ -113,12 +103,9 @@ def delete_hive(    *,
             status_code=404, detail=f"Recipe with ID: {hive_id} not found."
         )
     try:
-        updated_hive = crud.hive.remove(db=db, hive=hive)
+        crud.hive.remove(db=db, hive=hive)
     except Exception as e:
         raise HTTPException(
             status_code=500, detail=f"Error deleting the Hive: {e}"
         )
-    return    {"ok": True}
-
-
-
+    return {"ok": True}
