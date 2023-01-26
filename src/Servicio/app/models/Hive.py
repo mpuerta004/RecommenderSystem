@@ -14,6 +14,6 @@ class Hive(Base):
     id=Column(Integer, primary_key=True, index=True, unique=True,  autoincrement=True, nullable=False)
     city=Column(String, nullable=False)
     beekeeper_id=Column(Integer, ForeignKey(BeeKeeper.id, ondelete="CASCADE"))
-    
+    # members
     # member_role=relationship("Role",cascade="all, delete")
        

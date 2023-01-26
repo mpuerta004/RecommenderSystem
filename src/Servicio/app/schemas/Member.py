@@ -50,7 +50,7 @@ class MemberUpdate(MemberBase):
 
 class MemberInDBBase(MemberBase):
     id: int = None
-    roles:Sequence[CampaignRole]=None
+    # roles:Sequence[CampaignRole]=None
 
     class Config:
         orm_mode = True

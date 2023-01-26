@@ -24,7 +24,7 @@ class Member(Base):
     # device_id=Column(Integer,ForeignKey(Device.id, ondelete='CASCADE'))
     
     Measurements=relationship("Measurement",cascade="all, delete")
-    roles=relationship("CampaignRole", back_populates="member",cascade="all, delete")
+    hives=relationship("HiveMember", cascade="all, delete")
     # campaign_creator= relationship("Campaign",cascade="all, delete")
 
     

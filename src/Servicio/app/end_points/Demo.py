@@ -149,8 +149,7 @@ async def asignacion_recursos(
             random.seed()
             print("----------------------------------------------------------------------", segundo)
             time = cam.start_timestamp + timedelta(seconds=segundo)
-           
-            # print(f"a ver que es to {time}")
+            
             prioriry_calculation_2(time=time,db=db,cam=cam)
             # print("----------------------------------------")
             # if segundo%120 ==0:

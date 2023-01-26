@@ -20,4 +20,4 @@ class CampaignRole(Base):
     role=Column(Enum("WorkerBee","QueenBee","BeeKeeper","DroneBee" ))
 
     
-    member=relationship("Member",back_populates="roles")
+    # member=relationship("Member",back_populates="roles")

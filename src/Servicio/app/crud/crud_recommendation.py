@@ -13,7 +13,7 @@ from sqlalchemy import Integer, String, Column, Boolean, ForeignKey, DateTime, A
 import datetime
 
 from db.base_class import Base
-from sqlalchemy import and_, extract
+from sqlalchemy import and_, extract,or_
 
 from sqlalchemy.orm import Session
 
@@ -51,6 +51,11 @@ class CRUDRecommendation(CRUDBase[Recommendation, RecommendationCreate, Recommen
 
         def get_aceptance_state_of_cell(self,db: Session, *, cell_id:int, )-> List[Recommendation]:
                 return db.query(Recommendation).filter(and_(Recommendation.state=="ACCEPTED", Recommendation.cell_id == cell_id)).all()
+        
+        def get_aceptance_and_notified_state(self,*,db: Session)-> List[Recommendation]:
+                return db.query(Recommendation).filter(or_(Recommendation.state=="ACCEPTED", Recommendation.state=="NOTIFIED")).all()
+        
+    
                         
 
 recommendation = CRUDRecommendation(Recommendation)
