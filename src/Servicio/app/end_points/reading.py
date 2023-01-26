@@ -10,7 +10,6 @@ from schemas.Slot import Slot, SlotCreate,SlotSearchResults
 from schemas.Reading import Reading, ReadingCreate, ReadingSearchResults,ReadingUpdate
 from schemas.Member import Member,MemberCreate,MemberSearchResults
 
-from schemas.Role import Role,RoleCreate,RoleSearchResults
 from schemas.newMember import NewMemberBase
 from schemas.Priority import Priority, PriorityCreate, PrioritySearchResults
 from datetime import datetime, timedelta

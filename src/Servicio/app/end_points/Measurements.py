@@ -12,7 +12,7 @@ from schemas.Member import Member,MemberCreate,MemberSearchResults
 from schemas.Reading import Reading, ReadingCreate, ReadingSearchResults
 from typing import Any, Dict, Generic, List, Optional, Type, TypeVar, Union
 
-from schemas.Role import Role,RoleCreate,RoleSearchResults
+from schemas.CampaignRole import CampaignRole,CampaignRoleCreate,CampaignRoleSearchResults
 from schemas.newMember import NewMemberBase
 from schemas.Priority import Priority, PriorityCreate, PrioritySearchResults
 from datetime import datetime, timedelta
@@ -107,19 +107,11 @@ def create_measurements(
         )
     bool=False
     hives=[]
-    
-    for i in member.roles:
-        if not (i.hive_id in  hives):
-            hives.append(i.hive_id)
-        print(i.role)
-        if i.role =="WorkerBee":
-            admi=True
-    if admi:
-        #encontramos la celda de la medicion
-        cells=[]
-        for i in hives:
+    hives=crud.hivemember.get_by_member_id(db=db, member_id=member.id)
+    cells=[]
+    for i in hives:
             time=recipe_in.timestamp
-            campaign=crud.campaign.get_campaigns_from_hive_id_active(db=db,hive_id=i,time=time)
+            campaign=crud.campaign.get_campaigns_from_hive_id_active(db=db,hive_id=i.hive_id,time=time)
             
             for j in campaign:
                 if j.start_timestamp<=time and (j.start_timestamp+timedelta(seconds=j.campaign_duration))>=time:
@@ -131,24 +123,21 @@ def create_measurements(
                                 cell_id=l.id
                                 surface=l.surface_id
                                 campaign_finaly=j
-        print(cell_id,surface)
-        slot=crud.slot.get_slot_time(db=db,cell_id=cell_id,time=recipe_in.timestamp)
-        if slot is None: 
+    print(cell_id,surface)
+    slot=crud.slot.get_slot_time(db=db,cell_id=cell_id,time=recipe_in.timestamp)
+    if slot is None: 
               raise HTTPException(
             status_code=401, detail=f"In this time the Campaign is not active"
         )
-        campaign=campaign_finaly
-        if recipe_in.timestamp>=campaign.start_timestamp and recipe_in.timestamp<=campaign.start_timestamp +timedelta(seconds=campaign.campaign_duration):
+    campaign=campaign_finaly
+    if recipe_in.timestamp>=campaign.start_timestamp and recipe_in.timestamp<=campaign.start_timestamp +timedelta(seconds=campaign.campaign_duration):
             cellMeasurement = crud.measurement.create_Measurement(db=db, obj_in=recipe_in,member_id=member_id,slot_id=slot.id,cell_id=cell_id)
             return cellMeasurement
-        else:
+    else:
             raise HTTPException(
                 status_code=400, detail=f"This campaign is not active in this moment"
             )
-    else:
-        raise HTTPException(
-            status_code=401, detail=f"This memeber is only a QueenBee not a WorkingBee"
-        )
+   
 
 
 

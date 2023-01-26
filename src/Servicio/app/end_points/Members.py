@@ -11,7 +11,7 @@ from schemas.Slot import Slot, SlotCreate,SlotSearchResults
 from schemas.Hive import Hive, HiveCreate, HiveSearchResults
 from schemas.Member import Member,MemberCreate,MemberSearchResults, MemberUpdate
 from schemas.MemberDevice import MemberDeviceCreate
-from schemas.Role import Role,RoleCreate,RoleSearchResults, RoleUpdate
+from schemas.CampaignRole import CampaignRole,CampaignRoleCreate,CampaignRoleSearchResults, CampaignRoleUpdate
 from schemas.newMember import NewMemberBase, NewRole
 from schemas.MemberDevice import MemberDevice,MemberDeviceUpdate
 from schemas.Device import Device
@@ -88,8 +88,6 @@ def create_member(
         raise HTTPException(
             status_code=404, detail=f"The input is not correct."
         )
-    # Role= RoleCreate(role=recipe_in.role)
-    # role_new=crud.role.create_Role(db=db,obj_in=Role, hive_id=hive_id, member_id=member_new.id)
     return member_new
    
    

@@ -7,7 +7,6 @@ from typing import NamedTuple
 
 from pydantic import BaseModel, ValidationError
 from datetime import datetime, time, timedelta
-from schemas.Role import Role
 
 
 class HiveBase(BaseModel):    

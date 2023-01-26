@@ -1,6 +1,5 @@
 from typing import Optional, List, Sequence
 from pydantic import BaseModel
-from schemas.Role import Role
 from enum import Enum
 
 class gender_type(str, Enum):
@@ -49,8 +48,7 @@ class BeeKeeperInDBBase(BeeKeeperBase):
 # Additional properties to return via API
 class BeeKeeper(BeeKeeperInDBBase):
     id:int
-    # roles:Sequence[Role]=None
-    #campaigns:CampaignSearchResults
+   
     
 
 class BeeKeeperInDB(BeeKeeperInDBBase):

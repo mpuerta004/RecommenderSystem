@@ -1,6 +1,6 @@
 from typing import Optional, List, Sequence
 from pydantic import BaseModel
-from schemas.Role import Role
+from schemas.CampaignRole import CampaignRole
 
 from enum import Enum
 
@@ -50,7 +50,7 @@ class MemberUpdate(MemberBase):
 
 class MemberInDBBase(MemberBase):
     id: int = None
-    roles:Sequence[Role]=None
+    roles:Sequence[CampaignRole]=None
 
     class Config:
         orm_mode = True

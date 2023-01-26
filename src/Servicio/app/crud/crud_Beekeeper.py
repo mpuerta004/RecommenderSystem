@@ -12,8 +12,8 @@ from sqlalchemy import and_, extract
 class CRUDbeekeeper(CRUDBase[BeeKeeper, BeeKeeperCreate, BeeKeeperUpdate]):
     
 
-    def get_by_id(self, db: Session, *, id:int) -> Optional[BeeKeeper]:
-         return db.query(beekeeper).filter(and_(beekeeper.id == id)).first()
+    def get_by_id(self, db: Session, *, id:int) -> BeeKeeper:
+         return db.query(BeeKeeper).filter(and_(BeeKeeper.id == id)).first()
     def remove(self, db: Session, *, beekeeper:BeeKeeper) -> BeeKeeper:
         obj = beekeeper
         db.delete(obj)
@@ -21,7 +21,7 @@ class CRUDbeekeeper(CRUDBase[BeeKeeper, BeeKeeperCreate, BeeKeeperUpdate]):
         return obj
     
     def get_beekeeper_of_city(self, db: Session, *, city:str) -> List[ BeeKeeper]:
-        return db.query(beekeeper).filter(and_(beekeeper.city == city,beekeeper.name!="Hive")).all()
+        return db.query(BeeKeeper).filter(and_(BeeKeeper.city == city,BeeKeeper.name!="Hive")).all()
     
    
 

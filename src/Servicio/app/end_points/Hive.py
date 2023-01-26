@@ -11,7 +11,6 @@ from schemas.Slot import Slot, SlotCreate,SlotSearchResults
 from schemas.Hive import Hive, HiveCreate, HiveSearchResults,HiveUpdate
 from schemas.Member import Member,MemberCreate,MemberSearchResults
 from fastapi.encoders import jsonable_encoder
-from schemas.Role import Role,RoleCreate,RoleSearchResults
 
 from schemas.HiveMember import  HiveMember, HiveMemberCreate
 from schemas.newMember import NewMemberBase

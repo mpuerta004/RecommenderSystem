@@ -30,6 +30,8 @@ class CRUDHiveMember(CRUDBase[HiveMember, HiveMemberCreate, HiveMemberUpdate]):
          
         def get_by_hive_id(selt, db=Session,*, hive_id=int)->List[HiveMember]:
                  return db.query(HiveMember).filter(and_( HiveMember.hive_id==hive_id)).all()
+        def get_by_member_id(selt, db=Session,*, member_id=int)->List[HiveMember]:
+                 return db.query(HiveMember).filter(and_( HiveMember.member_id==member_id)).all()
 
         
 hivemember = CRUDHiveMember(HiveMember)

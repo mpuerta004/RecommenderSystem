@@ -3,9 +3,6 @@ from pydantic import BaseModel, HttpUrl
 from schemas.Point import Point
 
 from typing import Sequence, Union
-from datetime import datetime, time, timedelta
-from typing import NamedTuple
-from schemas.Slot import Slot
 from pydantic import BaseModel, ValidationError
 
 from typing_extensions import TypedDict

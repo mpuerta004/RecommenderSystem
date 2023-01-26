@@ -10,9 +10,8 @@ from schemas.Slot import Slot, SlotCreate,SlotSearchResults
 from schemas.Hive import Hive, HiveCreate, HiveSearchResults
 from schemas.Member import Member,MemberCreate,MemberSearchResults
 
-from schemas.Role import Role,RoleCreate,RoleSearchResults
+from schemas.CampaignRole import CampaignRole,CampaignRoleCreate,CampaignRoleSearchResults
 from schemas.newMember import NewMemberBase
-from schemas.Priority import Priority, PriorityCreate, PrioritySearchResults
 from datetime import datetime, timedelta
 from schemas.Cell import Cell, CellCreate, CellSearchResults, Point
 
@@ -78,20 +77,19 @@ def create_recomendation(
 ) -> dict:
     time=recipe_in.recommendation_timestamp
     user=crud.member.get_by_id(db=db,id=member_id)
-    admi=False
-    hives=[]
-    for i in user.roles:
-        if not (i.hive_id in  hives):
-            hives.append(i.hive_id)
-        print(i.role)
-        if i.role =="WorkerBee" or i.role=="QueenBee":
-            admi=True
-    if admi:
+    hives=crud.hivemember.get_by_member_id(db=db, member_id=user.id)
+    # for i in hive
+    #     if not (i.hive_id in  hives):
+    #         hives.append(i.hive_id)
+    #     print(i.role)
+    #     if i.role =="WorkerBee" or i.role=="QueenBee":
+    #         admi=True
+    # if admi:
         #Calcular las celdas 
-        List_cells_cercanas=[]
-        cells=[]
-        for i in hives:
-            campaign=crud.campaign.get_campaigns_from_hive_id_active(db=db,hive_id=i,time=time)
+    List_cells_cercanas=[]
+    cells=[]
+    for i in hives:
+            campaign=crud.campaign.get_campaigns_from_hive_id_active(db=db,hive_id=i.hive_id,time=time)
             
             for j in campaign:
                 if j.start_timestamp<=time and (j.start_timestamp+timedelta(seconds=j.campaign_duration))>=time:
@@ -100,25 +98,25 @@ def create_recomendation(
                         for l in a:
                             cells.append([l,j])
         
-        if cells is []: 
+    if cells is []: 
             raise HTTPException(
             status_code=404, detail=f"Cells of campaign {cam.id} not found."
         )
-        for i in cells: 
+    for i in cells: 
             centro= i[0].center
             point= recipe_in.member_current_location
             distancia= math.sqrt((centro['lgn'] - point['lgn'])**2+(centro['lat']-point['lat'])**2)
             if distancia<=250:
                 List_cells_cercanas.append(i)
-        lista_celdas_ordenas=[]
-        if List_cells_cercanas!=[]:
+    lista_celdas_ordenas=[]
+    if List_cells_cercanas!=[]:
             lista_celdas_ordenas=List_cells_cercanas
         #Todo: imporve this else! 
-        else:
+    else:
             lista_celdas_ordenas=cells
             
-        cells_and_priority=[]
-        for i in lista_celdas_ordenas:
+    cells_and_priority=[]
+    for i in lista_celdas_ordenas:
                 cam = i[1]
                 slot=crud.slot.get_slot_time(db=db,cell_id=i[0].id,time=time)                
                 priority=crud.priority.get_last(db=db,slot_id=slot.id,time=time)
@@ -131,10 +129,10 @@ def create_recomendation(
                 #         Cardinal_esperado=Cardinal_esperado+1
                 if Cardinal_esperado < cam.min_samples:
                     cells_and_priority.append((i[0],priority, math.sqrt((i[0].center['lgn'] - point['lgn'])**2+(i[0].center['lat']-point['lat'])**2),priority.temporal_priority,Cardinal_esperado,Cardinal_actual))
-        cells_and_priority.sort(key=lambda Cell: (-Cell[4], Cell[1].temporal_priority, -Cell[2] ),reverse=True)
-        result=[]
+    cells_and_priority.sort(key=lambda Cell: (-Cell[4], Cell[1].temporal_priority, -Cell[2] ),reverse=True)
+    result=[]
         
-        if len(cells_and_priority)>=3:
+    if len(cells_and_priority)>=3:
                 for i in range(0,3):
                     a=crud.slot.get_slot(db=db, slot_id=cells_and_priority[i][1].slot_id)
                     # print(a.cell_id)
@@ -143,7 +141,7 @@ def create_recomendation(
                     recomendation=crud.recommendation.create_recommendation_detras(db=db,obj_in=recipe_in,member_id=member_id,slot_id=cells_and_priority[i][1].slot_id,cell_id=a.cell_id,state="NOTIFIED",timestamp_update=time)
                     result.append(recomendation)
 
-        elif  len(cells_and_priority)!=0:
+    elif  len(cells_and_priority)!=0:
                 for i in range(0,len(cells_and_priority)):
                     a=crud.slot.get_slot(db=db, slot_id=cells_and_priority[i][1].slot_id)
                     cell_id=a.cell_id
@@ -153,13 +151,10 @@ def create_recomendation(
                     recomendation=crud.recommendation.create_recommendation_detras(db=db,obj_in=recipe_in,member_id=member_id,slot_id=cells_and_priority[i][1].slot_id,cell_id=a.cell_id,state="NOTIFIED",timestamp_update=time)
                     result.append(recomendation)
         
-        if len(cells_and_priority)==0:
+    if len(cells_and_priority)==0:
             return {"results": []}
-        return {"results": result}
-    else:
-        raise HTTPException(
-                status_code=401, detail=f"This member is not a WorkingBee"
-        )
+    return {"results": result}
+    
 
 
 
