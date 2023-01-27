@@ -42,7 +42,7 @@ def get_a_member(
     db: Session = Depends(deps.get_db),
 ) -> Cell:
     """
-    Get a member of the hive
+    Get a member
     """
     try:
         user=crud.member.get_by_id(db=db, id=member_id)
@@ -64,7 +64,7 @@ def delete_member(    *,
     db: Session = Depends(deps.get_db),
 ):
     """
-    Update recipe in the database.
+    Remove a member from the database
     """
     try:
         user=crud.member.get_by_id(db=db, id=member_id)
@@ -105,7 +105,7 @@ def create_member(
 
 
 @api_router_members.put("/{member_id}", status_code=201, response_model=Member)
-def put_a_member(
+def update_a_member(
     *,
     member_id:int,
     recipe_in: MemberUpdate,
@@ -137,14 +137,14 @@ def put_a_member(
 
 
 @api_router_members.patch("/{member_id}", status_code=201, response_model=Member)
-def put_a_member(
+def partially_update_a_member(
     *,
     member_id:int,
     recipe_in: Union[MemberUpdate, Dict[str, Any]],
     db: Session = Depends(deps.get_db),
 ) -> dict:
     """
-    Update a member
+    Partially update a member
     """
     try:
         user=crud.member.get_by_id(db=db, id=member_id)
