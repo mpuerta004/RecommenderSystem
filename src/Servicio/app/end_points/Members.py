@@ -44,12 +44,15 @@ def get_a_member(
     """
     Get a member of the hive
     """
-    
-    user=crud.member.get_by_id(db=db, id=member_id)
-
+    try:
+        user=crud.member.get_by_id(db=db, id=member_id)
+    except Exception as e:
+        raise HTTPException(
+            status_code=500, detail=f"Error with mysql: {e}"
+        )
     if  user is None:
         raise HTTPException(
-            status_code=404, detail=f"Member with member_id=={member_id} not found"
+            status_code=404, detail=f"Member with id=={member_id} not found"
         )
     return user
 
@@ -63,15 +66,24 @@ def delete_member(    *,
     """
     Update recipe in the database.
     """
-    user=crud.member.get_by_id(db=db, id=member_id)
+    try:
+        user=crud.member.get_by_id(db=db, id=member_id)
+    except Exception as e:
+        raise HTTPException(
+            status_code=500, detail=f"Error with mysql: {e}"
+        )
     if  user is None:
         raise HTTPException(
             status_code=404, detail=f"Member with member_id=={member_id} not found"
         )
-    updated_recipe = crud.member.remove(db=db, Member=user)
+    try:
+        updated_recipe = crud.member.remove(db=db, Member=user)
+    except Exception as e:
+        raise HTTPException(
+            status_code=500, detail=f"Error removing a mmeber from the database: {e}"
+        )
     return {"ok": True}
 
-#Todo: esto no se si deberia ir asi... control de errores! 
 @api_router_members.post("/",status_code=201, response_model=Member )
 def create_member(
     *,    
@@ -79,13 +91,13 @@ def create_member(
     db: Session = Depends(deps.get_db)
 ) -> dict:
     """
-    Create a new member of the hive in the database.
+    Create a new member. 
     """
     try: 
         member_new= crud.member.create(db=db, obj_in=recipe_in)
-    except:
+    except Exception as e:
         raise HTTPException(
-            status_code=404, detail=f"The input is not correct."
+            status_code=500, detail=f"Error with mysql: {e}"
         )
     return member_new
    
@@ -102,14 +114,23 @@ def put_a_member(
     """
     Update a member
     """
-    user=crud.member.get_by_id(db=db, id=member_id)
-
+    try:
+        user=crud.member.get_by_id(db=db, id=member_id)
+    except Exception as e:
+        raise HTTPException(
+            status_code=500, detail=f"Error with mysql: {e}"
+        )
     if  user is None:
         raise HTTPException(
-            status_code=404, detail=f"Member with member_id=={member_id} not found"
+            status_code=404, detail=f"Member with id=={member_id} not found"
         )
-    updated_recipe = crud.member.update(db=db, db_obj=user, obj_in=recipe_in)
-    db.commit()
+    try:
+        updated_recipe = crud.member.update(db=db, db_obj=user, obj_in=recipe_in)
+        db.commit()
+    except Exception as e:
+        raise HTTPException(
+            status_code=500, detail=f"Error updating the member: {e}"
+        )
 
     return updated_recipe
 
@@ -125,12 +146,21 @@ def put_a_member(
     """
     Update a member
     """
-    user=crud.member.get_by_id(db=db, id=member_id)
-
+    try:
+        user=crud.member.get_by_id(db=db, id=member_id)
+    except Exception as e:
+        raise HTTPException(
+            status_code=500, detail=f"Error with mysql: {e}"
+        )
     if  user is None:
         raise HTTPException(
             status_code=404, detail=f"Member with member_id=={member_id} not found"
         )
-    updated_recipe = crud.member.update(db=db, db_obj=user, obj_in=recipe_in)
-    db.commit()
+    try:
+        updated_recipe = crud.member.update(db=db, db_obj=user, obj_in=recipe_in)
+        db.commit()
+    except Exception as e:
+        raise HTTPException(
+            status_code=500, detail=f"Error updaiting the member entity: {e}"
+        )
     return updated_recipe

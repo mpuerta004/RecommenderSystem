@@ -8,7 +8,6 @@ from typing import NamedTuple
 from pydantic import BaseModel, ValidationError
 from datetime import datetime, time, timedelta
 
-
 class HiveBase(BaseModel):    
     city:str
     beekeeper_id:int
@@ -24,15 +23,13 @@ class HiveUpdate(HiveBase):
 # Properties shared by models stored in DB
 class HiveInDBBase(HiveBase):
     id:int 
-    
     class Config:
         orm_mode = True
 
 
 # Properties to return to client
 class Hive(HiveInDBBase):
-    id:int 
-
+    pass
     class Config:
         orm_mode = True
 

@@ -3,7 +3,7 @@ from pydantic import BaseModel
 from schemas.CampaignRole import CampaignRole
 from datetime import datetime
 from enum import Enum
-
+from schemas.HiveMember import HiveMember
 
 
 # class role(str, Enum):
@@ -31,7 +31,6 @@ class MemberBase(BaseModel):
     real_user:bool=True
     # device_id:int=None
 
-#Todo: hacer que member_type tenga dos opcciones solamente. 
 # # Properties to receive via API on creation
 class MemberCreate(MemberBase):
      pass
@@ -51,18 +50,14 @@ class MemberUpdate(MemberBase):
 
 class MemberInDBBase(MemberBase):
     id: int = None
-    # roles:Sequence[CampaignRole]=None
-
+    
     class Config:
         orm_mode = True
 
 
 # Additional properties to return via API
 class Member(MemberInDBBase):
-    id:int
-    # roles:Sequence[Role]=None
-    #campaigns:CampaignSearchResults
-    
+    pass
 
 class MemberInDB(MemberInDBBase):
     pass
