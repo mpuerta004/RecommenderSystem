@@ -164,3 +164,204 @@ def partially_update_a_member(
             status_code=500, detail=f"Error updaiting the member entity: {e}"
         )
     return updated_recipe
+
+
+@api_router_members.get("{member_id}/devices/", status_code=200, response_model=Device)
+def get_memberdevice(
+    *,
+    member_id: int,
+    db: Session = Depends(deps.get_db),
+) -> dict:
+    """
+    Fetch a single Memberdevice by ID
+    """
+    # verify that the user exists
+    try: 
+        user=crud.member.get_by_id(db=db, id=member_id)
+    except Exception as e:
+        raise HTTPException(
+            status_code=404, detail=f"Error with mysql: {e}"
+        )
+    if  user is None:
+            raise HTTPException(
+                status_code=404, detail=f"The member with id={member_id} not found"
+            )
+    try:
+        memberdevice = crud.memberdevice.get_by_member_id(db=db,member_id=member_id)
+    except Exception as e:
+        raise HTTPException(
+            status_code=500, detail=f"Error with mysql: {e}"
+        )
+    if  memberdevice is None:
+            raise HTTPException(
+                status_code=404, detail=f"The member with id={member_id} has not a device."
+            )
+    return memberdevice
+
+
+#TODO! preguntar si esto esta bien! 
+@api_router_members.put("/{member_id}/devices",status_code=201, response_model=MemberDevice)
+def update_the_device_of_a_member(
+    *,
+    member_id:int,
+    recipe_in: MemberDeviceUpdate,
+    db: Session = Depends(deps.get_db),
+) -> dict:
+    """
+    Update the association of a device with a user. 
+    """
+      # verify that the user exists
+    try: 
+        user=crud.member.get_by_id(db=db, id=member_id)
+    except Exception as e:
+        raise HTTPException(
+            status_code=404, detail=f"Error with mysql: {e}"
+        )
+    if  user is None:
+            raise HTTPException(
+                status_code=404, detail=f"The member with id={member_id} not found"
+            )
+            
+    # verify that the device exists
+    try: 
+        device=crud.device.get(db=db, id=recipe_in.device_id)
+
+    except Exception as e:
+        raise HTTPException(
+            status_code=404, detail=f"Error with mysql: {e}"
+        )
+    if  device is None:
+            raise HTTPException(
+                status_code=404, detail=f"The device with id={recipe_in.device_id} not found"
+            )
+    try:
+        memberDevice=crud.memberdevice.get_by_member_id(db=db, member_id=member_id)
+    except Exception as e:
+        raise HTTPException(
+            status_code=500, detail=f"Error with mysql: {e}"
+        )
+    if  memberDevice is None:
+        raise HTTPException(
+            status_code=404, detail=f"This member has not a device."
+        )
+        
+    try:
+        updated_MemberDevice = crud.memberdevice.update(db=db, db_obj=memberDevice, obj_in=recipe_in)
+        db.commit()
+    except Exception as e:
+        raise HTTPException(
+            status_code=500, detail=f"Error updating the device of this memeber: {e}"
+        )
+    return updated_MemberDevice
+
+
+
+
+@api_router_members.post("{member_id}/devices/{device_id}", status_code=201, response_model=MemberDevice)
+def create_memberdevice(
+    *, member_id:int, device_id:int ,
+    db: Session = Depends(deps.get_db)
+) -> dict:
+    """
+    Create a new Memberdevice in the database.
+    """
+    # verify that the user exists
+    try: 
+        user=crud.member.get_by_id(db=db, id=member_id)
+    except Exception as e:
+        raise HTTPException(
+            status_code=404, detail=f"Error with mysql: {e}"
+        )
+    if  user is None:
+            raise HTTPException(
+                status_code=404, detail=f"The member with id={member_id} not found"
+            )
+    # verify that the device exists
+
+    try: 
+        device=crud.device.get(db=db, id=device_id)
+
+    except Exception as e:
+        raise HTTPException(
+            status_code=404, detail=f"Error with mysql: {e}"
+        )
+    if  device is None:
+            raise HTTPException(
+                status_code=404, detail=f"The device with id={device_id} not found"
+            )
+    # associete member and device. 
+    try:
+        memberDevice= crud.memberdevice.get_by_member_id(db=db,member_id=member_id)
+    except Exception as e:
+        raise HTTPException(
+            status_code=500, detail=f"Error with mysql: {e}"
+        )
+    if memberDevice is None:
+        member_device=MemberDeviceCreate(member_id=member_id,device_id=device_id)
+        try:
+            Memberdevice = crud.memberdevice.create(db=db, obj_in=member_device)
+        except Exception as e:
+            raise HTTPException(
+                status_code=500, detail=f"Error creating the memberdevice: {e}"
+            )
+        return Memberdevice
+    else: 
+        #We dont want to associete with several devices. Only one! 
+        raise HTTPException(
+                status_code=400, detail=f"This member already has an associated device."
+            )
+
+
+@api_router_members.delete("/{member_id}/devices/{device_id}",status_code=204)
+def delete_memberdevice(    *,
+    member_id:int,
+    device_id:int,
+    db: Session = Depends(deps.get_db),
+):
+    """
+    Delete Memberdevice in the database.
+    """
+      # verify that the user exists
+    try: 
+        user=crud.member.get_by_id(db=db, id=member_id)
+    except Exception as e:
+        raise HTTPException(
+            status_code=404, detail=f"Error with mysql: {e}"
+        )
+    if  user is None:
+            raise HTTPException(
+                status_code=404, detail=f"The member with id={member_id} not found"
+            )
+    # verify that the device exists
+
+    try: 
+        device=crud.device.get(db=db, id=device_id)
+
+    except Exception as e:
+        raise HTTPException(
+            status_code=404, detail=f"Error with mysql: {e}"
+        )
+    if  device is None:
+            raise HTTPException(
+                status_code=404, detail=f"The device with id={device_id} not found"
+            )
+    try:
+        Memberdevice=crud.memberdevice.get_by_member_id(db=db, member_id=member_id)
+    except Exception as e:
+        raise HTTPException(
+            status_code=500, detail=f"Error with mysql: {e}"
+        )
+    if  Memberdevice is None:
+        raise HTTPException(
+            status_code=404, detail=f"The assosiation of device with id={device_id} with a member with id={member_id} is not found."
+        )
+    try:
+        crud.memberdevice.remove(db=db, Memberdevice=Memberdevice)
+    except Exception as e:
+        raise HTTPException(
+            status_code=500, detail=f"Error removing the MemberDevice entity: {e}"
+        )
+    return  {"ok": True}
+
+
+   
