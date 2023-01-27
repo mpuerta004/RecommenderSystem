@@ -10,7 +10,6 @@ from sqlalchemy.orm import Session
 import deps
 from end_points import Hive
 from end_points import Members
-from end_points import HiveMember
 from end_points import BeeKeeper
 from end_points import CampaignRole
 from end_points import Cells
@@ -42,7 +41,6 @@ app.include_router(Device.api_router_device, tags=["Device"])
 app.include_router(BeeKeeper.api_router_beekeepers, tags=["BeeKeepers"])
 app.include_router(Hive.api_router_hive, tags=["Hives"])
 app.include_router(Members.api_router_members, tags=["Members"])
-app.include_router(HiveMember.api_router_hivemember, tags=[ "Member in a hive"])
 app.include_router(Campaigns.api_router_campaign, tags=["Campaigns"])
 app.include_router(CampaignRole.api_router_campaignrole, tags=["Campaign - Role"])
 app.include_router(Surface.api_router_surface, tags=["Surfaces"])
