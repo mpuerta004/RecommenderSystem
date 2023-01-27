@@ -17,7 +17,6 @@ from end_points import Cells
 from end_points import reading
 from end_points import Campaigns
 from end_points import device
-from end_points import MemberDevice
 from end_points import Surface
 from end_points import Measurements
 from end_points import Recommendation
@@ -46,7 +45,6 @@ app.include_router(Members.api_router_members, tags=["Members"])
 app.include_router(HiveMember.api_router_hivemember, tags=[ "Member in a hive"])
 
 app.include_router(device.api_router_device, tags=["Device"])
-app.include_router(MemberDevice.api_router_membersDevice, tags=["Member - Device "])
 
 app.include_router(Campaigns.api_router_campaign, tags=["Campaigns"])
 app.include_router(CampaignRole.api_router_campaignrole, tags=["Campaign - Role"])
