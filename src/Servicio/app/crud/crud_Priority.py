@@ -27,7 +27,7 @@ from sqlalchemy import and_, extract
 
 class CRUDPriority(CRUDBase[Priority, PriorityCreate,PriorityUpdate]):
     def get_last(self,*, db: Session,  slot_id:int,time:datetime) -> Priority:
-        return db.query(Priority).filter(and_(Priority.slot_id == slot_id, Priority.timestamp<=time)).order_by(Priority.timestamp.desc()).first()
+        return db.query(Priority).filter(and_(Priority.slot_id == slot_id, Priority.datetime<=time)).order_by(Priority.datetime.desc()).first()
     
     def get_by_slot(self, *, db: Session, slot_id:int) -> Priority :
         return db.query(Priority).filter(Priority.slot_id == slot_id).first()

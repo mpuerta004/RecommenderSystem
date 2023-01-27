@@ -8,12 +8,14 @@ from db.base_class import Base
 # print(sys.path)
 from models.Hive import Hive
 from models.Member import Member
+from sqlalchemy import Integer, Enum
+
 
 
 class HiveMember(Base):
     __tablename__='HiveMember'
     hive_id=Column(Integer, ForeignKey(Hive.id, ondelete="CASCADE"),primary_key=True)
     member_id=Column(Integer, ForeignKey(Member.id, ondelete="CASCADE"),primary_key=True)
-
+    role=Column(Enum("WorkerBee","QueenBee","DroneBee" ),primary_key=True,default="WorkerBee")
     # member_role=relationship("Role",cascade="all, delete")
        

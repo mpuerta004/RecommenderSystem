@@ -69,17 +69,17 @@ def prioriry_calculation_2(time:datetime, cam:Campaign, db:Session= Depends(deps
             # date = datetime(year=a.year, month=a.month, day=a.day,
             #                 hour=a.hour, minute=a.minute, second=a.second)
             # for cam in campaigns:
-            if time >= cam.start_timestamp and time <= cam.start_timestamp+timedelta(seconds=cam.campaign_duration):
+            if time >= cam.start_datetime and time <= cam.end_datetime:
                 surfaces=crud.surface.get_multi_surface_from_campaign_id(db=db,campaign_id=cam.id,limit=1000)
                 for sur in surfaces:
                     for cells in sur.cells:
                 # for cells in cam.cells:
                         momento = time
-                        if momento >= (cam.start_timestamp+timedelta(seconds=cam.sampling_period)):
+                        if momento >= (cam.start_datetime+timedelta(seconds=cam.sampling_period)):
                             slot_pasado = crud.slot.get_slot_time(db=db, cell_id=cells.id, time=(
                                  momento - timedelta(seconds=cam.sampling_period)))
                             Cardinal_pasado =  crud.measurement.get_all_Measurement_from_cell_in_the_current_slot(
-                            db=db, cell_id=cells.id, time=slot_pasado.end_timestamp, slot_id=slot_pasado.id)
+                            db=db, cell_id=cells.id, time=slot_pasado.end_datetime, slot_id=slot_pasado.id)
                         else:
                             Cardinal_pasado = 0
                         db.commit()
@@ -93,7 +93,7 @@ def prioriry_calculation_2(time:datetime, cam:Campaign, db:Session= Depends(deps
                         # b = max(2, cam.min_samples - int(Cardinal_pasado))
                         # a = max(2, cam.min_samples - int(Cardinal_actual))
                         # result = math.log(a) * math.log(b, int(Cardinal_actual) + 2)
-                        init=momento  - cam.start_timestamp
+                        init=momento  - cam.start_datetime
                         
                         a =  init - timedelta(seconds= ((init).total_seconds()//cam.sampling_period)*cam.sampling_period)
                         result=-Cardinal_actual/cam.min_samples + a.total_seconds()/cam.sampling_period
@@ -112,7 +112,7 @@ def prioriry_calculation_2(time:datetime, cam:Campaign, db:Session= Depends(deps
                         # Maximo de la prioridad temporal -> 8.908297157282622
                         # Minimo -> 0.1820547846864113
                         Cell_priority = PriorityCreate(
-                            slot_id=slot.id, timestamp=time, temporal_priority=result, trend_priority=trendy)  # ,cell_id=cells.id)
+                            slot_id=slot.id, datetime=time, temporal_priority=result, trend_priority=trendy)  # ,cell_id=cells.id)
                         priority = crud.priority.create_priority_detras(
                             db=db, obj_in=Cell_priority)
                         db.commit()
@@ -144,19 +144,19 @@ async def asignacion_recursos(
         mediciones=[]
         cam=crud.campaign.get_campaign(db=db,hive_id=hive_id,campaign_id=campaign_id)
    
-        dur=cam.campaign_duration
+        dur=cam.end_datetime - cam.start_datetime
         for segundo in range(60,dur,60):
             random.seed()
             print("----------------------------------------------------------------------", segundo)
-            time = cam.start_timestamp + timedelta(seconds=segundo)
+            time = cam.start_datetime + timedelta(seconds=segundo)
             
             prioriry_calculation_2(time=time,db=db,cam=cam)
             # print("----------------------------------------")
             # if segundo%120 ==0:
-            #     # time = cam.start_timestamp + timedelta(seconds=segundo)
+            #     # time = cam.start_datetime + timedelta(seconds=segundo)
             #     cell_statics=crud.cell.get_statics(db=db, campaign_id=cam.id)   
             #     for i in cell_statics:
-            #         Measurementcreate= MeasurementCreate(cell_id=i.id, timestamp=time,location=i.center)
+            #         Measurementcreate= MeasurementCreate(cell_id=i.id, datetime=time,location=i.centre)
             #         slot=crud.slot.get_slot_time(db=db,cell_id=i.id,time=time)
             #         user_static=crud.member.get_static_user(db=db,hive_id=cam.hive_id)
             #         crud.measurement.create_Measurement(db=db, slot_id=slot.id,member_id=user_static.id, obj_in=Measurementcreate)
@@ -168,11 +168,11 @@ async def asignacion_recursos(
                 # posiciones_y=[]
                 
                 # for sur in cam.surfaces:
-                #     posiciones_x.append(int(sur.center[0]) + sur.rad) 
-                #     posiciones_x.append(int(sur.center[0]) - sur.rad) 
+                #     posiciones_x.append(int(sur.centre[0]) + sur.radius) 
+                #     posiciones_x.append(int(sur.centre[0]) - sur.radius) 
 
-                #     posiciones_y.append(int(sur.center[1]) + sur.rad)   
-                #     posiciones_y.append(int(sur.center[1]) - sur.rad)   
+                #     posiciones_y.append(int(sur.centre[1]) + sur.radius)   
+                #     posiciones_y.append(int(sur.centre[1]) - sur.radius)   
 
                 # La coordenada x tiene que estar entre 100 y (n_surface*700)
                 #La coordenada y entre 100 y 100*n_filas
@@ -181,8 +181,8 @@ async def asignacion_recursos(
                 posiciones_y=[]
                 for i in range(n_surfaces):
                     boundary= cam.surfaces[i].boundary
-                    posiciones_x.append((boundary.center['lgn']-boundary.rad,boundary.center['lgn']+boundary.rad))
-                    posiciones_y.append((boundary.center['lat']-boundary.rad,boundary.center['lat']+boundary.rad))
+                    posiciones_x.append((boundary.centre['Longitude']-boundary.radius,boundary.centre['Longitude']+boundary.radius))
+                    posiciones_y.append((boundary.centre['Latitude']-boundary.radius,boundary.centre['Latitude']+boundary.radius))
                 
                 list_users= reciboUser(cam,db=db)
                 if list_users!=[]:
@@ -190,11 +190,11 @@ async def asignacion_recursos(
                     #Genero las recomendaciones y la que el usuario selecciona y el tiempo que va a tardar en realizar dicho recomendacion. 
                         n=len(posiciones_y)
                         surface_number = random.randint(0,n-1) 
-                        #Posiciones con los circulos  y cells cuadradas 
+                        #Posiciones con los circulos  y cells cuadradiusas 
                         x=random.randint(posiciones_x[surface_number][0],posiciones_x[surface_number][1])
                         y=random.randint(posiciones_y[surface_number][0],posiciones_y[surface_number][1])
 
-                        a=RecommendationCreate(member_current_location={'lgn':x,'lat':y},recommendation_timestamp=time)
+                        a=RecommendationCreate(member_current_location={'Longitude':x,'Latitude':y},recommendation_datetime=time)
                         recomendaciones=create_recomendation_2(db=db,member_id=user.id,recipe_in=a,cam=cam)
                         
                         if len(recomendaciones['results'])>0:
@@ -204,10 +204,10 @@ async def asignacion_recursos(
                             #Todo: esto en realidad es una iteracion con el front-end segun la respuesta del usuario. 
                             # state=crud.state.get_state_from_recommendation(db=db,recommendation_id=recomendacion_polinizar.id)
                             #Todo! no se si esto va a funcionar! 
-                            crud.recommendation.update(db=db,db_obj=recomendacion_polinizar, obj_in={"state":"ACCEPTED","timestamp_update":time})
+                            crud.recommendation.update(db=db,db_obj=recomendacion_polinizar, obj_in={"state":"ACCEPTED","update_datetime":time})
                             show_recomendation(db=db, cam=cam, user=user, result=recomendaciones['results'],time=time,recomendation=recomendacion_polinizar)  
 
-            new=[]
+            new=[] 
             for i in range(0,len(mediciones)):
                 #Anterior approach cuando declaramos el tiempo que el uusario iba a tardar en realizarlo 
                 mediciones[i][2]=int(mediciones[i][2]) - 60
@@ -217,19 +217,18 @@ async def asignacion_recursos(
                         time_polinizado = time
                         cell=crud.cell.get_Cell(db=db,cell_id=mediciones[i][1].cell_id)
                         MemberDevice_user=crud.memberdevice.get_by_member_id(db=db,member_id=mediciones[i][0].id)
-                        creation=MeasurementCreate(db=db, location=cell.center,timestamp=time_polinizado,device_id=MemberDevice_user.device_id, recommendation_id=mediciones[i][1].id)
+                        creation=MeasurementCreate(db=db, location=cell.centre,datetime=time_polinizado,device_id=MemberDevice_user.device_id, recommendation_id=mediciones[i][1].id)
                         slot=crud.slot.get_slot_time(db=db, cell_id=cell.id,time=time)
                         #Ver si se registran bien mas recomendaciones con el id de la medicion correcta. 
-                        measurement=crud.measurement.create_Measurement(db=db,obj_in=creation,member_id=mediciones[i][0].id,slot_id=slot.id,cell_id=mediciones[i][1].cell_id)
-                        #Todo: esto en realidad es una iteracion con el 
-                        crud.recommendation.update(db=db,db_obj=mediciones[i][1], obj_in={"state":"REALIZED","timestamp_update":time_polinizado})
+                        
+                        measurement=crud.measurement.create_Measurement(db=db,obj_in=creation,member_id=mediciones[i][0].id,slot_id=slot.id,cell_id=mediciones[i][1].cell_id,recommendation_id=mediciones[i][1].id)
+                        crud.recommendation.update(db=db,db_obj=mediciones[i][1], obj_in={"state":"REALIZED","update_datetime":time_polinizado})
                         db.commit()
                         
                         db.commit()
                     else:
                         time_polinizado = time
-                        #Todo: esto en realidad es una iteracion con el front-end y necesitamos realizar una funcion autiomatica que cada cierto tiempo ponga esto en no realized. 
-                        crud.recommendation.update(db=db,db_obj=mediciones[i][1], obj_in={"state":"NON_REALIZED","timestamp_update":time_polinizado})
+                        crud.recommendation.update(db=db,db_obj=mediciones[i][1], obj_in={"state":"NON_REALIZED","update_datetime":time_polinizado})
                         db.commit()
                 else:
                     new.append(mediciones[i])
@@ -246,7 +245,7 @@ def create_recomendation_2(
     """
     Create a new recommendation
     """
-    time=recipe_in.recommendation_timestamp
+    time=recipe_in.recommendation_datetime
     user=crud.member.get_by_id(db=db,id=member_id)
     admi=False
     hives=[]
@@ -272,9 +271,9 @@ def create_recomendation_2(
             status_code=404, detail=f"Cells of campaign {cam.id} not found."
         )
         for i in cells: 
-            centro= i.center
+            centro= i.centre
             point= recipe_in.member_current_location
-            distancia= math.sqrt((centro['lgn'] - point['lgn'])**2+(centro['lat']-point['lat'])**2)
+            distancia= math.sqrt((centro['Longitude'] - point['Longitude'])**2+(centro['Latitude']-point['Latitude'])**2)
             if distancia<=250:
                 List_cells_cercanas.append(i)
         lista_celdas_ordenas=[]
@@ -289,14 +288,14 @@ def create_recomendation_2(
                 slot=crud.slot.get_slot_time(db=db,cell_id=i.id,time=time)                
                 priority=crud.priority.get_last(db=db,slot_id=slot.id,time=time)
                 Cardinal_actual = crud.measurement.get_all_Measurement_from_cell_in_the_current_slot(db=db, cell_id=i.id, time=time,slot_id=slot.id)
-                Cardinal_esperado = Cardinal_actual
+                Cardinal_esperadiuso = Cardinal_actual
                 recommendation_accepted= crud.recommendation.get_aceptance_state_of_cell(db=db, cell_id=i.id)
-                Cardinal_esperado=Cardinal_esperado+ len(recommendation_accepted)
+                Cardinal_esperadiuso=Cardinal_esperadiuso+ len(recommendation_accepted)
                 # for l in mediciones:
                 #     if l[1].cell_id== i.id:
-                #         Cardinal_esperado=Cardinal_esperado+1
-                if Cardinal_esperado < cam.min_samples:
-                    cells_and_priority.append((i,priority, math.sqrt((i.center['lgn'] - point['lgn'])**2+(i.center['lat']-point['lat'])**2),priority.temporal_priority,Cardinal_esperado,Cardinal_actual))
+                #         Cardinal_esperadiuso=Cardinal_esperadiuso+1
+                if Cardinal_esperadiuso < cam.min_samples:
+                    cells_and_priority.append((i,priority, math.sqrt((i.centre['Longitude'] - point['Longitude'])**2+(i.centre['Latitude']-point['Latitude'])**2),priority.temporal_priority,Cardinal_esperadiuso,Cardinal_actual))
         cells_and_priority.sort(key=lambda Cell: (-Cell[4], Cell[1].temporal_priority, -Cell[2] ),reverse=True)
         result=[]
         
@@ -306,7 +305,7 @@ def create_recomendation_2(
                     # print(a.cell_id)
                     # obj_state=StateCreate(db=db)
                     # state=crud.state.create_state(db=db,obj_in=obj_state)
-                    recomendation=crud.recommendation.create_recommendation_detras(db=db,obj_in=recipe_in,member_id=member_id,slot_id=cells_and_priority[i][1].slot_id,cell_id=a.cell_id,state="NOTIFIED",timestamp_update=time)
+                    recomendation=crud.recommendation.create_recommendation_detras(db=db,obj_in=recipe_in,member_id=member_id,slot_id=cells_and_priority[i][1].slot_id,cell_id=a.cell_id,state="NOTIFIED",update_datetime=time)
                     result.append(recomendation)
 
         elif  len(cells_and_priority)!=0:
@@ -316,7 +315,7 @@ def create_recomendation_2(
                     # # print(a.cell_id)
                     # obj_state=StateCreate(db=db)
                     # state=crud.state.create_state(db=db,obj_in=obj_state)
-                    recomendation=crud.recommendation.create_recommendation_detras(db=db,obj_in=recipe_in,member_id=member_id,slot_id=cells_and_priority[i][1].slot_id,cell_id=a.cell_id,state="NOTIFIED",timestamp_update=time)
+                    recomendation=crud.recommendation.create_recommendation_detras(db=db,obj_in=recipe_in,member_id=member_id,slot_id=cells_and_priority[i][1].slot_id,cell_id=a.cell_id,state="NOTIFIED",update_datetime=time)
                     result.append(recomendation)
         
         if len(cells_and_priority)==0:
@@ -366,7 +365,7 @@ def show_recomendation(*, cam:Campaign, user:Member, result:list(),time:datetime
     
     
     cv2.putText(imagen, f"User Position", (500+50,50), cv2.FONT_HERSHEY_SIMPLEX , 0.75, (0,0,0))
-    cv2.circle(imagen,color=(0,0,0),center=(500 ,45), radius=10,thickness=-1) 
+    cv2.circle(imagen,color=(0,0,0),centre=(500 ,45), radiusius=10,thickness=-1) 
     cv2.putText(imagen, f"Cells Recommended", (500 +50,80), cv2.FONT_HERSHEY_SIMPLEX , 0.75, (0,0,0))
     cv2.drawMarker(imagen, position=(500,70), color=(255,0,0), markerType=cv2.MARKER_SQUARE, markerSize= 20, thickness=2)
     cv2.putText(imagen, f"Cell Selected", (500+50,110), cv2.FONT_HERSHEY_SIMPLEX , 0.75, (0,0,0))
@@ -389,21 +388,21 @@ def show_recomendation(*, cam:Campaign, user:Member, result:list(),time:datetime
                     numero=int((Cardinal_actual/cam.min_samples)//(1/4))
                 
                 color= (color_list[numero][2],color_list[numero][1],color_list[numero][0])
-                pt1=(int(j.center['lgn'])+j.rad,int(j.center['lat'])+j.rad)
-                pt2=(int(j.center['lgn'])-j.rad,int(j.center['lat'])-j.rad)
+                pt1=(int(j.centre['Longitude'])+j.radius,int(j.centre['Latitude'])+j.radius)
+                pt2=(int(j.centre['Longitude'])-j.radius,int(j.centre['Latitude'])-j.radius)
                 cv2.rectangle(imagen,pt1=pt1, pt2=pt2,color=color ,thickness = -1)
                 cv2.rectangle(imagen,pt1=pt1, pt2=pt2,color=(0,0,0))   
-                cv2.putText(imagen,  str(Cardinal_actual), (int(j.center['lgn']),int(j.center['lat'])+40), cv2.FONT_HERSHEY_SIMPLEX , 0.75, (0,0,0))
+                cv2.putText(imagen,  str(Cardinal_actual), (int(j.centre['Longitude']),int(j.centre['Latitude'])+40), cv2.FONT_HERSHEY_SIMPLEX , 0.75, (0,0,0))
 
                 if j.id in Cells_recomendadas:
                     if j.id== cell_elejida:
-                        cv2.drawMarker(imagen, position=(int(j.center['lgn']),int(j.center['lat'])), color=(151,45,248), markerType=cv2.MARKER_TILTED_CROSS,markerSize= 24, thickness=5)
-                        cv2.drawMarker(imagen, position=(int(j.center['lgn']),int(j.center['lat'])), color=(255,0,0), markerType=cv2.MARKER_SQUARE, markerSize= 20, thickness=2)
+                        cv2.drawMarker(imagen, position=(int(j.centre['Longitude']),int(j.centre['Latitude'])), color=(151,45,248), markerType=cv2.MARKER_TILTED_CROSS,markerSize= 24, thickness=5)
+                        cv2.drawMarker(imagen, position=(int(j.centre['Longitude']),int(j.centre['Latitude'])), color=(255,0,0), markerType=cv2.MARKER_SQUARE, markerSize= 20, thickness=2)
 
                     else:
-                        cv2.drawMarker(imagen, position=(int(j.center['lgn']),int(j.center['lat'])), color=(255,0,0), markerType=cv2.MARKER_SQUARE, markerSize= 20, thickness=2)
+                        cv2.drawMarker(imagen, position=(int(j.centre['Longitude']),int(j.centre['Latitude'])), color=(255,0,0), markerType=cv2.MARKER_SQUARE, markerSize= 20, thickness=2)
 
-    cv2.circle(imagen,color=(0,0,0),center=(int(user_position['lgn']),int(user_position['lat'])), radius=10,thickness=-1) 
+    cv2.circle(imagen,color=(0,0,0),centre=(int(user_position['Longitude']),int(user_position['Latitude'])), radiusius=10,thickness=-1) 
     # res, im_png = cv2.imencode(".png", imagen)
     direcion=f"/home/ubuntu/carpeta_compartida_docker/RecommenderSystem/src/Servicio/app/Pictures/Recomendaciones/{time.strftime('%m-%d-%Y-%H-%M-%S')}User_id{user.id}.jpeg"
     # print(direcion)
@@ -434,7 +433,7 @@ def show_recomendation(*, cam:Campaign, user:Member, result:list(),time:datetime
     
     
 #     # cv2.putText(imagen, f"User position", (100+1*600,150), cv2.FONT_HERSHEY_SIMPLEX , 0.75, (0,0,0))
-#     # cv2.circle(imagen,color=(0,0,0),center=(100+1*600 + 250,140), radius=10,thickness=-1) 
+#     # cv2.circle(imagen,color=(0,0,0),centre=(100+1*600 + 250,140), radiusius=10,thickness=-1) 
 #     # cv2.putText(imagen, f"cells recommended", (100+1*600,200), cv2.FONT_HERSHEY_SIMPLEX , 0.75, (0,0,0))
 #     # cv2.drawMarker(imagen, position=(100+1*600 + 250,190), color=(255,0,0), markerType=cv2.MARKER_SQUARE, markerSize= 20, thickness=2)
 #     # cv2.putText(imagen, f"Cell Selected", (100+1*600,250), cv2.FONT_HERSHEY_SIMPLEX , 0.75, (0,0,0))
@@ -448,11 +447,11 @@ def show_recomendation(*, cam:Campaign, user:Member, result:list(),time:datetime
 #     posiciones_x=[]
 #     posiciones_y=[]
 #     for i in cam.surfaces:
-#             posiciones_x.append(int(i.center[0]) + i.rad) 
-#             posiciones_x.append(int(i.center[0]) - i.rad) 
+#             posiciones_x.append(int(i.centre[0]) + i.radius) 
+#             posiciones_x.append(int(i.centre[0]) - i.radius) 
 
-#             posiciones_y.append(int(i.center[1]) + i.rad) 
-#             posiciones_y.append(int(i.center[1]) - i.rad) 
+#             posiciones_y.append(int(i.centre[1]) + i.radius) 
+#             posiciones_y.append(int(i.centre[1]) - i.radius) 
 
 
 #             for j in i.cells:
@@ -470,7 +469,7 @@ def show_recomendation(*, cam:Campaign, user:Member, result:list(),time:datetime
 #                     # color=(191, 355, 255) 
 #                     color='y'
 #                 Cardinal_actual = crud.measurement.get_all_Measurement_from_cell_in_the_current_slot(db=db, cell_id=j.id, time=time,slot_id=slot.id)
-#                 plt.plot(int(j.center[0]), int(j.center[1]), 'bo',markerfacecolor=color, markersize=40)
+#                 plt.plot(int(j.centre[0]), int(j.centre[1]), 'bo',markerfacecolor=color, markersize=40)
                 
 #                 # print(temporal_prioridad/9, j.id,Cardinal_actual)
 #                 # pt1=(int(j.superior_coord[0]),int(j.superior_coord[1]))
@@ -478,29 +477,29 @@ def show_recomendation(*, cam:Campaign, user:Member, result:list(),time:datetime
 #                 # # print(pt1, pt2)
 #                 # cv2.rectangle(imagen,pt1=pt1, pt2=pt2,color=color ,thickness = -1)
 #                 # cv2.rectangle(imagen,pt1=(int(j.superior_coord[0]),int(j.superior_coord[1])), pt2=(int(j.inferior_coord[0]),int(j.inferior_coord[1])),color=(0,0,0))   
-#                 # cv2.circle(imagen,center=(int(j.center[0]),int(j.center[1])) , radius=j.rad, color=color, thickness=-1)
-#                 plt.text(int(j.center[0]), int(j.center[1]),str(Cardinal_actual),    fontdict=None)
+#                 # cv2.circle(imagen,centre=(int(j.centre[0]),int(j.centre[1])) , radiusius=j.radius, color=color, thickness=-1)
+#                 plt.text(int(j.centre[0]), int(j.centre[1]),str(Cardinal_actual),    fontdict=None)
 #                 if j.id in Cells_recomendadas:
 #                     if j.id== cell_elejida:
-#                         plt.plot(int(j.center[0]), int(j.center[1]),marker="h",alpha=0.75,markerfacecolor='magenta', markersize=80)
-#                         plt.plot(int(j.center[0]), int(j.center[1]),marker="s",alpha=0.5,markerfacecolor='blue', markersize=60)
+#                         plt.plot(int(j.centre[0]), int(j.centre[1]),marker="h",alpha=0.75,markerfacecolor='magenta', markersize=80)
+#                         plt.plot(int(j.centre[0]), int(j.centre[1]),marker="s",alpha=0.5,markerfacecolor='blue', markersize=60)
 
-#                         # cv2.drawMarker(imagen, position=(int(j.center[0]),int(j.center[1])), color=(151,45,248), markerType=cv2.MARKER_TILTED_CROSS,markerSize= 24, thickness=5)
-#                         # cv2.drawMarker(imagen, position=(int(j.center[0]),int(j.center[1])), color=(255,0,0), markerType=cv2.MARKER_SQUARE, markerSize= 20, thickness=2)
+#                         # cv2.drawMarker(imagen, position=(int(j.centre[0]),int(j.centre[1])), color=(151,45,248), markerType=cv2.MARKER_TILTED_CROSS,markerSize= 24, thickness=5)
+#                         # cv2.drawMarker(imagen, position=(int(j.centre[0]),int(j.centre[1])), color=(255,0,0), markerType=cv2.MARKER_SQUARE, markerSize= 20, thickness=2)
 
 #                     else:
-#                         plt.plot(int(j.center[0]), int(j.center[1]),marker="s",alpha=0.5,markerfacecolor='blue', markersize=60)
+#                         plt.plot(int(j.centre[0]), int(j.centre[1]),marker="s",alpha=0.5,markerfacecolor='blue', markersize=60)
 
-#                         # cv2.drawMarker(imagen, position=(int(j.center[0]),int(j.center[1])), color=(255,0,0), markerType=cv2.MARKER_SQUARE, markerSize= 20, thickness=2)
+#                         # cv2.drawMarker(imagen, position=(int(j.centre[0]),int(j.centre[1])), color=(255,0,0), markerType=cv2.MARKER_SQUARE, markerSize= 20, thickness=2)
 
-#                 # cv2.putText(imagen, str(Cardinal_actual), (int(j.center[0]),int(j.center[1])), cv2.FONT_HERSHEY_SIMPLEX , 0.75, (0,0,0))
+#                 # cv2.putText(imagen, str(Cardinal_actual), (int(j.centre[0]),int(j.centre[1])), cv2.FONT_HERSHEY_SIMPLEX , 0.75, (0,0,0))
 #     plt.plot( int(user_position[0]),int(user_position[1]), marker="o", markersize=40)
 #     y=max(posiciones_y)
 #     x=min(posiciones_x)
 #     plt.text(x, y+10,f"Campaign: id={cam.id},",    fontdict=None)
 #     plt.text(x, y+8,f"city={cam.city}",    fontdict=None)
 #     plt.text(x, y+6,f"time={time.strftime('%m/%d/%Y, %H:%M:%S')}",    fontdict=None)
-#     plt.text(x, y+4,f"Campaign Start: id={cam.start_timestamp.strftime('%m/%d/%Y, %H:%M:%S')},",    fontdict=None)
+#     plt.text(x, y+4,f"Campaign Start: id={cam.start_datetime.strftime('%m/%d/%Y, %H:%M:%S')},",    fontdict=None)
     
 #     plt.text(x+5, y+10,f"User Position", fontdict=None)
 #     plt.plot(x+7, y+10,marker='o', markersize=60)
@@ -581,12 +580,12 @@ def show_a_campaign_2(
                 else:
                     numero=int((Cardinal_actual/campañas_activas.min_samples)//(1/4))
                 color= (color_list[numero][2],color_list[numero][1],color_list[numero][0])
-                pt1=(int(j.center['lgn'])+j.rad,int(j.center['lat'])+j.rad)
-                pt2=(int(j.center['lgn'])-j.rad,int(j.center['lat'])-j.rad)
+                pt1=(int(j.centre['Longitude'])+j.radius,int(j.centre['Latitude'])+j.radius)
+                pt2=(int(j.centre['Longitude'])-j.radius,int(j.centre['Latitude'])-j.radius)
                 # print(pt1, pt2)
                 cv2.rectangle(imagen,pt1=pt1, pt2=pt2,color=color ,thickness = -1)
                 cv2.rectangle(imagen,pt1=pt1, pt2=pt2,color=(0,0,0))   
-                cv2.putText(imagen, str(Cardinal_actual), (int(j.center['lgn']),int(j.center['lat'])), cv2.FONT_HERSHEY_SIMPLEX , 0.75, (0,0,0))
+                cv2.putText(imagen, str(Cardinal_actual), (int(j.centre['Longitude']),int(j.centre['Latitude'])), cv2.FONT_HERSHEY_SIMPLEX , 0.75, (0,0,0))
 
     
     # res, im_png = cv2.imencode(".png", imagen)
@@ -609,11 +608,11 @@ def show_a_campaign_2(
     # posiciones_y=[]
     # for i in campañas_activas.surfaces:
            
-    #         posiciones_x.append(int(i.center[0]) + i.rad) 
-    #         posiciones_x.append(int(i.center[0]) - i.rad) 
+    #         posiciones_x.append(int(i.centre[0]) + i.radius) 
+    #         posiciones_x.append(int(i.centre[0]) - i.radius) 
 
-    #         posiciones_y.append(int(i.center[1]) + i.rad)   
-    #         posiciones_y.append(int(i.center[1]) - i.rad)   
+    #         posiciones_y.append(int(i.centre[1]) + i.radius)   
+    #         posiciones_y.append(int(i.centre[1]) - i.radius)   
 
     #         for j in i.cells:
     #             slot=crud.slot.get_slot_time(db=db, cell_id=j.id,time=time)
@@ -629,7 +628,7 @@ def show_a_campaign_2(
     #                 # color=(191, 355, 255) 
     #                 color='y'
     #             Cardinal_actual = crud.measurement.get_all_Measurement_from_cell_in_the_current_slot(db=db, cell_id=j.id, time=time,slot_id=slot.id)
-    #             plt.plot(int(j.center[0]), int(j.center[1]), 'bo',markerfacecolor=color, markersize=40)
+    #             plt.plot(int(j.centre[0]), int(j.centre[1]), 'bo',markerfacecolor=color, markersize=40)
                 
     #             # print(temporal_prioridad/9, j.id,Cardinal_actual)
     #             # pt1=(int(j.superior_coord[0]),int(j.superior_coord[1]))
@@ -637,16 +636,16 @@ def show_a_campaign_2(
     #             # # print(pt1, pt2)
     #             # cv2.rectangle(imagen,pt1=pt1, pt2=pt2,color=color ,thickness = -1)
     #             # cv2.rectangle(imagen,pt1=(int(j.superior_coord[0]),int(j.superior_coord[1])), pt2=(int(j.inferior_coord[0]),int(j.inferior_coord[1])),color=(0,0,0))   
-    #             # cv2.circle(imagen,center=(int(j.center[0]),int(j.center[1])) , radius=j.rad, color=color, thickness=-1)
-    #             plt.text(int(j.center[0]), int(j.center[1]),str(Cardinal_actual),    fontdict=None)
-    #             # cv2.putText(imagen, str(Cardinal_actual), (int(j.center[0]),int(j.center[1])), cv2.FONT_HERSHEY_SIMPLEX , 0.75, (0,0,0))
+    #             # cv2.circle(imagen,centre=(int(j.centre[0]),int(j.centre[1])) , radiusius=j.radius, color=color, thickness=-1)
+    #             plt.text(int(j.centre[0]), int(j.centre[1]),str(Cardinal_actual),    fontdict=None)
+    #             # cv2.putText(imagen, str(Cardinal_actual), (int(j.centre[0]),int(j.centre[1])), cv2.FONT_HERSHEY_SIMPLEX , 0.75, (0,0,0))
     # y=max(posiciones_y)
     # x=min(posiciones_x)
     # plt.text(x, y+10,f"Campaign: id={campañas_activas.id},",    fontdict=None)
     # plt.text(x, y+8,f"city={campañas_activas.city}",    fontdict=None)
     # plt.text(x, y+6,f"time={time.strftime('%m/%d/%Y, %H:%M:%S')}",    fontdict=None)
-    # plt.text(x, y+4,f"Campaign Start: id={campañas_activas.start_timestamp.strftime('%m/%d/%Y, %H:%M:%S')},",    fontdict=None)
-    # plt.text(x, y+4,f"Campaign Start: id={campañas_activas.start_timestamp.strftime('%m/%d/%Y, %H:%M:%S')},",    fontdict=None)
+    # plt.text(x, y+4,f"Campaign Start: id={campañas_activas.start_datetime.strftime('%m/%d/%Y, %H:%M:%S')},",    fontdict=None)
+    # plt.text(x, y+4,f"Campaign Start: id={campañas_activas.start_datetime.strftime('%m/%d/%Y, %H:%M:%S')},",    fontdict=None)
     # res, im_png = cv2.imencode(".png", imagen)
     direcion=f"/home/ubuntu/carpeta_compartida_docker/RecommenderSystem/src/Servicio/app/Pictures/Measurements/{time.strftime('%m-%d-%Y-%H-%M-%S')}.jpeg"
     # print(direcion)

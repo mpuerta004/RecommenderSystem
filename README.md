@@ -2,7 +2,7 @@ You have to follow these steps to be able to launch the Micro-Volunteering Engin
 1. `pip install poetry` (or safer, follow the instructions: https://python-poetry.org/docs/#installation)
 2. Install dependencies `cd` into the directory where the `pyproject.toml` is located then `poetry install`
 3. [UNIX] Run `cd Model` 
-4. [UNIX] Run `sudo mysql -uroot -p < BaseDatos.v6.sql`
+4. [UNIX] Run `sudo mysql -uroot -p < BaseDatos.v7.sql`
 5. [UNIX] Run `cd ..`
 6. [UNIX]: Run the FastAPI server via poetry with the bash script: `poetry run ./run.sh`
 6. [WINDOWS]: Run the FastAPI server via poetry with the Python command: `poetry run python src/Servicio/app/main.py`
@@ -45,8 +45,7 @@ Use case - Example:
 4. **Create a Campaign:** At http://localhost:8001 in secction Campaign at the endpoint post. 
     ![](./Picture_readme/Campaign_section.PNG)
     
-    For example, if we want to create a short campaign to get air quality data for a small area. So, the strategy of this campaign is to collect as many measurements as possible for the campaign duration (which should not be long). Click on the POST endpoint and then in the "Try it out" button, and complete the Request body (picture example). The creator_id must be the id of a QueenBee of the hive.  
-    ![](./Picture_readme/Campaign_post.PNG)
+    For example, if we want to create a short campaign to get air quality data for a small area. So, the strategy of this campaign is to collect as many measurements as possible for the campaign duration (which should not be long). Click on the POST endpoint and then in the "Try it out" button, and complete the Request body (picture example). 
 
     We can visualize the campaign map with the /hives/{hive_id}/campaigns/{campaign_id}/show endpoint. In this case, the campaign has the following surface: 
     ![](./Picture_readme/Campaign_show.PNG)

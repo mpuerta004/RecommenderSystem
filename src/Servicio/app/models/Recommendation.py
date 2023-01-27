@@ -25,7 +25,7 @@ class Recommendation(Base):
     __tablename__='Recommendation'
     cell_id=Column(Integer, ForeignKey(Cell.id, ondelete="CASCADE"))
     member_id=Column(Integer, ForeignKey(Member.id, ondelete="CASCADE"),primary_key=True)
-    recommendation_timestamp=Column(DateTime)
+    send_datetime=Column(DateTime)
     # planning_timestamp=Column(DateTime,nullable=True)
     #measurement_id=Column(Integer, ForeignKey(Measurement.id, ondelete="CASCADE"),nullable=True)
     # campaign_id=Column(Integer, ForeignKey(Campaign.id))
@@ -33,7 +33,7 @@ class Recommendation(Base):
     member_current_location=Column(Point)
     slot_id=Column(Integer,ForeignKey(Slot.id, ondelete="CASCADE"))
     state=Column(Enum('NOTIFIED', 'ACCEPTED', 'REALIZED', 'NON_REALIZED'),nullable=False)
-    timestamp_update=Column(DateTime)
+    update_datetime=Column(DateTime)
     
     
     # state=relationship("State",cascade="all, delete")

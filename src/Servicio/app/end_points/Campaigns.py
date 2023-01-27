@@ -120,12 +120,10 @@ async def create_campaign(
     """
      Create a new campaing in the database.
     """
-    center = boundary_campaign.center
-    rad = boundary_campaign.rad
-
-    hiveMember = crud.hivemember.get_by_member_hive_id(
-        db=db, member_id=campaign_metadata.creator_id, hive_id=hive_id)
-    if hiveMember is None:
+    centre = boundary_campaign.centre
+    radius = boundary_campaign.radius
+    QueenBee=crud.hivemember.get_by_role_hive(db=db, hive_id=hive_id, role="QueenBee")
+    if QueenBee is None:
         raise HTTPException(
             status_code=404, detail=f"The creator memeber is not part of the campaign."
         )
@@ -133,11 +131,10 @@ async def create_campaign(
     Campaign = crud.campaign.create_cam(
         db=db, obj_in=campaign_metadata, hive_id=hive_id)
     role = CampaignRoleCreate(role="QueenBee")
-    role_queenBee = crud.campaignrole.create_CampaignRole(
-        db=db, obj_in=role, campaign_id=Campaign.id, member_id=Campaign.creator_id)
+    role_queenBee = crud.campaignrole.create_CampaignRole( db=db, obj_in=role, campaign_id=Campaign.id, member_id=QueenBee.id)
     hivemembers = crud.hivemember.get_by_hive_id(db=db, hive_id=Campaign.hive_id)
     for i in hivemembers:
-        if i.member_id != Campaign.creator_id:
+        if i.member_id != QueenBee.id:
             try:
                 role = CampaignRoleCreate(role="WorkerBee")
                 role_WB = crud.campaignrole.create_CampaignRole(
@@ -157,13 +154,13 @@ async def create_campaign(
             status_code=404, detail=f"Problem with the conecction with mysql."
         )
     anchura_celdas = (campaign_metadata.cells_distance)*2
-    numero_celdas = rad//anchura_celdas + 1
+    numero_celdas = radius//anchura_celdas + 1
 
     for i in range(0, numero_celdas):
         if i == 0:
             try:
-                cell_create = CellCreate(surface_id=Surface.id, center={
-                    'lgn': center['lgn'], 'lat': center['lat']}, rad=Campaign.cells_distance)
+                cell_create = CellCreate(surface_id=Surface.id, centre={
+                    'Longitude': centre['Longitude'], 'Latitude': centre['Latitude']}, radius=Campaign.cells_distance)
                 cell = crud.cell.create_cell(
                     db=db, obj_in=cell_create, surface_id=Surface.id)
             except:
@@ -171,21 +168,21 @@ async def create_campaign(
                     status_code=404, detail=f"Problem with the conecction with mysql."
                 )
         else:
-            CENTER_CELL_arriba = {'lgn': center['lgn'],
-                                  'lat': center['lat']+i*anchura_celdas}
-            center_cell_abajo = {'lgn': center['lgn'],
-                                 'lat': center['lat']-i*anchura_celdas}
-            center_cell_izq = {'lgn': center['lgn'] +
-                               i*anchura_celdas, 'lat': center['lat']}
-            center_cell_derecha = {
-                'lgn': center['lgn']-i*anchura_celdas, 'lat': center['lat']}
-            center_point_list = [CENTER_CELL_arriba, center_cell_abajo,
-                                 center_cell_izq,   center_cell_derecha]
-            for poin in center_point_list:
-                if np.sqrt((poin['lgn']-center['lgn'])**2 + (poin['lat']-center['lat'])**2) <= rad:
+            centre_CELL_arriba = {'Longitude': centre['Longitude'],
+                                  'Latitude': centre['Latitude']+i*anchura_celdas}
+            centre_cell_abajo = {'Longitude': centre['Longitude'],
+                                 'Latitude': centre['Latitude']-i*anchura_celdas}
+            centre_cell_izq = {'Longitude': centre['Longitude'] +
+                               i*anchura_celdas, 'Latitude': centre['Latitude']}
+            centre_cell_derecha = {
+                'Longitude': centre['Longitude']-i*anchura_celdas, 'Latitude': centre['Latitude']}
+            centre_point_list = [centre_CELL_arriba, centre_cell_abajo,
+                                 centre_cell_izq,   centre_cell_derecha]
+            for poin in centre_point_list:
+                if np.sqrt((poin['Longitude']-centre['Longitude'])**2 + (poin['Latitude']-centre['Latitude'])**2) <= radius:
                     try:
                         cell_create = CellCreate(
-                            surface_id=Surface.id, center=poin, rad=Campaign.cells_distance)
+                            surface_id=Surface.id, centre=poin, radius=Campaign.cells_distance)
                         cell = crud.cell.create_cell(
                             db=db, obj_in=cell_create, surface_id=Surface.id)
                     except:
@@ -193,21 +190,21 @@ async def create_campaign(
                             status_code=404, detail=f"Problems with the conecction with mysql."
                         )
             for j in range(1, numero_celdas):
-                CENTER_CELL_arriba_lado_1 = {
-                    'lgn': center['lgn']+j*anchura_celdas, 'lat': center['lat']+i*anchura_celdas}
-                CENTER_CELL_arriba_lado_2 = {
-                    'lgn': center['lgn']-j*anchura_celdas, 'lat': center['lat']+i*anchura_celdas}
-                CENTER_CELL_abajo_lado_1 = {
-                    'lgn': center['lgn']+j*anchura_celdas, 'lat': center['lat']-i*anchura_celdas}
-                CENTER_CELL_abajo_lado_2 = {
-                    'lgn': center['lgn']-j*anchura_celdas, 'lat': center['lat']-i*anchura_celdas}
-                center_point_list = [CENTER_CELL_arriba_lado_1, CENTER_CELL_arriba_lado_2,
-                                     CENTER_CELL_abajo_lado_1, CENTER_CELL_abajo_lado_2]
-                for poin in center_point_list:
-                    if np.sqrt((poin['lgn']-center['lgn'])**2 + (poin['lat']-center['lat'])**2) <= rad:
+                centre_CELL_arriba_lado_1 = {
+                    'Longitude': centre['Longitude']+j*anchura_celdas, 'Latitude': centre['Latitude']+i*anchura_celdas}
+                centre_CELL_arriba_lado_2 = {
+                    'Longitude': centre['Longitude']-j*anchura_celdas, 'Latitude': centre['Latitude']+i*anchura_celdas}
+                centre_CELL_abajo_lado_1 = {
+                    'Longitude': centre['Longitude']+j*anchura_celdas, 'Latitude': centre['Latitude']-i*anchura_celdas}
+                centre_CELL_abajo_lado_2 = {
+                    'Longitude': centre['Longitude']-j*anchura_celdas, 'Latitude': centre['Latitude']-i*anchura_celdas}
+                centre_point_list = [centre_CELL_arriba_lado_1, centre_CELL_arriba_lado_2,
+                                     centre_CELL_abajo_lado_1, centre_CELL_abajo_lado_2]
+                for poin in centre_point_list:
+                    if np.sqrt((poin['Longitude']-centre['Longitude'])**2 + (poin['Latitude']-centre['Latitude'])**2) <= radius:
                         try:
                             cell_create = CellCreate(
-                                surface_id=Surface.id, center=poin, rad=Campaign.cells_distance)
+                                surface_id=Surface.id, centre=poin, radius=Campaign.cells_distance)
                             cell = crud.cell.create_cell(
                                 db=db, obj_in=cell_create, surface_id=Surface.id)
                         except:
@@ -229,41 +226,41 @@ async def create_points_of_campaign(
     """
     Generate the points of a campaign.
     """
-    center = boundary.center
-    rad = boundary.rad
+    centre = boundary.centre
+    radius = boundary.radius
 
-    hiveMember = crud.hivemember.get_by_member_hive_id(
-        db=db, member_id=campaign_metadata.creator_id, hive_id=hive_id)
-    if hiveMember is None:
-        raise HTTPException(
-            status_code=404, detail=f"The creator is not part of the campaign."
-        )
+    # hiveMember = crud.hivemember.get_by_member_hive_id(
+    #     db=db, member_id=campaign_metadata.creator_id, hive_id=hive_id)
+    # if hiveMember is None:
+    #     raise HTTPException(
+    #         status_code=404, detail=f"The creator is not part of the campaign."
+    #     )
     anchura_celdas = (campaign_metadata.cells_distance)*2
-    numero_celdas = rad//anchura_celdas + 1
+    numero_celdas = radius//anchura_celdas + 1
     List_points = []
     for i in range(0, numero_celdas):
         if i == 0:
-            List_points.append([center['lgn'], center['lat']])
+            List_points.append([centre['Longitude'], centre['Latitude']])
         else:
-            List_points.append([center['lgn'], center['lat']+i*anchura_celdas])
-            List_points.append([center['lgn'], center['lat']-i*anchura_celdas])
-            List_points.append([center['lgn']+i*anchura_celdas, center['lat']])
-            List_points.append([center['lgn']-i*anchura_celdas, center['lat']])
+            List_points.append([centre['Longitude'], centre['Latitude']+i*anchura_celdas])
+            List_points.append([centre['Longitude'], centre['Latitude']-i*anchura_celdas])
+            List_points.append([centre['Longitude']+i*anchura_celdas, centre['Latitude']])
+            List_points.append([centre['Longitude']-i*anchura_celdas, centre['Latitude']])
             for j in range(1, numero_celdas):
-                List_points.append([center['lgn']+j*anchura_celdas,
-                                   center['lat']+i*anchura_celdas])
-                List_points.append([center['lgn']-j*anchura_celdas,
-                                   center['lat']+i*anchura_celdas])
-                List_points.append([center['lgn']+j*anchura_celdas,
-                                   center['lat']-i*anchura_celdas])
-                List_points.append([center['lgn']-j*anchura_celdas,
-                                   center['lat']-i*anchura_celdas])
+                List_points.append([centre['Longitude']+j*anchura_celdas,
+                                   centre['Latitude']+i*anchura_celdas])
+                List_points.append([centre['Longitude']-j*anchura_celdas,
+                                   centre['Latitude']+i*anchura_celdas])
+                List_points.append([centre['Longitude']+j*anchura_celdas,
+                                   centre['Latitude']-i*anchura_celdas])
+                List_points.append([centre['Longitude']-j*anchura_celdas,
+                                   centre['Latitude']-i*anchura_celdas])
 
     return List_points
 
 
 """
-Output ( "center": [0,0], "rad": 100):
+Output ( "centre": [0,0], "radius": 100):
 [
   [    0,    0  ],
   [    0,    100  ],
@@ -284,25 +281,26 @@ async def create_slots(cam: Campaign):
     """
     await asyncio.sleep(3)
     with sessionmaker.context_session() as db:
-        n_slot = cam.campaign_duration//cam.sampling_period
-        if cam.campaign_duration % cam.sampling_period != 0:
+        duration= cam.end_timesptamp- cam.start_datetime 
+        n_slot = duration//cam.sampling_period
+        if duration % cam.sampling_period != 0:
             n_slot = n_slot+1
         for i in range(n_slot):
             time_extra = i*cam.sampling_period
-            start = cam.start_timestamp + timedelta(seconds=time_extra)
+            start = cam.start_datetime + timedelta(seconds=time_extra)
             end = start + timedelta(seconds=cam.sampling_period - 1)
             for sur in cam.surfaces:
                 for cells in sur.cells:
                     try:
                         slot_create = SlotCreate(
-                            cell_id=cells.id, start_timestamp=start, end_timestamp=end)
+                            cell_id=cells.id, start_datetime=start, end_datetime=end)
                         slot = crud.slot.create_slot_detras(db=db, obj_in=slot_create)
                         db.commit()
                     except:
                                 raise HTTPException(
                                     status_code=404, detail=f"Problem with the conecction with mysql."
                                 )
-                    if start == cam.start_timestamp:
+                    if start == cam.start_datetime:
                         Cardinal_pasado = 0
                         Cardinal_actual = 0
                         init= 0
@@ -315,7 +313,7 @@ async def create_slots(cam: Campaign):
                         trendy = 0.0
                         try:
                             Cell_priority = PriorityCreate(
-                                slot_id=slot.id, timestamp=start, temporal_priority=result, trend_priority=trendy)  # ,cell_id=cells.id)
+                                slot_id=slot.id, datetime=start, temporal_priority=result, trend_priority=trendy)  # ,cell_id=cells.id)
                             priority = crud.priority.create_priority_detras(
                                 db=db, obj_in=Cell_priority)
                         except:
@@ -350,7 +348,7 @@ def show_a_campaign(
             status_code=404, detail=f"Campaign with campaign_id== {campaign_id}  and hive_id=={hive_id} not found"
         )
     else:
-        if time >= campañas_activas.start_timestamp and time <= (campañas_activas.start_timestamp + timedelta(seconds=campañas_activas.campaign_duration)):
+        if time >= campañas_activas.start_datetime and time <= (campañas_activas.end_datetime):
             imagen = 255*np.ones((1500, 1500, 3), dtype=np.uint8)
 
             # imagen = 255*np.ones(( 200+100*n_filas , 200+n_surfaces*600,3),dtype=np.uint8)
@@ -393,13 +391,13 @@ def show_a_campaign(
                             (Cardinal_actual/campañas_activas.min_samples)//(1/4))
                     color = (color_list[numero][2], color_list[numero]
                              [1], color_list[numero][0])
-                    pt1 = (int(j.center['lgn'])+j.rad, int(j.center['lat'])+j.rad)
-                    pt2 = (int(j.center['lgn'])-j.rad, int(j.center['lat'])-j.rad)
+                    pt1 = (int(j.centre['Longitude'])+j.radius, int(j.centre['Latitude'])+j.radius)
+                    pt2 = (int(j.centre['Longitude'])-j.radius, int(j.centre['Latitude'])-j.radius)
                     # print(pt1, pt2)
                     cv2.rectangle(imagen, pt1=pt1, pt2=pt2, color=color, thickness=-1)
                     cv2.rectangle(imagen, pt1=pt1, pt2=pt2, color=(0, 0, 0))
-                    cv2.putText(imagen, str(Cardinal_actual), (int(j.center['lgn']), int(
-                        j.center['lat'])), cv2.FONT_HERSHEY_SIMPLEX, 0.75, (0, 0, 0))
+                    cv2.putText(imagen, str(Cardinal_actual), (int(j.centre['Longitude']), int(
+                        j.centre['Latitude'])), cv2.FONT_HERSHEY_SIMPLEX, 0.75, (0, 0, 0))
 
             res, im_png = cv2.imencode(".png", imagen)
 
@@ -428,8 +426,8 @@ def update_campaign(
         raise HTTPException(
             status_code=400, detail=f"Recipe with hive_id=={hive_id} and campaign_id=={campaign_id} not found."
         )
-    if recipe_in.start_timestamp != campaign.start_timestamp or recipe_in.campaign_duration != campaign.campaign_duration or recipe_in.cells_distance != campaign.cells_distance:
-        if datetime.now() > campaign.start_timestamp:
+    if recipe_in.start_datetime != campaign.start_datetime or recipe_in.end_datetime != campaign.end_datetime or recipe_in.cells_distance != campaign.cells_distance:
+        if datetime.now() > campaign.start_datetime:
             raise HTTPException(
                 status_code=401, detail=f"You cannot modify a campaign that has already been started "
             )
@@ -437,12 +435,12 @@ def update_campaign(
             updated_recipe = crud.campaign.update(
                 db=db, db_obj=campaign, obj_in=recipe_in)
             for i in campaign.surfaces:
-                center = i.boundary.center
-                rad = i.boundary.rad
+                centre = i.boundary.centre
+                radius = i.boundary.radius
                 crud.surface.remove(db=db, surface=i)
                 db.commit()
                 try:
-                    boundary_create = BoundaryCreate(center=center, rad=rad)
+                    boundary_create = BoundaryCreate(centre=centre, radius=radius)
                     boundary = crud.boundary.create_boundary(db=db, obj_in=boundary_create)
                     surface_create = SurfaceCreate(boundary_id=boundary.id)
                     Surface = crud.surface.create_sur(
@@ -454,12 +452,12 @@ def update_campaign(
                
 
                 anchura_celdas = (recipe_in.cells_distance)*2
-                numero_celdas = rad//anchura_celdas + 1
+                numero_celdas = radius//anchura_celdas + 1
                 for i in range(0, numero_celdas):
                     if i == 0:
                         try:
-                            cell_create = CellCreate(surface_id=Surface.id, center=Point(
-                            center[0], center[1]), rad=campaign.cells_distance)
+                            cell_create = CellCreate(surface_id=Surface.id, centre=Point(
+                            centre[0], centre[1]), radius=campaign.cells_distance)
                             cell = crud.cell.create_cell(
                             db=db, obj_in=cell_create, surface_id=Surface.id)
                         except:
@@ -467,19 +465,19 @@ def update_campaign(
                                     status_code=404, detail=f"Problem with the conecction with mysql."
                                 )
                     else:
-                        CENTER_CELL_arriba = Point(
-                            center[0], center[1]+i*anchura_celdas)
-                        center_cell_abajo = Point(center[0], center[1]-i*anchura_celdas)
-                        center_cell_izq = Point(center[0]+i*anchura_celdas, center[1])
-                        center_cell_derecha = Point(
-                            center[0]-i*anchura_celdas, center[1])
-                        center_point_list = [
-                            CENTER_CELL_arriba, center_cell_abajo, center_cell_izq,   center_cell_derecha]
-                        for poin in center_point_list:
-                            if np.sqrt((poin['lgn']-center[0])**2 + (poin['lat']-center[1])**2) <= rad:
+                        centre_CELL_arriba = Point(
+                            centre[0], centre[1]+i*anchura_celdas)
+                        centre_cell_abajo = Point(centre[0], centre[1]-i*anchura_celdas)
+                        centre_cell_izq = Point(centre[0]+i*anchura_celdas, centre[1])
+                        centre_cell_derecha = Point(
+                            centre[0]-i*anchura_celdas, centre[1])
+                        centre_point_list = [
+                            centre_CELL_arriba, centre_cell_abajo, centre_cell_izq,   centre_cell_derecha]
+                        for poin in centre_point_list:
+                            if np.sqrt((poin['Longitude']-centre[0])**2 + (poin['Latitude']-centre[1])**2) <= radius:
                                 try:
                                     cell_create = CellCreate(
-                                    surface_id=Surface.id, center=poin, rad=campaign.cells_distance)
+                                    surface_id=Surface.id, centre=poin, radius=campaign.cells_distance)
                                     cell = crud.cell.create_cell(
                                     db=db, obj_in=cell_create, surface_id=Surface.id)
                                 except:
@@ -487,21 +485,21 @@ def update_campaign(
                                     status_code=404, detail=f"Problem with the conecction with mysql."
                                 )
                         for j in range(1, numero_celdas):
-                            CENTER_CELL_arriba_lado_1 = Point(
-                                center[0]+j*anchura_celdas, center[1]+i*anchura_celdas)
-                            CENTER_CELL_arriba_lado_2 = Point(
-                                center[0]-j*anchura_celdas, center[1]+i*anchura_celdas)
-                            CENTER_CELL_abajo_lado_1 = Point(
-                                center[0]+j*anchura_celdas, center[1]-i*anchura_celdas)
-                            CENTER_CELL_abajo_lado_2 = Point(
-                                center[0]-j*anchura_celdas, center[1]-i*anchura_celdas)
-                            center_point_list = [
-                                CENTER_CELL_arriba_lado_1, CENTER_CELL_arriba_lado_2, CENTER_CELL_abajo_lado_1, CENTER_CELL_abajo_lado_2]
-                            for poin in center_point_list:
-                                if np.sqrt((poin['lgn']-center[0])**2 + (poin['lat']-center[1])**2) <= rad:
+                            centre_CELL_arriba_lado_1 = Point(
+                                centre[0]+j*anchura_celdas, centre[1]+i*anchura_celdas)
+                            centre_CELL_arriba_lado_2 = Point(
+                                centre[0]-j*anchura_celdas, centre[1]+i*anchura_celdas)
+                            centre_CELL_abajo_lado_1 = Point(
+                                centre[0]+j*anchura_celdas, centre[1]-i*anchura_celdas)
+                            centre_CELL_abajo_lado_2 = Point(
+                                centre[0]-j*anchura_celdas, centre[1]-i*anchura_celdas)
+                            centre_point_list = [
+                                centre_CELL_arriba_lado_1, centre_CELL_arriba_lado_2, centre_CELL_abajo_lado_1, centre_CELL_abajo_lado_2]
+                            for poin in centre_point_list:
+                                if np.sqrt((poin['Longitude']-centre[0])**2 + (poin['Latitude']-centre[1])**2) <= radius:
                                     try:
                                         cell_create = CellCreate(
-                                            surface_id=Surface.id, center=poin, rad=campaign.cells_distance)
+                                            surface_id=Surface.id, centre=poin, radius=campaign.cells_distance)
                                         cell = crud.cell.create_cell(
                                             db=db, obj_in=cell_create, surface_id=Surface.id)
                                     except:
@@ -534,8 +532,8 @@ def partially_update_campaign(
         raise HTTPException(
             status_code=400, detail=f"Recipe with hive_id=={hive_id} and campaign_id=={campaign_id} not found."
         )
-    if recipe_in.start_timestamp != campaign.start_timestamp or recipe_in.campaign_duration != campaign.campaign_duration or recipe_in.cells_distance != campaign.cells_distance:
-        if datetime.now() > campaign.start_timestamp:
+    if recipe_in.start_datetime != campaign.start_datetime or recipe_in.end_datetime != campaign.end_datetime or recipe_in.cells_distance != campaign.cells_distance:
+        if datetime.now() > campaign.start_datetime:
             raise HTTPException(
                 status_code=401, detail=f"You cannot modify a campaign that has already been started "
             )
@@ -544,11 +542,11 @@ def partially_update_campaign(
                 db=db, db_obj=campaign, obj_in=recipe_in)
             for i in campaign.surfaces:
                 # boundary=crud.boundary.get_Boundary_by_id(db=db, id=i.boundary_id)
-                center = i.boundary.center
-                rad = i.boundary.rad
+                centre = i.boundary.centre
+                radius = i.boundary.radius
                 crud.surface.remove(db=db, surface=i)
                 db.commit()
-                boundary_create = BoundaryCreate(center=center, rad=rad)
+                boundary_create = BoundaryCreate(centre=centre, radius=radius)
                 boundary = crud.boundary.create_boundary(db=db, obj_in=boundary_create)
 
                 surface_create = SurfaceCreate(boundary_id=boundary.id)
@@ -557,44 +555,44 @@ def partially_update_campaign(
 
                 anchura_celdas = (recipe_in.cells_distance)
 
-                numero_celdas = rad//anchura_celdas + 1
+                numero_celdas = radius//anchura_celdas + 1
 
                 for i in range(0, numero_celdas):
                     if i == 0:
-                        cell_create = CellCreate(surface_id=Surface.id, center=Point(
-                            center[0], center[1]), rad=campaign.cells_distance/2)
+                        cell_create = CellCreate(surface_id=Surface.id, centre=Point(
+                            centre[0], centre[1]), radius=campaign.cells_distance/2)
                         cell = crud.cell.create_cell(
                             db=db, obj_in=cell_create, surface_id=Surface.id)
                     else:
-                        CENTER_CELL_arriba = Point(
-                            center[0], center[1]+i*anchura_celdas)
-                        center_cell_abajo = Point(center[0], center[1]-i*anchura_celdas)
-                        center_cell_izq = Point(center[0]+i*anchura_celdas, center[1])
-                        center_cell_derecha = Point(
-                            center[0]-i*anchura_celdas, center[1])
-                        center_point_list = [
-                            CENTER_CELL_arriba, center_cell_abajo, center_cell_izq,   center_cell_derecha]
-                        for poin in center_point_list:
-                            if np.sqrt((poin['lgn']-center[0])**2 + (poin['lat']-center[1])**2) <= rad:
+                        centre_CELL_arriba = Point(
+                            centre[0], centre[1]+i*anchura_celdas)
+                        centre_cell_abajo = Point(centre[0], centre[1]-i*anchura_celdas)
+                        centre_cell_izq = Point(centre[0]+i*anchura_celdas, centre[1])
+                        centre_cell_derecha = Point(
+                            centre[0]-i*anchura_celdas, centre[1])
+                        centre_point_list = [
+                            centre_CELL_arriba, centre_cell_abajo, centre_cell_izq,   centre_cell_derecha]
+                        for poin in centre_point_list:
+                            if np.sqrt((poin['Longitude']-centre[0])**2 + (poin['Latitude']-centre[1])**2) <= radius:
                                 cell_create = CellCreate(
-                                    surface_id=Surface.id, center=poin, rad=campaign.cells_distance/2)
+                                    surface_id=Surface.id, centre=poin, radius=campaign.cells_distance/2)
                                 cell = crud.cell.create_cell(
                                     db=db, obj_in=cell_create, surface_id=Surface.id)
                         for j in range(1, numero_celdas):
-                            CENTER_CELL_arriba_lado_1 = Point(
-                                center[0]+j*anchura_celdas, center[1]+i*anchura_celdas)
-                            CENTER_CELL_arriba_lado_2 = Point(
-                                center[0]-j*anchura_celdas, center[1]+i*anchura_celdas)
-                            CENTER_CELL_abajo_lado_1 = Point(
-                                center[0]+j*anchura_celdas, center[1]-i*anchura_celdas)
-                            CENTER_CELL_abajo_lado_2 = Point(
-                                center[0]-j*anchura_celdas, center[1]-i*anchura_celdas)
-                            center_point_list = [
-                                CENTER_CELL_arriba_lado_1, CENTER_CELL_arriba_lado_2, CENTER_CELL_abajo_lado_1, CENTER_CELL_abajo_lado_2]
-                            for poin in center_point_list:
-                                if np.sqrt((poin['lgn']-center[0])**2 + (poin['lat']-center[1])**2) <= rad:
+                            centre_CELL_arriba_lado_1 = Point(
+                                centre[0]+j*anchura_celdas, centre[1]+i*anchura_celdas)
+                            centre_CELL_arriba_lado_2 = Point(
+                                centre[0]-j*anchura_celdas, centre[1]+i*anchura_celdas)
+                            centre_CELL_abajo_lado_1 = Point(
+                                centre[0]+j*anchura_celdas, centre[1]-i*anchura_celdas)
+                            centre_CELL_abajo_lado_2 = Point(
+                                centre[0]-j*anchura_celdas, centre[1]-i*anchura_celdas)
+                            centre_point_list = [
+                                centre_CELL_arriba_lado_1, centre_CELL_arriba_lado_2, centre_CELL_abajo_lado_1, centre_CELL_abajo_lado_2]
+                            for poin in centre_point_list:
+                                if np.sqrt((poin['Longitude']-centre[0])**2 + (poin['Latitude']-centre[1])**2) <= radius:
                                     cell_create = CellCreate(
-                                        surface_id=Surface.id, center=poin, rad=campaign.cells_distance/2)
+                                        surface_id=Surface.id, centre=poin, radius=campaign.cells_distance/2)
                                     cell = crud.cell.create_cell(
                                         db=db, obj_in=cell_create, surface_id=Surface.id)
         background_tasks.add_task(create_slots, cam=campaign)

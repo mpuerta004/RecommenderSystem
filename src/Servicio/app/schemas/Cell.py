@@ -13,8 +13,8 @@ class CellBase(BaseModel):
     # inferior_coord:Point
     # superior_coord:Point
     cell_type:str='Dynamic'
-    center: Point
-    rad:int
+    centre: Point
+    radius:int
 
 class CellCreate(CellBase):
     pass

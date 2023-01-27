@@ -1,7 +1,7 @@
 from typing import Optional, List, Sequence
 from pydantic import BaseModel
 from schemas.CampaignRole import CampaignRole
-
+from datetime import datetime
 from enum import Enum
 
 
@@ -27,6 +27,7 @@ class MemberBase(BaseModel):
     gender:gender_type
     city: str=None
     mail:str
+    birthday:datetime
     real_user:bool=True
     # device_id:int=None
 

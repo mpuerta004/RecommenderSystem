@@ -13,8 +13,8 @@ class Cell(Base):
     __tablename__ = 'Cell'
     id = Column(Integer, unique=True, primary_key=True, index=True, autoincrement=True)
  
-    center = Column(Point)
-    rad=Column(Integer,default=1)
+    centre = Column(Point)
+    radius=Column(Integer,default=1)
     cell_type = Column(String, default="Dynamic")
     surface_id = Column(Integer, ForeignKey(Surface.id, ondelete="CASCADE"))
 

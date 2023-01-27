@@ -18,12 +18,17 @@ def get_hive(
     """
     Fetch a single Hive by ID
     """
-    result = crud.hive.get(db=db, id=hive_id)
-    if result is None:
+    try:
+        result = crud.hive.get(db=db, id=hive_id)
+        if result is None:
+            raise HTTPException(
+                status_code=404, detail=f"Hive with id=={hive_id} not found"
+            )
+        return result
+    except Exception as e:
         raise HTTPException(
-            status_code=404, detail=f"Hive with id=={hive_id} not found"
+            status_code=500, detail=f"Error creating the Hive: {e}"
         )
-    return result
 
 
 @api_router_hive.post("/", status_code=201, response_model=Hive)
@@ -52,12 +57,13 @@ def update_hive(*,
     """
     Update Hive in the database.
     """
-    hive = crud.hive.get(db, id=hive_id)
-    if hive is None:
-        raise HTTPException(
-            status_code=404, detail=f"Hive with id={hive_id} not found."
-        )
     try:
+
+        hive = crud.hive.get(db, id=hive_id)
+        if hive is None:
+            raise HTTPException(
+                status_code=404, detail=f"Hive with id={hive_id} not found."
+            )
         updated_hive = crud.hive.update(db=db, db_obj=hive, obj_in=recipe_in)
     except Exception as e:
         raise HTTPException(
@@ -75,12 +81,12 @@ def update_parcial_hive(*,
     """
     Update recipe in the database.
     """
-    hive = crud.hive.get(db, id=hive_id)
-    if hive is None:
-        raise HTTPException(
-            status_code=404, detail=f"Recipe with ID: {hive_id} not found."
-        )
     try:
+        hive = crud.hive.get(db, id=hive_id)
+        if hive is None:
+            raise HTTPException(
+                status_code=404, detail=f"Recipe with ID: {hive_id} not found."
+            )
         updated_hive = crud.hive.update(db=db, db_obj=hive, obj_in=recipe_in)
     except Exception as e:
         raise HTTPException(
@@ -97,12 +103,12 @@ def delete_hive(*,
     """
     Delete a hive in the database.
     """
-    hive = crud.hive.get(db, id=hive_id)
-    if hive is None:
-        raise HTTPException(
-            status_code=404, detail=f"Recipe with ID: {hive_id} not found."
-        )
     try:
+        hive = crud.hive.get(db, id=hive_id)
+        if hive is None:
+            raise HTTPException(
+                status_code=404, detail=f"Recipe with ID: {hive_id} not found."
+            )
         crud.hive.remove(db=db, hive=hive)
     except Exception as e:
         raise HTTPException(

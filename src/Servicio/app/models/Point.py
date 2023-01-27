@@ -20,8 +20,8 @@ class Point(UserDefinedType):
             if value is None:
                 return None
             assert isinstance(value, dict)
-            lng=value['lgn']
-            lat=value['lat']
+            lng=value['Longitude']
+            lat=value['Latitude']
             return "POINT(%s %s)" % (lng,lat)
             
         return process
@@ -33,7 +33,7 @@ class Point(UserDefinedType):
             #m = re.match(r'^POINT\((\S+) (\S+)\)$', value)
             #lng, lat = m.groups()
             lng, lat = value[6:-1].split()  # 'POINT(135.00 35.00)' => ('135.00', '35.00')
-            return { 'lgn':float(lng),'lat':float(lat)}
+            return { 'Longitude':float(lng),'Latitude':float(lat)}
         return process
 
 

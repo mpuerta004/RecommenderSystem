@@ -36,7 +36,7 @@ class CRUDMember(CRUDBase[Member, MemberCreate, MemberUpdate]):
         db.commit()
         return obj
     
-    def get_Member_of_city(self, db: Session, *, city:str) -> List[ Member]:
+    def get_Member_of_city(self, db: Session, *, city:str) -> List[Member]:
         return db.query(Member).filter(and_(Member.city == city,Member.real_user==True)).all()
     
    

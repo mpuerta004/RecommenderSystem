@@ -1,6 +1,7 @@
 from typing import Optional, List, Sequence
 from pydantic import BaseModel
 from enum import Enum
+from datetime import datetime
 
 class gender_type(str, Enum):
     Male="Male"
@@ -14,6 +15,7 @@ class BeeKeeperBase(BaseModel):
     surname: str=None
     age: int
     gender:gender_type
+    birthday:datetime
     city: str=None
     mail:str
     real_user:bool=True

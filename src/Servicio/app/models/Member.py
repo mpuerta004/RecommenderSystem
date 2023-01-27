@@ -1,6 +1,6 @@
 
 
-from sqlalchemy import Integer, String, Column, Boolean, ForeignKey,Boolean
+from sqlalchemy import Integer, String, Column, Boolean, ForeignKey,Boolean,DateTime
 from sqlalchemy.orm import relationship
 
 from db.base_class import Base
@@ -18,6 +18,8 @@ class Member(Base):
     name=Column(String,nullable=True)
     age=Column(Integer,nullable=True)
     surname=Column(String,nullable=True)
+    birthday=Column(DateTime)
+
     city=Column(String,nullable=True)
     gender=Column(Enum("NoBinary","Male","Female",'I dont want to answer'),nullable=False)
     real_user=Column(Boolean,default=True)

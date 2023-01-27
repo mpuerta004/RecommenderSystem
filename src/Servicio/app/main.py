@@ -43,7 +43,7 @@ app.include_router(BeeKeeper.api_router_beekeepers, tags=["BeeKeepers"])
 app.include_router(Hive.api_router_hive, tags=["Hives"])
 
 app.include_router(Members.api_router_members, tags=["Members"])
-app.include_router(HiveMember.api_router_hivemember, tags=["Hive - Member"])
+app.include_router(HiveMember.api_router_hivemember, tags=[ "Member in a hive"])
 
 app.include_router(device.api_router_device, tags=["Device"])
 app.include_router(MemberDevice.api_router_membersDevice, tags=["Member - Device "])
@@ -102,14 +102,14 @@ async def state_calculation()->None:
             print(a)
             Current_time = datetime(year=a.year, month=a.month, day=a.day,
                         hour=a.hour, minute=a.minute, second=a.second)
-            if (Current_time - i.timestamp_update) > timedelta(minutes=7):
-                crud.recommendation.update(db=db,db_obj=i, obj_in={"state":"NON_REALIZED","timestamp_update":Current_time})
+            if (Current_time - i.update_datetime) > timedelta(minutes=7):
+                crud.recommendation.update(db=db,db_obj=i, obj_in={"state":"NON_REALIZED","update_datetime":Current_time})
                 db.commit()         
                        
 #Funcion sensores automaticos: 
 # cell_statics=crud.cell.get_statics(db=db, campaign_id=cam.id)                
 #                 for i in cell_statics:
-#                     Measurementcreate= MeasurementCreate(cell_id=i.id, timestamp=date,location=i.center)
+#                     Measurementcreate= MeasurementCreate(cell_id=i.id, datetime=date,location=i.centre)
 #                     slot=crud.slot.get_slot_time(db=db,cell_id=i.id,time=date)
 #                     crud.measurement.create_Measurement(db=db, slot_id=slot.id,member_id=)
 

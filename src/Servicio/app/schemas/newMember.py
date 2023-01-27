@@ -1,6 +1,7 @@
 from typing import Optional, List, Sequence, Union
 from pydantic import BaseModel
 from enum import Enum
+from datetime import datetime
 
 
 
@@ -28,6 +29,7 @@ class NewMemberBase(BaseModel):
     city: str=None
     mail:str
     real_user:bool=True
+    birthday:datetime
     role: role #Union["QueenBee" or "Participant"]
  
 class NewRole(BaseModel):

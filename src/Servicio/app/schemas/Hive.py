@@ -12,7 +12,7 @@ from datetime import datetime, time, timedelta
 class HiveBase(BaseModel):    
     city:str
     beekeeper_id:int
-    
+    name:str
 
 class HiveCreate(HiveBase):
     pass

@@ -10,6 +10,6 @@ from pydantic import BaseModel, ValidationError
 from datetime import datetime, time, timedelta
 
 class Point(TypedDict):
-    lgn: float
-    lat: float
+    Longitude: float
+    Latitude: float
 

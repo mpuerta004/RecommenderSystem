@@ -114,10 +114,10 @@ def create_cell(
             status_code=404, detail=f"Surface with surface_id=={surface_id} and campaign_id={campaign_id } not found"
         )
     # boundary=crud.boundary.get_Boundary_by_ids(db=db, surface_id=surface.id)
-    centro=surface.boundary.center
-    point=recipe_in.center
-    distancia= math.sqrt((centro['lgn'] - point['lgn'])**2+(centro['lat']-point['lat'])**2)
-    if distancia<=surface.boundary.rad:
+    centro=surface.boundary.centre
+    point=recipe_in.centre
+    distancia= math.sqrt((centro['Longitude'] - point['Longitude'])**2+(centro['Latitude']-point['Latitude'])**2)
+    if distancia<=surface.boundary.radius:
     
         cell = crud.cell.create_cell(db=db, obj_in=recipe_in,surface_id=surface_id)
         
@@ -125,7 +125,7 @@ def create_cell(
         return cell
     else:
         raise HTTPException(
-            status_code=400, detail=f"INVALID REQUEST: The cell does not have the center inside the surface"
+            status_code=400, detail=f"INVALID REQUEST: The cell does not have the centre inside the surface"
         )
    
 
@@ -141,20 +141,21 @@ async def create_slots_cell(surface: Surface,hive_id:int,cell_id:int):
     with sessionmaker.context_session() as db:
         #       campaigns=crud.campaign.get_all_campaign(db=db)
         #       for cam in campaigns:
-        # if cam.start_timestamp.strftime("%m/%d/%Y, %H:%M:%S")==date_time:
+        # if cam.start_datetime.strftime("%m/%d/%Y, %H:%M:%S")==date_time:
         cam=crud.campaign.get_campaign(db=db,hive_id=hive_id,campaign_id=surface.campaign_id)
-        n_slot = cam.campaign_duration//cam.sampling_period
-        if cam.campaign_duration % cam.sampling_period != 0:
+        duration= cam.end_datetime - cam.start_datetime
+        n_slot = duration//cam.sampling_period
+        if duration % cam.sampling_period != 0:
             n_slot = n_slot+1
         for i in range(n_slot):
             time_extra=i*cam.sampling_period
-            start = cam.start_timestamp + timedelta(seconds=time_extra)
+            start = cam.start_datetime + timedelta(seconds=time_extra)
             end = start + timedelta(seconds=cam.sampling_period)
             # for sur in cam.surfaces:
                 # for cells in sur.cells:
                 # for cells in cam.cells:
             slot_create =  SlotCreate(
-                    cell_id=cell_id, start_timestamp=start, end_timestamp=end)
+                    cell_id=cell_id, start_datetime=start, end_datetime=end)
             slot = crud.slot.create_slot_detras(db=db, obj_in=slot_create)
             db.commit()
 

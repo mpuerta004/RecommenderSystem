@@ -6,29 +6,15 @@ from schemas.Cell import Cell
 from schemas.CampaignRole import CampaignRole
 from typing import Any, Dict, Generic, List, Optional, Type, TypeVar, Union
 
-# class CampaignModel1(BaseModel):
-#     cells_distance:int=50
-#     min_samples:int=12
-#     sampling_period:int=3600
-#     campaign_duration:int=3600*24*14
-
-    
-# class CampaignModel2(BaseModel):
-#     cells_distance:int=50
-#     min_samples:int=None
-#     sampling_period:int=None
-#     campaign_duration:int=3600
 
 
 class CampaignBase(BaseModel):
-    creator_id:int
-    city:str
-    start_timestamp:datetime
-    # metadata:Union[CampaignModel2,CampaignModel1]
+    title:str
+    start_datetime:datetime
     cells_distance:int=50
     min_samples:int=12
     sampling_period:int=3600
-    campaign_duration:int=3600*24*14
+    end_datetime:datetime
     hypothesis:str
     
     

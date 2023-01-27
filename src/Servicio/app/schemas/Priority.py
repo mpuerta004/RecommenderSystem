@@ -11,7 +11,7 @@ from datetime import datetime, time, timedelta
 
 class PriorityBase(BaseModel):   
     slot_id:int # INT,
-    timestamp:datetime
+    datetime:datetime
     temporal_priority:float
     trend_priority:float
     # cell_id:int

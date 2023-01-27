@@ -8,12 +8,11 @@ from datetime import datetime
 from schemas.Reading import Reading
 
 class MeasurementBase(BaseModel):    
-    timestamp:datetime=None
+    datetime:datetime
     measurement_type:str='AIRDATA' #Varchar(30) default 'AirData', #set('AirData','Sound')
     reading_id:int=None
-    location:Point=None
+    location:Point
     device_id:int
-    recommendation_id:int=None
     
     
 
@@ -31,6 +30,8 @@ class MeasurementInDBBase(MeasurementBase):
     slot_id:int
     member_id:int #  INT,
     readings:Sequence[Reading]=None
+    recommendation_id:int=None
+
     
     class Config:
         orm_mode = True

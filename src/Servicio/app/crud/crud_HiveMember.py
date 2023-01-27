@@ -18,7 +18,13 @@ from sqlalchemy import and_, extract
 
 class CRUDHiveMember(CRUDBase[HiveMember, HiveMemberCreate, HiveMemberUpdate]):
         
-    
+        def create_hiveMember(self, db: Session, *,  obj_in: HiveMemberCreate,role:str="WorkerBee",) -> HiveMember:
+                obj_in_data = jsonable_encoder(obj_in) 
+                db_obj = self.model(**obj_in_data,role=role)  # type: ignore
+                db.add(db_obj)
+                db.commit()
+                db.refresh(db_obj)
+                return db_obj
         def remove(self, db: Session, *, hiveMember:HiveMember) -> HiveMember:
                 obj = hiveMember
                 db.delete(obj)
@@ -32,6 +38,7 @@ class CRUDHiveMember(CRUDBase[HiveMember, HiveMemberCreate, HiveMemberUpdate]):
                  return db.query(HiveMember).filter(and_( HiveMember.hive_id==hive_id)).all()
         def get_by_member_id(selt, db=Session,*, member_id=int)->List[HiveMember]:
                  return db.query(HiveMember).filter(and_( HiveMember.member_id==member_id)).all()
-
+        def get_by_role_hive(selt, db=Session,*, hive_id=int,role=str)->HiveMember:
+                 return db.query(HiveMember).filter(and_( HiveMember.hive_id==hive_id, HiveMember.role==role)).first()
         
 hivemember = CRUDHiveMember(HiveMember)

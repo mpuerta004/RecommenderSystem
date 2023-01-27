@@ -108,3 +108,24 @@ def delete_Memberdevice(    *,
     updated_recipe = crud.memberdevice.remove(db=db, Memberdevice=Memberdevice)
     return  {"ok": True}
 
+
+@api_router_membersDevice.get("/{device_id}/members/", status_code=200, response_model=MemberDevice)
+def get_Memberdevice(
+    *,
+    device_id: int,
+    db: Session = Depends(deps.get_db),
+) -> dict:
+    """
+    Fetch a single Memberdevice by ID
+    """
+    try:
+        memberdevice = crud.memberdevice.get_by_device_id(db=db,device_id=device_id)
+        if  memberdevice is None:
+            raise HTTPException(
+                status_code=404, detail=f"The user associeted with  the device with device_id=={device_id} not found"
+            )
+        return memberdevice
+    except Exception as e:
+        raise HTTPException(
+            status_code=500, detail=f"Error removing the  entity: {e}"
+        )

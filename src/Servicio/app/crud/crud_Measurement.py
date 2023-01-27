@@ -22,9 +22,9 @@ from sqlalchemy import and_, extract
 
 class CRUDMeasurement(CRUDBase[Measurement, MeasurementCreate, MeasurementUpdate]):
         
-        def create_Measurement(self, db: Session, *, obj_in: MeasurementCreate, member_id:int,slot_id:int,cell_id:int) -> Measurement:
+        def create_Measurement(self, db: Session, *, obj_in: MeasurementCreate, member_id:int,slot_id:int,cell_id:int,recommendation_id:int) -> Measurement:
                 obj_in_data = jsonable_encoder(obj_in) 
-                db_obj = self.model(**obj_in_data,member_id=member_id,slot_id=slot_id,cell_id=cell_id)  # type: ignore
+                db_obj = self.model(**obj_in_data,member_id=member_id,slot_id=slot_id,cell_id=cell_id,recommendation_id=recommendation_id)  # type: ignore
                 db.add(db_obj)
                 db.commit()
                 db.refresh(db_obj)
@@ -36,14 +36,14 @@ class CRUDMeasurement(CRUDBase[Measurement, MeasurementCreate, MeasurementUpdate
                  return db.query(Measurement).filter(Measurement.member_id==member_id).all()
         
         def get_all_Measurement_campaign(self, db:Session, *, campaign_id:int, time:DateTime)-> int:
-            return db.query(Measurement).join(Cell).join(Surface).filter(and_(Measurement.cell_id==Cell.id ,Measurement.timestamp<=time,Cell.surface_id==Surface.id, Surface.campaign_id==campaign_id)).count()
+            return db.query(Measurement).join(Cell).join(Surface).filter(and_(Measurement.cell_id==Cell.id ,Measurement.datetime<=time,Cell.surface_id==Surface.id, Surface.campaign_id==campaign_id)).count()
         
         
         def get_all_Measurement_from_cell(self, db:Session, *,  cell_id:int, time:DateTime)-> int:
-            return db.query(Measurement).filter(and_(Measurement.cell_id==cell_id,Measurement.timestamp<=time)).count()        
+            return db.query(Measurement).filter(and_(Measurement.cell_id==cell_id,Measurement.datetime<=time)).count()        
          
         def get_all_Measurement_from_cell_in_the_current_slot(self, db:Session, *,  cell_id:int, time:DateTime, slot_id:int)-> int:
-            return db.query(Measurement).filter( and_(Measurement.cell_id==cell_id, Measurement.timestamp<=time, Measurement.slot_id==slot_id)).count()        
+            return db.query(Measurement).filter( and_(Measurement.cell_id==cell_id, Measurement.datetime<=time, Measurement.slot_id==slot_id)).count()        
         def remove(self, db: Session, *, measurement:Measurement) -> Measurement:
             obj = measurement
             db.delete(obj)

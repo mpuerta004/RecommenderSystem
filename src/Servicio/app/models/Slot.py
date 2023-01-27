@@ -9,8 +9,8 @@ class Slot(Base):
     __tablaname__='Slot'
     id=Column(Integer, unique=True, primary_key=True, index=True, autoincrement=True) 
     cell_id=Column(Integer, ForeignKey(Cell.id, ondelete="CASCADE"), primary_key=True,default=True)
-    start_timestamp=Column(DateTime)
-    end_timestamp=Column(DateTime)
+    start_datetime=Column(DateTime)
+    end_datetime=Column(DateTime)
 
     # priority=relationship("Priority")
     measurements = relationship("Measurement",cascade="all, delete")

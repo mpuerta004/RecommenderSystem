@@ -4,8 +4,8 @@ from schemas.Point import Point
 
 from schemas.Cell import Cell
 class BoundaryBase(BaseModel):
-    center: Point
-    rad:int
+    centre: Point
+    radius:int
 
 class BoundaryCreate(BoundaryBase):
     pass

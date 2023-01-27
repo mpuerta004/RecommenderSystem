@@ -3,7 +3,14 @@ from pydantic import BaseModel, HttpUrl
 from typing import Sequence, Union
 
 from pydantic import BaseModel, ValidationError
+from enum import Enum
 
+class role(str, Enum):
+    WorkerBee="WorkerBee" 
+    QueenBee="QueenBee" 
+    BeeKeeper="BeeKeeper" 
+    DroneBee="DroneBee" 
+    Hive="Hive"
 
 class HiveMemberBase(BaseModel):    
     hive_id:int
@@ -18,6 +25,8 @@ class HiveMemberUpdate(HiveMemberBase):
 
 # Properties shared by models stored in DB
 class HiveMemberInDBBase(HiveMemberBase):
+    role:role
+
     pass    
     class Config:
         orm_mode = True

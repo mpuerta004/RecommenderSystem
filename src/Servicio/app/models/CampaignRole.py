@@ -17,7 +17,7 @@ class CampaignRole(Base):
     __tablename__='CampaignRole'
     campaign_id=Column(Integer, ForeignKey(Campaign.id, ondelete="RESTRICT"),primary_key=True)
     member_id=Column(Integer, ForeignKey(Member.id,ondelete="RESTRICT"),primary_key=True)
-    role=Column(Enum("WorkerBee","QueenBee","BeeKeeper","DroneBee" ))
+    role=Column(Enum("WorkerBee","QueenBee","DroneBee" ),primary_key=True)
 
     
     # member=relationship("Member",back_populates="roles")

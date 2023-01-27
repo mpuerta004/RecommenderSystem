@@ -19,7 +19,7 @@ class Measurement(Base):
     id=Column(Integer, unique=True, primary_key=True, index=True, autoincrement=True) 
     cell_id=Column(Integer, ForeignKey(Cell.id, ondelete="CASCADE"))
     member_id=Column(Integer, ForeignKey(Member.id, ondelete="CASCADE"))
-    timestamp=Column(DateTime)
+    datetime=Column(DateTime)
     slot_id=Column(Integer, ForeignKey(Slot.id, ondelete="CASCADE"))
     measurement_type=Column(String,default="AIRDATA")
     reading_id=Column(Integer, ForeignKey(Reading.id, ondelete="CASCADE"), nullable=True)

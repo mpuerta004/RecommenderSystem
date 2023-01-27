@@ -11,8 +11,8 @@ from models.Point import Point
 class Boundary(Base):
     __tablename__='Boundary'
     id=Column(Integer, unique=True, primary_key=True, index=True, autoincrement=True) 
-    center=Column(Point)
-    rad=Column(Integer)
+    centre=Column(Point)
+    radius=Column(Integer)
     
     
   

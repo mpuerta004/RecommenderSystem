@@ -1,6 +1,6 @@
 
 
-from sqlalchemy import Integer, String, Column, Boolean, ForeignKey
+from sqlalchemy import Integer, String, Column, Boolean, ForeignKey, DateTime
 from sqlalchemy.orm import relationship
 from sqlalchemy import Integer, Enum
 
@@ -15,7 +15,7 @@ class BeeKeeper(Base):
     surname=Column(String,nullable=True)
     city=Column(String,nullable=True)
     real_user=Column(Boolean,default=True)
-
+    birthday=Column(DateTime)
     gender=Column(Enum("NoBinary","Male","Female",'I dont want to answer'),nullable=False)
     
     # device_id=Column(Integer,ForeignKey(Device.id, ondelete='CASCADE'))

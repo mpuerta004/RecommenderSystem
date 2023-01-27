@@ -33,14 +33,18 @@ def get_device(
     """
     Fetch a single device by ID
     """
-    result = crud.device.get(db=db, id=device_id)
-    if  result is None:
+    try:
+        device = crud.device.get(db=db, id=device_id)
+        if  device is None:
+            raise HTTPException(
+                status_code=404, detail=f"device with id=={device_id} not found"
+            )
+        return device
+    except Exception as e:
         raise HTTPException(
-            status_code=404, detail=f"device with   device_id=={device_id} not found"
+            status_code=500, detail=f"Error getting the Device entity: {e}"
         )
-    return result
 
-#Todo: control de errores! 
 @api_router_device.post("/",status_code=201, response_model=Device)
 def create_device(
     *, recipe_in: DeviceCreate,db: Session = Depends(deps.get_db)
@@ -48,30 +52,13 @@ def create_device(
     """
     Create a new device in the database.
     """
-    device = crud.device.create(db=db, obj_in=recipe_in)
-    if device is None:
+    try:
+        device = crud.device.create(db=db, obj_in=recipe_in)
+        return device
+    except Exception as e:
         raise HTTPException(
-            status_code=400, detail=f"INVALID REQUEST"
+            status_code=500, detail=f"Error creating the Device entity: {e}"
         )
-    return device
-
-
-@api_router_device.get("/{device_id}/members/", status_code=200, response_model=MemberDevice)
-def get_Memberdevice(
-    *,
-    device_id: int,
-    db: Session = Depends(deps.get_db),
-) -> dict:
-    """
-    Fetch a single Memberdevice by ID
-    """
-    
-    result = crud.memberdevice.get_by_device_id(db=db,device_id=device_id)
-    if  result is None:
-        raise HTTPException(
-            status_code=404, detail=f"The user associeted with  the device with device_id=={device_id} not found"
-        )
-    return result
 
 
 @api_router_device.delete("/{device_id}", status_code=204)
@@ -82,11 +69,15 @@ def delete_device(    *,
     """
     Delete device in the database.
     """
-    device=crud.device.get(db=db,id=device_id)
-    if  device is None:
+    try:
+        device=crud.device.get(db=db,id=device_id)
+        if  device is None:
+            raise HTTPException(
+                status_code=404, detail=f"Device with  device_id=={device_id} not found"            )
+        updated_recipe = crud.device.remove(db=db, device=device)
+        return  {"ok": True}
+    except Exception as e:
         raise HTTPException(
-            status_code=404, detail=f"Device with  device_id=={device_id} not found"
+            status_code=500, detail=f"Error removing the Beekeeper entity: {e}"
         )
-    updated_recipe = crud.device.remove(db=db, device=device)
-    return  {"ok": True}
 

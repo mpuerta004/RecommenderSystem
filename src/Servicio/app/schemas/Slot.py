@@ -7,8 +7,8 @@ from schemas.Measurement import Measurement
 
 class SlotBase(BaseModel):
     cell_id: int 
-    start_timestamp: datetime
-    end_timestamp:datetime
+    start_datetime: datetime
+    end_datetime:datetime
 
 
 
