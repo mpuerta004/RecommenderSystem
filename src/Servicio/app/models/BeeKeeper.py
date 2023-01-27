@@ -16,7 +16,7 @@ class BeeKeeper(Base):
     city=Column(String,nullable=True)
     real_user=Column(Boolean,default=True)
     birthday=Column(DateTime)
-    gender=Column(Enum("NoBinary","Male","Female",'I dont want to answer'),nullable=False)
+    gender=Column(Enum("NOBINARY","MALE","FEMALE",'NOANSER'),nullable=False)
     
     # device_id=Column(Integer,ForeignKey(Device.id, ondelete='CASCADE'))
     # Measurements=relationship("Measurement",cascade="all, delete")

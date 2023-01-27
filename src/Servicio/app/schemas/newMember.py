@@ -12,13 +12,12 @@ class role(str, Enum):
     DroneBee="DroneBee" 
     Hive="Hive"
     
-
 class gender_type(str, Enum):
-    NoBinary="NoBinary"
-    Male="Male"
-    Female="Female"
-    IDontWantToAnser='I dont want to answer' 
-   
+    MALE="MALE"
+    NOBINARY="NOBINARY"
+    FEMALE="FEMALE"
+    NOANSER='NOANSER' 
+    
     
     
 class NewMemberBase(BaseModel):

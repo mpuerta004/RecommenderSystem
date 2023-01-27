@@ -81,9 +81,8 @@ def create_member(
     """
     Create a new member of the hive in the database.
     """
-    member=MemberCreate(name=recipe_in.name,surname=recipe_in.surname,age=recipe_in.age,city=recipe_in.city,mail=recipe_in.mail,gender=recipe_in.gender)
     try: 
-        member_new= crud.member.create(db=db, obj_in=member)
+        member_new= crud.member.create(db=db, obj_in=recipe_in)
     except:
         raise HTTPException(
             status_code=404, detail=f"The input is not correct."

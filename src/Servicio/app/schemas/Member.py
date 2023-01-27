@@ -13,12 +13,12 @@ from enum import Enum
 #     DroneBee="DroneBee" 
 #     Hive="Hive"
     
-
 class gender_type(str, Enum):
-    Male="Male"
-    NoBinary="NoBinary"
-    Female="Female"
-    IDontWantToAnser='I dont want to answer' 
+    MALE="MALE"
+    NOBINARY="NOBINARY"
+    FEMALE="FEMALE"
+    NOANSER='NOANSER' 
+    
 
 class MemberBase(BaseModel):
     name: str 

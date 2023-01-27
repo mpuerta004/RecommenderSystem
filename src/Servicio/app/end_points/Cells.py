@@ -8,7 +8,6 @@ from schemas.Measurement import Measurement, MeasurementCreate, MeasurementSearc
 from schemas.Campaign import CampaignSearchResults, Campaign, CampaignCreate
 from schemas.Slot import Slot, SlotCreate,SlotSearchResults
 from schemas.Hive import Hive, HiveCreate, HiveSearchResults
-from schemas.Member import Member,MemberCreate,MemberSearchResults
 
 from schemas.CampaignRole import CampaignRole,CampaignRoleCreate,CampaignRoleSearchResults
 from schemas.newMember import NewMemberBase

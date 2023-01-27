@@ -41,16 +41,15 @@ def get_a_beekeeper(
     """
     try:
         beekeeper = crud.beekeeper.get_by_id(db=db, id=Beekeeper_id)
-
-        if beekeeper is None:
+    except Exception as e:
+        raise HTTPException(
+            status_code=500, detail=f"Error with mysql: {e}"
+        )
+    if beekeeper is None:
             raise HTTPException(
                 status_code=404, detail=f"BeeKeeper with BeeKeeper_id=={Beekeeper_id} not found"
             )
-        return beekeeper
-    except Exception as e:
-        raise HTTPException(
-            status_code=500, detail=f"Error removing the Beekeeper entity: {e}"
-        )
+    return beekeeper
 
 @api_router_beekeepers.delete("/{beekeeper_id}", status_code=204)
 def delete_beekeeper(*,
@@ -62,10 +61,16 @@ def delete_beekeeper(*,
     """
     try:
         beekeeper = crud.beekeeper.get_by_id(db=db, id=beekeeper_id)
-        if beekeeper is None:
+    except Exception as e:
+        raise HTTPException(
+            status_code=500, detail=f"Error with mysql: {e}"
+        )
+    
+    if beekeeper is None:
             raise HTTPException(
                 status_code=404, detail=f"BeeKeeper with id=={beekeeper_id} not found"
         )
+    try:
         crud.beekeeper.remove(db=db, beekeeper=beekeeper)
     except Exception as e:
         raise HTTPException(
@@ -84,9 +89,7 @@ def create_beekeeper(
     Create a new BeeKeeper of the hive in the database.
     """
     try:
-        BeeKeeper = BeeKeeperCreate(name=recipe_in.name, surname=recipe_in.surname, age=recipe_in.age,
-                                city=recipe_in.city, mail=recipe_in.mail, gender=recipe_in.gender, real_user=recipe_in.real_user)
-        BeeKeeper_new = crud.beekeeper.create(db=db, obj_in=BeeKeeper)
+        BeeKeeper_new = crud.beekeeper.create(db=db, obj_in=recipe_in)
     except Exception as e:
         raise HTTPException(
             status_code=500, detail=f"Error creating the Beekeeper: {e}"
@@ -106,11 +109,15 @@ def put_a_beekeeper(
     """
     try:
         beekeeper = crud.beekeeper.get_by_id(db=db, id=beekeeper_id)
-
-        if beekeeper is None:
+    except Exception as e:
+        raise HTTPException(
+            status_code=500, detail=f"Error with mysql: {e}"
+        )
+    if beekeeper is None:
             raise HTTPException(
                 status_code=404, detail=f"BeeKeeper with BeeKeeper_id=={beekeeper_id} not found"
             )
+    try:
         updated_beekeeper = crud.beekeeper.update(
             db=db, db_obj=beekeeper, obj_in=recipe_in)
         db.commit()
@@ -133,11 +140,15 @@ def patch_a_beekeeper(
     """
     try:
         beekeeper = crud.beekeeper.get_by_id(db=db, id=beekeeper_id)
-
-        if beekeeper is None:
+    except Exception as e:
+        raise HTTPException(
+            status_code=500, detail=f"Error with mysql: {e}"
+        )
+    if beekeeper is None:
             raise HTTPException(
             status_code=404, detail=f"BeeKeeper with BeeKeeper_id=={beekeeper_id} not found"
                 )
+    try:
         updated_beekeeper = crud.beekeeper.update(
             db=db, db_obj=beekeeper, obj_in=recipe_in)
         db.commit()

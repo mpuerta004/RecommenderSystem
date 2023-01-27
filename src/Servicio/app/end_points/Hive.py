@@ -20,15 +20,16 @@ def get_hive(
     """
     try:
         result = crud.hive.get(db=db, id=hive_id)
-        if result is None:
+    except Exception as e:
+        raise HTTPException(
+            status_code=500, detail=f"Error with mysql {e}"
+        )
+    if result is None:
             raise HTTPException(
                 status_code=404, detail=f"Hive with id=={hive_id} not found"
             )
-        return result
-    except Exception as e:
-        raise HTTPException(
-            status_code=500, detail=f"Error creating the Hive: {e}"
-        )
+    return result
+
 
 
 @api_router_hive.post("/", status_code=201, response_model=Hive)
@@ -39,6 +40,16 @@ def create_hive(*,
     """
     Create a new hive in the database.
     """
+    try:
+        beekeeper=crud.beekeeper.get_by_id(db=db,id=recipe_in.beekeeper_id)
+    except Exception as e:
+        raise HTTPException(
+            status_code=500, detail=f"Error with mysql: {e}"
+        )
+    if beekeeper is None:
+            raise HTTPException(
+                status_code=404, detail=f"Beekeeper with id=={recipe_in.beekeeper_id} not found"
+            )
     try:
         hive = crud.hive.create(db=db, obj_in=recipe_in)
     except Exception as e:
@@ -58,12 +69,16 @@ def update_hive(*,
     Update Hive in the database.
     """
     try:
-
         hive = crud.hive.get(db, id=hive_id)
-        if hive is None:
+    except Exception as e:
+        raise HTTPException(
+            status_code=500, detail=f"Error with mysql: {e}"
+        )
+    if hive is None:
             raise HTTPException(
                 status_code=404, detail=f"Hive with id={hive_id} not found."
             )
+    try:
         updated_hive = crud.hive.update(db=db, db_obj=hive, obj_in=recipe_in)
     except Exception as e:
         raise HTTPException(
@@ -83,10 +98,15 @@ def update_parcial_hive(*,
     """
     try:
         hive = crud.hive.get(db, id=hive_id)
-        if hive is None:
+    except Exception as e:
+        raise HTTPException(
+            status_code=500, detail=f"Error with mysql: {e}"
+        )
+    if hive is None:
             raise HTTPException(
                 status_code=404, detail=f"Recipe with ID: {hive_id} not found."
             )
+    try:
         updated_hive = crud.hive.update(db=db, db_obj=hive, obj_in=recipe_in)
     except Exception as e:
         raise HTTPException(
@@ -105,10 +125,15 @@ def delete_hive(*,
     """
     try:
         hive = crud.hive.get(db, id=hive_id)
-        if hive is None:
+    except Exception as e:
+        raise HTTPException(
+            status_code=500, detail=f"Error with mysql: {e}"
+        )
+    if hive is None:
             raise HTTPException(
                 status_code=404, detail=f"Recipe with ID: {hive_id} not found."
             )
+    try:
         crud.hive.remove(db=db, hive=hive)
     except Exception as e:
         raise HTTPException(

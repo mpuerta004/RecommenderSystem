@@ -8,7 +8,6 @@ from sqlalchemy.orm import Session
 # from schemas.Slot import Slot, SlotCreate,SlotSearchResults
 from schemas.Device import Device, DeviceCreate, DeviceSearchResults,DeviceUpdate
 from schemas.MemberDevice import MemberDevice
-# from schemas.Member import Member,MemberCreate,MemberSearchResults
 
 # from schemas.Role import Role,RoleCreate,RoleSearchResults
 # from schemas.newMember import NewMemberBase
@@ -46,9 +45,10 @@ def get_device(
         )
 
 @api_router_device.post("/",status_code=201, response_model=Device)
-def create_device(
-    *, recipe_in: DeviceCreate,db: Session = Depends(deps.get_db)
-) -> dict:
+def create_device(    *, 
+                recipe_in: DeviceCreate,
+                db: Session = Depends(deps.get_db)
+                ) -> dict:
     """
     Create a new device in the database.
     """
@@ -62,9 +62,9 @@ def create_device(
 
 
 @api_router_device.delete("/{device_id}", status_code=204)
-def delete_device(    *,
+def delete_device(*,
     device_id:int,
-    db: Session = Depends(deps.get_db),
+    db: Session = Depends(deps.get_db)
 ):
     """
     Delete device in the database.
@@ -74,10 +74,10 @@ def delete_device(    *,
         if  device is None:
             raise HTTPException(
                 status_code=404, detail=f"Device with  device_id=={device_id} not found"            )
-        updated_recipe = crud.device.remove(db=db, device=device)
+        crud.device.remove(db=db, device=device)
         return  {"ok": True}
     except Exception as e:
         raise HTTPException(
-            status_code=500, detail=f"Error removing the Beekeeper entity: {e}"
+            status_code=500, detail=f"Error removing the Device entity: {e}"
         )
 

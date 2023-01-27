@@ -4,10 +4,10 @@ from enum import Enum
 from datetime import datetime
 
 class gender_type(str, Enum):
-    Male="Male"
-    NoBinary="NoBinary"
-    Female="Female"
-    IDontWantToAnser='I dont want to answer' 
+    MALE="MALE"
+    NOBINARY="NOBINARY"
+    FEMALE="FEMALE"
+    NOANSER='NOANSER' 
     
     
 class BeeKeeperBase(BaseModel):
