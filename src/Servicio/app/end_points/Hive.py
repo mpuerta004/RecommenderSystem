@@ -2,9 +2,13 @@ from fastapi import FastAPI, APIRouter, Query, HTTPException, Request, Depends
 from typing import Any, Dict, Generic, List, Optional, Type, TypeVar, Union, Optional
 from sqlalchemy.orm import Session
 from schemas.Hive import Hive, HiveCreate, HiveSearchResults, HiveUpdate
+from schemas.Member import MemberCreate
+from datetime import datetime
+from schemas.HiveMember import HiveMember,HiveMemberCreate
+from schemas.CampaignRole import CampaignRole,CampaignRoleCreate
 import deps
 import crud
-
+from schemas.newMember import NewRole
 
 api_router_hive = APIRouter(prefix="/hives")
 
@@ -18,18 +22,12 @@ def get_hive(
     """
     Fetch a single Hive by ID
     """
-    try:
-        result = crud.hive.get(db=db, id=hive_id)
-    except Exception as e:
-        raise HTTPException(
-            status_code=500, detail=f"Error with mysql {e}"
-        )
+    result = crud.hive.get(db=db, id=hive_id)
     if result is None:
             raise HTTPException(
                 status_code=404, detail=f"Hive with id=={hive_id} not found"
             )
     return result
-
 
 
 @api_router_hive.post("/", status_code=201, response_model=Hive)
@@ -40,12 +38,8 @@ def create_hive(*,
     """
     Create a new hive in the database.
     """
-    try:
-        beekeeper=crud.beekeeper.get_by_id(db=db,id=recipe_in.beekeeper_id)
-    except Exception as e:
-        raise HTTPException(
-            status_code=500, detail=f"Error with mysql: {e}"
-        )
+    beekeeper=crud.beekeeper.get_by_id(db=db,id=recipe_in.beekeeper_id)
+    
     if beekeeper is None:
             raise HTTPException(
                 status_code=404, detail=f"Beekeeper with id=={recipe_in.beekeeper_id} not found"
@@ -68,12 +62,8 @@ def update_hive(*,
     """
     Update Hive in the database.
     """
-    try:
-        hive = crud.hive.get(db, id=hive_id)
-    except Exception as e:
-        raise HTTPException(
-            status_code=500, detail=f"Error with mysql: {e}"
-        )
+    hive = crud.hive.get(db, id=hive_id)
+    
     if hive is None:
             raise HTTPException(
                 status_code=404, detail=f"Hive with id={hive_id} not found."
@@ -96,12 +86,8 @@ def update_parcial_hive(*,
     """
     Update recipe in the database.
     """
-    try:
-        hive = crud.hive.get(db, id=hive_id)
-    except Exception as e:
-        raise HTTPException(
-            status_code=500, detail=f"Error with mysql: {e}"
-        )
+    hive = crud.hive.get(db, id=hive_id)
+    
     if hive is None:
             raise HTTPException(
                 status_code=404, detail=f"Recipe with ID: {hive_id} not found."
@@ -123,15 +109,11 @@ def delete_hive(*,
     """
     Delete a hive in the database.
     """
-    try:
-        hive = crud.hive.get(db, id=hive_id)
-    except Exception as e:
-        raise HTTPException(
-            status_code=500, detail=f"Error with mysql: {e}"
-        )
+    hive = crud.hive.get(db, id=hive_id)
+    
     if hive is None:
             raise HTTPException(
-                status_code=404, detail=f"Recipe with ID: {hive_id} not found."
+                status_code=404, detail=f"Hive with ID: {hive_id} not found."
             )
     try:
         crud.hive.remove(db=db, hive=hive)
@@ -140,3 +122,287 @@ def delete_hive(*,
             status_code=500, detail=f"Error deleting the Hive: {e}"
         )
     return {"ok": True}
+
+
+
+# @api_router_hive.get("/{hive_id}/members",  status_code=200, response_model=MemberSearchResults)
+# def get_real_members_of_hive(
+#     *,
+#     hive_id: int,
+#     db: Session = Depends(deps.get_db),
+# ) -> dict:
+#     """
+#     Fetch all members of the Hive
+#     """
+#     try:
+#         hive= crud.hive.get(db=db, id=hive_id)
+#     except Exception as e:
+#         raise HTTPException(
+#             status_code=500, detail=f"Error with mysql: {e}"
+#         )
+#     if hive is None:
+#         raise HTTPException(
+#             status_code=404, detail=f"Hive with id=={hive_id} not found"
+#         )
+#     HiveMembers=crud.hivemember.get_by_hive_id(db=db, hive_id=hive_id)
+    
+#     # if  HiveMembers is []:
+#     #     raise HTTPException(
+#     #         status_code=404, detail=f"this hive has no members"
+#     #     )
+        
+#     List_members=[]
+#     for i in HiveMembers:
+#         user=crud.member.get_by_id(db=db, id=i.member_id)
+#         if user!=None:
+#             if user.real_user==True:
+#                 List_members.append(user)
+#     return {"results": List_members}
+
+
+# @api_router_hive.post("/{hive_id}/members/", status_code=201, response_model=Member )
+# def create_a_new_WB_for_a_hive(
+#     *,    
+#     hive_id:int,
+#     recipe_in: MemberCreate,
+#     db: Session = Depends(deps.get_db)
+# ) -> dict:
+#     """
+#     Create a new member of the hive in the database with a specific role. 
+#     """
+    
+#     try:
+#         hive=crud.hive.get(db=db, id=hive_id)
+#     except Exception as e:
+#         raise HTTPException(
+#             status_code=500, detail=f"Error with mysql: {e}"
+#         )
+#     if hive is None: 
+#          raise HTTPException(
+#                 status_code=404, detail=f"Hive with ID: {hive_id} not found."
+#             )
+#     #Create the Member
+#     try:     
+#         member_new= crud.member.create(db=db, obj_in=recipe_in)
+#     except Exception as e:
+#         raise HTTPException(
+#             status_code=500, detail=f"Error with mysql: {e}"
+#         )
+#     #Create the hiveMember 
+#     hivemember_create=HiveMemberCreate(hive_id=hive_id,member_id=member_new.id)
+#     try:
+#         hiveMember= crud.hivemember.create_hiveMember(db=db,obj_in=hivemember_create,role="WorkerBee")
+#     except Exception as e:
+#         raise HTTPException(
+#             status_code=500, detail=f"Error with mysql: {e}"
+#         )
+#     #Create the Role in active campaigns
+#     try:
+#         list_campaigns=crud.campaign.get_campaigns_from_hive_id_active(db=db, time=datetime.now(),hive_id=hive_id)
+#     except Exception as e:
+#         raise HTTPException(
+#             status_code=500, detail=f"Error with mysql: {e}"
+#         )
+#     if list_campaigns is not []:
+#         role=CampaignRoleCreate(role="WorkerBee")
+#         for i in list_campaigns:
+#             try:
+#                 crud.campaignrole.create_CampaignRole(db=db, obj_in=role, campaign_id=i.id,member_id=member_new.id)
+#             except Exception as e:
+#                 raise HTTPException(
+#                     status_code=500, detail=f"Error with mysql: {e}"
+#                 )
+#     return member_new
+
+
+@api_router_hive.post("/{hive_id}/members/", status_code=201, response_model=HiveMember)
+def create_a_new_member_for_a_hive_with_especific_role(
+    *,    
+    hive_id:int,
+    member: MemberCreate,
+    role:NewRole,
+    db: Session = Depends(deps.get_db)
+) -> dict:
+    """
+    Create a new member of the hive in the database with a specific role. 
+    """ 
+    hive=crud.hive.get(db=db, id=hive_id)
+    
+    if hive is None: 
+         raise HTTPException(
+                status_code=404, detail=f"Hive with ID: {hive_id} not found."
+            )
+    #Create the Member
+    member_new= crud.member.create(db=db, obj_in=member)
+    
+    #Create the hiveMember
+    hiveMember=crud.hivemember.get_by_member_hive_id(db=db, hive_id=hive_id,member_id=member_new.id)
+    
+    if hiveMember is None:
+        hivemember_create=HiveMemberCreate(hive_id=hive_id,member_id=member_new.id)
+        if role.role=="QueenBee":
+            QueenBee=crud.hivemember.get_by_role_hive(db=db, hive_id=hive_id,role="QueenBee")
+          
+            if QueenBee is None:
+                    hiveMember= crud.hivemember.create_hiveMember(db=db,obj_in=hivemember_create,role=role.role)
+                    
+                    #Create the Role in active campaigns
+                    list_campaigns=crud.campaign.get_campaigns_from_hive_id_active(db=db, time=datetime.now(),hive_id=hive_id)
+                    
+                    #Todo! verificar que esto esta bien! 
+                    if list_campaigns is not []:
+                        role=CampaignRoleCreate(role="WorkerBee")
+                        for i in list_campaigns:
+                            crud.campaignrole.create_CampaignRole(db=db, obj_in=role, campaign_id=i.id,member_id=member_new.id)
+                           
+                    return member_new
+            else:
+                raise HTTPException(
+                    status_code=400, detail=f"This hive has already a QueenBee"
+                )
+        else:
+            hiveMember= crud.hivemember.create_hiveMember(db=db,obj_in=hivemember_create,role=role.role)
+            
+            #Create the Role in active campaigns
+            list_campaigns=crud.campaign.get_campaigns_from_hive_id_active(db=db, time=datetime.now(),hive_id=hive_id)
+            
+            if list_campaigns is not []:
+                role=CampaignRoleCreate(role=role.role)
+                for i in list_campaigns:
+                    crud.campaignrole.create_CampaignRole(db=db, obj_in=role, campaign_id=i.id,member_id=member_new.id)
+                    
+            return member_new
+    else: 
+        raise HTTPException(
+                    status_code=400, detail=f"This Member is already in this hive."
+                )
+        
+@api_router_hive.post("/{hive_id}/members/{member_id}/WB", status_code=201, response_model=HiveMember)
+def associate_existing_member_with_a_hive_as_WB(
+    *,    
+    hive_id:int,
+    member_id:int,
+    db: Session = Depends(deps.get_db)
+) -> dict:
+    """
+    Create a new member of the hive in the database with a specific role. 
+    """
+    hive=crud.hive.get(db=db, id=hive_id)
+    
+    if hive is None: 
+         raise HTTPException(
+                status_code=404, detail=f"Hive with ID: {hive_id} not found."
+            )
+    member=crud.member.get(db=db, id=member_id)
+    
+    if member is None: 
+         raise HTTPException(
+                status_code=404, detail=f"Member with ID: {hive_id} not found."
+            )
+    #Create the HiveMember
+    hivemember_create=HiveMemberCreate(hive_id=hive_id,member_id=member_id)
+    result=crud.hivemember.create_hiveMember(db=db,obj_in=hivemember_create, role="WorkerBee")
+    
+    #Create the role in the Campaigns!  
+    list_campaigns=crud.campaign.get_campaigns_from_hive_id_active(db=db, time=datetime.now(),hive_id=hive_id)
+   
+    if list_campaigns is not []:
+        role=CampaignRoleCreate(role="WorkerBee")
+        for i in list_campaigns:
+            crud.campaignrole.create_CampaignRole(db=db, obj_in=role, campaign_id=i.id,member_id=member_id)
+            
+    return result
+
+
+
+# @api_router_hive.post("/{hive_id}/members/{member_id}/", status_code=201, response_model=HiveMember)
+# def associate_existing_member_with_a_hive(
+#     *,    
+#     hive_id:int,
+#     member_id:int,
+#     db: Session = Depends(deps.get_db)
+# ) -> dict:
+#     """
+#     Create a new member of the hive in the database with a specific role. 
+#     """
+#     try:
+#         hive=crud.hive.get(db=db, id=hive_id)
+#     except Exception as e:
+#         raise HTTPException(
+#             status_code=500, detail=f"Error with mysql: {e}"
+#         )
+#     if hive is None: 
+#          raise HTTPException(
+#                 status_code=404, detail=f"Hive with ID: {hive_id} not found."
+#             )
+#     try:
+#         member=crud.member.get(db=db, id=member_id)
+#     except Exception as e:
+#         raise HTTPException(
+#             status_code=500, detail=f"Error with mysql: {e}"
+#         )
+#     if member is None: 
+#          raise HTTPException(
+#                 status_code=404, detail=f"Member with ID: {hive_id} not found."
+#             )
+    
+#     hivemember=crud.hivemember.get_by_member_hive_id(db=db, hive_id=hive_id,member_id=member_id)
+#     #Create the HiveMember
+#     queenBee=crud.hivemember.get_by_role_hive(db=db, hive_id=hive_id,role="QueenBee")
+#     if queenBee is None:
+#         hivemember_create=HiveMemberCreate(hive_id=hive_id,member_id=member_id)
+#         try:
+#             result=crud.hivemember.create_hiveMember(db=db,obj_in=hivemember_create, role="QueenBee")
+#         except Exception as e:
+#             raise HTTPException(
+#                 status_code=500, detail=f"Error with mysql: {e}"
+#             )
+#     else:
+        
+#     #Create the role in the Campaigns!  
+#     try:  
+#         list_campaigns=crud.campaign.get_campaigns_from_hive_id_active(db=db, time=datetime.now(),hive_id=hive_id)
+#     except Exception as e:
+#         raise HTTPException(
+#             status_code=500, detail=f"Error with mysql: {e}"
+#         )
+#     if list_campaigns is not []:
+#         role=CampaignRoleCreate(role="WorkerBee")
+#         for i in list_campaigns:
+#             try:
+#                 crud.campaignrole.create_CampaignRole(db=db, obj_in=role, campaign_id=i.id,member_id=member_id)
+#             except Exception as e:
+#                 raise HTTPException(
+#                     status_code=500, detail=f"Error with mysql: {e}"
+#                  )
+#     return result
+
+
+@api_router_hive.delete("/{hive_id}/members/{member_id}", status_code=204)
+def delete_member_of_hive(
+    *,    
+    hive_id:int,
+    member_id:int, 
+    db: Session = Depends(deps.get_db)
+) -> dict:
+    """
+    Create a new member of the hive in the database with a specific role. 
+    """
+    result= crud.campaign.get_campaigns_from_hive_id_active(db=db, time=datetime.now,hive_id=hive_id)
+    role_campaign=crud.campaignrole.get_CampaignRole_in_campaign(db=db,campaign_id=result.id,member_id=member_id)
+    
+    if role_campaign is not None:
+        raise HTTPException(
+            status_code=400, detail=f"Do not remove a member from the hive if he/she is participating in an active campaign."
+        )
+    
+    campaigns= crud.campaign.get_campaigns_from_hive_id(db=db,hive_id=hive_id)
+    for i in campaigns:
+        role_campaign=crud.campaignrole.get_CampaignRole_in_campaign(db=db,campaign_id=i.id,member_id=member_id)
+        crud.campaignrole.remove(db=db, role=role_campaign)
+    
+    hiveMember=crud.hivemember.get_by_member_hive_id(db=db, member_id=member_id, hive_id=hive_id)
+    updated_recipe = crud.hivemember.remove(db=db,hiveMember=hiveMember)
+    return  {"ok": True}
+
+

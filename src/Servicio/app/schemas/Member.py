@@ -1,9 +1,7 @@
 from typing import Optional, List, Sequence
 from pydantic import BaseModel
-from schemas.CampaignRole import CampaignRole
 from datetime import datetime
 from enum import Enum
-from schemas.HiveMember import HiveMember
 
 
 # class role(str, Enum):

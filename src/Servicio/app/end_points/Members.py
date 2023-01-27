@@ -44,12 +44,8 @@ def get_a_member(
     """
     Get a member
     """
-    try:
-        user=crud.member.get_by_id(db=db, id=member_id)
-    except Exception as e:
-        raise HTTPException(
-            status_code=500, detail=f"Error with mysql: {e}"
-        )
+    user=crud.member.get_by_id(db=db, id=member_id)
+
     if  user is None:
         raise HTTPException(
             status_code=404, detail=f"Member with id=={member_id} not found"
@@ -66,12 +62,8 @@ def delete_member(    *,
     """
     Remove a member from the database
     """
-    try:
-        user=crud.member.get_by_id(db=db, id=member_id)
-    except Exception as e:
-        raise HTTPException(
-            status_code=500, detail=f"Error with mysql: {e}"
-        )
+    user=crud.member.get_by_id(db=db, id=member_id)
+    
     if  user is None:
         raise HTTPException(
             status_code=404, detail=f"Member with member_id=={member_id} not found"
@@ -93,12 +85,8 @@ def create_member(
     """
     Create a new member. 
     """
-    try: 
-        member_new= crud.member.create(db=db, obj_in=recipe_in)
-    except Exception as e:
-        raise HTTPException(
-            status_code=500, detail=f"Error with mysql: {e}"
-        )
+    member_new= crud.member.create(db=db, obj_in=recipe_in)
+    
     return member_new
    
    
@@ -114,12 +102,8 @@ def update_a_member(
     """
     Update a member
     """
-    try:
-        user=crud.member.get_by_id(db=db, id=member_id)
-    except Exception as e:
-        raise HTTPException(
-            status_code=500, detail=f"Error with mysql: {e}"
-        )
+    user=crud.member.get_by_id(db=db, id=member_id)
+    
     if  user is None:
         raise HTTPException(
             status_code=404, detail=f"Member with id=={member_id} not found"
@@ -146,12 +130,9 @@ def partially_update_a_member(
     """
     Partially update a member
     """
-    try:
-        user=crud.member.get_by_id(db=db, id=member_id)
-    except Exception as e:
-        raise HTTPException(
-            status_code=500, detail=f"Error with mysql: {e}"
-        )
+    
+    user=crud.member.get_by_id(db=db, id=member_id)
+    
     if  user is None:
         raise HTTPException(
             status_code=404, detail=f"Member with member_id=={member_id} not found"
@@ -176,22 +157,15 @@ def get_memberdevice(
     Fetch a single Memberdevice by ID
     """
     # verify that the user exists
-    try: 
-        user=crud.member.get_by_id(db=db, id=member_id)
-    except Exception as e:
-        raise HTTPException(
-            status_code=404, detail=f"Error with mysql: {e}"
-        )
+    user=crud.member.get_by_id(db=db, id=member_id)
+    
     if  user is None:
             raise HTTPException(
                 status_code=404, detail=f"The member with id={member_id} not found"
             )
-    try:
-        memberdevice = crud.memberdevice.get_by_member_id(db=db,member_id=member_id)
-    except Exception as e:
-        raise HTTPException(
-            status_code=500, detail=f"Error with mysql: {e}"
-        )
+    
+    memberdevice = crud.memberdevice.get_by_member_id(db=db,member_id=member_id)
+   
     if  memberdevice is None:
             raise HTTPException(
                 status_code=404, detail=f"The member with id={member_id} has not a device."
@@ -211,35 +185,23 @@ def update_the_device_of_a_member(
     Update the association of a device with a user. 
     """
       # verify that the user exists
-    try: 
-        user=crud.member.get_by_id(db=db, id=member_id)
-    except Exception as e:
-        raise HTTPException(
-            status_code=404, detail=f"Error with mysql: {e}"
-        )
+    user=crud.member.get_by_id(db=db, id=member_id)
+    
     if  user is None:
             raise HTTPException(
                 status_code=404, detail=f"The member with id={member_id} not found"
             )
             
     # verify that the device exists
-    try: 
-        device=crud.device.get(db=db, id=recipe_in.device_id)
+    device=crud.device.get(db=db, id=recipe_in.device_id)
 
-    except Exception as e:
-        raise HTTPException(
-            status_code=404, detail=f"Error with mysql: {e}"
-        )
+    
     if  device is None:
             raise HTTPException(
                 status_code=404, detail=f"The device with id={recipe_in.device_id} not found"
             )
-    try:
-        memberDevice=crud.memberdevice.get_by_member_id(db=db, member_id=member_id)
-    except Exception as e:
-        raise HTTPException(
-            status_code=500, detail=f"Error with mysql: {e}"
-        )
+    memberDevice=crud.memberdevice.get_by_member_id(db=db, member_id=member_id)
+   
     if  memberDevice is None:
         raise HTTPException(
             status_code=404, detail=f"This member has not a device."
@@ -266,36 +228,24 @@ def create_memberdevice(
     Create a new Memberdevice in the database.
     """
     # verify that the user exists
-    try: 
-        user=crud.member.get_by_id(db=db, id=member_id)
-    except Exception as e:
-        raise HTTPException(
-            status_code=404, detail=f"Error with mysql: {e}"
-        )
+    user=crud.member.get_by_id(db=db, id=member_id)
+    
     if  user is None:
             raise HTTPException(
                 status_code=404, detail=f"The member with id={member_id} not found"
             )
     # verify that the device exists
 
-    try: 
-        device=crud.device.get(db=db, id=device_id)
+    device=crud.device.get(db=db, id=device_id)
 
-    except Exception as e:
-        raise HTTPException(
-            status_code=404, detail=f"Error with mysql: {e}"
-        )
+    
     if  device is None:
             raise HTTPException(
                 status_code=404, detail=f"The device with id={device_id} not found"
             )
     # associete member and device. 
-    try:
-        memberDevice= crud.memberdevice.get_by_member_id(db=db,member_id=member_id)
-    except Exception as e:
-        raise HTTPException(
-            status_code=500, detail=f"Error with mysql: {e}"
-        )
+    memberDevice= crud.memberdevice.get_by_member_id(db=db,member_id=member_id)
+    
     if memberDevice is None:
         member_device=MemberDeviceCreate(member_id=member_id,device_id=device_id)
         try:
@@ -322,35 +272,23 @@ def delete_memberdevice(    *,
     Delete Memberdevice in the database.
     """
       # verify that the user exists
-    try: 
-        user=crud.member.get_by_id(db=db, id=member_id)
-    except Exception as e:
-        raise HTTPException(
-            status_code=404, detail=f"Error with mysql: {e}"
-        )
+    user=crud.member.get_by_id(db=db, id=member_id)
+    
     if  user is None:
             raise HTTPException(
                 status_code=404, detail=f"The member with id={member_id} not found"
             )
     # verify that the device exists
 
-    try: 
-        device=crud.device.get(db=db, id=device_id)
+    device=crud.device.get(db=db, id=device_id)
 
-    except Exception as e:
-        raise HTTPException(
-            status_code=404, detail=f"Error with mysql: {e}"
-        )
+   
     if  device is None:
             raise HTTPException(
                 status_code=404, detail=f"The device with id={device_id} not found"
             )
-    try:
-        Memberdevice=crud.memberdevice.get_by_member_id(db=db, member_id=member_id)
-    except Exception as e:
-        raise HTTPException(
-            status_code=500, detail=f"Error with mysql: {e}"
-        )
+    Memberdevice=crud.memberdevice.get_by_member_id(db=db, member_id=member_id)
+    
     if  Memberdevice is None:
         raise HTTPException(
             status_code=404, detail=f"The assosiation of device with id={device_id} with a member with id={member_id} is not found."

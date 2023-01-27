@@ -17,12 +17,8 @@ def get_device(
     """
     Fetch a single device by ID
     """
-    try:
-        device = crud.device.get(db=db, id=device_id)
-    except Exception as e:
-        raise HTTPException(
-            status_code=500, detail=f"Error with mysql: {e}"
-        )
+    device = crud.device.get(db=db, id=device_id)
+    
 
     if  device is None:
             raise HTTPException(
@@ -56,12 +52,8 @@ def delete_device(*,
     """
     Remove a device in the database.
     """
-    try:
-        device=crud.device.get(db=db,id=device_id)
-    except Exception as e:
-        raise HTTPException(
-            status_code=500, detail=f"Error witg mysql: {e}"
-        )
+    device=crud.device.get(db=db,id=device_id)
+    
     if  device is None:
             raise HTTPException(
                 status_code=404, detail=f"Device with id=={device_id} not found"            )
@@ -84,12 +76,8 @@ def parcially_update_a_device(
     """
     Partially update a Device entity
     """
-    try:
-        device = crud.device.get(db=db, id=device_id)
-    except Exception as e:
-        raise HTTPException(
-            status_code=500, detail=f"Error with mysql: {e}"
-        )
+    device = crud.device.get(db=db, id=device_id)
+    
     if device is None:
             raise HTTPException(
             status_code=404, detail=f"Device with id=={device_id} not found"
@@ -116,12 +104,8 @@ def update_a_device(
     """
     Partially update a Device entity
     """
-    try:
-        device = crud.device.get(db=db, id=device_id)
-    except Exception as e:
-        raise HTTPException(
-            status_code=500, detail=f"Error with mysql: {e}"
-        )
+    device = crud.device.get(db=db, id=device_id)
+    
     if device is None:
             raise HTTPException(
             status_code=404, detail=f"Device with id=={device_id} not found"

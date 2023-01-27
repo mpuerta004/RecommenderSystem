@@ -39,12 +39,8 @@ def get_a_beekeeper(
     """
     Get a BeeKeeper
     """
-    try:
-        beekeeper = crud.beekeeper.get_by_id(db=db, id=Beekeeper_id)
-    except Exception as e:
-        raise HTTPException(
-            status_code=500, detail=f"Error with mysql: {e}"
-        )
+    beekeeper = crud.beekeeper.get_by_id(db=db, id=Beekeeper_id)
+    
     if beekeeper is None:
             raise HTTPException(
                 status_code=404, detail=f"BeeKeeper with BeeKeeper_id=={Beekeeper_id} not found"
@@ -59,12 +55,8 @@ def delete_beekeeper(*,
     """
     Delete a BeeKeeper.
     """
-    try:
-        beekeeper = crud.beekeeper.get_by_id(db=db, id=beekeeper_id)
-    except Exception as e:
-        raise HTTPException(
-            status_code=500, detail=f"Error with mysql: {e}"
-        )
+    beekeeper = crud.beekeeper.get_by_id(db=db, id=beekeeper_id)
+    
     
     if beekeeper is None:
             raise HTTPException(
@@ -107,12 +99,9 @@ def put_a_beekeeper(
     """
     Update a BeeKeeper
     """
-    try:
-        beekeeper = crud.beekeeper.get_by_id(db=db, id=beekeeper_id)
-    except Exception as e:
-        raise HTTPException(
-            status_code=500, detail=f"Error with mysql: {e}"
-        )
+
+    beekeeper = crud.beekeeper.get_by_id(db=db, id=beekeeper_id)
+    
     if beekeeper is None:
             raise HTTPException(
                 status_code=404, detail=f"BeeKeeper with BeeKeeper_id=={beekeeper_id} not found"
@@ -138,12 +127,8 @@ def patch_a_beekeeper(
     """
     Update a BeeKeeper
     """
-    try:
-        beekeeper = crud.beekeeper.get_by_id(db=db, id=beekeeper_id)
-    except Exception as e:
-        raise HTTPException(
-            status_code=500, detail=f"Error with mysql: {e}"
-        )
+    beekeeper = crud.beekeeper.get_by_id(db=db, id=beekeeper_id)
+    
     if beekeeper is None:
             raise HTTPException(
             status_code=404, detail=f"BeeKeeper with BeeKeeper_id=={beekeeper_id} not found"

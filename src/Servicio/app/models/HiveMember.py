@@ -18,3 +18,4 @@ class HiveMember(Base):
     member_id=Column(Integer, ForeignKey(Member.id, ondelete="CASCADE"),primary_key=True)
     role=Column(Enum("WorkerBee","QueenBee","DroneBee" ),primary_key=True,default="WorkerBee")
        
+    member=relationship("Member",cascade="all, delete")

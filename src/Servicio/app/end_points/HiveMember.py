@@ -39,48 +39,6 @@ from starlette.responses import StreamingResponse
 api_router_hivemember = APIRouter(prefix="/hives/{hive_id}/members")
 
 
-@api_router_hivemember.post("/", status_code=201, response_model=Member )
-def create_member_of_hive(
-    *,    
-    hive_id:int,
-    recipe_in: MemberCreate,
-    db: Session = Depends(deps.get_db)
-) -> dict:
-    """
-    Create a new member of the hive in the database with a specific role. 
-    """
-    member_new= crud.member.create(db=db, obj_in=recipe_in)
-    hivemember_create=HiveMemberCreate(hive_id=hive_id,member_id=member_new.id)
-    crud.hivemember.create_hiveMember(db=db,obj_in=hivemember_create,role="WorkerBee")
-    
-    list_campaigns=crud.campaign.get_campaigns_from_hive_id_active(db=db, time=datetime.now(),hive_id=hive_id)
-    if list_campaigns is not []:
-        role=CampaignRoleCreate(role="WorkerBee")
-        for i in list_campaigns:
-            crud.campaignrole.create_CampaignRole(db=db, obj_in=role, campaign_id=i.id,member_id=member_new.id)
-    return member_new
-
-
-@api_router_hivemember.post("/{member_id}", status_code=201, response_model=HiveMember )
-def associate_member_of_hive(
-    *,    
-    hive_id:int,
-    member_id:int,
-    db: Session = Depends(deps.get_db)
-) -> dict:
-    """
-    Create a new member of the hive in the database with a specific role. 
-    """
-    hivemember_create=HiveMemberCreate(hive_id=hive_id,member_id=member_id)
-    result=crud.hivemember.create_hiveMember(db=db,obj_in=hivemember_create, role="WorkerBee")
-    
-    list_campaigns=crud.campaign.get_campaigns_from_hive_id_active(db=db, time=datetime.now(),hive_id=hive_id)
-    if list_campaigns is not []:
-        role=CampaignRoleCreate(role="WorkerBee")
-        for i in list_campaigns:
-            crud.campaignrole.create_CampaignRole(db=db, obj_in=role, campaign_id=i.id,member_id=member_id)
-    return result
-
 @api_router_hivemember.delete("/{member_id}", status_code=204)
 def delete_member_of_hive(
     *,    
@@ -107,51 +65,4 @@ def delete_member_of_hive(
     updated_recipe = crud.hivemember.remove(db=db,hiveMember=hiveMember)
     return  {"ok": True}
 
-
-
-@api_router_hivemember.patch("/{member_id}", status_code=201, response_model=Hive)
-def update_parcial_hiveMember(*,
-                        recipe_in: Union[HiveMemberUpdate, Dict[str, Any]],
-                        hive_id: int,
-                        member_id:int,
-                        db: Session = Depends(deps.get_db),
-                        ) -> dict:
-    """
-    Update recipe in the database.
-    """
-    try:
-        hivemember = crud.hivemember.get_by_member_hive_id(db=db, member_id=member_id,hive_id=hive_id)
-        if hivemember is None:
-            raise HTTPException(
-                status_code=404, detail=f"Recipe with ID: {hive_id} not found."
-            )
-        updated_hive = crud.hive.update(db=db, db_obj=hivemember, obj_in=recipe_in)
-    except Exception as e:
-        raise HTTPException(
-            status_code=500, detail=f"Error updaiting the Hive: {e}"
-        )
-    return updated_hive
-
-@api_router_hivemember.get("/",  status_code=200, response_model=MemberSearchResults)
-def get_members_of_hive(
-    *,
-    hive_id: int,
-    db: Session = Depends(deps.get_db),
-) -> Cell:
-    """
-    Fetch all members of the Hive
-    """
-    HiveMembers=crud.hivemember.get_by_hive_id(db=db, hive_id=hive_id)
-    
-    if  HiveMembers is []:
-        raise HTTPException(
-            status_code=404, detail=f"Members with hive_id=={hive_id} not found"
-        )
-        
-    List_members=[]
-    for i in HiveMembers:
-        user=crud.member.get_by_id(db=db, id=i.member_id)
-        if user!=None:
-            List_members.append(user)
-    return {"results": List_members}
 
