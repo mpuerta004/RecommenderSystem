@@ -38,7 +38,7 @@ TEMPLATES = Jinja2Templates(directory=str(BASE_PATH / "templates"))
 
 app = FastAPI(title="Micro-volunteering Engine",
               version=1.0, openapi_url="/openapi.json")
-app.include_router(device.api_router_device, tags=["Device"])
+app.include_router(Device.api_router_device, tags=["Device"])
 
 app.include_router(BeeKeeper.api_router_beekeepers, tags=["BeeKeepers"])
 app.include_router(Hive.api_router_hive, tags=["Hives"])
@@ -52,7 +52,7 @@ app.include_router(Surface.api_router_surface, tags=["Surfaces"])
 app.include_router(Cells.api_router_cell, tags=["Cells"])
 app.include_router(Measurements.api_router_measurements, tags=["Measurements"])
 app.include_router(Recommendation.api_router_recommendation, tags=["Recommendations"])
-app.include_router(reading.api_router_reading, tags=["Readings"])
+app.include_router(Reading.api_router_reading, tags=["Readings"])
 app.include_router(Demo.api_router_demo, tags=["Demo"])
 api_router = APIRouter()
 import asyncio
