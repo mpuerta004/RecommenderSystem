@@ -17,6 +17,7 @@ from sqlalchemy.orm import Session
 from crud.base import CRUDBase
 from models.Surface import Surface
 from models.Cell import Cell
+from models.Slot import Slot
 from sqlalchemy import and_, extract
 
 from fastapi import HTTPException
@@ -51,7 +52,7 @@ class CRUDMeasurement(CRUDBase[Measurement, MeasurementCreate, MeasurementUpdate
         
         def get_all_Measurement_campaign(self, db:Session, *, campaign_id:int, time:DateTime)-> int:
             try:
-                return db.query(Measurement).join(Cell).join(Surface).filter(and_(Measurement.cell_id==Cell.id ,Measurement.datetime<=time,Cell.surface_id==Surface.id, Surface.campaign_id==campaign_id)).count()
+                return db.query(Measurement).join(Cell).join(Surface).join(Slot).filter(and_(Measurement.slot_id==Slot.id, Slot.cell_id==Cell.id ,Measurement.datetime<=time,Cell.surface_id==Surface.id, Surface.campaign_id==campaign_id)).count()
             except Exception as e:
                         raise HTTPException(status_code=500, detail=f"Error with mysql {e}" )
    
@@ -59,7 +60,7 @@ class CRUDMeasurement(CRUDBase[Measurement, MeasurementCreate, MeasurementUpdate
         
         def get_all_Measurement_from_cell(self, db:Session, *,  cell_id:int, time:DateTime)-> int:
             try:
-                return db.query(Measurement).filter(and_(Measurement.cell_id==cell_id,Measurement.datetime<=time)).count()        
+                return db.query(Measurement).join(Slot).filter(and_(Measurement.slot_id==Slot.id, Slot.cell_id==cell_id,Measurement.datetime<=time)).count()        
             except Exception as e:
                         raise HTTPException(status_code=500, detail=f"Error with mysql {e}" )
    

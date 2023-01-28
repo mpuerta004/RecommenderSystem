@@ -63,7 +63,7 @@ def prioriry_calculation_2(time:datetime, cam:Campaign, db:Session= Depends(deps
             # with sessionmaker.context_session() as db:
             db.refresh(cam)
             campaign_new=crud.campaign.get_campaign(db=db,hive_id=cam.hive_id,campaign_id=cam.id)
-            campaigns = campaign_new #crud.campaign.get_all_campaign(db=db)
+            campaigns = campaign_new
             # a = datetime.now()
             # print(a)
             # date = datetime(year=a.year, month=a.month, day=a.day,
@@ -215,13 +215,14 @@ async def asignacion_recursos(
                     aletorio = random.random()
                     if aletorio>0.4:
                         time_polinizado = time
-                        cell=crud.cell.get_Cell(db=db,cell_id=mediciones[i][1].cell_id)
+                        # slotcrud.slot.get(db=db, id=mediciones[i][1].slot_id)
+                        cell=crud.cell.get_Cell(db=db,cell_id=mediciones[i][1].slot.cell.id)
                         Member_Device_user=crud.member_device.get_by_member_id(db=db,member_id=mediciones[i][0].id)
                         creation=MeasurementCreate(db=db, location=cell.centre,datetime=time_polinizado,device_id=Member_Device_user.device_id, recommendation_id=mediciones[i][1].id)
                         slot=crud.slot.get_slot_time(db=db, cell_id=cell.id,time=time)
                         #Ver si se registran bien mas recomendaciones con el id de la medicion correcta. 
                         
-                        measurement=crud.measurement.create_Measurement(db=db,obj_in=creation,member_id=mediciones[i][0].id,slot_id=slot.id,cell_id=mediciones[i][1].cell_id,recommendation_id=mediciones[i][1].id)
+                        measurement=crud.measurement.create_Measurement(db=db,obj_in=creation,member_id=mediciones[i][0].id,slot_id=slot.id,cell_id=mediciones[i][1].slot.cell.id,recommendation_id=mediciones[i][1].id)
                         crud.recommendation.update(db=db,db_obj=mediciones[i][1], obj_in={"state":"REALIZED","update_datetime":time_polinizado})
                         db.commit()
                         
@@ -373,8 +374,8 @@ def show_recomendation(*, cam:Campaign, user:Member, result:list(),time:datetime
     
     Cells_recomendadas=[]
     for i in result:
-        Cells_recomendadas.append(i.cell_id)
-    cell_elejida=recomendation.cell_id
+        Cells_recomendadas.append(i.slot.cell.id)
+    cell_elejida=recomendation.slot.cell.id
     user_position=recomendation.member_current_location
     for i in cam.surfaces:
             count=count+1

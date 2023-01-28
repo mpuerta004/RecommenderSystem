@@ -15,7 +15,7 @@ import datetime
 
 from db.base_class import Base
 from sqlalchemy import and_, extract,or_
-
+from models.Slot import Slot
 from sqlalchemy.orm import Session
 
 from crud.base import CRUDBase
@@ -51,7 +51,7 @@ class CRUDRecommendation(CRUDBase[Recommendation, RecommendationCreate, Recommen
         
         def get_recommendation_to_measurement(self, db: Session, *, member_id:int, cell_id:int) -> Recommendation:
                 try:
-                        return db.query(Recommendation).filter( and_(Recommendation.cell_id==cell_id, Recommendation.member_id==member_id, Recommendation.state=="ACCEPTED")).first()
+                        return db.query(Recommendation).join(Slot).filter( and_(Recommendation.slot_id==Slot.id, Slot.cell_id==cell_id, Recommendation.member_id==member_id, Recommendation.state=="ACCEPTED")).first()
                 except Exception as e:
                         raise HTTPException(status_code=500, detail=f"Error with mysql {e}" )
    
@@ -77,7 +77,7 @@ class CRUDRecommendation(CRUDBase[Recommendation, RecommendationCreate, Recommen
 
         def get_aceptance_state_of_cell(self,db: Session, *, cell_id:int, )-> List[Recommendation]:
                 try:
-                        return db.query(Recommendation).filter(and_(Recommendation.state=="ACCEPTED", Recommendation.cell_id == cell_id)).all()
+                        return db.query(Recommendation).join(Slot).filter(and_(Recommendation.state=="ACCEPTED", Recommendation.slot_id==Slot.id, Slot.cell_id == cell_id)).all()
                 except Exception as e:
                         raise HTTPException(status_code=500, detail=f"Error with mysql {e}" )
    

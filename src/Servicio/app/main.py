@@ -1,13 +1,9 @@
 from fastapi import BackgroundTasks, FastAPI
-from starlette.background import BackgroundTask
-from starlette.responses import JSONResponse
-from starlette.applications import Starlette
 from fastapi import FastAPI, APIRouter, Query, HTTPException, Request, Depends
 from fastapi.templating import Jinja2Templates
 from typing import Optional, Any, List
 from pathlib import Path
 from sqlalchemy.orm import Session
-import deps
 from end_points import Hive
 from end_points import Members
 from end_points import BeeKeeper
@@ -61,7 +57,7 @@ async def prioriry_calculation() -> None:
     await  asyncio.sleep(1)
     print("HELOOS ")
     with sessionmaker.context_session() as db:
-        campaigns = crud.campaign.get_all_campaign(db=db)
+        campaigns = crud.campaign.get_all_active_campaign(db=db)
         a = datetime.now()
         print(a)
         time = datetime(year=a.year, month=a.month, day=a.day,
