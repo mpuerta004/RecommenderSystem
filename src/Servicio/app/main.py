@@ -63,11 +63,7 @@ import math
 from schemas.Priority import Priority, PriorityCreate, PrioritySearchResults
 
 
-# @scheduler.scheduled_job('interval', seconds=60)
-# def prioriry_calculation() -> None:
-#     print("HELLOW")
-# @app.on_event("startup")
-# @repeat_every(seconds=60*10)  # 10 minutes
+
 async def prioriry_calculation() -> None:
     """
     Create the priorirty based on the measurements
@@ -107,7 +103,6 @@ async def state_calculation()->None:
 #                     crud.measurement.create_Measurement(db=db, slot_id=slot.id,member_id=)
 
 
-#Todo hacer que desde esta se llame a la que esta en la demo! 
 def final_funtion():
     asyncio.run(prioriry_calculation())
     print("He terminado!")

@@ -8,20 +8,20 @@ from schemas.Slot import Slot
 from pydantic import BaseModel, ValidationError
 
 
-class MemberDeviceBase(BaseModel):
+class Member_DeviceBase(BaseModel):
     member_id:int
     device_id:int
    
 
-class MemberDeviceCreate(MemberDeviceBase):
+class Member_DeviceCreate(Member_DeviceBase):
     pass
 
 
-class MemberDeviceUpdate(MemberDeviceBase):
+class Member_DeviceUpdate(Member_DeviceBase):
     pass
 
 # Properties shared by models stored in DB
-class MemberDeviceInDBBase(MemberDeviceBase):
+class Member_DeviceInDBBase(Member_DeviceBase):
 
     pass
 
@@ -30,14 +30,14 @@ class MemberDeviceInDBBase(MemberDeviceBase):
 
 
 # Properties to return to client
-class MemberDevice(MemberDeviceInDBBase):
+class Member_Device(Member_DeviceInDBBase):
     pass
 
 
 # Properties properties stored in DB
-class RecipeInDB(MemberDeviceInDBBase):
+class RecipeInDB(Member_DeviceInDBBase):
     pass
 
 
-class MemberDeviceSearchResults(BaseModel):
-    results: Sequence[MemberDevice]
+class Member_DeviceSearchResults(BaseModel):
+    results: Sequence[Member_Device]

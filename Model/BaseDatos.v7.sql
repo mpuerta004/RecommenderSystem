@@ -86,7 +86,7 @@ year varchar(30) null default null
 );
 
 
-Create Table MemberDevice(
+Create Table Member_Device(
   device_id int Unique default Null,
   member_id int not null, 
   primary key(member_id),
