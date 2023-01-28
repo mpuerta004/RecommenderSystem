@@ -31,7 +31,7 @@ class CRUDCampaign_Member(CRUDBase[Campaign_Member, Campaign_MemberCreate, Campa
     
     def get_Campaign_Member_in_campaign(self, db: Session, *, campaign_id:int, member_id:int) -> Campaign_Member:
         try:
-            return db.query(Campaign_Member.role).filter(and_(Campaign_Member.campaign_id == campaign_id,Campaign_Member.member_id==member_id)).first()
+            return db.query(Campaign_Member).filter(and_(Campaign_Member.campaign_id == campaign_id,Campaign_Member.member_id==member_id)).first()
         except Exception as e:
             raise HTTPException(status_code=500, detail=f"Error with mysql {e}" )
     

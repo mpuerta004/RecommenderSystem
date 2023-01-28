@@ -67,47 +67,46 @@ api_router_campaign_member = APIRouter(prefix="/members/{member_id}/campaigns/{c
 #                             status_code=404, detail=f"This user already has a role in campaign"
 #                         )
     
-# @api_router_campaign_member.delete("/{role}", status_code=204)
-# def delete_role(    *,
-#     campaign_id: int,
-#     member_id:int,
-#     role:str,
-#     db: Session = Depends(deps.get_db),
-# ):
-#     """
-#     Delete role in the database.
-#     """
-#     result = crud.role.get_by_ids_role(db=db, campaign_id=campaign_id,member_id=member_id,Role_str=role)
-#     if  result is None:
-#         raise HTTPException(
-#             status_code=404, detail=f"Role with member_id=={member_id}, campaign_id={campaign_id} and role={role} not found"
-#         )
-#     updated_recipe = crud.role.remove(db=db, role=result)
-#     return {"ok": True}
+@api_router_campaign_member.delete("/{role}", status_code=204)
+def delete_role(    *,
+    campaign_id: int,
+    member_id:int,
+    db: Session = Depends(deps.get_db),
+):
+    """
+    Delete role in the database.
+    """
+    result = crud.campaign_member.get_Campaign_Member_in_campaign( db=db, campaign_id=campaign_id,member_id=member_id)
+    if  result is None:
+        raise HTTPException(
+            status_code=400, detail=f"Member with id=={member_id} is not in the campaign id={campaign_id} "
+        )
+    if result.role=="QueenBee":
+        raise HTTPException(
+            status_code=400, detail=f"A QueenBee can not leave a active campaign "
+        )
+    crud.campaign_member.remove(db=db, Campaign_Member=result)
+    return {"ok": True}
 
 
-
-
-@api_router_campaign_member.put("/{role}", status_code=201, response_model=Campaign_Member)
+@api_router_campaign_member.put("/", status_code=201, response_model=Campaign_Member)
 def put_role(
     *,
     campaign_id:int,
     member_id:int,
-    role:str,
     roleUpdate:Campaign_MemberUpdate,
     db: Session = Depends(deps.get_db),
 ) -> dict:
     """
     Update a member
     """
-    result = crud.campaign_member.get_by_ids_Campaign_Member(db=db,campaign_id=campaign_id,member_id=member_id,Campaign_Member_str=role)
+    result = crud.campaign_member.get_Campaign_Member_in_campaign(db=db,campaign_id=campaign_id,member_id=member_id)
 
     if  result is None:
         raise HTTPException(
             status_code=404, detail=f"Member with member_id=={member_id} not found"
         )
-    role_update=Campaign_MemberUpdate(role=roleUpdate.role)
-    updated_recipe = crud.campaign_member.update(db=db, db_obj=result, obj_in=role_update)
+    updated_recipe = crud.campaign_member.update(db=db, db_obj=result, obj_in=roleUpdate)
     db.commit()
 
     return updated_recipe
