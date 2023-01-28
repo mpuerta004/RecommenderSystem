@@ -174,11 +174,10 @@ def create_a_new_member_for_a_hive_with_especific_role(
     if hive is None: 
          raise HTTPException(
                 status_code=404, detail=f"Hive with ID: {hive_id} not found."
-            )
-    #Create the Member
-    member_new= crud.member.create(db=db, obj_in=member)
-    
+            )    
     #Create the hiveMember
+    member_new= crud.member.create(db=db, obj_in=member)
+
     hiveMember=crud.hive_member.get_by_member_hive_id(db=db, hive_id=hive_id,member_id=member_new.id)
     
     if hiveMember is None:
@@ -187,7 +186,6 @@ def create_a_new_member_for_a_hive_with_especific_role(
             QueenBee=crud.hive_member.get_by_role_hive(db=db, hive_id=hive_id,role="QueenBee")
             if QueenBee is None:
                     hiveMember= crud.hive_member.create_hiveMember(db=db,obj_in=hive_member_create,role=role.role)
-                    
                     #Create the Role in active campaigns
                     list_campaigns=crud.campaign.get_campaigns_from_hive_id_active(db=db, time=datetime.now(),hive_id=hive_id)
                     
@@ -197,7 +195,7 @@ def create_a_new_member_for_a_hive_with_especific_role(
                         for i in list_campaigns:
                             crud.campaign_member.create_Campaign_Member(db=db, obj_in=role, campaign_id=i.id,member_id=member_new.id)
                            
-                    return member_new
+                    return hiveMember
             else:
                 raise HTTPException(
                     status_code=400, detail=f"This hive has already a QueenBee"

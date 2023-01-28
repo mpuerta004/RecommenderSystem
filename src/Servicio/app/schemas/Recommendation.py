@@ -6,7 +6,7 @@ from datetime import datetime, time, timedelta
 from typing import NamedTuple
 
 from pydantic import BaseModel, ValidationError
-from datetime import datetime, time, timedelta
+from datetime import datetime, time, timedelta,timezone
 from schemas.Point import Point
 from schemas.Slot import Slot
 # from schemas.State import State
@@ -21,12 +21,11 @@ class state(str, Enum):
     ACCEPTED="ACCEPTED"
     REALIZED="REALIZED"
     NON_REALIZED="NON_REALIZED"
-    
-   
+import pytz
 
 class RecommendationBase(BaseModel):
     member_current_location:Point
-    sent_datetime:datetime = datetime.now()
+    sent_datetime:datetime=datetime.now()
 
     
 
@@ -36,7 +35,6 @@ class RecommendationCreate(RecommendationBase):
 
 class RecommendationUpdate(RecommendationBase):
     pass
-
 # Properties shared by models stored in DB
 class RecommendationInDBBase(RecommendationBase):
     member_id:int

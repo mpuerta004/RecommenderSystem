@@ -48,9 +48,12 @@ app.include_router(Demo.api_router_demo, tags=["Demo"])
 api_router = APIRouter()
 import asyncio
 import crud
+from backports.zoneinfo import ZoneInfo
 SQLALCHEMY_DATABASE_URL = "mysql+mysqlconnector://mve_automatic:mvepasswd123@localhost:3306/SocioBee"
 sessionmaker = FastAPISessionMaker(SQLALCHEMY_DATABASE_URL)
-
+zona_madrid = ZoneInfo("Europe/Madrid")
+import locale
+import pytz
 async def prioriry_calculation() -> None:
     """
     Create the priorirty based on the measurements
@@ -63,7 +66,6 @@ async def prioriry_calculation() -> None:
         time = datetime(year=a.year, month=a.month, day=a.day,
                         hour=a.hour, minute=a.minute, second=a.second)
         campaigns = crud.campaign.get_all_active_campaign(db=db,time=time)
-
         for cam in campaigns:
             Demo.prioriry_calculation_2(time=time,cam=cam, db=db)
     
@@ -89,6 +91,8 @@ async def state_calculation()->None:
 #                     Measurementcreate= MeasurementCreate(cell_id=i.id, datetime=date,location=i.centre)
 #                     slot=crud.slot.get_slot_time(db=db,cell_id=i.id,time=date)
 #                     crud.measurement.create_Measurement(db=db, slot_id=slot.id,member_id=)
+
+
 
 
 def final_funtion():
