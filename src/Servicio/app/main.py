@@ -20,11 +20,10 @@ from end_points import Surface
 from end_points import Measurements
 from end_points import Recommendation
 from end_points import Demo
-from fastapi_amis_admin.admin.settings import Settings
-from fastapi_amis_admin.admin.site import AdminSite
 from fastapi_utils.tasks import repeat_every
-from fastapi_scheduler import SchedulerAdmin
 from fastapi_utils.session import FastAPISessionMaker
+from apscheduler.schedulers.background import BackgroundScheduler
+from datetime import datetime, timedelta
 
 SQLALCHEMY_DATABASE_URL = "mysql+mysqlconnector://mve:mvepasswd123@localhost:3306/SocioBee"
 sessionmaker = FastAPISessionMaker(SQLALCHEMY_DATABASE_URL)
@@ -54,15 +53,6 @@ import asyncio
 import crud
 SQLALCHEMY_DATABASE_URL = "mysql+mysqlconnector://mve_automatic:mvepasswd123@localhost:3306/SocioBee"
 sessionmaker = FastAPISessionMaker(SQLALCHEMY_DATABASE_URL)
-
-
-
-from apscheduler.schedulers.background import BackgroundScheduler
-from datetime import datetime, timedelta
-import math 
-from schemas.Priority import Priority, PriorityCreate, PrioritySearchResults
-
-
 
 async def prioriry_calculation() -> None:
     """
