@@ -239,7 +239,7 @@ def associate_existing_member_with_a_hive_with_specific_role(
     #
     user= crud.member.get_by_id(db=db, id=member_id)
     if user is None:
-        raise HTTPException(status_code=404, detail=f"Hive with ID: {hive_id} not found."
+        raise HTTPException(status_code=404, detail=f"Member with ID: {member_id} not found."
             )
     #Create the hiveMember
     hiveMember=crud.hive_member.get_by_member_hive_id(db=db, hive_id=hive_id,member_id=member_id)

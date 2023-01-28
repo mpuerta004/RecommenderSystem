@@ -82,9 +82,9 @@ def get_campaign(
     db: Session = Depends(deps.get_db),
 ) -> dict:
     """
-    Search a campaing based on campaing_id and hive_id
+    Fetch a campaing 
     """
-    hive=crud.hive.get(db=db, hive_id=hive_id)
+    hive=crud.hive.get(db=db, id=hive_id)
     if hive is None:
         raise HTTPException(
             status_code=404, detail=f"Hive with id=={hive_id} not found"
@@ -107,7 +107,7 @@ def delete_campaign(*,
     """
     Remove campaign
     """
-    hive=crud.hive.get(db=db, hive_id=hive_id)
+    hive=crud.hive.get(db=db, id=hive_id)
     if hive is None:
         raise HTTPException(
             status_code=404, detail=f"Hive with id=={hive_id} not found"
@@ -139,7 +139,7 @@ async def create_campaign(
     """
      Create a new campaing in the database.
     """
-    hive=crud.hive.get(db=db, hive_id=hive_id)
+    hive=crud.hive.get(db=db, id=hive_id)
     if hive is None:
         raise HTTPException(
             status_code=404, detail=f"Hive with id=={hive_id} not found"
@@ -356,7 +356,7 @@ def show_a_campaign(
             count = 0
             cv2.putText(imagen, f"Campaign: id={campañas_activas.id},",
                         (50, 50), cv2.FONT_HERSHEY_SIMPLEX, 0.75, (0, 0, 0))
-            cv2.putText(imagen, f"city={campañas_activas.city}",
+            cv2.putText(imagen, f"city={campañas_activas.title}",
                         (50, 80), cv2.FONT_HERSHEY_SIMPLEX, 0.75, (0, 0, 0))
             cv2.putText(imagen, f"time={time.strftime('%m/%d/%Y, %H:%M:%S')}",
                         (50, 110), cv2.FONT_HERSHEY_SIMPLEX, 0.75, (0, 0, 0))
@@ -405,9 +405,9 @@ def update_campaign(
     db: Session = Depends(deps.get_db)
 ) -> dict:
     """
-    Update Campaign with campaign_id 
+    Update Campaign 
     """
-    hive=crud.hive.get(db=db, hive_id=hive_id)
+    hive=crud.hive.get(db=db, id=hive_id)
     if hive is None:
         raise HTTPException(
             status_code=404, detail=f"Hive with id=={hive_id} not found"
@@ -510,9 +510,9 @@ def partially_update_campaign(
     db: Session = Depends(deps.get_db)
 ) -> dict:
     """
-    Update Campaign with campaign_id 
+    Partially Update a Campaign
     """
-    hive=crud.hive.get(db=db, hive_id=hive_id)
+    hive=crud.hive.get(db=db, id=hive_id)
     if hive is None:
         raise HTTPException(
             status_code=404, detail=f"Hive with id=={hive_id} not found"

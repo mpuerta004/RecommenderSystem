@@ -70,10 +70,10 @@ CONSTRAINT role_type_hiveMember CHECK (role IN ("WorkerBee","QueenBee","DroneBee
   primary key (hive_id,member_id,role),
    FOREIGN KEY (member_id)
     REFERENCES Member (id)
-    ON DELETE RESTRICT,
+    ON DELETE CASCADE,
     FOREIGN KEY (hive_id)
     REFERENCES Hive (id)
-    ON DELETE RESTRICT
+    ON DELETE CASCADE
 );
 
 Create table Device(
@@ -92,10 +92,10 @@ Create Table Member_Device(
   primary key(member_id),
   FOREIGN KEY (member_id)
     REFERENCES Member (id)
-    ON DELETE RESTRICT,
+    ON DELETE CASCADe,
     FOREIGN KEY (device_id)
     REFERENCES Device (id)
-    ON DELETE RESTRICT
+    ON DELETE CASCADE
 );
 
 -- -----------------------------------------------------
@@ -129,7 +129,7 @@ CREATE TABLE Campaign (
   PRIMARY KEY (id, hive_id),
      FOREIGN KEY (hive_id)
     REFERENCES Hive (id)
-    ON DELETE RESTRICT
+    ON DELETE CASCADE
    );
 
 
@@ -144,10 +144,10 @@ CREATE TABLE Campaign_Member (
     PRIMARY KEY (campaign_id, member_id,role),
     FOREIGN KEY (campaign_id)
     REFERENCES Campaign (id)
-    ON DELETE RESTRICT,
+    ON DELETE CASCADE,
     FOREIGN KEY (member_id)
     REFERENCES Member (id)
-    ON DELETE RESTRICT
+    ON DELETE CASCADE
 );
 
 
