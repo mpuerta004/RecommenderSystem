@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 from schemas.Hive import Hive, HiveCreate, HiveSearchResults, HiveUpdate
 from schemas.Member import MemberCreate, MemberSearchResults
 from datetime import datetime
-from schemas.HiveMember import HiveMember,HiveMemberCreate
+from schemas.HiveMember import HiveMember,HiveMemberCreate,HiveMemberUpdate
 from schemas.CampaignRole import CampaignRole,CampaignRoleCreate
 import deps
 import crud
@@ -220,16 +220,15 @@ def create_a_new_member_for_a_hive_with_especific_role(
                 )
         
 @api_router_hive.post("/{hive_id}/members/{member_id}/", status_code=201, response_model=HiveMember)
-def associate_existing_member_with_a_hive_with_especific_role(
+def associate_existing_member_with_a_hive_with_specific_role(
     *,    
     hive_id:int,
     member_id:int,
     role:NewRole,
-
     db: Session = Depends(deps.get_db)
 ) -> dict:
     """
-    Create a new member of the hive in the database with a specific role. 
+    Associete existing member with a hive with specific role.
     """
     hive=crud.hive.get(db=db, id=hive_id)
     
@@ -293,7 +292,7 @@ def delete_hivemember_of_hive(
     db: Session = Depends(deps.get_db)
 ) -> dict:
     """
-    Create a new member of the hive in the database with a specific role. 
+    Delete a member from a hive. 
     """
     hive=crud.hive.get(db=db, id=hive_id)
     if hive is None:
@@ -319,7 +318,7 @@ def delete_hivemember_of_hive(
         updated_recipe = crud.hivemember.remove(db=db,hiveMember=hiveMember)
     else: 
         for i in activeCampaigns:
-            role_in_campaign=crud.campaignrole.get_CampaignRole_in_campaign(db=db, member_id=member_id, hive_id=hive_id) 
+            role_in_campaign=crud.campaignrole.get_CampaignRole_in_campaign(db=db, member_id=member_id, campaign_id=i.id) 
             if  role_in_campaign is not None:
                 raise HTTPException(
                     status_code=400, detail=f"Do not remove a member from the hive if he/she is participating in an active campaign."
@@ -328,3 +327,48 @@ def delete_hivemember_of_hive(
     return  {"ok": True}
 
 
+@api_router_hive.patch("/{hive_id}/members/{member_id}", status_code=201, response_model=HiveMember)
+def update_the_role_of_a_member_in_hive(
+    *,    
+    hive_id:int,
+    member_id:int, 
+    role:NewRole,
+    db: Session = Depends(deps.get_db)
+) -> dict:
+    """
+    Partially update the role of a member in a hive.  
+    """
+    #verify hive exist
+    hive=crud.hive.get(db=db, id=hive_id)
+    if hive is None:
+        if hive is None:
+            raise HTTPException(
+                status_code=404, detail=f"Hive with id={hive_id} not fount"
+            )
+    #verify user exist
+    user=crud.member.get_by_id(db=db, id=member_id)
+    if user is None:
+        if hive is None:
+            raise HTTPException(
+                status_code=404, detail=f"Member with id={member_id} not fount"
+            )
+    #verify hivemember exist
+    hiveMember=crud.hivemember.get_by_member_hive_id(db=db, member_id=member_id,hive_id=hive_id)
+    if hiveMember is None:
+        raise HTTPException(
+            status_code=404, detail=f"This member is not in the hive. "
+        )
+    #Comprobamos su role en las campañas activas. 
+    activeCampaigns= crud.campaign.get_campaigns_from_hive_id_active(db=db, time=datetime.now(),hive_id=hive_id)
+    if activeCampaigns is []:
+        updated_recipe = crud.hivemember.update(db=db,obj_in={"role":role.role}, db_obj=hiveMember)
+        return  updated_recipe
+    else: 
+        for i in activeCampaigns:
+            role_in_campaign=crud.campaignrole.get_CampaignRole_in_campaign(db=db, member_id=member_id, campaign_id=i.id) 
+            if  role_in_campaign is not None:
+                raise HTTPException(
+                    status_code=400, detail=f"Do not update a member from the hive if he/she is participating in an active campaign."
+                )    
+        updated_recipe = crud.hivemember.update(db=db,obj_in={"role":role.role}, db_obj=hiveMember)
+        return  updated_recipe
