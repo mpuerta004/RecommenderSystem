@@ -3,7 +3,7 @@ from typing import Sequence
 from datetime import datetime
 from schemas.Surface import Surface
 from schemas.Cell import Cell
-from schemas.CampaignRole import CampaignRole
+from schemas.Campaign_Member import Campaign_Member
 from typing import Any, Dict, Generic, List, Optional, Type, TypeVar, Union
 
 
@@ -34,7 +34,7 @@ class CampaignInDBBase(CampaignBase):
     id:int 
     hive_id:int
     surfaces:Sequence[Surface]=None
-    membes_roles:Sequence[CampaignRole]=None
+    membes_roles:Sequence[Campaign_Member]=None
 
     # cells:Sequence[Cell]=None
     class Config:

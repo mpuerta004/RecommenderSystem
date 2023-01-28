@@ -5,7 +5,7 @@ from schemas.Hive import Hive, HiveCreate, HiveSearchResults, HiveUpdate
 from schemas.Member import MemberCreate, MemberSearchResults
 from datetime import datetime
 from schemas.HiveMember import HiveMember,HiveMemberCreate,HiveMemberUpdate
-from schemas.CampaignRole import CampaignRole,CampaignRoleCreate
+from schemas.Campaign_Member import Campaign_Member,Campaign_MemberCreate
 import deps
 import crud
 from schemas.newMember import NewRole
@@ -193,9 +193,9 @@ def create_a_new_member_for_a_hive_with_especific_role(
                     
                     #Todo! verificar que esto esta bien! 
                     if list_campaigns is not []:
-                        role=CampaignRoleCreate(role="WorkerBee")
+                        role=Campaign_MemberCreate(role="WorkerBee")
                         for i in list_campaigns:
-                            crud.campaignrole.create_CampaignRole(db=db, obj_in=role, campaign_id=i.id,member_id=member_new.id)
+                            crud.campaign_member.create_Campaign_Member(db=db, obj_in=role, campaign_id=i.id,member_id=member_new.id)
                            
                     return member_new
             else:
@@ -209,9 +209,9 @@ def create_a_new_member_for_a_hive_with_especific_role(
             list_campaigns=crud.campaign.get_campaigns_from_hive_id_active(db=db, time=datetime.now(),hive_id=hive_id)
             
             if list_campaigns is not []:
-                role=CampaignRoleCreate(role=role.role)
+                role=Campaign_MemberCreate(role=role.role)
                 for i in list_campaigns:
-                    crud.campaignrole.create_CampaignRole(db=db, obj_in=role, campaign_id=i.id,member_id=member_new.id)
+                    crud.campaign_member.create_Campaign_Member(db=db, obj_in=role, campaign_id=i.id,member_id=member_new.id)
                     
             return hiveMember
     else: 
@@ -256,9 +256,9 @@ def associate_existing_member_with_a_hive_with_specific_role(
                     
                     #Todo! verificar que esto esta bien! 
                     if list_campaigns is not []:
-                        role=CampaignRoleCreate(role="WorkerBee")
+                        role=Campaign_MemberCreate(role="WorkerBee")
                         for i in list_campaigns:
-                            crud.campaignrole.create_CampaignRole(db=db, obj_in=role, campaign_id=i.id,member_id=member_id)
+                            crud.campaign_member.create_Campaign_Member(db=db, obj_in=role, campaign_id=i.id,member_id=member_id)
                            
                     return hiveMember
             else:
@@ -272,9 +272,9 @@ def associate_existing_member_with_a_hive_with_specific_role(
             list_campaigns=crud.campaign.get_campaigns_from_hive_id_active(db=db, time=datetime.now(),hive_id=hive_id)
             
             if list_campaigns is not []:
-                role=CampaignRoleCreate(role=role.role)
+                role=Campaign_MemberCreate(role=role.role)
                 for i in list_campaigns:
-                    crud.campaignrole.create_CampaignRole(db=db, obj_in=role, campaign_id=i.id,member_id=member_id)
+                    crud.campaign_member.create_Campaign_Member(db=db, obj_in=role, campaign_id=i.id,member_id=member_id)
                     
             return hiveMember
     else: 
@@ -318,7 +318,7 @@ def delete_hivemember_of_hive(
         updated_recipe = crud.hivemember.remove(db=db,hiveMember=hiveMember)
     else: 
         for i in activeCampaigns:
-            role_in_campaign=crud.campaignrole.get_CampaignRole_in_campaign(db=db, member_id=member_id, campaign_id=i.id) 
+            role_in_campaign=crud.campaign_member.get_Campaign_Member_in_campaign(db=db, member_id=member_id, campaign_id=i.id) 
             if  role_in_campaign is not None:
                 raise HTTPException(
                     status_code=400, detail=f"Do not remove a member from the hive if he/she is participating in an active campaign."
@@ -365,7 +365,7 @@ def update_the_role_of_a_member_in_hive(
         return  updated_recipe
     else: 
         for i in activeCampaigns:
-            role_in_campaign=crud.campaignrole.get_CampaignRole_in_campaign(db=db, member_id=member_id, campaign_id=i.id) 
+            role_in_campaign=crud.campaign_member.get_Campaign_Member_in_campaign(db=db, member_id=member_id, campaign_id=i.id) 
             if  role_in_campaign is not None:
                 raise HTTPException(
                     status_code=400, detail=f"Do not update a member from the hive if he/she is participating in an active campaign."

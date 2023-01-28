@@ -3,15 +3,15 @@ from typing import Any, Dict, Optional, Union, List
 from sqlalchemy.orm import Session
 
 from crud.base import CRUDBase
-from models.CampaignRole import CampaignRole
-from schemas.CampaignRole import CampaignRoleCreate, CampaignRoleUpdate, CampaignRoleSearchResults
+from models.Campaign_Member import Campaign_Member
+from schemas.Campaign_Member import Campaign_MemberCreate, Campaign_MemberUpdate, Campaign_MemberSearchResults
 from fastapi.encoders import jsonable_encoder
 from sqlalchemy import and_, extract
 from fastapi import HTTPException
 
 
-class CRUDCampaignRole(CRUDBase[CampaignRole, CampaignRoleCreate, CampaignRoleUpdate]):
-    def create_CampaignRole(self, db: Session, *, obj_in: CampaignRoleCreate,campaign_id:int,member_id:int) -> CampaignRole:
+class CRUDCampaign_Member(CRUDBase[Campaign_Member, Campaign_MemberCreate, Campaign_MemberUpdate]):
+    def create_Campaign_Member(self, db: Session, *, obj_in: Campaign_MemberCreate,campaign_id:int,member_id:int) -> Campaign_Member:
         try:
             obj_in_data = jsonable_encoder(obj_in) 
             db_obj = self.model(**obj_in_data,campaign_id=campaign_id,member_id=member_id)  # type: ignore
@@ -23,27 +23,27 @@ class CRUDCampaignRole(CRUDBase[CampaignRole, CampaignRoleCreate, CampaignRoleUp
             raise HTTPException(status_code=500, detail=f"Error with mysql {e}" )
    
      
-    def get_by_ids_CampaignRole(self, db: Session, *, campaign_id:int,member_id:int,CampaignRole_str:str) -> CampaignRole:
+    def get_by_ids_Campaign_Member(self, db: Session, *, campaign_id:int,member_id:int,Campaign_Member_str:str) -> Campaign_Member:
         try:
-            return db.query(CampaignRole).filter(and_(CampaignRole.campaign_id == campaign_id, CampaignRole.member_id==member_id, CampaignRole.role==CampaignRole_str)).first()
+            return db.query(Campaign_Member).filter(and_(Campaign_Member.campaign_id == campaign_id, Campaign_Member.member_id==member_id, Campaign_Member.role==Campaign_Member_str)).first()
         except Exception as e:
             raise HTTPException(status_code=500, detail=f"Error with mysql {e}" )                          
     
-    def get_CampaignRole_in_campaign(self, db: Session, *, campaign_id:int, member_id:int) -> CampaignRole:
+    def get_Campaign_Member_in_campaign(self, db: Session, *, campaign_id:int, member_id:int) -> Campaign_Member:
         try:
-            return db.query(CampaignRole.role).filter(and_(CampaignRole.campaign_id == campaign_id,CampaignRole.member_id==member_id)).first()
+            return db.query(Campaign_Member.role).filter(and_(Campaign_Member.campaign_id == campaign_id,Campaign_Member.member_id==member_id)).first()
         except Exception as e:
             raise HTTPException(status_code=500, detail=f"Error with mysql {e}" )
     
-    def get_CampaignRole_of_member(self, db: Session, *, campaign_id:int) -> List[str]:
+    def get_Campaign_Member_of_member(self, db: Session, *, campaign_id:int) -> List[str]:
         try:
-            return db.query(CampaignRole.member_id).filter(CampaignRole.campaign_id == campaign_id).all()
+            return db.query(Campaign_Member.member_id).filter(Campaign_Member.campaign_id == campaign_id).all()
         except Exception as e:
             raise HTTPException(status_code=500, detail=f"Error with mysql {e}" )
     
-    def remove(self, db: Session, *, CampaignRole:CampaignRole) -> CampaignRole:
+    def remove(self, db: Session, *, Campaign_Member:Campaign_Member) -> Campaign_Member:
         try:    
-            obj = CampaignRole
+            obj = Campaign_Member
             db.delete(obj)
             db.commit()
             return obj
@@ -53,4 +53,4 @@ class CRUDCampaignRole(CRUDBase[CampaignRole, CampaignRoleCreate, CampaignRoleUp
    
     
 
-campaignrole = CRUDCampaignRole(CampaignRole)
+campaign_member = CRUDCampaign_Member(Campaign_Member)

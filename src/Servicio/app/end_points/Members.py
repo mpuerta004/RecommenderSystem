@@ -11,7 +11,7 @@ from schemas.Slot import Slot, SlotCreate,SlotSearchResults
 from schemas.Hive import Hive, HiveCreate, HiveSearchResults
 from schemas.Member import Member,MemberCreate,MemberSearchResults, MemberUpdate
 from schemas.Member_Device import Member_DeviceCreate
-from schemas.CampaignRole import CampaignRole,CampaignRoleCreate,CampaignRoleSearchResults, CampaignRoleUpdate
+from schemas.Campaign_Member import Campaign_Member,Campaign_MemberCreate,Campaign_MemberSearchResults, Campaign_MemberUpdate
 from schemas.newMember import NewMemberBase, NewRole
 from schemas.Member_Device import Member_Device,Member_DeviceUpdate
 from schemas.Device import Device

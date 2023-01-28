@@ -13,19 +13,19 @@ class role(str, Enum):
     Hive="Hive"
 
 
-class CampaignRoleBase(BaseModel):
+class Campaign_MemberBase(BaseModel):
     role:role  #Union["QueenBee" or "Participant"]
     
 # Properties to receive via API on creation
-class CampaignRoleCreate(CampaignRoleBase):
+class Campaign_MemberCreate(Campaign_MemberBase):
     pass
     
 # Properties to receive via API on update
-class CampaignRoleUpdate(CampaignRoleBase):
+class Campaign_MemberUpdate(Campaign_MemberBase):
     pass
 
 
-class CampaignRoleInDBBase(CampaignRoleBase):
+class Campaign_MemberInDBBase(Campaign_MemberBase):
     campaign_id:int
     member_id: int = None
      
@@ -34,7 +34,7 @@ class CampaignRoleInDBBase(CampaignRoleBase):
 
 
 # Additional properties to return via API
-class CampaignRole(CampaignRoleInDBBase):
+class Campaign_Member(Campaign_MemberInDBBase):
     campaign_id:int
     member_id: int = None
     # member:Sequence[Member]=None
@@ -44,8 +44,8 @@ class CampaignRole(CampaignRoleInDBBase):
     class Config:
         orm_mode = True
 
-class CampaignRoleInDB(CampaignRoleInDBBase):
+class Campaign_MemberInDB(Campaign_MemberInDBBase):
     pass
 
-class CampaignRoleSearchResults(BaseModel):
-    results: Sequence[CampaignRole]
+class Campaign_MemberSearchResults(BaseModel):
+    results: Sequence[Campaign_Member]

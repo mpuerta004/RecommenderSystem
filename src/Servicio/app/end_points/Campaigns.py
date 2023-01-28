@@ -9,7 +9,7 @@ from schemas.Boundary import Boundary, BoundaryCreate, BoundarySearchResults
 
 from schemas.Campaign import CampaignSearchResults, Campaign, CampaignCreate, CampaignUpdate
 from schemas.Slot import Slot, SlotCreate, SlotSearchResults
-from schemas.CampaignRole import CampaignRole, CampaignRoleCreate
+from schemas.Campaign_Member import Campaign_Member, Campaign_MemberCreate
 
 from schemas.Recommendation import Recommendation, RecommendationCreate
 # from schemas.State import State,StateCreate
@@ -130,14 +130,14 @@ async def create_campaign(
 
     Campaign = crud.campaign.create_cam(
         db=db, obj_in=campaign_metadata, hive_id=hive_id)
-    role = CampaignRoleCreate(role="QueenBee")
-    role_queenBee = crud.campaignrole.create_CampaignRole( db=db, obj_in=role, campaign_id=Campaign.id, member_id=QueenBee.id)
+    role = Campaign_MemberCreate(role="QueenBee")
+    role_queenBee = crud.campaign_member.create_Campaign_Member( db=db, obj_in=role, campaign_id=Campaign.id, member_id=QueenBee.id)
     hivemembers = crud.hivemember.get_by_hive_id(db=db, hive_id=Campaign.hive_id)
     for i in hivemembers:
         if i.member_id != QueenBee.id:
             try:
-                role = CampaignRoleCreate(role="WorkerBee")
-                role_WB = crud.campaignrole.create_CampaignRole(
+                role = Campaign_MemberCreate(role="WorkerBee")
+                role_WB = crud.campaign_member.create_Campaign_Member(
                     db=db, obj_in=role, campaign_id=Campaign.id, member_id=i.member_id)
             except:
                 raise HTTPException(

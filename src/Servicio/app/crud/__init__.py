@@ -1,6 +1,6 @@
 from .crud_hive import hive
 from .crud_member import member
-from .crud_CampaignRole import campaignrole
+from .crud_Campaign_Member import campaign_member
 from .crud_campaign import campaign
 from .crud_cell import cell
 from .crud_surface import surface

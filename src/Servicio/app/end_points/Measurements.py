@@ -12,7 +12,7 @@ from schemas.Member import Member,MemberCreate,MemberSearchResults
 from schemas.Reading import Reading, ReadingCreate, ReadingSearchResults
 from typing import Any, Dict, Generic, List, Optional, Type, TypeVar, Union
 
-from schemas.CampaignRole import CampaignRole,CampaignRoleCreate,CampaignRoleSearchResults
+from schemas.Campaign_Member import Campaign_Member,Campaign_MemberCreate,Campaign_MemberSearchResults
 from schemas.newMember import NewMemberBase
 from schemas.Priority import Priority, PriorityCreate, PrioritySearchResults
 from datetime import datetime, timedelta

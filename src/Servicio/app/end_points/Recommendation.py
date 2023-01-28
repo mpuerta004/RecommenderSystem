@@ -10,7 +10,7 @@ from schemas.Slot import Slot, SlotCreate,SlotSearchResults
 from schemas.Hive import Hive, HiveCreate, HiveSearchResults
 from schemas.Member import Member,MemberCreate,MemberSearchResults
 
-from schemas.CampaignRole import CampaignRole,CampaignRoleCreate,CampaignRoleSearchResults
+from schemas.Campaign_Member import Campaign_Member,Campaign_MemberCreate,Campaign_MemberSearchResults
 from schemas.newMember import NewMemberBase
 from datetime import datetime, timedelta
 from schemas.Cell import Cell, CellCreate, CellSearchResults, Point

@@ -138,7 +138,7 @@ CREATE TABLE Campaign (
 -- -----------------------------------------------------
 -- Table role
 -- -----------------------------------------------------
-CREATE TABLE CampaignRole (
+CREATE TABLE Campaign_Member (
     campaign_id int not null, 
     role VARCHAR(30) not null default "WorkerBee", 
     CONSTRAINT role_type CHECK (role IN ("WorkerBee","QueenBee","DroneBee")),

@@ -11,7 +11,7 @@ from schemas.Slot import Slot, SlotCreate, SlotSearchResults
 from schemas.Hive import Hive, HiveCreate, HiveSearchResults
 from schemas.BeeKeeper import BeeKeeper, BeeKeeperCreate, BeeKeeperSearchResults, BeeKeeperUpdate
 
-from schemas.CampaignRole import CampaignRole, CampaignRoleCreate, CampaignRoleSearchResults, CampaignRoleUpdate
+from schemas.Campaign_Member import Campaign_Member, Campaign_MemberCreate, Campaign_MemberSearchResults, Campaign_MemberUpdate
 from schemas.Priority import Priority, PriorityCreate, PrioritySearchResults
 from datetime import datetime, timedelta
 from schemas.Cell import Cell, CellCreate, CellSearchResults, Point
