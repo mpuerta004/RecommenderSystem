@@ -4,14 +4,14 @@ from pydantic import BaseModel
 
 
 class ReadingBase(BaseModel):
-    No2: float
-    Co2: float
-    O3:float 
-    SO2:float
-    PM10:float 
-    PM25: float 
-    PM2:float 
-    Benzene:float 
+    no2: float
+    co2: float
+    o3:float 
+    so02:float
+    pm10:float 
+    pm25: float 
+    pm1:float 
+    benzene:float 
 
 
 class ReadingCreate(ReadingBase):

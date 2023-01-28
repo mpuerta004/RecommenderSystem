@@ -103,14 +103,14 @@ Create Table MemberDevice(
 -- -----------------------------------------------------
 CREATE TABLE Reading (
   id INT NOT NULL AUTO_INCREMENT,
-  No2 DOUBLE NULL DEFAULT NULL,
-  Co2 DOUBLE NULL DEFAULT NULL,
-  O3 DOUBLE NULL DEFAULT NULL,
-  S0O2 DOUBLE NULL DEFAULT NULL,
-  PM10 DOUBLE NULL DEFAULT NULL,
-  PM25 DOUBLE NULL DEFAULT NULL,
-  PM1 DOUBLE NULL DEFAULT NULL,
-  Benzene DOUBLE NULL DEFAULT NULL,
+  no2 DOUBLE NULL DEFAULT NULL,
+  co2 DOUBLE NULL DEFAULT NULL,
+  o3 DOUBLE NULL DEFAULT NULL,
+  so02 DOUBLE NULL DEFAULT NULL,
+  pm10 DOUBLE NULL DEFAULT NULL,
+  pm25 DOUBLE NULL DEFAULT NULL,
+  pm1 DOUBLE NULL DEFAULT NULL,
+  benzene DOUBLE NULL DEFAULT NULL,
   PRIMARY KEY (id)
 );
 -- -----------------------------------------------------
@@ -159,7 +159,7 @@ CREATE TABLE CampaignRole (
 
 CREATE TABLE Boundary (
     id INT NOT NULL AUTO_INCREMENT,
-    radiud INT,
+    radius INT,
     centre POINT,
     PRIMARY KEY (id))
 ;
@@ -191,7 +191,7 @@ CREATE TABLE Surface (
 CREATE TABLE Cell (
   id INT NOT NULL AUTO_INCREMENT,
   centre POINT not NULL,
-  rad INT,
+  radius INT,
   cell_type VARCHAR(30) DEFAULT 'Dynamic',
   surface_id INT not null,
   CONSTRAINT cell_type CHECK (cell_type IN ("DYNAMIC","STATIC")),
