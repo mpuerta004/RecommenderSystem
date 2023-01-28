@@ -52,7 +52,7 @@ class CRUDMeasurement(CRUDBase[Measurement, MeasurementCreate, MeasurementUpdate
         
         def get_all_Measurement_campaign(self, db:Session, *, campaign_id:int, time:DateTime)-> int:
             try:
-                return db.query(Measurement).join(Cell).join(Surface).join(Slot).filter(and_(Measurement.slot_id==Slot.id, Slot.cell_id==Cell.id ,Measurement.datetime<=time,Cell.surface_id==Surface.id, Surface.campaign_id==campaign_id)).count()
+                return db.query(Measurement, Cell, Surface, Slot).filter(and_(Measurement.datetime<=time,Measurement.slot_id==Slot.id, Slot.cell_id==Cell.id,Cell.surface_id==Surface.id, Surface.campaign_id==campaign_id)).count()
             except Exception as e:
                         raise HTTPException(status_code=500, detail=f"Error with mysql {e}" )
    

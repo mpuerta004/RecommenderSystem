@@ -359,16 +359,23 @@ def update_the_role_of_a_member_in_hive(
             status_code=404, detail=f"This member is not in the hive. "
         )
     #Comprobamos su role en las campañas activas. 
-    activeCampaigns= crud.campaign.get_campaigns_from_hive_id_active(db=db, time=datetime.now(),hive_id=hive_id)
-    if activeCampaigns is []:
-        updated_recipe = crud.hive_member.update(db=db,obj_in={"role":role.role}, db_obj=hiveMember)
-        return  updated_recipe
-    else: 
-        for i in activeCampaigns:
-            role_in_campaign=crud.campaign_member.get_Campaign_Member_in_campaign(db=db, member_id=member_id, campaign_id=i.id) 
-            if  role_in_campaign is not None:
-                raise HTTPException(
-                    status_code=400, detail=f"Do not update a member from the hive if he/she is participating in an active campaign."
-                )    
-        updated_recipe = crud.hive_member.update(db=db,obj_in={"role":role.role}, db_obj=hiveMember)
-        return  updated_recipe
+    if role.role=="QueenBee":
+        QueenBee=crud.hive_member.get_by_role_hive(db=db,hive_id=hive_id,role="QueenBee")
+        if QueenBee is None:
+            activeCampaigns= crud.campaign.get_campaigns_from_hive_id_active(db=db, time=datetime.now(),hive_id=hive_id)
+            if activeCampaigns is []:
+                updated_recipe = crud.hive_member.update(db=db,obj_in={"role":role.role}, db_obj=hiveMember)
+                return  updated_recipe
+            else: 
+                for i in activeCampaigns:
+                    role_in_campaign=crud.campaign_member.get_Campaign_Member_in_campaign(db=db, member_id=member_id, campaign_id=i.id) 
+                    if  role_in_campaign is not None:
+                        raise HTTPException(
+                            status_code=400, detail=f"Do not update a member from the hive if he/she is participating in an active campaign."
+                        )    
+                updated_recipe = crud.hive_member.update(db=db,obj_in={"role":role.role}, db_obj=hiveMember)
+                return  updated_recipe
+        else:
+            raise HTTPException(
+                            status_code=400, detail=f"This hive have already a QueenBee."
+                        )  

@@ -38,7 +38,7 @@ app.include_router(Members.api_router_members, tags=["Members"])
 app.include_router(Hive.api_router_hive, tags=["Hives"])
 
 app.include_router(Campaigns.api_router_campaign, tags=["Campaigns"])
-app.include_router(Campaign_Member.api_router_campaign_member, tags=["Campaign - Role"])
+app.include_router(Campaign_Member.api_router_campaign_member, tags=["Campaign - Member"])
 app.include_router(Surface.api_router_surface, tags=["Surfaces"])
 app.include_router(Cells.api_router_cell, tags=["Cells"])
 app.include_router(Measurements.api_router_measurements, tags=["Measurements"])

@@ -155,7 +155,17 @@ async def create_campaign(
     #Si tenemos QueenBee
     if campaign_metadata.sampling_period==0:
         duration= campaign_metadata.end_datetime + campaign_metadata.start_datetime
-        campaign_metadata.sampling_period=duration
+        campaign_metadata.sampling_period=duration.total_seconds()
+    
+    if campaign_metadata.end_datetime==campaign_metadata.start_datetime:
+        raise HTTPException(
+            status_code=400, detail=f"End datetime can be the same as start datetime"
+        )
+    if campaign_metadata.start_datetime + timedelta(seconds=campaign_metadata.sampling_period) > campaign_metadata.end_datetime:
+         raise HTTPException(
+            status_code=400, detail=f"Error with the sampling period"
+        )
+    
     Campaign = crud.campaign.create_cam(db=db, obj_in=campaign_metadata, hive_id=hive_id)
     role = Campaign_MemberCreate(role="QueenBee")
     role_queenBee = crud.campaign_member.create_Campaign_Member( db=db, obj_in=role, campaign_id=Campaign.id, member_id=QueenBee.member_id)
@@ -298,8 +308,8 @@ async def create_slots(cam: Campaign):
     await asyncio.sleep(3)
     with sessionmaker.context_session() as db:
         duration= cam.end_datetime - cam.start_datetime 
-        n_slot = duration//cam.sampling_period
-        if duration % cam.sampling_period != 0:
+        n_slot = int(duration.total_seconds()//cam.sampling_period)
+        if duration.total_seconds() % cam.sampling_period != 0:
                 n_slot = n_slot+1
         for i in range(n_slot):
                 time_extra = i*cam.sampling_period
@@ -316,8 +326,7 @@ async def create_slots(cam: Campaign):
                             Cardinal_pasado = 0
                             Cardinal_actual = 0
                             init= 0
-                            a =  0 - timedelta(seconds= (0//cam.sampling_period)*cam.sampling_period)
-                            result=-Cardinal_actual/cam.min_samples + a.total_seconds()/cam.sampling_period
+                            result=-Cardinal_actual/cam.min_samples 
                             # b = max(2, cam.min_samples - int(Cardinal_pasado))
                             # a = max(2, cam.min_samples - int(Cardinal_actual))
                             # result = math.log(a) * math.log(b, int(Cardinal_actual) + 2)
