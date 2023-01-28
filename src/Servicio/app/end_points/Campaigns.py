@@ -154,9 +154,12 @@ async def create_campaign(
         )
     #Si tenemos QueenBee
     if campaign_metadata.sampling_period==0:
-        duration= campaign_metadata.end_datetime + campaign_metadata.start_datetime
+        duration= campaign_metadata.end_datetime - campaign_metadata.start_datetime
         campaign_metadata.sampling_period=duration.total_seconds()
-    
+    if campaign_metadata.end_datetime <= campaign_metadata.start_datetime:
+        raise HTTPException(
+            status_code=400, detail=f"the end time cannot be earlier than the initial time."
+        )
     if campaign_metadata.end_datetime==campaign_metadata.start_datetime:
         raise HTTPException(
             status_code=400, detail=f"End datetime can be the same as start datetime"
