@@ -57,11 +57,12 @@ async def prioriry_calculation() -> None:
     await  asyncio.sleep(1)
     print("HELOOS ")
     with sessionmaker.context_session() as db:
-        campaigns = crud.campaign.get_all_active_campaign(db=db)
         a = datetime.now()
         print(a)
         time = datetime(year=a.year, month=a.month, day=a.day,
                         hour=a.hour, minute=a.minute, second=a.second)
+        campaigns = crud.campaign.get_all_active_campaign(db=db,time=time)
+
         for cam in campaigns:
             Demo.prioriry_calculation_2(time=time,cam=cam, db=db)
     

@@ -147,7 +147,7 @@ async def create_campaign(
     centre = boundary_campaign.centre
     radius = boundary_campaign.radius
     
-    QueenBee=crud.hivemember.get_by_role_hive(db=db, hive_id=hive_id, role="QueenBee")
+    QueenBee=crud.hive_member.get_by_role_hive(db=db, hive_id=hive_id, role="QueenBee")
     if QueenBee is None:
         raise HTTPException(
             status_code=404, detail=f"This Hive haven`t a QueenBee"
@@ -159,9 +159,9 @@ async def create_campaign(
     Campaign = crud.campaign.create_cam(db=db, obj_in=campaign_metadata, hive_id=hive_id)
     role = Campaign_MemberCreate(role="QueenBee")
     role_queenBee = crud.campaign_member.create_Campaign_Member( db=db, obj_in=role, campaign_id=Campaign.id, member_id=QueenBee.member_id)
-    hivemembers = crud.hivemember.get_by_hive_id(db=db, hive_id=Campaign.hive_id)
+    hive_members = crud.hive_member.get_by_hive_id(db=db, hive_id=Campaign.hive_id)
     
-    for i in hivemembers:
+    for i in hive_members:
         if i.member_id != QueenBee.member_id:
                 role = Campaign_MemberCreate(role="WorkerBee")
                 role_WB = crud.campaign_member.create_Campaign_Member(
@@ -245,7 +245,7 @@ async def create_points_of_campaign(
     centre = boundary.centre
     radius = boundary.radius
 
-    # hiveMember = crud.hivemember.get_by_member_hive_id(
+    # hiveMember = crud.hive_member.get_by_member_hive_id(
     #     db=db, member_id=campaign_metadata.creator_id, hive_id=hive_id)
     # if hiveMember is None:
     #     raise HTTPException(

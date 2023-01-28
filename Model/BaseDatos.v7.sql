@@ -62,7 +62,7 @@ CREATE TABLE Hive (
 );
 
 
-CREATE TABLE HiveMember(
+CREATE TABLE Hive_Member(
   hive_id int not null,
   member_id int not null,
   role Varchar(30) not null default "WorkerBee",

@@ -13,19 +13,19 @@ class role(str, Enum):
     DroneBee="DroneBee" 
     Hive="Hive"
 
-class HiveMemberBase(BaseModel):    
+class Hive_MemberBase(BaseModel):    
     hive_id:int
     member_id:int
     
-class HiveMemberCreate(HiveMemberBase):
+class Hive_MemberCreate(Hive_MemberBase):
     pass
 
 
-class HiveMemberUpdate(HiveMemberBase):
+class Hive_MemberUpdate(Hive_MemberBase):
     pass
 
 # Properties shared by models stored in DB
-class HiveMemberInDBBase(HiveMemberBase):
+class Hive_MemberInDBBase(Hive_MemberBase):
     role:role
     member:hivemeber
 
@@ -35,14 +35,14 @@ class HiveMemberInDBBase(HiveMemberBase):
 
 
 # Properties to return to client
-class HiveMember(HiveMemberInDBBase):
+class Hive_Member(Hive_MemberInDBBase):
     class Config:
         orm_mode = True
 
 # Properties properties stored in DB
-class RecipeInDB(HiveMemberInDBBase):
+class RecipeInDB(Hive_MemberInDBBase):
     pass
 
 
-class HiveMemberSearchResults(BaseModel):
-    results: Sequence[HiveMember]
+class Hive_MemberSearchResults(BaseModel):
+    results: Sequence[Hive_Member]

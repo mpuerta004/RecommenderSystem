@@ -116,7 +116,7 @@ def create_measurement(
             status_code=404, detail=f"Member with member_id=={member_id} not found"
         )
     hives=[]
-    hives=crud.hivemember.get_by_member_id(db=db, member_id=member.id)
+    hives=crud.hive_member.get_by_member_id(db=db, member_id=member.id)
     cells=[]
     for i in hives:
             time=recipe_in.datetime

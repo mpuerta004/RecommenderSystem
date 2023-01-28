@@ -77,7 +77,7 @@ def create_recomendation(
 ) -> dict:
     time=recipe_in.sent_datetime
     user=crud.member.get_by_id(db=db,id=member_id)
-    hives=crud.hivemember.get_by_member_id(db=db, member_id=user.id)
+    hives=crud.hive_member.get_by_member_id(db=db, member_id=user.id)
     # for i in hive
     #     if not (i.hive_id in  hives):
     #         hives.append(i.hive_id)
