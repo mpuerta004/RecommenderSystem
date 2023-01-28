@@ -75,7 +75,7 @@ def create_recomendation(
     recipe_in: RecommendationCreate,
     db: Session = Depends(deps.get_db)
 ) -> dict:
-    time=recipe_in.send_datetime
+    time=recipe_in.sent_datetime
     user=crud.member.get_by_id(db=db,id=member_id)
     hives=crud.hivemember.get_by_member_id(db=db, member_id=user.id)
     # for i in hive

@@ -6,6 +6,8 @@ from typing_extensions import TypedDict
 from pydantic import BaseModel, ValidationError
 from datetime import datetime
 from schemas.Reading import Reading
+from schemas.Slot import Slot 
+
 
 class MeasurementBase(BaseModel):    
     datetime:datetime
@@ -26,11 +28,13 @@ class MeasurementUpdate(MeasurementBase):
 # Properties shared by models stored in DB
 class MeasurementInDBBase(MeasurementBase):
     id:int 
-    cell_id:int # INT,
+    #cell_id:int # INT,
     slot_id:int
     member_id:int #  INT,
-    readings:Sequence[Reading]=None
     recommendation_id:int=None
+    slot:Slot=None
+    readings:Sequence[Reading]=None
+
 
     
     class Config:

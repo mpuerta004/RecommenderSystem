@@ -127,11 +127,11 @@ def create_measurement(
                     a=crud.cell.get_cells_campaign(db=db,campaign_id=j.id)
                     if a is not None:
                         for l in a:
-                            cells.append(l)
                             if np.sqrt((l.centre[0]-recipe_in.location[0])**2 +(l.centre[1]==recipe_in.location[1])**2)<=l.radius:
                                 cell_id=l.id
                                 surface=l.surface_id
                                 campaign_finaly=j
+    #Solo deeria haber una.   
     print(cell_id,surface)
     slot=crud.slot.get_slot_time(db=db,cell_id=cell_id,time=recipe_in.datetime)
     if slot is None: 

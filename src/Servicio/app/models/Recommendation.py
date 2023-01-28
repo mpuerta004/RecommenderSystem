@@ -23,9 +23,9 @@ from sqlalchemy import Integer, Enum
 
 class Recommendation(Base):
     __tablename__='Recommendation'
-    cell_id=Column(Integer, ForeignKey(Cell.id, ondelete="CASCADE"))
+    #cell_id=Column(Integer, ForeignKey(Cell.id, ondelete="CASCADE"))
     member_id=Column(Integer, ForeignKey(Member.id, ondelete="CASCADE"),primary_key=True)
-    send_datetime=Column(DateTime)
+    sent_datetime=Column(DateTime)
     # planning_timestamp=Column(DateTime,nullable=True)
     #measurement_id=Column(Integer, ForeignKey(Measurement.id, ondelete="CASCADE"),nullable=True)
     # campaign_id=Column(Integer, ForeignKey(Campaign.id))
@@ -36,7 +36,8 @@ class Recommendation(Base):
     update_datetime=Column(DateTime)
     
     
-    # state=relationship("State",cascade="all, delete")
-    cell=relationship("Cell",cascade="all, delete")
+    #state=relationship("State",cascade="all, delete")
+    #cell=relationship("Cell",cascade="all, delete")
+    slot=relationship("Slot")
     
     

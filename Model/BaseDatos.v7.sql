@@ -133,8 +133,6 @@ CREATE TABLE Campaign (
    );
 
 
-
-
 -- -----------------------------------------------------
 -- Table role
 -- -----------------------------------------------------
@@ -182,9 +180,6 @@ CREATE TABLE Surface (
     );
 
 
-
-
-
 -- -----------------------------------------------------
 -- Table Cell
 -- -----------------------------------------------------
@@ -223,18 +218,18 @@ FOREIGN KEY (cell_id)
 -- -----------------------------------------------------
 CREATE TABLE Recommendation (
   id int not null auto_increment,
-  cell_id INT NOT NULL,
+  #cell_id INT NOT NULL,
   member_id INT NOT NULL,
-  send_datetime datetime NOT NULL,
+  sent_datetime datetime NOT NULL,
   state  VARCHAR(15),
   update_datetime datetime,
   slot_id int, 
   member_current_location POINT NULL, 
   CONSTRAINT state_type CHECK (state IN ("NOTIFIED","ACCEPTED","REALIZED","NON_REALIZED")),
   PRIMARY KEY (id,member_id),
-    FOREIGN KEY (cell_id)
-    REFERENCES Cell (id)
-            ON DELETE CASCADE,
+    #FOREIGN KEY (cell_id)
+    #REFERENCES Cell (id)
+    #        ON DELETE CASCADE,
     FOREIGN KEY (member_id)
     REFERENCES Member (id)
     ON DELETE CASCADE,
@@ -248,7 +243,7 @@ CREATE TABLE Recommendation (
 -- -----------------------------------------------------
 CREATE TABLE Measurement (
   id INT NOT NULL AUTO_INCREMENT,
-  cell_id INT NOT NULL,
+#  cell_id INT NOT NULL,
   member_id INT NOT NULL,
   device_id int default null, 
   datetime datetime NULL DEFAULT NULL,
@@ -258,9 +253,9 @@ CREATE TABLE Measurement (
   location POINT NULL DEFAULT NULL,
   recommendation_id int null default Null, 
   PRIMARY KEY (id, member_id),
-    FOREIGN KEY (cell_id)
-    REFERENCES Cell (id)
-    ON DELETE CASCADE,
+    #FOREIGN KEY (cell_id)
+    #REFERENCES Cell (id)
+    #ON DELETE CASCADE,
     FOREIGN KEY (reading_id)
     REFERENCES Reading (id)
     ON DELETE CASCADE,

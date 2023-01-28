@@ -17,7 +17,7 @@ from models.Recommendation import Recommendation
 class Measurement(Base):
     __tablename__='Measurement'
     id=Column(Integer, unique=True, primary_key=True, index=True, autoincrement=True) 
-    cell_id=Column(Integer, ForeignKey(Cell.id, ondelete="CASCADE"))
+    #cell_id=Column(Integer, ForeignKey(Cell.id, ondelete="CASCADE"))
     member_id=Column(Integer, ForeignKey(Member.id, ondelete="CASCADE"))
     datetime=Column(DateTime)
     slot_id=Column(Integer, ForeignKey(Slot.id, ondelete="CASCADE"))
@@ -28,6 +28,6 @@ class Measurement(Base):
     recommendation_id=Column(Integer,ForeignKey(Recommendation.id,ondelete="CASCADE"))
     
     readings= relationship("Reading",cascade="all, delete")
-    
+    slot=relationship("Slot")
     # member=relationship(Member)
     

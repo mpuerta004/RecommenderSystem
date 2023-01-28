@@ -8,7 +8,7 @@ from typing import NamedTuple
 from pydantic import BaseModel, ValidationError
 from datetime import datetime, time, timedelta
 from schemas.Point import Point
-from schemas.Cell import Cell
+from schemas.Slot import Slot
 # from schemas.State import State
 
 from enum import Enum
@@ -26,7 +26,7 @@ class state(str, Enum):
 
 class RecommendationBase(BaseModel):
     member_current_location:Point
-    send_datetime:datetime = datetime.now()
+    sent_datetime:datetime = datetime.now()
 
     
 
@@ -47,9 +47,10 @@ class RecommendationInDBBase(RecommendationBase):
     # state_id:int
     id:int
     slot_id:int
-    cell_id:int
+    #cell_id:int
+    slot:Slot=None
     # state:State=None
-    cell:Cell=None
+    #cell:Cell=None
     class Config:
         orm_mode = True
 

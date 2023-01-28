@@ -11,7 +11,8 @@ class Slot(Base):
     cell_id=Column(Integer, ForeignKey(Cell.id, ondelete="CASCADE"), primary_key=True,default=True)
     start_datetime=Column(DateTime)
     end_datetime=Column(DateTime)
-
-    # priority=relationship("Priority")
-    measurements = relationship("Measurement",cascade="all, delete")
-    recomendations=relationship("Recommendation",cascade="all, delete")
+    
+    cell=relationship("Cell")
+    
+    #measurements = relationship("Measurement",cascade="all, delete")
+    #recomendations=relationship("Recommendation",cascade="all, delete")
