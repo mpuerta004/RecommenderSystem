@@ -15,12 +15,11 @@ class role(str, Enum):
 
 class Campaign_MemberBase(BaseModel):
     role:role  #Union["QueenBee" or "Participant"]
-    
+     
     
 # Properties to receive via API on creation
 class Campaign_MemberCreate(Campaign_MemberBase):
-    campaign_id:int
-    member_id: int 
+    
     pass
     
 # Properties to receive via API on update
@@ -29,7 +28,8 @@ class Campaign_MemberUpdate(Campaign_MemberBase):
 
 
 class Campaign_MemberInDBBase(Campaign_MemberBase):
-    pass
+    campaign_id:int
+    member_id: int
      
     class Config:
         orm_mode = True

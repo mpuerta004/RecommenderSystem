@@ -186,14 +186,15 @@ async def create_campaign(
     Surface = crud.surface.create_sur(
             db=db, campaign_id=Campaign.id, obj_in=surface_create)
     
-    anchura_celdas = (campaign_metadata.cells_distance)*2
+    anchura_celdas = (campaign_metadata.cells_distance)
+    radio=(campaign_metadata.cells_distance)//2
     numero_celdas = radius//anchura_celdas + 1
 
     for i in range(0, numero_celdas):
         if i == 0:
             try:
                 cell_create = CellCreate(surface_id=Surface.id, centre={
-                    'Longitude': centre['Longitude'], 'Latitude': centre['Latitude']}, radius=Campaign.cells_distance)
+                    'Longitude': centre['Longitude'], 'Latitude': centre['Latitude']}, radius=radio)
                 cell = crud.cell.create_cell(
                     db=db, obj_in=cell_create, surface_id=Surface.id)
             except:
@@ -215,7 +216,7 @@ async def create_campaign(
                 if np.sqrt((poin['Longitude']-centre['Longitude'])**2 + (poin['Latitude']-centre['Latitude'])**2) <= radius:
                     try:
                         cell_create = CellCreate(
-                            surface_id=Surface.id, centre=poin, radius=Campaign.cells_distance)
+                            surface_id=Surface.id, centre=poin, radius=radio)
                         cell = crud.cell.create_cell(
                             db=db, obj_in=cell_create, surface_id=Surface.id)
                     except:
@@ -236,7 +237,7 @@ async def create_campaign(
                 for poin in centre_point_list:
                     if np.sqrt((poin['Longitude']-centre['Longitude'])**2 + (poin['Latitude']-centre['Latitude'])**2) <= radius:
                             cell_create = CellCreate(
-                                surface_id=Surface.id, centre=poin, radius=Campaign.cells_distance)
+                                surface_id=Surface.id, centre=poin, radius=radio)
                             cell = crud.cell.create_cell(
                                 db=db, obj_in=cell_create, surface_id=Surface.id)
                         
@@ -264,8 +265,9 @@ async def create_points_of_campaign(
     #     raise HTTPException(
     #         status_code=404, detail=f"The creator is not part of the campaign."
     #     )
-    anchura_celdas = (campaign_metadata.cells_distance)*2
-    numero_celdas = radius//anchura_celdas + 1
+    anchura_celdas = (campaign_metadata.cells_distance)
+    print(anchura_celdas)
+    numero_celdas = radius//int(anchura_celdas) + 1
     List_points = []
     for i in range(0, numero_celdas):
         if i == 0:
@@ -439,7 +441,7 @@ def update_campaign(
                 status_code=401, detail=f"You cannot modify a campaign that has already been started "
             )
         else:
-            updated_recipe = crud.campaign.update(
+            campaign = crud.campaign.update(
                 db=db, db_obj=campaign, obj_in=recipe_in)
             for i in campaign.surfaces:
                 centre = i.boundary.centre
@@ -452,16 +454,19 @@ def update_campaign(
                 Surface = crud.surface.create_sur(
                 db=db, campaign_id=campaign.id, obj_in=surface_create)
                 
-                anchura_celdas = (campaign_metadata.cells_distance)*2
-                numero_celdas = radius//anchura_celdas + 1
+                anchura_celdas = (campaign.cells_distance)
+                radio=(campaign.cells_distance)//2
+                numero_celdas = radius//int(anchura_celdas) + 2
 
                 for i in range(0, numero_celdas):
                     if i == 0:
                         try:
                             cell_create = CellCreate(surface_id=Surface.id, centre={
-                                'Longitude': centre['Longitude'], 'Latitude': centre['Latitude']}, radius=Campaign.cells_distance)
+                                'Longitude': centre['Longitude'], 'Latitude': centre['Latitude']}, radius=radio)
                             cell = crud.cell.create_cell(
                                 db=db, obj_in=cell_create, surface_id=Surface.id)
+                            db.commit()
+
                         except:
                             raise HTTPException(
                                 status_code=404, detail=f"Problem with the conecction with mysql."
@@ -481,9 +486,10 @@ def update_campaign(
                             if np.sqrt((poin['Longitude']-centre['Longitude'])**2 + (poin['Latitude']-centre['Latitude'])**2) <= radius:
                                 try:
                                     cell_create = CellCreate(
-                                        surface_id=Surface.id, centre=poin, radius=Campaign.cells_distance)
+                                        surface_id=Surface.id, centre=poin, radius=radio)
                                     cell = crud.cell.create_cell(
                                         db=db, obj_in=cell_create, surface_id=Surface.id)
+                                    db.commit()
                                 except:
                                     raise HTTPException(
                                         status_code=404, detail=f"Problems with the conecction with mysql."
@@ -502,16 +508,16 @@ def update_campaign(
                             for poin in centre_point_list:
                                 if np.sqrt((poin['Longitude']-centre['Longitude'])**2 + (poin['Latitude']-centre['Latitude'])**2) <= radius:
                                         cell_create = CellCreate(
-                                            surface_id=Surface.id, centre=poin, radius=Campaign.cells_distance)
+                                            surface_id=Surface.id, centre=poin, radius=radio)
                                         cell = crud.cell.create_cell(
                                             db=db, obj_in=cell_create, surface_id=Surface.id)
-                                    
-            background_tasks.add_task(create_slots, cam=Campaign)
+                                        db.commit()
+            background_tasks.add_task(create_slots, cam=campaign)
             return campaign
     else:
-        updated_recipe = crud.campaign.update(db=db, db_obj=campaign, obj_in=recipe_in)
+        campaign = crud.campaign.update(db=db, db_obj=campaign, obj_in=recipe_in)
     db.commit()
-    return updated_recipe
+    return campaign
 
 
 @api_router_campaign.patch("/{campaign_id}", status_code=201, response_model=Campaign)
@@ -538,13 +544,13 @@ def partially_update_campaign(
         raise HTTPException(
             status_code=400, detail=f"Campaign with id=={campaign_id} not found."
         )
-    if recipe_in.start_datetime != campaign.start_datetime or recipe_in.end_datetime != campaign.end_datetime or recipe_in.cells_distance != campaign.cells_distance or recipe_in.sampling_period!=campaign.sampling_period or recipe_in.min_samples!=campaign.min_samples:
+    if True:
         if datetime.now() > campaign.start_datetime:
             raise HTTPException(
                 status_code=401, detail=f"You cannot modify a campaign that has already been started "
             )
         else:
-            updated_recipe = crud.campaign.update(
+            campaign = crud.campaign.update(
                 db=db, db_obj=campaign, obj_in=recipe_in)
             for i in campaign.surfaces:
                 centre = i.boundary.centre
@@ -557,16 +563,19 @@ def partially_update_campaign(
                 Surface = crud.surface.create_sur(
                 db=db, campaign_id=campaign.id, obj_in=surface_create)
                 
-                anchura_celdas = (campaign_metadata.cells_distance)*2
-                numero_celdas = radius//anchura_celdas + 1
+                anchura_celdas = (campaign.cells_distance)
+                radio=(campaign.cells_distance)//2
+                numero_celdas = radius//int(anchura_celdas) + 1
 
                 for i in range(0, numero_celdas):
                     if i == 0:
                         try:
                             cell_create = CellCreate(surface_id=Surface.id, centre={
-                                'Longitude': centre['Longitude'], 'Latitude': centre['Latitude']}, radius=Campaign.cells_distance)
+                                'Longitude': centre['Longitude'], 'Latitude': centre['Latitude']}, radius=radio)
                             cell = crud.cell.create_cell(
                                 db=db, obj_in=cell_create, surface_id=Surface.id)
+                            db.commit()
+
                         except:
                             raise HTTPException(
                                 status_code=404, detail=f"Problem with the conecction with mysql."
@@ -586,9 +595,10 @@ def partially_update_campaign(
                             if np.sqrt((poin['Longitude']-centre['Longitude'])**2 + (poin['Latitude']-centre['Latitude'])**2) <= radius:
                                 try:
                                     cell_create = CellCreate(
-                                        surface_id=Surface.id, centre=poin, radius=Campaign.cells_distance)
+                                        surface_id=Surface.id, centre=poin, radius=radio)
                                     cell = crud.cell.create_cell(
                                         db=db, obj_in=cell_create, surface_id=Surface.id)
+                                    db.commit()
                                 except:
                                     raise HTTPException(
                                         status_code=404, detail=f"Problems with the conecction with mysql."
@@ -607,13 +617,13 @@ def partially_update_campaign(
                             for poin in centre_point_list:
                                 if np.sqrt((poin['Longitude']-centre['Longitude'])**2 + (poin['Latitude']-centre['Latitude'])**2) <= radius:
                                         cell_create = CellCreate(
-                                            surface_id=Surface.id, centre=poin, radius=Campaign.cells_distance)
+                                            surface_id=Surface.id, centre=poin, radius=radio)
                                         cell = crud.cell.create_cell(
                                             db=db, obj_in=cell_create, surface_id=Surface.id)
-                                    
-            background_tasks.add_task(create_slots, cam=Campaign)
+                                        db.commit()
+            background_tasks.add_task(create_slots, cam=campaign)
             return campaign
     else:
-        updated_recipe = crud.campaign.update(db=db, db_obj=campaign, obj_in=recipe_in)
+        campaign = crud.campaign.update(db=db, db_obj=campaign, obj_in=recipe_in)
     db.commit()
-    return updated_recipe
+    return campaign

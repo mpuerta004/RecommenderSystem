@@ -254,8 +254,8 @@ def associate_existing_member_with_a_hive_with_specific_role(
                     
                     #Todo! verificar que esto esta bien! 
                     if list_campaigns is not []:
-                        role=Campaign_MemberCreate(role="WorkerBee")
                         for i in list_campaigns:
+                            role=Campaign_MemberCreate(role="WorkerBee")
                             crud.campaign_member.create_Campaign_Member(db=db, obj_in=role, campaign_id=i.id,member_id=member_id)
                            
                     return hiveMember
@@ -269,7 +269,7 @@ def associate_existing_member_with_a_hive_with_specific_role(
             #Create the Role in active campaigns
             list_campaigns=crud.campaign.get_campaigns_from_hive_id_active(db=db, time=datetime.now(),hive_id=hive_id)
             
-            if list_campaigns is not []:
+            if len(list_campaigns)!=0:
                 role=Campaign_MemberCreate(role=role.role)
                 for i in list_campaigns:
                     crud.campaign_member.create_Campaign_Member(db=db, obj_in=role, campaign_id=i.id,member_id=member_id)
