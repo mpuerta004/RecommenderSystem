@@ -180,7 +180,9 @@ def update_measurement(
         raise HTTPException(
             status_code=404, detail=f"Measurement with id=={measurement_id} not found."
         )
-    if recipe_in.datetime!= measurement.datetime or recipe_in.location!=measurement.location:
+    time=recipe_in.datetime.replace(tzinfo=None)    
+
+    if time!= measurement.datetime or recipe_in.location!=measurement.location:
         crud.measurement.remove(db=db,measurement=measurement)
         time=recipe_in.datetime.replace(tzinfo=None)    
         cell_id=None
@@ -216,6 +218,7 @@ def update_measurement(
         else:
             recommendation_id=recomendation.id
         cellMeasurement = crud.measurement.create_Measurement(db=db, obj_in=recipe_in,member_id=member_id,slot_id=slot.id,recommendation_id=recommendation_id,device_id=member_device.device_id)
+        db.commit()
         return cellMeasurement
     updated_recipe = crud.measurement.update(db=db, db_obj=measurement, obj_in=recipe_in)
     db.commit()

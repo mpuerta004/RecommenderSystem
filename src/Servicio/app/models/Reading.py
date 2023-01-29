@@ -14,7 +14,7 @@ class Reading(Base):
     no2=Column(Float)
     so02=Column(Float)
     o3=Column(Float)
-    so2=Column(Float)
+    so02=Column(Float)
     pm10=Column(Float)
     pm25=Column(Float)
     pm1=Column(Float)

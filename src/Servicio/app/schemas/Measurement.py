@@ -33,7 +33,7 @@ class MeasurementInDBBase(MeasurementBase):
     member_id:int #  INT,
     recommendation_id:int=None
     slot:Slot=None
-    readings:Sequence[Reading]=None
+    readings:Reading=None
 
 
     
