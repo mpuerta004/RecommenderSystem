@@ -12,9 +12,9 @@ from models.Cell import Cell
 from sqlalchemy import and_, extract
 
 class CRUDSurface(CRUDBase[Surface, SurfaceCreate, SurfaceUpdate]):
-     def get_multi_surface_from_campaign_id(self, db: Session, *, campaign_id:int, limit: int = 100, ) -> List[Surface]:
+     def get_multi_surface_from_campaign_id(self, db: Session, *, campaign_id:int ) -> List[Surface]:
          try:
-            return db.query(Surface).filter(Surface.campaign_id==campaign_id).limit(limit).all()
+            return db.query(Surface).filter(Surface.campaign_id==campaign_id).all()
          except Exception as e:
                         raise HTTPException(status_code=500, detail=f"Error with mysql {e}" )
    
