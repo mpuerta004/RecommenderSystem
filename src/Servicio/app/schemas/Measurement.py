@@ -14,7 +14,6 @@ class MeasurementBase(BaseModel):
     measurement_type:str='AIRDATA' #Varchar(30) default 'AirData', #set('AirData','Sound')
     reading_id:int=None
     location:Point
-    device_id:int
     
     
 
@@ -30,6 +29,7 @@ class MeasurementInDBBase(MeasurementBase):
     id:int 
     #cell_id:int # INT,
     slot_id:int
+    device_id:int
     member_id:int #  INT,
     recommendation_id:int=None
     slot:Slot=None

@@ -24,10 +24,10 @@ from fastapi import HTTPException
 
 class CRUDMeasurement(CRUDBase[Measurement, MeasurementCreate, MeasurementUpdate]):
         
-        def create_Measurement(self, db: Session, *, obj_in: MeasurementCreate, member_id:int,slot_id:int,cell_id:int,recommendation_id:int) -> Measurement:
+        def create_Measurement(self, db: Session, *, obj_in: MeasurementCreate, member_id:int,slot_id:int,cell_id:int,recommendation_id:int,device_id:int) -> Measurement:
             try:
                 obj_in_data = jsonable_encoder(obj_in) 
-                db_obj = self.model(**obj_in_data,member_id=member_id,slot_id=slot_id,cell_id=cell_id,recommendation_id=recommendation_id)  # type: ignore
+                db_obj = self.model(**obj_in_data,member_id=member_id,slot_id=slot_id,cell_id=cell_id,recommendation_id=recommendation_id,device_id=device_id)  # type: ignore
                 db.add(db_obj)
                 db.commit()
                 db.refresh(db_obj)
