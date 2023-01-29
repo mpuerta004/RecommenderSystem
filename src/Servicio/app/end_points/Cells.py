@@ -126,8 +126,7 @@ def delete_cell(   *,
         raise HTTPException(
             status_code=404, detail=f"Surface with IDs id=={surface_id}  not found"
         )
-    
-    result = crud.cell.get_Cell(db=db, cell_id=cell_id, surface_id=surface_id, campaign_id=campaign_id)
+    result = crud.cell.get_Cell(db=db, cell_id=cell_id)
     if  result is None:
         raise HTTPException(
             status_code=404, detail=f"Cell with id=={cell_id} not found"
@@ -157,6 +156,10 @@ def create_cell(
     if Campaign is None:
         raise HTTPException(
             status_code=404, detail=f"Campaign with id=={campaign_id} not found"
+        )
+    if datetime.now() > Campaign.start_datetime:
+        raise HTTPException(
+            status_code=400, detail=f"We can not create a surface in an active campaigm"
         )
     surface = crud.surface.get_surface_by_ids(db=db, surface_id=surface_id,campaign_id=campaign_id)
     if  surface is None:
