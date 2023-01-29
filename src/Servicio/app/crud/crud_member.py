@@ -27,9 +27,9 @@ class CRUDMember(CRUDBase[Member, MemberCreate, MemberUpdate]):
                         raise HTTPException(status_code=500, detail=f"Error with mysql {e}" )
    
         
-     def get_multi_worker_members_from_hive_id( self, db: Session, *, hive_id:int, limit: int = 100) -> List[Member]:
+     def get_multi_worker_members_from_hive_id( self, db: Session, *, campaign_id:int) -> List[Member]:
           try:
-              return db.query(Member).join(Campaign_Member).filter(and_(Campaign_Member.hive_id== hive_id, (Campaign_Member.role=="WorkerBee" or Campaign_Member.role=="QueenBee"),Campaign_Member.member_id==Member.id,Member.real_user==True)).limit(limit).all()
+              return db.query(Member).join(Campaign_Member).filter(and_(Campaign_Member.campaign_id==campaign_id,(Campaign_Member.role=="WorkerBee" or Campaign_Member.role=="QueenBee"),Campaign_Member.member_id==Member.id,Member.real_user==True)).all()
           except Exception as e:
                         raise HTTPException(status_code=500, detail=f"Error with mysql {e}" )
    

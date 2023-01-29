@@ -60,7 +60,6 @@ class Recommendation(RecommendationInDBBase):
     # state_id:int
     id:int
     slot_id:int
-    cell_id:int
 
 
 # Properties properties stored in DB
