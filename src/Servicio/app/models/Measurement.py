@@ -28,6 +28,6 @@ class Measurement(Base):
     recommendation_id=Column(Integer,ForeignKey(Recommendation.id,ondelete="CASCADE"))
     
     readings= relationship("Reading",cascade="all, delete")
-    slot=relationship("Slot")
+    slot=relationship("Slot",cascade="all, delete")
     # member=relationship(Member)
     

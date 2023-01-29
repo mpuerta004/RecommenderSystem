@@ -48,11 +48,10 @@ def get_reading(
     result = crud.reading.get(db=db, id=reading_id)
     if  result is None:
         raise HTTPException(
-            status_code=404, detail=f"reading with   reading_id=={reading_id} not found"
+            status_code=404, detail=f"Reading with id=={reading_id} not found"
         )
     return result
 
-#Todo: control de errores! 
 @api_router_reading.post("/",status_code=201, response_model=Reading)
 def create_reading(
     *, recipe_in: ReadingCreate,db: Session = Depends(deps.get_db)
@@ -81,9 +80,9 @@ def delete_reading(    *,
     reading=crud.reading.get(db=db,id=reading_id)
     if  reading is None:
         raise HTTPException(
-            status_code=404, detail=f"Reading with  reading_id=={reading_id} not found"
+            status_code=404, detail=f"Reading with id=={reading_id} not found"
         )
-    updated_recipe = crud.reading.remove(db=db, id=reading_id)
+    crud.reading.remove(db=db, reading=reading)
     return {"ok": True}
 
 @api_router_reading.put("/{reading_id}", status_code=200, response_model=Reading)
