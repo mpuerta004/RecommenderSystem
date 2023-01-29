@@ -120,7 +120,9 @@ def create_measurement(
         raise HTTPException(
             status_code=404, detail=f"This member is not in a hive"
         )
-    time=recipe_in.datetime            
+        
+    
+    time=recipe_in.datetime.replace(tzinfo=None)    
     cell_id=None
     surface=None
     campaign_finaly=None
@@ -132,7 +134,7 @@ def create_measurement(
                 a=crud.cell.get_cells_campaign(db=db,campaign_id=i.campaign_id)
                 if len(a)!=0:
                     for l in a:
-                        if np.sqrt((l.centre[0]-recipe_in.location[0])**2 +(l.centre[1]==recipe_in.location[1])**2)<=l.radius:
+                        if np.sqrt((l.centre['Longitude']-recipe_in.location['Longitude'])**2 +(l.centre['Latitude']-recipe_in.location['Latitude'])**2)<=l.radius:
                             cell_id=l.id
                             surface=l.surface_id
                             campaign_finaly=campaign
@@ -180,7 +182,7 @@ def update_measurement(
         )
     if recipe_in.datetime!= measurement.datetime or recipe_in.location!=measurement.location:
         crud.measurement.remove(db=db,measurement=measurement)
-        time=recipe_in.datetime            
+        time=recipe_in.datetime.replace(tzinfo=None)    
         cell_id=None
         surface=None
         campaign_finaly=None
@@ -192,7 +194,7 @@ def update_measurement(
                     a=crud.cell.get_cells_campaign(db=db,campaign_id=i.campaign_id)
                     if len(a)!=0:
                         for l in a:
-                            if np.sqrt((l.centre[0]-recipe_in.location[0])**2 +(l.centre[1]==recipe_in.location[1])**2)<=l.radius:
+                            if np.sqrt((l.centre['Longitude']-recipe_in.location['Longitude'])**2 +(l.centre['Latitude']-recipe_in.location['Latitude'])**2)<=l.radius:
                                 cell_id=l.id
                                 surface=l.surface_id
                                 campaign_finaly=campaign
