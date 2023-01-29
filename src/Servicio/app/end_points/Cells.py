@@ -146,7 +146,7 @@ def create_cell(
 
 ) -> dict:
     """
-    Create a new cell in the surface_id of the campaign_id of the hive_id
+    Create a new cell in a surface
     """
     hive = crud.hive.get(db=db, id=hive_id)
     if hive is None:
@@ -217,7 +217,7 @@ def update_cell(
     db: Session = Depends(deps.get_db)
 ) -> dict:
     """
-    Update Campaign with campaign_id 
+    Update cell 
     """
     hive = crud.hive.get(db=db, id=hive_id)
     if hive is None:
