@@ -70,7 +70,7 @@ def prioriry_calculation_2(time:datetime, cam:Campaign, db:Session= Depends(deps
             #                 hour=a.hour, minute=a.minute, second=a.second)
             # for cam in campaigns:
             if time >= cam.start_datetime and time <= cam.end_datetime:
-                surfaces=crud.surface.get_multi_surface_from_campaign_id(db=db,campaign_id=cam.id,limit=1000)
+                surfaces=crud.surface.get_multi_surface_from_campaign_id(db=db,campaign_id=cam.id)
                 for sur in surfaces:
                     for cells in sur.cells:
                 # for cells in cam.cells:
