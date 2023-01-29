@@ -22,15 +22,7 @@ from schemas.Surface import SurfaceSearchResults, Surface, SurfaceCreate
 import deps
 import crud
 from datetime import datetime
-import math
 import numpy as np
-from io import BytesIO
-from starlette.responses import StreamingResponse
-import sys
-import cv2
-import numpy as np
-from io import BytesIO
-from starlette.responses import StreamingResponse
 
 
 
@@ -45,6 +37,11 @@ def search_all_measurements_of_member(*,
     """
     Get all measurements of a mmeber
     """
+    member=crud.member.get_by_id(db=db,id=member_id)
+    if member is None:
+        raise HTTPException(
+                    status_code=404, detail=f"Member with id=={member_id} not found"
+                )
     try:
         measurements = crud.measurement.get_All_Measurement(db=db,member_id=member_id)
         if  measurements is []:
@@ -64,19 +61,20 @@ def get_measurement(*,
     db: Session = Depends(deps.get_db)
 ) -> Cell:
     """
-    Get a measurement of the user member_id
+    Get a measurement of a member
     """
-    try:
-        result = crud.measurement.get_Measurement(db=db, measurement_id=measurement_id,member_id=member_id)
-        if  result is None:
-            raise HTTPException(
-                status_code=404, detail=f"Measurement with member_id=={member_id} and measurement_id=={measurement_id} not found"
-            )
-        return result
-    except Exception as e:
+    member=crud.member.get_by_id(db=db,id=member_id)
+    if member is None:
         raise HTTPException(
-            status_code=500, detail=f"Error getting a Measurements of a Member: {e}"
-        )
+                    status_code=404, detail=f"Member with id=={member_id} not found"
+                )
+    result = crud.measurement.get_Measurement(db=db, measurement_id=measurement_id,member_id=member_id)
+    if  result is None:
+            raise HTTPException(
+                status_code=404, detail=f"Measurement with id=={measurement_id} not found"
+            )
+    return result
+    
 
 @api_router_measurements.delete("/{measurement_id}", status_code=204)
 def delete_measurement( *,
@@ -87,19 +85,21 @@ def delete_measurement( *,
     """
     Delete a measurement in the database.
     """
-    try:
-        measurement = crud.measurement.get_Measurement(db=db, measurement_id=measurement_id,member_id=member_id)
-        if  measurement is None:
+    member=crud.member.get_by_id(db=db,id=member_id)
+    if member is None:
+        raise HTTPException(
+                    status_code=404, detail=f"Member with id=={member_id} not found"
+                )
+    measurement = crud.measurement.get_Measurement(db=db, measurement_id=measurement_id,member_id=member_id)
+    if  measurement is None:
             raise HTTPException(
                 status_code=404, detail=f"Measurement with member_id=={member_id} and measurement_id=={measurement_id} not found"
             )
-        crud.measurement.remove(db=db, measurement=measurement)
-        return {"ok": True}
-    except Exception as e:
-        raise HTTPException(
-            status_code=500, detail=f"Error removing a Measurement {e}"
-        )
-#TODO! Hay que unirlo con la recomendacion si viene de ella! Entonces aqui hay que mirar si hay una recomendacion realizada a ese usuario en esa celda. 
+    crud.measurement.remove(db=db, measurement=measurement)
+    return {"ok": True}
+
+
+
 @api_router_measurements.post("/",status_code=201, response_model=Measurement)
 def create_measurement(
     *, 
@@ -108,90 +108,137 @@ def create_measurement(
     db: Session = Depends(deps.get_db)
 ) -> dict:
     """
-    Create a new measurement of the user member_id
+    Create a new measurement
     """
     member = crud.member.get_by_id(db=db,id=member_id)
     if  member is None:
         raise HTTPException(
-            status_code=404, detail=f"Member with member_id=={member_id} not found"
+            status_code=404, detail=f"Member with id=={member_id} not found"
         )
-    hives=[]
     hives=crud.hive_member.get_by_member_id(db=db, member_id=member.id)
-    cells=[]
-    for i in hives:
-            time=recipe_in.datetime
-            campaign=crud.campaign.get_campaigns_from_hive_id_active(db=db,hive_id=i.hive_id,time=time)
-            
-            for j in campaign:
-                if j.start_datetime<=time and j.end_datetime>=time:
-                    a=crud.cell.get_cells_campaign(db=db,campaign_id=j.id)
-                    if a is not None:
-                        for l in a:
-                            if np.sqrt((l.centre[0]-recipe_in.location[0])**2 +(l.centre[1]==recipe_in.location[1])**2)<=l.radius:
-                                cell_id=l.id
-                                surface=l.surface_id
-                                campaign_finaly=j
-    #Solo deeria haber una.   
-    print(cell_id,surface)
-    slot=crud.slot.get_slot_time(db=db,cell_id=cell_id,time=recipe_in.datetime)
-    if slot is None: 
-              raise HTTPException(
-            status_code=401, detail=f"In this time the Campaign is not active"
+    if len(hives)==0:
+        raise HTTPException(
+            status_code=404, detail=f"This member is not in a hive"
         )
+    time=recipe_in.datetime            
+    cell_id=None
+    surface=None
+    campaign_finaly=None
+    campaign_member=crud.campaign_member.get_Campaigns_of_member(db=db, member_id=member_id)
+    for i in campaign_member:
+            a=crud.cell.get_cells_campaign(db=db,campaign_id=i.campaign_id)
+            campaign=crud.campaign.get(db=db, id=i.campaign_id)
+            if campaign.start_datetime<=time and campaign.end_datetime>=time:
+                a=crud.cell.get_cells_campaign(db=db,campaign_id=i.campaign_id)
+                if len(a)!=0:
+                    for l in a:
+                        if np.sqrt((l.centre[0]-recipe_in.location[0])**2 +(l.centre[1]==recipe_in.location[1])**2)<=l.radius:
+                            cell_id=l.id
+                            surface=l.surface_id
+                            campaign_finaly=campaign
+    if cell_id is None:
+        raise HTTPException(
+            status_code=401, detail=f"This measurement is not from a active campaign"
+        )
+    #Solo deeria haber una...pero puede haber varias...    
+    slot=crud.slot.get_slot_time(db=db,cell_id=cell_id,time=recipe_in.datetime)
     campaign=campaign_finaly
-    if recipe_in.datetime>=campaign.start_datetime and recipe_in.datetime<=campaign.end_datetime:
-            recomendation= crud.recommendation.get_recommendation_to_measurement(db=db, member_id=member_id,cell_id=cell_id)
-            cellMeasurement = crud.measurement.create_Measurement(db=db, obj_in=recipe_in,member_id=member_id,slot_id=slot.id,cell_id=cell_id,recommendation_id=recomendation.id)
-            return cellMeasurement
+    recomendation= crud.recommendation.get_recommendation_to_measurement(db=db, member_id=member_id,cell_id=cell_id)
+    member_device=crud.member_device.get_by_member_id(db=db, member_id=member_id)
+    if member_device is None:
+        raise HTTPException(
+            status_code=401, detail=f"This user dont have a device. "
+        )
+    if recomendation is None:
+        recommendation_id=None
     else:
-            raise HTTPException(
-                status_code=400, detail=f"This campaign is not active in this moment"
-            )
-   
+        recommendation_id=recomendation.id
+    cellMeasurement = crud.measurement.create_Measurement(db=db, obj_in=recipe_in,member_id=member_id,slot_id=slot.id,recommendation_id=recommendation_id,device_id=member_device.device_id)
+    return cellMeasurement
+    
 
 @api_router_measurements.put("/{measurement_id}", status_code=201, response_model=Measurement)
 def update_measurement(
     *,
     recipe_in: MeasurementUpdate,
-        member_id:int, 
-measurement_id:int,
-    db: Session = Depends(deps.get_db)
-) -> dict:
-    """
-    Update Campaign with campaign_id 
-    """
-    
-    measurement = crud.measurement.get_Measurement(db=db,member_id=member_id, measurement_id=measurement_id)
-    if not measurement:
-        raise HTTPException(
-            status_code=400, detail=f"Recipe with member_id=={member_id} and measurement_id=={measurement_id} not found."
-        )
-  
-    updated_recipe = crud.measurement.update(db=db, db_obj=measurement, obj_in=recipe_in)
-    db.commit()
-  
-    return updated_recipe
-
-
-
-@api_router_measurements.patch("/{measurement_id}", status_code=201, response_model=Measurement)
-def partially_update_measurement(
-    *,
-    recipe_in: Union[MeasurementUpdate,Dict[str, Any]],
     member_id:int, 
     measurement_id:int,
     db: Session = Depends(deps.get_db)
 ) -> dict:
     """
-    Parcially Update Campaign with campaign_id 
+    Update measurement 
     """
-    measurement = crud.measurement.get_Measurement(db=db,member_id=member_id, measurement_id=measurement_id)
-    if not measurement:
+    member = crud.member.get_by_id(db=db,id=member_id)
+    if  member is None:
         raise HTTPException(
-            status_code=400, detail=f"Recipe with member_id=={member_id} and measurement_id=={measurement_id} not found."
+            status_code=404, detail=f"Member with id=={member_id} not found"
         )
-  
+    measurement = crud.measurement.get_Measurement(db=db,member_id=member_id, measurement_id=measurement_id)
+    if measurement is None:
+        raise HTTPException(
+            status_code=404, detail=f"Measurement with id=={measurement_id} not found."
+        )
+    if recipe_in.datetime!= measurement.datetime or recipe_in.location!=measurement.location:
+        crud.measurement.remove(db=db,measurement=measurement)
+        time=recipe_in.datetime            
+        cell_id=None
+        surface=None
+        campaign_finaly=None
+        campaign_member=crud.campaign_member.get_Campaigns_of_member(db=db, member_id=member_id)
+        for i in campaign_member:
+                a=crud.cell.get_cells_campaign(db=db,campaign_id=i.campaign_id)
+                campaign=crud.campaign.get(db=db, id=i.campaign_id)
+                if campaign.start_datetime<=time and campaign.end_datetime>=time:
+                    a=crud.cell.get_cells_campaign(db=db,campaign_id=i.campaign_id)
+                    if len(a)!=0:
+                        for l in a:
+                            if np.sqrt((l.centre[0]-recipe_in.location[0])**2 +(l.centre[1]==recipe_in.location[1])**2)<=l.radius:
+                                cell_id=l.id
+                                surface=l.surface_id
+                                campaign_finaly=campaign
+        if cell_id is None:
+            raise HTTPException(
+                status_code=401, detail=f"This measurement is not from a active campaign"
+            )
+        #Solo deeria haber una...pero puede haber varias...    
+        slot=crud.slot.get_slot_time(db=db,cell_id=cell_id,time=recipe_in.datetime)
+        campaign=campaign_finaly
+        recomendation= crud.recommendation.get_recommendation_to_measurement(db=db, member_id=member_id,cell_id=cell_id)
+        member_device=crud.member_device.get_by_member_id(db=db, member_id=member_id)
+        if member_device is None:
+            raise HTTPException(
+                status_code=401, detail=f"This user dont have a device. "
+            )
+        if recomendation is None:
+            recommendation_id=None
+        else:
+            recommendation_id=recomendation.id
+        cellMeasurement = crud.measurement.create_Measurement(db=db, obj_in=recipe_in,member_id=member_id,slot_id=slot.id,recommendation_id=recommendation_id,device_id=member_device.device_id)
+        return cellMeasurement
     updated_recipe = crud.measurement.update(db=db, db_obj=measurement, obj_in=recipe_in)
     db.commit()
-  
     return updated_recipe
+
+
+
+# @api_router_measurements.patch("/{measurement_id}", status_code=201, response_model=Measurement)
+# def partially_update_measurement(
+#     *,
+#     recipe_in: Union[MeasurementUpdate,Dict[str, Any]],
+#     member_id:int, 
+#     measurement_id:int,
+#     db: Session = Depends(deps.get_db)
+# ) -> dict:
+#     """
+#     Parcially Update Campaign with campaign_id 
+#     """
+#     measurement = crud.measurement.get_Measurement(db=db,member_id=member_id, measurement_id=measurement_id)
+#     if not measurement:
+#         raise HTTPException(
+#             status_code=400, detail=f"Recipe with member_id=={member_id} and measurement_id=={measurement_id} not found."
+#         )
+  
+#     updated_recipe = crud.measurement.update(db=db, db_obj=measurement, obj_in=recipe_in)
+#     db.commit()
+  
+#     return updated_recipe
