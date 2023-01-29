@@ -22,10 +22,10 @@ from crud.base import CRUDBase
 
 class CRUDRecommendation(CRUDBase[Recommendation, RecommendationCreate, RecommendationUpdate]):
         
-        def create_recommendation(self, db: Session, *, obj_in: RecommendationCreate, member_id:int,slot_id:int,cell_id:int,state:str,update_datetime:datetime) -> Recommendation:
+        def create_recommendation(self, db: Session, *, obj_in: RecommendationCreate, member_id:int,slot_id:int,state:str,update_datetime:datetime) -> Recommendation:
                 try:
                         obj_in_data = jsonable_encoder(obj_in) 
-                        db_obj = self.model(**obj_in_data,member_id=member_id,slot_id=slot_id,cell_id=cell_id,state=state,update_datetime=update_datetime)  # type: ignore
+                        db_obj = self.model(**obj_in_data,member_id=member_id,slot_id=slot_id,state=state,update_datetime=update_datetime)  # type: ignore
                         db.add(db_obj)
                         db.commit()
                         db.refresh(db_obj)
@@ -62,10 +62,10 @@ class CRUDRecommendation(CRUDBase[Recommendation, RecommendationCreate, Recommen
                         raise HTTPException(status_code=500, detail=f"Error with mysql {e}" )
    
 
-        def create_recommendation_detras(self, db: Session, *, obj_in: RecommendationCreate, member_id:int,slot_id:int,cell_id:int,state=str,update_datetime:datetime) -> Recommendation:
+        def create_recommendation_detras(self, db: Session, *, obj_in: RecommendationCreate, member_id:int,slot_id:int,state=str,update_datetime:datetime) -> Recommendation:
                 try:
                         obj_in_data = jsonable_encoder(obj_in) 
-                        db_obj = self.model(**obj_in_data,member_id=member_id,slot_id=slot_id,cell_id=cell_id,state=state,update_datetime=update_datetime)  # type: ignore
+                        db_obj = self.model(**obj_in_data,member_id=member_id,slot_id=slot_id,state=state,update_datetime=update_datetime)  # type: ignore
                         db.add(db_obj)
                         db.commit()
                         return db_obj
