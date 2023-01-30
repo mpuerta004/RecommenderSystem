@@ -20,6 +20,7 @@ from datetime import datetime, timedelta
 import asyncio
 import crud
 
+
 SQLALCHEMY_DATABASE_URL = "mysql+mysqlconnector://mve:mvepasswd123@localhost:3306/SocioBee"
 sessionmaker = FastAPISessionMaker(SQLALCHEMY_DATABASE_URL)
 

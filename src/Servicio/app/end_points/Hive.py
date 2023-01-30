@@ -301,7 +301,7 @@ def delete_hive_member_of_hive(
     hive_id:int,
     member_id:int, 
     db: Session = Depends(deps.get_db)
-) -> dict:
+):
     """
     Delete a member from a hive. 
     """
@@ -335,7 +335,7 @@ def delete_hive_member_of_hive(
                     status_code=400, detail=f"Do not remove a member from the hive if he/she is participating in an active campaign."
                 )    
     crud.hive_member.remove(db=db,hiveMember=hiveMember)
-    return  {"ok": True}
+    return {"ok": True}
 
 
 @api_router_hive.patch("/{hive_id}/members/{member_id}", status_code=201, response_model=Hive_Member)
