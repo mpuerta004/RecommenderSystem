@@ -8,7 +8,7 @@ from typing import Any, Dict, Generic, List, Optional, Type, TypeVar, Union
 from schemas.Recommendation import Recommendation,RecommendationCell, RecommendationCellSearchResults, RecommendationCreate, RecommendationSearchResults, RecommendationUpdate
 import deps
 import crud
-from datetime import datetime
+from datetime import datetime,timezone
 import math
 
 
@@ -72,7 +72,7 @@ def create_recomendation(
         raise HTTPException(
             status_code=404, detail=f"Member with id=={member_id} not found"
         )
-    time=recipe_in.sent_datetime.replace(tzinfo=None)    
+    time=recipe_in.sent_datetime.replace(tzinfo=timezone.utc)    
     campaign_member=crud.campaign_member.get_Campaigns_of_member(db=db, member_id=user.id)
     
     # hives=crud.hive_member.get_by_member_id(db=db, member_id=user.id)
@@ -91,7 +91,7 @@ def create_recomendation(
     for i in campaign_member:
         if(i.role=="QueenBee" or i.role=="WorkerBee"):
             campaign=crud.campaign.get(db=db,id=i.campaign_id)
-            if campaign.start_datetime<=time and (campaign.end_datetime)>=time:
+            if campaign.start_datetime.replace(tzinfo=timezone.utc)    <=time and (campaign.end_datetime.replace(tzinfo=timezone.utc)    )>=time:
                         a=crud.cell.get_cells_campaign(db=db,campaign_id=i.campaign_id)
                         if len(a)!=0:
                             for l in a:
@@ -116,6 +116,8 @@ def create_recomendation(
                 cam = i[1]
                 slot=crud.slot.get_slot_time(db=db,cell_id=i[0].id,time=time)                
                 priority=crud.priority.get_last(db=db,slot_id=slot.id,time=time)
+                if priority is None:
+                    print(slot.id)
                 Cardinal_actual = crud.measurement.get_all_Measurement_from_cell_in_the_current_slot(db=db, cell_id=i[0].id, time=time,slot_id=slot.id)
                 Cardinal_esperadiuso = Cardinal_actual
                 recommendation_accepted= crud.recommendation.get_aceptance_state_of_cell(db=db, cell_id=i[0].id)
@@ -135,7 +137,7 @@ def create_recomendation(
                     # obj_state=StateCreate(db=db)
                     # state=crud.state.create_state(db=db,obj_in=obj_state)
                     recomendation=crud.recommendation.create_recommendation_detras(db=db,obj_in=recipe_in,member_id=member_id,slot_id=cells_and_priority[i][1].slot_id,state="NOTIFIED",update_datetime=time)
-                    result.append(RecommendationCell(recomendation=recomendation, cell=a.cell))
+                    result.append(RecommendationCell(recommendation =recomendation, cell=a.cell))
 
     elif  len(cells_and_priority)!=0:
                 for i in range(0,len(cells_and_priority)):
@@ -145,7 +147,7 @@ def create_recomendation(
                     # obj_state=StateCreate(db=db)
                     # state=crud.state.create_state(db=db,obj_in=obj_state)
                     recomendation=crud.recommendation.create_recommendation_detras(db=db,obj_in=recipe_in,member_id=member_id,slot_id=cells_and_priority[i][1].slot_id,state="NOTIFIED",update_datetime=time)
-                    result.append(RecommendationCell(recomendation=recomendation, cell=a.cell))
+                    result.append(RecommendationCell(recommendation=recomendation, cell=a.cell))
         
     if len(cells_and_priority)==0:
             return {"results": []}
@@ -204,14 +206,12 @@ def partially_update_recommendation(
         raise HTTPException(
             status_code=404, detail=f"Recommendation with id=={recommendation_id} not found"
         )
-    if isinstance(recipe_in, dict):
-        dict_key=recipe_in.keys()
-        if "state" in dict_key:
-            dict_update={"state":recipe_in["state"], "update_datetime":datetime.utcnow()}
-            updated_recipe = crud.recommendation.update(db=db, db_obj=recommendation, obj_in=dict_update)
-            db.commit()
-            return updated_recipe
+    
         
+    dict_update={"state":recipe_in.state, "update_datetime":datetime.utcnow()}
+    updated_recipe = crud.recommendation.update(db=db, db_obj=recommendation, obj_in=dict_update)
+    db.commit()
+    return updated_recipe
 
 @api_router_recommendation.delete("/{recommendation_id}", status_code=204)
 def delete_recommendation(    *,

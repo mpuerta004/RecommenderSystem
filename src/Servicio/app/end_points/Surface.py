@@ -320,8 +320,8 @@ async def create_slots_surface(surface: Surface, hive_id: int):
         for i in range(n_slot):
             time_extra = i*cam.sampling_period
 
-            start = cam.start_datetime + timedelta(seconds=time_extra - 1)
-            end = start + timedelta(seconds=cam.sampling_period)
+            start = cam.start_datetime + timedelta(seconds=time_extra )
+            end = start + timedelta(seconds=cam.sampling_period-1)
             if end > cam.end_datetime:
                 end = cam.end_datetime
             for sur in cam.surfaces:

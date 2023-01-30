@@ -1,1 +1,1 @@
-Select * from Campaign
+delete from Campaign

@@ -17,7 +17,7 @@ from fastapi import BackgroundTasks, FastAPI
 from schemas.Surface import SurfaceSearchResults, Surface, SurfaceCreate
 import deps
 import crud
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 import math
 import numpy as np
 from io import BytesIO
@@ -134,6 +134,9 @@ async def create_campaign(
     """
      Create a new campaing in the database.
     """
+    campaign_metadata.start_datetime=campaign_metadata.start_datetime.replace(tzinfo=timezone.utc)
+    campaign_metadata.end_datetime=campaign_metadata.end_datetime.replace(tzinfo=timezone.utc)
+
     hive=crud.hive.get(db=db, id=hive_id)
     if hive is None:
         raise HTTPException(
@@ -183,14 +186,19 @@ async def create_campaign(
     
     anchura_celdas = (campaign_metadata.cells_distance)
     radio=(campaign_metadata.cells_distance)//2
-    numero_celdas = radius//anchura_celdas + 1
+    numero_celdas = int(radius)//int(anchura_celdas) + 1
 
     for i in range(0, numero_celdas):
         if i == 0:
+            try:
                 cell_create = CellCreate(surface_id=Surface.id, centre={
                     'Longitude': centre['Longitude'], 'Latitude': centre['Latitude']}, radius=radio)
                 cell = crud.cell.create_cell(
                     db=db, obj_in=cell_create, surface_id=Surface.id)
+            except:
+                raise HTTPException(
+                    status_code=404, detail=f"Problem with the conecction with mysql."
+                )
         else:
             centre_CELL_arriba = {'Longitude': centre['Longitude'],
                                   'Latitude': centre['Latitude']+i*anchura_celdas}
@@ -200,38 +208,37 @@ async def create_campaign(
                                i*anchura_celdas, 'Latitude': centre['Latitude']}
             centre_cell_derecha = {
                 'Longitude': centre['Longitude']-i*anchura_celdas, 'Latitude': centre['Latitude']}
-            centre_CELL_arriba_lado_1 = {
-                    'Longitude': centre['Longitude']+i*anchura_celdas, 'Latitude': centre['Latitude']+i*anchura_celdas}
-            centre_CELL_arriba_lado_2 = {
-                    'Longitude': centre['Longitude']-i*anchura_celdas, 'Latitude': centre['Latitude']+i*anchura_celdas}
-            centre_CELL_abajo_lado_1 = {
-                    'Longitude': centre['Longitude']+i*anchura_celdas, 'Latitude': centre['Latitude']-i*anchura_celdas}
-            centre_CELL_abajo_lado_2 = {
-                    'Longitude': centre['Longitude']-i*anchura_celdas, 'Latitude': centre['Latitude']-i*anchura_celdas}
-            centre_point_list = [centre_CELL_arriba_lado_1, centre_CELL_arriba_lado_2,
-                                     centre_CELL_abajo_lado_1, centre_CELL_abajo_lado_2,centre_CELL_arriba, centre_cell_abajo,
+            centre_point_list = [centre_CELL_arriba, centre_cell_abajo,
                                  centre_cell_izq,   centre_cell_derecha]
             for poin in centre_point_list:
                 if np.sqrt((poin['Longitude']-centre['Longitude'])**2 + (poin['Latitude']-centre['Latitude'])**2) <= radius:
-                    # try:
+                    try:
                         cell_create = CellCreate(
                             surface_id=Surface.id, centre=poin, radius=radio)
                         cell = crud.cell.create_cell(
                             db=db, obj_in=cell_create, surface_id=Surface.id)
-                        db.commit()
-                    # except:
-                    #     raise HTTPException(
-                    #         status_code=404, detail=f"Problems with the conecction with mysql."
-                    #     )
-            # for j in range(1, numero_celdas):
-                
-            #     for poin in centre_point_list:
-            #         if np.sqrt((poin['Longitude']-centre['Longitude'])**2 + (poin['Latitude']-centre['Latitude'])**2) <= radius:
-            #                 cell_create = CellCreate(
-            #                     surface_id=Surface.id, centre=poin, radius=radio)
-            #                 cell = crud.cell.create_cell(
-            #                     db=db, obj_in=cell_create, surface_id=Surface.id)
-                        
+                    except:
+                        raise HTTPException(
+                            status_code=404, detail=f"Problems with the conecction with mysql."
+                        )
+            for j in range(1, numero_celdas):
+                centre_CELL_arriba_lado_1 = {
+                    'Longitude': centre['Longitude']+j*anchura_celdas, 'Latitude': centre['Latitude']+i*anchura_celdas}
+                centre_CELL_arriba_lado_2 = {
+                    'Longitude': centre['Longitude']-j*anchura_celdas, 'Latitude': centre['Latitude']+i*anchura_celdas}
+                centre_CELL_abajo_lado_1 = {
+                    'Longitude': centre['Longitude']+j*anchura_celdas, 'Latitude': centre['Latitude']-i*anchura_celdas}
+                centre_CELL_abajo_lado_2 = {
+                    'Longitude': centre['Longitude']-j*anchura_celdas, 'Latitude': centre['Latitude']-i*anchura_celdas}
+                centre_point_list = [centre_CELL_arriba_lado_1, centre_CELL_arriba_lado_2,
+                                     centre_CELL_abajo_lado_1, centre_CELL_abajo_lado_2]
+                for poin in centre_point_list:
+                    if np.sqrt((poin['Longitude']-centre['Longitude'])**2 + (poin['Latitude']-centre['Latitude'])**2) <= radius:
+                            cell_create = CellCreate(
+                                surface_id=Surface.id, centre=poin, radius=radio)
+                            cell = crud.cell.create_cell(
+                                db=db, obj_in=cell_create, surface_id=Surface.id)
+
     background_tasks.add_task(create_slots, cam=Campaign)
     return Campaign
 
@@ -259,7 +266,7 @@ async def create_slots(cam: Campaign):
     """
     Create all the slot of each cells of the campaign. 
     """
-    await asyncio.sleep(3)
+    await asyncio.sleep(0.1)
     with sessionmaker.context_session() as db:
         duration= cam.end_datetime - cam.start_datetime 
         n_slot = int(duration.total_seconds()//cam.sampling_period)
@@ -267,8 +274,8 @@ async def create_slots(cam: Campaign):
                 n_slot = n_slot+1
         for i in range(n_slot):
                 time_extra = i*cam.sampling_period
-                start = cam.start_datetime + timedelta(seconds=time_extra -1)
-                end = start + timedelta(seconds=cam.sampling_period)
+                start = cam.start_datetime + timedelta(seconds=time_extra)
+                end = start + timedelta(seconds=cam.sampling_period -1)
                 if end > cam.end_datetime:
                     end=cam.end_datetime
                 for sur in cam.surfaces:
@@ -293,6 +300,7 @@ async def create_slots(cam: Campaign):
                                     slot_id=slot.id, datetime=start, temporal_priority=result, trend_priority=trendy)  # ,cell_id=cells.id)
                             priority = crud.priority.create_priority_detras(
                                     db=db, obj_in=Cell_priority)
+                            db.commit()
                         
 
 @api_router_campaign.get("/{campaign_id}/show", status_code=200)

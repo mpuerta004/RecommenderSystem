@@ -180,8 +180,8 @@ async def create_slots_cell(surface: Surface,hive_id:int,cell_id:int):
                 n_slot = n_slot+1
         for i in range(n_slot):
             time_extra=i*cam.sampling_period
-            start = cam.start_datetime + timedelta(seconds=time_extra-1)
-            end = start + timedelta(seconds=cam.sampling_period)
+            start = cam.start_datetime + timedelta(seconds=time_extra)
+            end = start + timedelta(seconds=cam.sampling_period-1)
             # for sur in cam.surfaces:
                 # for cells in sur.cells:
                 # for cells in cam.cells:

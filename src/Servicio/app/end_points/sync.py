@@ -81,16 +81,22 @@ def create_points_of_campaign(
                 [centre['Longitude'], centre['Latitude']+i*anchura_celdas],
                 [centre['Longitude'], centre['Latitude']-i*anchura_celdas],
                 [centre['Longitude']+i*anchura_celdas, centre['Latitude']],
-                [centre['Longitude']-i*anchura_celdas, centre['Latitude']],
-                [centre['Longitude']+i*anchura_celdas,  centre['Latitude']+i*anchura_celdas],
-                [centre['Longitude']-i*anchura_celdas,  centre['Latitude']+i*anchura_celdas],
-                [centre['Longitude']+i*anchura_celdas,                                   centre['Latitude']-i*anchura_celdas],
-               [centre['Longitude']-i*anchura_celdas,                                   centre['Latitude']-i*anchura_celdas]]
+                [centre['Longitude']-i*anchura_celdas, centre['Latitude']]]
             
             for poin in centre_point_list:
                 if np.sqrt((poin[0]-centre['Longitude'])**2 + (poin[1]-centre['Latitude'])**2) <= radius:
                     List_points.append(poin)
+            for j in (1,numero_celdas):
+                centre_point_list=[
+                [centre['Longitude']+j*anchura_celdas,  centre['Latitude']+i*anchura_celdas],
+                [centre['Longitude']-j*anchura_celdas,  centre['Latitude']+i*anchura_celdas],
+                [centre['Longitude']+j*anchura_celdas,                                   centre['Latitude']-i*anchura_celdas],
+               [centre['Longitude']-j*anchura_celdas,                                   centre['Latitude']-i*anchura_celdas]]
+                for poin in centre_point_list:
+                    if np.sqrt((poin[0]-centre['Longitude'])**2 + (poin[1]-centre['Latitude'])**2) <= radius:
+                        List_points.append(poin)
     return List_points        
+
 
 @api_router_sync.put("/sync/hives/{hive_id}", status_code=201, response_model=Hive)
 def update_hive_sync(*,
@@ -124,7 +130,7 @@ def put_a_beekeeper(
     
     if beekeeper is None:
         beecreater=BeeKeeperCreate(name=recipe_in.name, surname=recipe_in.surname, age=recipe_in.age, gender=recipe_in.gender,birthday=recipe_in.birthday,city=recipe_in.city,mail=recipe_in.mail,real_user=recipe_in.real_user )
-        return crud.beekeeper.create_beekeeper(obj_in=beecreater,id=beekeeper_id)
+        return crud.beekeeper.create_beekeeper(db=db,obj_in=beecreater,id=beekeeper_id)
     updated_beekeeper = crud.beekeeper.update(
             db=db, db_obj=beekeeper, obj_in=recipe_in)
     db.commit()
