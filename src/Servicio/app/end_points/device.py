@@ -40,7 +40,11 @@ def create_a_device(    *,
         if len(list_device_id)==0:
             maximo=1
         else:
-            maximo=max(list_device_id)+1
+            maximo=0
+            for (i,) in list_device_id:
+                if maximo<i:
+                    maximo=i
+        maximo=maximo+1
         device = crud.device.create_device(db=db, obj_in=recipe_in,id=maximo)
     except Exception as e:
         raise HTTPException(

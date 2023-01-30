@@ -49,7 +49,11 @@ def create_hive(*,
         if len(list_member_id)==0:
             maximo=1
         else:
-            maximo=max(list_member_id)+1
+            maximo=0
+            for (i,) in list_member_id:
+                if maximo<i:
+                    maximo=i
+            maximo=maximo+1
         hive = crud.hive.create_hive(db=db, obj_in=recipe_in,id=maximo)
     except Exception as e:
         raise HTTPException(
@@ -180,7 +184,11 @@ def create_a_new_member_for_a_hive_with_especific_role(
     if len(list_member_id)==0:
             maximo=1
     else:
-            maximo=max(list_member_id)+1
+        maximo=0
+        for (i,) in list_member_id:
+            if maximo<i:
+                maximo=i
+        maximo=maximo+1
     member_new = crud.member.create_member(db=db, obj_in=member,id=maximo)
 
     hiveMember=crud.hive_member.get_by_member_hive_id(db=db, hive_id=hive_id,member_id=member_new.id)

@@ -39,7 +39,7 @@ class CRUDbeekeeper(CRUDBase[BeeKeeper, BeeKeeperCreate, BeeKeeperUpdate]):
                 status_code=500, detail=f"Error with mysql {e}"
             )
     
-    def get_beekeepers_id(self, db: Session, *, city:str) -> List[ int]:
+    def get_beekeepers_id(self,*, db: Session) -> List[ int]:
         try:
             return db.query(BeeKeeper.id).all()
         except Exception as e:
