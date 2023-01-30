@@ -84,9 +84,12 @@ def create_beekeeper(
     if len(list_device_id)==0:
             maximo=1
     else:
-            maximo=max(list_device_id)+1
+        maximo=0
+        for (i,) in list_device_id:
+            if maximo<i:
+                maximo=i
+        maximo=maximo+1    
     BeeKeeper_new = crud.beekeeper.create_beekeeper(db=db, obj_in=recipe_in, id=maximo)
-    
     return BeeKeeper_new
 
 
