@@ -4,7 +4,7 @@ from typing import Sequence, Union
 
 from pydantic import BaseModel, ValidationError
 from enum import Enum
-from schemas.Member import Member as hivemeber
+from schemas.Member import Member 
 
 class role(str, Enum):
     WorkerBee="WorkerBee" 
@@ -27,7 +27,7 @@ class Hive_MemberUpdate(Hive_MemberBase):
 # Properties shared by models stored in DB
 class Hive_MemberInDBBase(Hive_MemberBase):
     role:role
-    member:hivemeber
+    member:Member
 
     pass    
     class Config:
@@ -46,3 +46,5 @@ class RecipeInDB(Hive_MemberInDBBase):
 
 class Hive_MemberSearchResults(BaseModel):
     results: Sequence[Hive_Member]
+
+

@@ -1,15 +1,15 @@
 from typing import Optional, List, Sequence
 from pydantic import BaseModel
-from datetime import datetime
+from datetime import datetime, timezone
 from enum import Enum
 
 
-# class role(str, Enum):
-#     WorkerBee="WorkerBee" 
-#     QueenBee="QueenBee" 
-#     BeeKeeper="BeeKeeper" 
-#     DroneBee="DroneBee" 
-#     Hive="Hive"
+class role(str, Enum):
+    WorkerBee="WorkerBee" 
+    QueenBee="QueenBee" 
+    BeeKeeper="BeeKeeper" 
+    DroneBee="DroneBee" 
+    Hive="Hive"
     
 class gender_type(str, Enum):
     MALE="MALE"
@@ -63,6 +63,15 @@ class MemberInDB(MemberInDBBase):
 class MemberSearchResults(BaseModel):
     results: Sequence[Member]
 
+
+class NewRole(BaseModel):
+    role: role #Union["QueenBee" or "Participant"]
+
+
+class NewMembers(BaseModel):
+    member: Member
+    role:NewRole
+    
 
 # # Properties to receive via API on update
 # class MemberUpdate(MemberBase):
