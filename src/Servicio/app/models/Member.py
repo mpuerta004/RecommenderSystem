@@ -7,7 +7,7 @@ from sqlalchemy import Integer, Enum
 class Member(Base):
     __tablename__='Member'
     mail=Column(String, nullable=False)
-    id=Column(Integer, primary_key=True, index=True, unique=True,  autoincrement=True, nullable=False)
+    id=Column(Integer, primary_key=True, index=True, unique=True,  nullable=False)
     name=Column(String,nullable=True)
     age=Column(Integer,nullable=True)
     surname=Column(String,nullable=True)

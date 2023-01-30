@@ -47,7 +47,7 @@ class RecommendationInDBBase(RecommendationBase):
     id:int
     slot_id:int
     #cell_id:int
-    slot:Slot=None
+    # slot:Slot=None
     
     # state:State=None
     class Config:

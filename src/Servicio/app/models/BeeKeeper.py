@@ -9,7 +9,7 @@ from db.base_class import Base
 class BeeKeeper(Base):
     __tablename__='BeeKeeper'
     mail=Column(String, nullable=False)
-    id=Column(Integer, primary_key=True, index=True, unique=True,  autoincrement=True, nullable=False)
+    id=Column(Integer, primary_key=True, index=True, unique=True,  nullable=False)
     name=Column(String,nullable=True)
     age=Column(Integer,nullable=True)
     surname=Column(String,nullable=True)

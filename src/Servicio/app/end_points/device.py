@@ -36,7 +36,12 @@ def create_a_device(    *,
     Create a new device in the database.
     """
     try:
-        device = crud.device.create(db=db, obj_in=recipe_in)
+        list_device_id=crud.device.get_devices_id(db=db)
+        if len(list_device_id)==0:
+            maximo=1
+        else:
+            maximo=max(list_device_id)+1
+        device = crud.device.create_device(db=db, obj_in=recipe_in,id=maximo)
     except Exception as e:
         raise HTTPException(
             status_code=500, detail=f"Error creating the Device entity: {e}"

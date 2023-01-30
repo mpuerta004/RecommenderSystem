@@ -85,8 +85,13 @@ def create_member(
     """
     Create a new member. 
     """
-    member_new= crud.member.create(db=db, obj_in=recipe_in)
-    
+    list_member_id=crud.member.get_member_id(db=db)
+    if len(list_member_id)==0:
+            maximo=1
+    else:
+            maximo=max(list_member_id)+1
+    member_new = crud.member.create_member(db=db, obj_in=recipe_in,id=maximo)
+        
     return member_new
    
    
@@ -173,7 +178,6 @@ def get_member_device(
     return member_device
 
 
-#TODO! preguntar si esto esta bien! 
 @api_router_members.put("/{member_id}/devices",status_code=201, response_model=Member_Device)
 def update_the_device_of_a_member(
     *,

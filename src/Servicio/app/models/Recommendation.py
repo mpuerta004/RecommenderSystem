@@ -38,6 +38,6 @@ class Recommendation(Base):
     
     #state=relationship("State",cascade="all, delete")
     # cell=relationship("Cell",cascade="all, delete")
-    slot=relationship("Slot")
+    # slot=relationship("Slot")
     
     

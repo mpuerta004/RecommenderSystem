@@ -9,7 +9,7 @@ from db.base_class import Base
 
 class Device(Base):
     __tablename__='Device'
-    id=Column(Integer, unique=True, primary_key=True, index=True, autoincrement=True) 
+    id=Column(Integer, unique=True, primary_key=True, index=True) 
     
     description= Column(String, nullable=True)
     brand = Column(String, nullable=True)

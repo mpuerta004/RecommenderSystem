@@ -80,16 +80,13 @@ def create_beekeeper(
     """
     Create a new BeeKeeper of the hive in the database.
     """
-    if recipe_in.birthday is not None:
-        datetime_gola=recipe_in.birthday
-        recipe_in.birthday=datetime_gola.replace(tzinfo=timezone.utc)
-        print(recipe_in.birthday)
-    try:
-        BeeKeeper_new = crud.beekeeper.create(db=db, obj_in=recipe_in)
-    except Exception as e:
-        raise HTTPException(
-            status_code=500, detail=f"Error creating the Beekeeper: {e}"
-        )
+    list_device_id=crud.beekeeper.get_beekeepers_id(db=db)
+    if len(list_device_id)==0:
+            maximo=1
+    else:
+            maximo=max(list_device_id)+1
+    BeeKeeper_new = crud.beekeeper.create_beekeeper(db=db, obj_in=recipe_in, id=maximo)
+    
     return BeeKeeper_new
 
 
@@ -106,8 +103,9 @@ def put_a_beekeeper(
     beekeeper = crud.beekeeper.get_by_id(db=db, id=beekeeper_id)
     
     if beekeeper is None:
-        beecreater=BeeKeeperCreate(name=recipe_in.name, surname=recipe_in.surname, age=recipe_in.age, gender=recipe_in.gender,birthday=recipe_in.birthday,city=recipe_in.city,mail=recipe_in.mail,real_user=recipe_in.real_user )
-        return crud.beekeeper.create(obj_in=beecreater)
+        raise HTTPException(
+            status_code=404, detail=f"BeeKeeper with BeeKeeper_id=={beekeeper_id} not found"
+                )
     updated_beekeeper = crud.beekeeper.update(
             db=db, db_obj=beekeeper, obj_in=recipe_in)
     db.commit()

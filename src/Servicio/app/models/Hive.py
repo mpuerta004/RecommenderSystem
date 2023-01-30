@@ -11,7 +11,7 @@ from models.BeeKeeper import BeeKeeper
 
 class Hive(Base):
     __tablename__='Hive'
-    id=Column(Integer, primary_key=True, index=True, unique=True,  autoincrement=True, nullable=False)
+    id=Column(Integer, primary_key=True, index=True, unique=True,  nullable=False)
     city=Column(String, nullable=False)
     name=Column(String, nullable=False)
     beekeeper_id=Column(Integer, ForeignKey(BeeKeeper.id, ondelete="CASCADE"))

@@ -45,7 +45,12 @@ def create_hive(*,
                 status_code=404, detail=f"Beekeeper with id=={recipe_in.beekeeper_id} not found"
             )
     try:
-        hive = crud.hive.create(db=db, obj_in=recipe_in)
+        list_member_id=crud.hive.get_hive_id(db=db)
+        if len(list_member_id)==0:
+            maximo=1
+        else:
+            maximo=max(list_member_id)+1
+        hive = crud.hive.create_hive(db=db, obj_in=recipe_in,id=maximo)
     except Exception as e:
         raise HTTPException(
             status_code=500, detail=f"Error creating the Hive: {e}"
@@ -65,8 +70,9 @@ def update_hive(*,
     hive = crud.hive.get(db, id=hive_id)
     
     if hive is None:
-            hiveCreate=HiveCreate(city=recipe_in.city, beekeeper_id=recipe_in.beekeeper_id,name=recipe_in.name)
-            return crud.hive.create(db=db, obj_in=hiveCreate)
+            raise HTTPException(
+                status_code=404, detail=f"Hive with ID: {hive_id} not found."
+            )
     updated_hive = crud.hive.update(db=db, db_obj=hive, obj_in=recipe_in)
     return updated_hive
 
@@ -84,7 +90,7 @@ def update_parcial_hive(*,
     
     if hive is None:
             raise HTTPException(
-                status_code=404, detail=f"Recipe with ID: {hive_id} not found."
+                status_code=404, detail=f"Hive with ID: {hive_id} not found."
             )
     try:
         updated_hive = crud.hive.update(db=db, db_obj=hive, obj_in=recipe_in)
@@ -170,7 +176,12 @@ def create_a_new_member_for_a_hive_with_especific_role(
                 status_code=404, detail=f"Hive with ID: {hive_id} not found."
             )    
     #Create the hiveMember
-    member_new= crud.member.create(db=db, obj_in=member)
+    list_member_id=crud.member.get_member_id(db=db)
+    if len(list_member_id)==0:
+            maximo=1
+    else:
+            maximo=max(list_member_id)+1
+    member_new = crud.member.create_member(db=db, obj_in=member,id=maximo)
 
     hiveMember=crud.hive_member.get_by_member_hive_id(db=db, hive_id=hive_id,member_id=member_new.id)
     

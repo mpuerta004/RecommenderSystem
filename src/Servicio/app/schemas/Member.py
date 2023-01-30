@@ -70,7 +70,7 @@ class NewRole(BaseModel):
 
 class NewMembers(BaseModel):
     member: Member
-    role:NewRole
+    role:role
     
 
 # # Properties to receive via API on update

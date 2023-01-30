@@ -19,7 +19,7 @@ GRANT ALL PRIVILEGES ON SocioBee.*  TO 'mve_automatic'@'localhost';
 -- Table Member
 -- -----------------------------------------------------
 CREATE TABLE Member (
-  id INT NOT NULL AUTO_INCREMENT,
+  id INT NOT NULL,
   birthday datetime,
   name VARCHAR(30) NULL DEFAULT NULL,
   surname VARCHAR(30) NULL DEFAULT NULL,
@@ -33,7 +33,7 @@ CREATE TABLE Member (
   );
   
 CREATE TABLE  BeeKeeper(
-  id INT NOT NULL AUTO_INCREMENT,
+  id INT NOT NULL,
   birthday datetime,
   name VARCHAR(30) NULL DEFAULT NULL,
   surname VARCHAR(30) NULL DEFAULT NULL,
@@ -51,7 +51,7 @@ CREATE TABLE  BeeKeeper(
 -- Table Hive
 -- -----------------------------------------------------
 CREATE TABLE Hive (
-  id INT NOT NULL AUTO_INCREMENT,
+  id INT NOT NULL,
   beekeeper_id INT, 
   city varchar(30) not null,
   name varchar(30),
@@ -77,7 +77,7 @@ CONSTRAINT role_type_hiveMember CHECK (role IN ("WorkerBee","QueenBee","DroneBee
 );
 
 Create table Device(
-id int not null AUTO_INCREMENT,
+id int not null,
 PRIMARY KEY (id),
 description varchar(30) null default null,
 brand varchar(30) null default null,

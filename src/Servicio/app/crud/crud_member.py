@@ -66,8 +66,25 @@ class CRUDMember(CRUDBase[Member, MemberCreate, MemberUpdate]):
           except Exception as e:
                         raise HTTPException(status_code=500, detail=f"Error with mysql {e}" )
    
-        
-   
+     def create_member(self, db: Session, *, obj_in: MemberCreate,id:int) -> Member:
+              try:
+                     obj_in_data = jsonable_encoder(obj_in) 
+                     db_obj = self.model(**obj_in_data,id=id)  # type: ignore
+                     db.add(db_obj)
+                     db.commit()
+                     db.refresh(db_obj)
+                     return db_obj
+              except Exception as e:
+                            raise HTTPException(status_code=500, detail=f"Error with mysql {e}" )
+       
+     def get_member_id(self,*, db: Session) -> List[int]:
+                try:
+                        return db.query(Member.id).all()
+                except Exception as e:
+                        raise HTTPException(
+                        status_code=500, detail=f"Error with mysql {e}"
+                )
+
 
 
 member = CRUDMember(Member)
