@@ -1,5 +1,4 @@
 from fastapi import FastAPI, APIRouter, Query, HTTPException, Request, Depends
-from fastapi.templating import Jinja2Templates
 
 from typing import Optional, Any, List
 from pathlib import Path
@@ -45,22 +44,13 @@ from schemas.Member import Member, NewMembers, MemberUpdate
 from schemas.Hive import HiveUpdate
 from schemas.Priority import Priority, PriorityCreate, PrioritySearchResults
 from schemas.Cell import Cell, CellCreate, CellSearchResults, Point
-from crud import crud_cell
-from fastapi import BackgroundTasks, FastAPI
 from schemas.Surface import SurfaceSearchResults, Surface, SurfaceCreate
 import deps
 import crud
 from datetime import datetime, timedelta
 import math
 import numpy as np
-from io import BytesIO
-from starlette.responses import StreamingResponse
-import sys
-import cv2
-import asyncio
-import numpy as np
-from starlette.responses import StreamingResponse
-from fastapi_utils.session import FastAPISessionMaker
+
 
 
 

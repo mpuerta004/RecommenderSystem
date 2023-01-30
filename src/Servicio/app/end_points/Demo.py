@@ -1,6 +1,4 @@
 from fastapi import FastAPI, APIRouter, Query, HTTPException, Request, Depends
-from fastapi.templating import Jinja2Templates
-
 from typing import Optional, Any, List
 from pathlib import Path
 from sqlalchemy.orm import Session
@@ -8,28 +6,16 @@ from schemas.Measurement import Measurement, MeasurementCreate, MeasurementSearc
 from schemas.Campaign import CampaignSearchResults, Campaign, CampaignCreate, CampaignUpdate
 from schemas.Slot import Slot, SlotCreate,SlotSearchResults
 from schemas.Recommendation import Recommendation,RecommendationCreate
-# from schemas.State import State,StateCreate
 from schemas.Member import Member
 from schemas.Priority import Priority, PriorityCreate, PrioritySearchResults
-from schemas.Cell import Cell, CellCreate, CellSearchResults, Point
-from crud import crud_cell
-from fastapi import BackgroundTasks, FastAPI
-from schemas.Surface import SurfaceSearchResults, Surface, SurfaceCreate
 import deps
 import crud
 from datetime import datetime, timedelta
 import math
 import numpy as np
-from io import BytesIO
-from starlette.responses import StreamingResponse
-import sys
 import cv2
-import asyncio
 import numpy as np
-from starlette.responses import StreamingResponse
-from fastapi_events.dispatcher import dispatch
-from fastapi_events.middleware import EventHandlerASGIMiddleware
-from fastapi_events.handlers.local import local_handler
+
 
 from fastapi_utils.session import FastAPISessionMaker
 

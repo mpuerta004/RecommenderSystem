@@ -6,7 +6,7 @@ from crud.base import CRUDBase
 from models.Campaign_Member import Campaign_Member
 from schemas.Campaign_Member import Campaign_MemberCreate, Campaign_MemberUpdate, Campaign_MemberSearchResults
 from fastapi.encoders import jsonable_encoder
-from sqlalchemy import and_, extract
+from sqlalchemy import and_
 from fastapi import HTTPException
 
 

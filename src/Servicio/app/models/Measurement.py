@@ -17,12 +17,9 @@ from models.Recommendation import Recommendation
 class Measurement(Base):
     __tablename__='Measurement'
     id=Column(Integer, unique=True, primary_key=True, index=True, autoincrement=True) 
-    #cell_id=Column(Integer, ForeignKey(Cell.id, ondelete="CASCADE"))
     member_id=Column(Integer, ForeignKey(Member.id, ondelete="CASCADE"))
     datetime=Column(DateTime)
     slot_id=Column(Integer, ForeignKey(Slot.id, ondelete="CASCADE"))
-    # measurement_type=Column(String,default="AIRDATA")
-    # reading_id=Column(Integer, ForeignKey(Reading.id, ondelete="CASCADE"), nullable=True)
     location=Column(Point)
     device_id=Column(Integer,ForeignKey(Device.id,ondelete="CASCADE"))
     recommendation_id=Column(Integer,ForeignKey(Recommendation.id,ondelete="CASCADE"))
@@ -36,7 +33,5 @@ class Measurement(Base):
     pm1=Column(Float)
     benzene=Column(Float)
     
-    # readings= relationship("Reading",cascade="all, delete")
     slot=relationship("Slot",cascade="all, delete")
-    # member=relationship(Member)
     

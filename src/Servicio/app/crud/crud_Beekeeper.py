@@ -1,12 +1,10 @@
-from typing import Any, Dict, Optional, Union, List
-
+from typing import  List
 from sqlalchemy.orm import Session
-
 from crud.base import CRUDBase
 from models.BeeKeeper import BeeKeeper
-from schemas.BeeKeeper import BeeKeeperCreate, BeeKeeperUpdate, BeeKeeperSearchResults
+from schemas.BeeKeeper import BeeKeeperCreate, BeeKeeperUpdate
 from fastapi.encoders import jsonable_encoder
-from sqlalchemy import and_, extract
+from sqlalchemy import and_
 from fastapi import HTTPException
 
 

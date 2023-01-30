@@ -13,6 +13,4 @@ class Slot(Base):
     end_datetime=Column(DateTime)
     
     cell=relationship("Cell")
-    
-    #measurements = relationship("Measurement",cascade="all, delete")
-    #recomendations=relationship("Recommendation",cascade="all, delete")
+   

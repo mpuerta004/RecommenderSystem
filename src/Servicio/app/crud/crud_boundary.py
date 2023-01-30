@@ -8,8 +8,7 @@ from sqlalchemy.orm import Session
 from fastapi.encoders import jsonable_encoder
 
 from crud.base import CRUDBase
-from models.Cell import Cell
-from sqlalchemy import and_, extract
+from sqlalchemy import and_
 
 class CRUDBoundary(CRUDBase[Boundary, BoundaryCreate, BoundaryUpdate]):
    

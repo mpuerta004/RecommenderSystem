@@ -1,16 +1,9 @@
 from fastapi import FastAPI, APIRouter, Query, HTTPException, Request, Depends
-from fastapi.templating import Jinja2Templates
 
-from typing import Optional, Any, List
-from pathlib import Path
 from sqlalchemy.orm import Session
-from schemas.Measurement import Measurement, MeasurementCreate, MeasurementSearchResults
-from schemas.Campaign import CampaignSearchResults, Campaign, CampaignCreate
-from schemas.Slot import Slot, SlotCreate,SlotSearchResults
-from schemas.Hive import Hive, HiveCreate, HiveSearchResults
 
-from schemas.Campaign_Member import Campaign_Member,Campaign_MemberCreate,Campaign_MemberSearchResults
-from schemas.newMember import NewMemberBase
+from schemas.Slot import Slot, SlotCreate,SlotSearchResults
+
 from schemas.Priority import Priority, PriorityCreate, PrioritySearchResults
 from datetime import datetime, timedelta
 from schemas.Cell import Cell, CellCreate, CellSearchResults, Point, CellUpdate
@@ -20,16 +13,7 @@ import deps
 import crud
 from datetime import datetime
 import math
-import numpy as np
-from io import BytesIO
-from starlette.responses import StreamingResponse
-import sys
-import cv2
-import numpy as np
-from io import BytesIO
-from starlette.responses import StreamingResponse
 from fastapi import BackgroundTasks
-# from end_points.Campaigns import create_slots
 from typing import Any, Dict, Generic, List, Optional, Type, TypeVar, Union
 
 import asyncio

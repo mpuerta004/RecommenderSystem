@@ -1,5 +1,5 @@
 
-from sqlalchemy import Integer, String, Column, ForeignKey, DateTime
+from sqlalchemy import Integer, String, Column, ForeignKey, DateTime,Float
 from sqlalchemy.orm import relationship
 from db.base_class import Base
 from models.Hive import Hive
@@ -12,7 +12,7 @@ class Campaign(Base):
     id=Column(Integer, unique=True, primary_key=True, autoincrement=True) 
     title=Column(String, nullable=True)
     start_datetime=Column(DateTime)
-    cells_distance=Column(Integer)
+    cells_distance=Column(Float)
     min_samples=Column(Integer,default=12)
     sampling_period=Column(Integer,default=3600)
     end_datetime=Column(DateTime)

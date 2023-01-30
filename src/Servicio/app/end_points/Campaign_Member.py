@@ -1,35 +1,15 @@
 from fastapi import FastAPI, APIRouter, Query, HTTPException, Request, Depends
-from fastapi.templating import Jinja2Templates
 
-from typing import Optional, Any, List
-from pathlib import Path
 from sqlalchemy.orm import Session
-from schemas.Measurement import Measurement, MeasurementCreate, MeasurementSearchResults
-from schemas.Campaign import CampaignSearchResults, Campaign, CampaignCreate
-from schemas.Slot import Slot, SlotCreate,SlotSearchResults
-from schemas.Hive import Hive, HiveCreate, HiveSearchResults
-from schemas.Member import Member,MemberCreate,MemberSearchResults, MemberUpdate
-from schemas.Hive_Member import Hive_Member, Hive_MemberCreate
+
 from schemas.Campaign_Member import Campaign_Member,Campaign_MemberCreate,Campaign_MemberSearchResults, Campaign_MemberUpdate
-from schemas.newMember import NewMemberBase, NewRole
-from schemas.Priority import Priority, PriorityCreate, PrioritySearchResults
-from datetime import datetime, timedelta
-from schemas.Cell import Cell, CellCreate, CellSearchResults, Point
-from crud import crud_cell
-from schemas.Surface import SurfaceSearchResults, Surface, SurfaceCreate
+
 import deps
 import crud
-from datetime import datetime
-import math
+
+
 import numpy as np
-from io import BytesIO
-from starlette.responses import StreamingResponse
-import sys
-import cv2
-import numpy as np
-from io import BytesIO
-from starlette.responses import StreamingResponse
-from enum import Enum, IntEnum
+
 
 api_router_campaign_member = APIRouter(prefix="/members/{member_id}/campaigns/{campaign_id}/roles")
 

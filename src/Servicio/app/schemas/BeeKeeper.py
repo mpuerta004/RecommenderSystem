@@ -59,29 +59,3 @@ class BeeKeeperInDB(BeeKeeperInDBBase):
 class BeeKeeperSearchResults(BaseModel):
     results: Sequence[BeeKeeper]
 
-
-# # Properties to receive via API on update
-# class MemberUpdate(MemberBase):
-#     pass
-
-
-# class MemberInDBBase(MemberBase):
-#     id: int = None
-#     hive_id:int
-
-#     class Config:
-#         orm_mode = True
-
-
-# # Additional properties to return via API
-# class BeeKeeper(MemberBase):
-#     id:int
-    
-#     #campaigns:CampaignSearchResults
-#     class Config:
-#         orm_mode = True
-
-
-
-# class MemberSearchResults(BaseModel):
-#     results: Sequence[BeeKeeper]

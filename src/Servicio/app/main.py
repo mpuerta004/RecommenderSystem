@@ -1,15 +1,12 @@
 from fastapi import BackgroundTasks, FastAPI
 from fastapi import FastAPI, APIRouter, Query, HTTPException, Request, Depends
 from fastapi.templating import Jinja2Templates
-from typing import Optional, Any, List
 from pathlib import Path
-from sqlalchemy.orm import Session
 from end_points import Hive
 from end_points import Members
 from end_points import BeeKeeper
 from end_points import Campaign_Member
 from end_points import Cells
-# from end_points import Reading
 from end_points import Campaigns
 from end_points import Device
 from end_points import Surface
@@ -17,10 +14,11 @@ from end_points import Measurements
 from end_points import Recommendation
 from end_points import Demo
 from end_points import sync
-from fastapi_utils.tasks import repeat_every
 from fastapi_utils.session import FastAPISessionMaker
 from apscheduler.schedulers.background import BackgroundScheduler
 from datetime import datetime, timedelta
+import asyncio
+import crud
 
 SQLALCHEMY_DATABASE_URL = "mysql+mysqlconnector://mve:mvepasswd123@localhost:3306/SocioBee"
 sessionmaker = FastAPISessionMaker(SQLALCHEMY_DATABASE_URL)
@@ -49,15 +47,7 @@ app.include_router(Demo.api_router_demo, tags=["Demo"])
 app.include_router(sync.api_router_sync, tags=["Sync"])
 
 api_router = APIRouter()
-import asyncio
-import crud
 
-from backports.zoneinfo import ZoneInfo
-SQLALCHEMY_DATABASE_URL = "mysql+mysqlconnector://mve_automatic:mvepasswd123@localhost:3306/SocioBee"
-sessionmaker = FastAPISessionMaker(SQLALCHEMY_DATABASE_URL)
-zona_madrid = ZoneInfo("Europe/Madrid")
-import locale
-import pytz
 
 async def prioriry_calculation() -> None:
     """

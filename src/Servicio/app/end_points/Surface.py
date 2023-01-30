@@ -1,35 +1,20 @@
 from fastapi_utils.session import FastAPISessionMaker
 import asyncio
-from fastapi import FastAPI, APIRouter, Query, HTTPException, Request, Depends
-from fastapi.templating import Jinja2Templates
-
-from typing import Optional, Any, List
-from pathlib import Path
+from fastapi import APIRouter, Query, HTTPException, Request, Depends
 from sqlalchemy.orm import Session
-from schemas.Measurement import Measurement, MeasurementCreate, MeasurementSearchResults
-from schemas.Campaign import CampaignSearchResults, Campaign, CampaignCreate
+
 from schemas.Slot import Slot, SlotCreate, SlotSearchResults
 from schemas.Boundary import Boundary, BoundaryCreate, BoundarySearchResults, BoundaryUpdate
 from schemas.Priority import Priority, PriorityCreate, PrioritySearchResults
 from datetime import datetime, timedelta
 from schemas.Cell import Cell, CellCreate, CellSearchResults, Point
-from crud import crud_cell
 from schemas.Surface import SurfaceSearchResults, Surface, SurfaceCreate, SurfaceUpdate
 import deps
 import crud
 from datetime import datetime
-import math
+
 import numpy as np
-from io import BytesIO
-from starlette.responses import StreamingResponse
-import sys
-import cv2
-import numpy as np
-from io import BytesIO
-from starlette.responses import StreamingResponse
-from fastapi import BackgroundTasks, FastAPI
-from end_points.Campaigns import create_slots
-from typing import Any, Dict, Generic, List, Optional, Type, TypeVar, Union
+from fastapi import BackgroundTasks
 
 
 api_router_surface = APIRouter(
