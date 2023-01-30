@@ -6,7 +6,7 @@ from datetime import datetime, time, timedelta
 from typing import NamedTuple
 
 from pydantic import BaseModel, ValidationError
-from datetime import datetime, time, timedelta
+from datetime import datetime, time, timedelta, timezone
 
 
 class PriorityBase(BaseModel):   

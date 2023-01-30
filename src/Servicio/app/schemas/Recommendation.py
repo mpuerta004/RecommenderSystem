@@ -10,9 +10,8 @@ from datetime import datetime, time, timedelta,timezone
 from schemas.Point import Point
 from schemas.Slot import Slot
 # from schemas.State import State
-
+from schemas.Cell import Cell
 from enum import Enum
-
 
 
 
@@ -25,7 +24,7 @@ import pytz
 
 class RecommendationBase(BaseModel):
     member_current_location:Point
-    sent_datetime:datetime=datetime.now()
+    sent_datetime:datetime=datetime.utcnow()
 
     
 
@@ -34,12 +33,14 @@ class RecommendationCreate(RecommendationBase):
 
 
 class RecommendationUpdate(RecommendationBase):
-    pass
+    state:state
+    update_datetime:datetime=datetime.utcnow()
+    
 # Properties shared by models stored in DB
 class RecommendationInDBBase(RecommendationBase):
     member_id:int
     state:state
-    update_datetime:datetime=datetime.now()
+    update_datetime:datetime=datetime.utcnow()
 
 
     # state_id:int
@@ -49,7 +50,6 @@ class RecommendationInDBBase(RecommendationBase):
     slot:Slot=None
     
     # state:State=None
-    #cell:Cell=None
     class Config:
         orm_mode = True
 
@@ -69,3 +69,13 @@ class RecipeInDB(RecommendationInDBBase):
 
 class RecommendationSearchResults(BaseModel):
     results: Sequence[Recommendation]
+
+
+class RecommendationCell(BaseModel):
+    recommendation:Recommendation
+    cell:Cell
+
+
+
+class RecommendationCellSearchResults(BaseModel):
+    results: Sequence[RecommendationCell]

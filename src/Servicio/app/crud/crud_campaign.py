@@ -66,6 +66,7 @@ class CRUDCampaign(CRUDBase[Campaign, CampaignCreate, CampaignUpdate]):
   
   def get_all_active_campaign( self,  time:datetime, db: Session) ->List[Campaign]:
     try:
+
       return db.query(Campaign).filter(and_(Campaign.start_datetime<=time, time<=Campaign.end_datetime)).all()
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error with mysql {e}" )  

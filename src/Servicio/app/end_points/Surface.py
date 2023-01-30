@@ -116,7 +116,7 @@ def parcially_update_surface(
             status_code=404, detail=f"Campaign with id=={campaign_id} not found"
         )
 
-    if datetime.now()> Campaign.start_datetime:
+    if datetime.utcnow()> Campaign.start_datetime:
          raise HTTPException(
             status_code=404, detail=f"Surface of an active campaignm can not be updated"
         )
@@ -223,7 +223,7 @@ def delete_surface(*,
             status_code=404, detail=f"Campaign with id=={campaign_id} not found"
         )
 
-    if datetime.now()>Campaign.start_datetime:
+    if datetime.utcnow()>Campaign.start_datetime:
         raise HTTPException(
             status_code=400, detail=f"We can not remove a surface in an active campaigm"
         )
@@ -260,7 +260,7 @@ def create_surface(
         raise HTTPException(
             status_code=404, detail=f"Campaign with id=={campaign_id} not found"
         )
-    if datetime.now() > Campaign.start_datetime:
+    if datetime.utcnow() > Campaign.start_datetime:
 
         raise HTTPException(
             status_code=400, detail=f"We can not create a surface in an active campaigm"
@@ -277,17 +277,10 @@ def create_surface(
 
     for i in range(0, numero_celdas):
         if i == 0:
-            try:
                 cell_create = CellCreate(surface_id=Surface.id, centre={
                     'Longitude': centre['Longitude'], 'Latitude': centre['Latitude']}, radius=radio)
                 cell = crud.cell.create_cell(
                     db=db, obj_in=cell_create, surface_id=Surface.id)
-                db.commit()
-
-            except:
-                raise HTTPException(
-                    status_code=404, detail=f"Problem with the conecction with mysql."
-                )
         else:
             centre_CELL_arriba = {'Longitude': centre['Longitude'],
                                   'Latitude': centre['Latitude']+i*anchura_celdas}
@@ -297,33 +290,20 @@ def create_surface(
                                i*anchura_celdas, 'Latitude': centre['Latitude']}
             centre_cell_derecha = {
                 'Longitude': centre['Longitude']-i*anchura_celdas, 'Latitude': centre['Latitude']}
-            centre_point_list = [centre_CELL_arriba, centre_cell_abajo,
+            centre_CELL_arriba_lado_1 = {
+                    'Longitude': centre['Longitude']+i*anchura_celdas, 'Latitude': centre['Latitude']+i*anchura_celdas}
+            centre_CELL_arriba_lado_2 = {
+                    'Longitude': centre['Longitude']-i*anchura_celdas, 'Latitude': centre['Latitude']+i*anchura_celdas}
+            centre_CELL_abajo_lado_1 = {
+                    'Longitude': centre['Longitude']+i*anchura_celdas, 'Latitude': centre['Latitude']-i*anchura_celdas}
+            centre_CELL_abajo_lado_2 = {
+                    'Longitude': centre['Longitude']-i*anchura_celdas, 'Latitude': centre['Latitude']-i*anchura_celdas}
+            centre_point_list = [centre_CELL_arriba_lado_1, centre_CELL_arriba_lado_2,
+                                     centre_CELL_abajo_lado_1, centre_CELL_abajo_lado_2,centre_CELL_arriba, centre_cell_abajo,
                                  centre_cell_izq,   centre_cell_derecha]
             for poin in centre_point_list:
                 if np.sqrt((poin['Longitude']-centre['Longitude'])**2 + (poin['Latitude']-centre['Latitude'])**2) <= radius:
-                    try:
-                        cell_create = CellCreate(
-                            surface_id=Surface.id, centre=poin, radius=radio)
-                        cell = crud.cell.create_cell(
-                            db=db, obj_in=cell_create, surface_id=Surface.id)
-                        db.commit()
-                    except:
-                        raise HTTPException(
-                            status_code=404, detail=f"Problems with the conecction with mysql."
-                        )
-            for j in range(1, numero_celdas):
-                centre_CELL_arriba_lado_1 = {
-                    'Longitude': centre['Longitude']+j*anchura_celdas, 'Latitude': centre['Latitude']+i*anchura_celdas}
-                centre_CELL_arriba_lado_2 = {
-                    'Longitude': centre['Longitude']-j*anchura_celdas, 'Latitude': centre['Latitude']+i*anchura_celdas}
-                centre_CELL_abajo_lado_1 = {
-                    'Longitude': centre['Longitude']+j*anchura_celdas, 'Latitude': centre['Latitude']-i*anchura_celdas}
-                centre_CELL_abajo_lado_2 = {
-                    'Longitude': centre['Longitude']-j*anchura_celdas, 'Latitude': centre['Latitude']-i*anchura_celdas}
-                centre_point_list = [centre_CELL_arriba_lado_1, centre_CELL_arriba_lado_2,
-                                     centre_CELL_abajo_lado_1, centre_CELL_abajo_lado_2]
-                for poin in centre_point_list:
-                    if np.sqrt((poin['Longitude']-centre['Longitude'])**2 + (poin['Latitude']-centre['Latitude'])**2) <= radius:
+                    # try:
                         cell_create = CellCreate(
                             surface_id=Surface.id, centre=poin, radius=radio)
                         cell = crud.cell.create_cell(
@@ -370,8 +350,10 @@ async def create_slots_surface(surface: Surface, hive_id: int):
                         Cardinal_pasado = 0
                         Cardinal_actual = 0
                         init = 0
-                        result = -Cardinal_actual/cam.min_samples
-                        # b = max(2, cam.min_samples - int(Cardinal_pasado))
+                        if cam.min_samples==0:
+                                result= 0
+                        else:
+                                result=-Cardinal_actual/cam.min_samples                         # b = max(2, cam.min_samples - int(Cardinal_pasado))
                         # a = max(2, cam.min_samples - int(Cardinal_actual))
                         # result = math.log(a) * math.log(b, int(Cardinal_actual) + 2)
                         trendy = 0.0

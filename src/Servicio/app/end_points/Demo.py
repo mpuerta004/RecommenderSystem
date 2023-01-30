@@ -64,7 +64,7 @@ def prioriry_calculation_2(time:datetime, cam:Campaign, db:Session= Depends(deps
             db.refresh(cam)
             campaign_new=crud.campaign.get_campaign(db=db,hive_id=cam.hive_id,campaign_id=cam.id)
             campaigns = campaign_new
-            # a = datetime.now()
+            # a = datetime.utcnow()
             # print(a)
             # date = datetime(year=a.year, month=a.month, day=a.day,
             #                 hour=a.hour, minute=a.minute, second=a.second)
@@ -96,7 +96,10 @@ def prioriry_calculation_2(time:datetime, cam:Campaign, db:Session= Depends(deps
                         init=momento  - cam.start_datetime
                         
                         a =  init - timedelta(seconds= ((init).total_seconds()//cam.sampling_period)*cam.sampling_period)
-                        result=-Cardinal_actual/cam.min_samples + a.total_seconds()/cam.sampling_period
+                        if cam.min_samples==0:
+                            result= a.total_seconds()/cam.sampling_period
+                        else:
+                            result=-Cardinal_actual/cam.min_samples + a.total_seconds()/cam.sampling_period
                         total_measurements = crud.measurement.get_all_Measurement_campaign(
                             db=db, campaign_id=cam.id, time=time)
                         if total_measurements==0:

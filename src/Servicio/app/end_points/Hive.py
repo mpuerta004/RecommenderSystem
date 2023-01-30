@@ -65,15 +65,9 @@ def update_hive(*,
     hive = crud.hive.get(db, id=hive_id)
     
     if hive is None:
-            raise HTTPException(
-                status_code=404, detail=f"Hive with id={hive_id} not found."
-            )
-    try:
-        updated_hive = crud.hive.update(db=db, db_obj=hive, obj_in=recipe_in)
-    except Exception as e:
-        raise HTTPException(
-            status_code=500, detail=f"Error updaiting the Hive: {e}"
-        )
+            hiveCreate=HiveCreate(city=recipe_in.city, beekeeper_id=recipe_in.beekeeper_id,name=recipe_in.name)
+            return crud.hive.create(db=db, obj_in=hiveCreate)
+    updated_hive = crud.hive.update(db=db, db_obj=hive, obj_in=recipe_in)
     return updated_hive
 
 
@@ -187,7 +181,7 @@ def create_a_new_member_for_a_hive_with_especific_role(
             if QueenBee is None:
                     hiveMember= crud.hive_member.create_hiveMember(db=db,obj_in=hive_member_create,role=role.role)
                     #Create the Role in active campaigns
-                    list_campaigns=crud.campaign.get_campaigns_from_hive_id_active(db=db, time=datetime.now(),hive_id=hive_id)
+                    list_campaigns=crud.campaign.get_campaigns_from_hive_id_active(db=db, time=datetime.utcnow(),hive_id=hive_id)
                     
                     #Todo! verificar que esto esta bien! 
                     if list_campaigns is not []:
@@ -204,7 +198,7 @@ def create_a_new_member_for_a_hive_with_especific_role(
             hiveMember= crud.hive_member.create_hiveMember(db=db,obj_in=hive_member_create,role=role.role)
             
             #Create the Role in active campaigns
-            list_campaigns=crud.campaign.get_campaigns_from_hive_id_active(db=db, time=datetime.now(),hive_id=hive_id)
+            list_campaigns=crud.campaign.get_campaigns_from_hive_id_active(db=db, time=datetime.utcnow(),hive_id=hive_id)
             
             if list_campaigns is not []:
                 role=Campaign_MemberCreate(role=role.role)
@@ -250,7 +244,7 @@ def associate_existing_member_with_a_hive_with_specific_role(
                     hiveMember= crud.hive_member.create_hiveMember(db=db,obj_in=hive_member_create,role=role.role)
                     
                     #Create the Role in active campaigns
-                    list_campaigns=crud.campaign.get_campaigns_from_hive_id_active(db=db, time=datetime.now(),hive_id=hive_id)
+                    list_campaigns=crud.campaign.get_campaigns_from_hive_id_active(db=db, time=datetime.utcnow(),hive_id=hive_id)
                     
                     #Todo! verificar que esto esta bien! 
                     if list_campaigns is not []:
@@ -267,7 +261,7 @@ def associate_existing_member_with_a_hive_with_specific_role(
             hiveMember= crud.hive_member.create_hiveMember(db=db,obj_in=hive_member_create,role=role.role)
             
             #Create the Role in active campaigns
-            list_campaigns=crud.campaign.get_campaigns_from_hive_id_active(db=db, time=datetime.now(),hive_id=hive_id)
+            list_campaigns=crud.campaign.get_campaigns_from_hive_id_active(db=db, time=datetime.utcnow(),hive_id=hive_id)
             
             if len(list_campaigns)!=0:
                 role=Campaign_MemberCreate(role=role.role)
@@ -311,7 +305,7 @@ def delete_hive_member_of_hive(
             status_code=404, detail=f"This member is not in the hive. "
         )
         
-    activeCampaigns= crud.campaign.get_campaigns_from_hive_id_active(db=db, time=datetime.now(),hive_id=hive_id)
+    activeCampaigns= crud.campaign.get_campaigns_from_hive_id_active(db=db, time=datetime.utcnow(),hive_id=hive_id)
     if activeCampaigns is []:
         updated_recipe = crud.hive_member.remove(db=db,hiveMember=hiveMember)
     else: 
@@ -360,7 +354,7 @@ def update_the_role_of_a_member_in_hive(
     if role.role=="QueenBee":
         QueenBee=crud.hive_member.get_by_role_hive(db=db,hive_id=hive_id,role="QueenBee")
         if QueenBee is None:
-            activeCampaigns= crud.campaign.get_campaigns_from_hive_id_active(db=db, time=datetime.now(),hive_id=hive_id)
+            activeCampaigns= crud.campaign.get_campaigns_from_hive_id_active(db=db, time=datetime.utcnow(),hive_id=hive_id)
             if activeCampaigns is []:
                 updated_recipe = crud.hive_member.update(db=db,obj_in={"role":role.role}, db_obj=hiveMember)
                 return  updated_recipe

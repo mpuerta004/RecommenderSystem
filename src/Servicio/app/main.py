@@ -16,6 +16,7 @@ from end_points import Surface
 from end_points import Measurements
 from end_points import Recommendation
 from end_points import Demo
+from end_points import sync
 from fastapi_utils.tasks import repeat_every
 from fastapi_utils.session import FastAPISessionMaker
 from apscheduler.schedulers.background import BackgroundScheduler
@@ -45,26 +46,28 @@ app.include_router(Measurements.api_router_measurements, tags=["Measurements"])
 app.include_router(Recommendation.api_router_recommendation, tags=["Recommendations"])
 app.include_router(Reading.api_router_reading, tags=["Readings"])
 app.include_router(Demo.api_router_demo, tags=["Demo"])
+app.include_router(sync.api_router_sync, tags=["Sync"])
+
 api_router = APIRouter()
 import asyncio
 import crud
+
 from backports.zoneinfo import ZoneInfo
 SQLALCHEMY_DATABASE_URL = "mysql+mysqlconnector://mve_automatic:mvepasswd123@localhost:3306/SocioBee"
 sessionmaker = FastAPISessionMaker(SQLALCHEMY_DATABASE_URL)
 zona_madrid = ZoneInfo("Europe/Madrid")
 import locale
 import pytz
+
 async def prioriry_calculation() -> None:
     """
     Create the priorirty based on the measurements
     """
     await  asyncio.sleep(1)
-    print("HELOOS ")
+    print("HELOS ")
     with sessionmaker.context_session() as db:
-        a = datetime.now()
-        print(a)
-        time = datetime(year=a.year, month=a.month, day=a.day,
-                        hour=a.hour, minute=a.minute, second=a.second)
+        time= datetime.utcnow()
+        print(time)
         campaigns = crud.campaign.get_all_active_campaign(db=db,time=time)
         for cam in campaigns:
             Demo.prioriry_calculation_2(time=time,cam=cam, db=db)
@@ -77,7 +80,7 @@ async def state_calculation()->None:
     with sessionmaker.context_session() as db:
         list_of_recommendations= crud.recommendation.get_aceptance_and_notified_state(db=db)
         for i in list_of_recommendations:
-            a = datetime.now()
+            a = datetime.utcnow()
             print(a)
             Current_time = datetime(year=a.year, month=a.month, day=a.day,
                         hour=a.hour, minute=a.minute, second=a.second)
@@ -109,10 +112,10 @@ app.include_router(api_router)
 if __name__ == "__main__":
     # Use this for debugging purposes only
     import uvicorn
-    # scheduler = BackgroundScheduler()
-    # scheduler.add_job(final_funtion, 'interval', seconds=60)
-    # scheduler.add_job(State_change, 'interval', seconds=420)
+    scheduler = BackgroundScheduler()
+    scheduler.add_job(final_funtion, 'interval', seconds=60)
+    scheduler.add_job(State_change, 'interval', seconds=420)
 
-    # scheduler.start()
+    scheduler.start()
 
     uvicorn.run(app, host="0.0.0.0", port=8001, log_level="debug")

@@ -19,7 +19,7 @@ from crud import crud_cell
 from schemas.Surface import SurfaceSearchResults, Surface, SurfaceCreate
 import deps
 import crud
-from datetime import datetime
+from datetime import datetime, timezone
 import math
 import numpy as np
 from io import BytesIO
@@ -80,6 +80,10 @@ def create_beekeeper(
     """
     Create a new BeeKeeper of the hive in the database.
     """
+    if recipe_in.birthday is not None:
+        datetime_gola=recipe_in.birthday
+        recipe_in.birthday=datetime_gola.replace(tzinfo=timezone.utc)
+        print(recipe_in.birthday)
     try:
         BeeKeeper_new = crud.beekeeper.create(db=db, obj_in=recipe_in)
     except Exception as e:
@@ -99,22 +103,15 @@ def put_a_beekeeper(
     """
     Update a BeeKeeper
     """
-
     beekeeper = crud.beekeeper.get_by_id(db=db, id=beekeeper_id)
     
     if beekeeper is None:
-            raise HTTPException(
-                status_code=404, detail=f"BeeKeeper with BeeKeeper_id=={beekeeper_id} not found"
-            )
-    try:
-        updated_beekeeper = crud.beekeeper.update(
+        beecreater=BeeKeeperCreate(name=recipe_in.name, surname=recipe_in.surname, age=recipe_in.age, gender=recipe_in.gender,birthday=recipe_in.birthday,city=recipe_in.city,mail=recipe_in.mail,real_user=recipe_in.real_user )
+        return crud.beekeeper.create(obj_in=beecreater)
+    updated_beekeeper = crud.beekeeper.update(
             db=db, db_obj=beekeeper, obj_in=recipe_in)
-        db.commit()
-    except Exception as e:
-        raise HTTPException(
-            status_code=500, detail=f"Error updating the BeeKeeper entity: {e}"
-        )
-    return beekeeper
+    db.commit()
+    return updated_beekeeper
 
 
 @api_router_beekeepers.patch("/{beekeeper_id}", status_code=201, response_model=BeeKeeper)

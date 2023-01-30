@@ -1,6 +1,6 @@
 from pydantic import BaseModel
 from typing import Sequence
-from datetime import datetime
+from datetime import datetime, timezone
 from schemas.Surface import Surface
 from schemas.Cell import Cell
 from schemas.Campaign_Member import Campaign_Member

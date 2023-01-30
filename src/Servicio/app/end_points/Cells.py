@@ -157,7 +157,7 @@ def create_cell(
         raise HTTPException(
             status_code=404, detail=f"Campaign with id=={campaign_id} not found"
         )
-    if datetime.now() > Campaign.start_datetime:
+    if datetime.utcnow() > Campaign.start_datetime:
         raise HTTPException(
             status_code=400, detail=f"We can not create a surface in an active campaigm"
         )
@@ -205,6 +205,22 @@ async def create_slots_cell(surface: Surface,hive_id:int,cell_id:int):
                     cell_id=cell_id, start_datetime=start, end_datetime=end)
             slot = crud.slot.create_slot_detras(db=db, obj_in=slot_create)
             db.commit()
+            if start == cam.start_datetime:
+                        Cardinal_pasado = 0
+                        Cardinal_actual = 0
+                        init = 0
+                        if cam.min_samples==0:
+                                result= 0
+                        else:
+                                result=-Cardinal_actual/cam.min_samples                         # b = max(2, cam.min_samples - int(Cardinal_pasado))
+                        # a = max(2, cam.min_samples - int(Cardinal_actual))
+                        # result = math.log(a) * math.log(b, int(Cardinal_actual) + 2)
+                        trendy = 0.0
+                        Cell_priority = PriorityCreate(
+                            slot_id=slot.id, datetime=start, temporal_priority=result, trend_priority=trendy)  # ,cell_id=cells.id)
+                        priority = crud.priority.create_priority_detras(
+                            db=db, obj_in=Cell_priority)
+                        db.commit()
 
 @api_router_cell.put("/{cell_id}", status_code=201, response_model=Cell)
 def update_cell(

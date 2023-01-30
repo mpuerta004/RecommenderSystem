@@ -1,7 +1,7 @@
 from typing import Optional, List, Sequence, Union
 from pydantic import BaseModel
 from enum import Enum
-from datetime import datetime
+from datetime import datetime, timezone
 
 
 

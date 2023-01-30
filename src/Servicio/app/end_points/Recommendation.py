@@ -17,7 +17,7 @@ from schemas.Cell import Cell, CellCreate, CellSearchResults, Point
 
 from typing import Any, Dict, Generic, List, Optional, Type, TypeVar, Union
 
-from schemas.Recommendation import Recommendation, RecommendationCreate, RecommendationSearchResults, RecommendationUpdate
+from schemas.Recommendation import Recommendation,RecommendationCell, RecommendationCellSearchResults, RecommendationCreate, RecommendationSearchResults, RecommendationUpdate
 from crud import crud_cell
 from schemas.Surface import SurfaceSearchResults, Surface, SurfaceCreate
 import deps
@@ -72,7 +72,7 @@ def get_recommendation(
     return {"results": result}
 
 
-@api_router_recommendation.post("/",status_code=201, response_model=RecommendationSearchResults)
+@api_router_recommendation.post("/",status_code=201, response_model=RecommendationCellSearchResults)
 def create_recomendation(
     *, 
     member_id:int, 
@@ -150,7 +150,7 @@ def create_recomendation(
                     # obj_state=StateCreate(db=db)
                     # state=crud.state.create_state(db=db,obj_in=obj_state)
                     recomendation=crud.recommendation.create_recommendation_detras(db=db,obj_in=recipe_in,member_id=member_id,slot_id=cells_and_priority[i][1].slot_id,state="NOTIFIED",update_datetime=time)
-                    result.append(recomendation)
+                    result.append(RecommendationCell(recomendation=recomendation, cell=a.cell))
 
     elif  len(cells_and_priority)!=0:
                 for i in range(0,len(cells_and_priority)):
@@ -160,10 +160,11 @@ def create_recomendation(
                     # obj_state=StateCreate(db=db)
                     # state=crud.state.create_state(db=db,obj_in=obj_state)
                     recomendation=crud.recommendation.create_recommendation_detras(db=db,obj_in=recipe_in,member_id=member_id,slot_id=cells_and_priority[i][1].slot_id,state="NOTIFIED",update_datetime=time)
-                    result.append(recomendation)
+                    result.append(RecommendationCell(recomendation=recomendation, cell=a.cell))
         
     if len(cells_and_priority)==0:
             return {"results": []}
+    
     return {"results": result}
     
 

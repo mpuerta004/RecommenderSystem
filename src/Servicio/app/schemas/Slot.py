@@ -1,6 +1,6 @@
 from typing import Optional, Sequence
 from pydantic import BaseModel
-from datetime import datetime
+from datetime import datetime,timezone
 from schemas.Cell import Cell
 
 

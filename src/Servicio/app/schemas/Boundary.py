@@ -3,6 +3,16 @@ from typing import Sequence
 from schemas.Point import Point
 
 from schemas.Cell import Cell
+
+
+
+class BoundaryBase_points(BaseModel):
+    centre: Point
+    radius:int
+    cells_distance:int
+
+
+
 class BoundaryBase(BaseModel):
     centre: Point
     radius:int

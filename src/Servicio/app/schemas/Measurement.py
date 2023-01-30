@@ -4,7 +4,7 @@ from schemas.Point import Point
 from typing import Sequence, Union
 from typing_extensions import TypedDict
 from pydantic import BaseModel, ValidationError
-from datetime import datetime
+from datetime import datetime, timezone
 from schemas.Reading import Reading
 from schemas.Slot import Slot 
 

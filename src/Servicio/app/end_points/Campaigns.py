@@ -192,15 +192,10 @@ async def create_campaign(
 
     for i in range(0, numero_celdas):
         if i == 0:
-            try:
                 cell_create = CellCreate(surface_id=Surface.id, centre={
                     'Longitude': centre['Longitude'], 'Latitude': centre['Latitude']}, radius=radio)
                 cell = crud.cell.create_cell(
                     db=db, obj_in=cell_create, surface_id=Surface.id)
-            except:
-                raise HTTPException(
-                    status_code=404, detail=f"Problem with the conecction with mysql."
-                )
         else:
             centre_CELL_arriba = {'Longitude': centre['Longitude'],
                                   'Latitude': centre['Latitude']+i*anchura_celdas}
@@ -210,84 +205,43 @@ async def create_campaign(
                                i*anchura_celdas, 'Latitude': centre['Latitude']}
             centre_cell_derecha = {
                 'Longitude': centre['Longitude']-i*anchura_celdas, 'Latitude': centre['Latitude']}
-            centre_point_list = [centre_CELL_arriba, centre_cell_abajo,
+            centre_CELL_arriba_lado_1 = {
+                    'Longitude': centre['Longitude']+i*anchura_celdas, 'Latitude': centre['Latitude']+i*anchura_celdas}
+            centre_CELL_arriba_lado_2 = {
+                    'Longitude': centre['Longitude']-i*anchura_celdas, 'Latitude': centre['Latitude']+i*anchura_celdas}
+            centre_CELL_abajo_lado_1 = {
+                    'Longitude': centre['Longitude']+i*anchura_celdas, 'Latitude': centre['Latitude']-i*anchura_celdas}
+            centre_CELL_abajo_lado_2 = {
+                    'Longitude': centre['Longitude']-i*anchura_celdas, 'Latitude': centre['Latitude']-i*anchura_celdas}
+            centre_point_list = [centre_CELL_arriba_lado_1, centre_CELL_arriba_lado_2,
+                                     centre_CELL_abajo_lado_1, centre_CELL_abajo_lado_2,centre_CELL_arriba, centre_cell_abajo,
                                  centre_cell_izq,   centre_cell_derecha]
             for poin in centre_point_list:
                 if np.sqrt((poin['Longitude']-centre['Longitude'])**2 + (poin['Latitude']-centre['Latitude'])**2) <= radius:
-                    try:
+                    # try:
                         cell_create = CellCreate(
                             surface_id=Surface.id, centre=poin, radius=radio)
                         cell = crud.cell.create_cell(
                             db=db, obj_in=cell_create, surface_id=Surface.id)
-                    except:
-                        raise HTTPException(
-                            status_code=404, detail=f"Problems with the conecction with mysql."
-                        )
-            for j in range(1, numero_celdas):
-                centre_CELL_arriba_lado_1 = {
-                    'Longitude': centre['Longitude']+j*anchura_celdas, 'Latitude': centre['Latitude']+i*anchura_celdas}
-                centre_CELL_arriba_lado_2 = {
-                    'Longitude': centre['Longitude']-j*anchura_celdas, 'Latitude': centre['Latitude']+i*anchura_celdas}
-                centre_CELL_abajo_lado_1 = {
-                    'Longitude': centre['Longitude']+j*anchura_celdas, 'Latitude': centre['Latitude']-i*anchura_celdas}
-                centre_CELL_abajo_lado_2 = {
-                    'Longitude': centre['Longitude']-j*anchura_celdas, 'Latitude': centre['Latitude']-i*anchura_celdas}
-                centre_point_list = [centre_CELL_arriba_lado_1, centre_CELL_arriba_lado_2,
-                                     centre_CELL_abajo_lado_1, centre_CELL_abajo_lado_2]
-                for poin in centre_point_list:
-                    if np.sqrt((poin['Longitude']-centre['Longitude'])**2 + (poin['Latitude']-centre['Latitude'])**2) <= radius:
-                            cell_create = CellCreate(
-                                surface_id=Surface.id, centre=poin, radius=radio)
-                            cell = crud.cell.create_cell(
-                                db=db, obj_in=cell_create, surface_id=Surface.id)
+                        db.commit()
+                    # except:
+                    #     raise HTTPException(
+                    #         status_code=404, detail=f"Problems with the conecction with mysql."
+                    #     )
+            # for j in range(1, numero_celdas):
+                
+            #     for poin in centre_point_list:
+            #         if np.sqrt((poin['Longitude']-centre['Longitude'])**2 + (poin['Latitude']-centre['Latitude'])**2) <= radius:
+            #                 cell_create = CellCreate(
+            #                     surface_id=Surface.id, centre=poin, radius=radio)
+            #                 cell = crud.cell.create_cell(
+            #                     db=db, obj_in=cell_create, surface_id=Surface.id)
                         
     background_tasks.add_task(create_slots, cam=Campaign)
     return Campaign
 
 
-@api_router_campaign.post("/points/", status_code=201, response_model=List)
-async def create_points_of_campaign(
-    *,
-    campaign_metadata: CampaignCreate,
-    hive_id: int,
-    boundary: BoundaryCreate,
-    db: Session = Depends(deps.get_db),
-) -> dict:
-    """
-    Generate the points of a campaign.
-    """
-    centre = boundary.centre
-    radius = boundary.radius
 
-    # hiveMember = crud.hive_member.get_by_member_hive_id(
-    #     db=db, member_id=campaign_metadata.creator_id, hive_id=hive_id)
-    # if hiveMember is None:
-    #     raise HTTPException(
-    #         status_code=404, detail=f"The creator is not part of the campaign."
-    #     )
-    anchura_celdas = (campaign_metadata.cells_distance)
-    print(anchura_celdas)
-    numero_celdas = radius//int(anchura_celdas) + 1
-    List_points = []
-    for i in range(0, numero_celdas):
-        if i == 0:
-            List_points.append([centre['Longitude'], centre['Latitude']])
-        else:
-            List_points.append([centre['Longitude'], centre['Latitude']+i*anchura_celdas])
-            List_points.append([centre['Longitude'], centre['Latitude']-i*anchura_celdas])
-            List_points.append([centre['Longitude']+i*anchura_celdas, centre['Latitude']])
-            List_points.append([centre['Longitude']-i*anchura_celdas, centre['Latitude']])
-            for j in range(1, numero_celdas):
-                List_points.append([centre['Longitude']+j*anchura_celdas,
-                                   centre['Latitude']+i*anchura_celdas])
-                List_points.append([centre['Longitude']-j*anchura_celdas,
-                                   centre['Latitude']+i*anchura_celdas])
-                List_points.append([centre['Longitude']+j*anchura_celdas,
-                                   centre['Latitude']-i*anchura_celdas])
-                List_points.append([centre['Longitude']-j*anchura_celdas,
-                                   centre['Latitude']-i*anchura_celdas])
-
-    return List_points
 
 
 """
@@ -332,8 +286,10 @@ async def create_slots(cam: Campaign):
                         if start == cam.start_datetime:
                             Cardinal_pasado = 0
                             Cardinal_actual = 0
-                            init= 0
-                            result=-Cardinal_actual/cam.min_samples 
+                            if cam.min_samples==0:
+                                result= 0
+                            else:
+                                result=-Cardinal_actual/cam.min_samples 
                             # b = max(2, cam.min_samples - int(Cardinal_pasado))
                             # a = max(2, cam.min_samples - int(Cardinal_actual))
                             # result = math.log(a) * math.log(b, int(Cardinal_actual) + 2)
@@ -436,7 +392,7 @@ def update_campaign(
             status_code=400, detail=f"Campaign with id=={campaign_id} not found."
         )
     if recipe_in.start_datetime != campaign.start_datetime or recipe_in.end_datetime != campaign.end_datetime or recipe_in.cells_distance != campaign.cells_distance or recipe_in.sampling_period!=campaign.sampling_period or recipe_in.min_samples!=campaign.min_samples:
-        if datetime.now() > campaign.start_datetime:
+        if datetime.utcnow() > campaign.start_datetime:
             raise HTTPException(
                 status_code=401, detail=f"You cannot modify a campaign that has already been started "
             )
@@ -545,7 +501,7 @@ def update_campaign(
 #             status_code=400, detail=f"Campaign with id=={campaign_id} not found."
 #         )
 #     if True:
-#         if datetime.now() > campaign.start_datetime:
+#         if datetime.utcnow() > campaign.start_datetime:
 #             raise HTTPException(
 #                 status_code=401, detail=f"You cannot modify a campaign that has already been started "
 #             )
