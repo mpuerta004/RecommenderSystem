@@ -9,7 +9,7 @@ from schemas.Cell import Cell
 class BoundaryBase_points(BaseModel):
     centre: Point
     radius:float
-    cells_distance:int
+    cells_distance:float
 
 
 

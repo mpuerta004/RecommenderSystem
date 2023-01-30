@@ -9,7 +9,7 @@ from schemas.Campaign import CampaignSearchResults, Campaign, CampaignCreate
 from schemas.Slot import Slot, SlotCreate,SlotSearchResults
 from schemas.Hive import Hive, HiveCreate, HiveSearchResults
 from schemas.Member import Member,MemberCreate,MemberSearchResults
-from schemas.Reading import Reading, ReadingCreate, ReadingSearchResults
+# from schemas.Reading import Reading, ReadingCreate, ReadingSearchResults
 from typing import Any, Dict, Generic, List, Optional, Type, TypeVar, Union
 
 from schemas.Campaign_Member import Campaign_Member,Campaign_MemberCreate,Campaign_MemberSearchResults

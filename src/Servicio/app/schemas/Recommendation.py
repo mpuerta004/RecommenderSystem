@@ -32,7 +32,7 @@ class RecommendationCreate(RecommendationBase):
     pass
 
 
-class RecommendationUpdate(RecommendationBase):
+class RecommendationUpdate(BaseModel):
     state:state
     update_datetime:datetime=datetime.utcnow()
     

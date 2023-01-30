@@ -9,7 +9,7 @@ from end_points import Members
 from end_points import BeeKeeper
 from end_points import Campaign_Member
 from end_points import Cells
-from end_points import Reading
+# from end_points import Reading
 from end_points import Campaigns
 from end_points import Device
 from end_points import Surface
@@ -44,7 +44,7 @@ app.include_router(Surface.api_router_surface, tags=["Surfaces"])
 app.include_router(Cells.api_router_cell, tags=["Cells"])
 app.include_router(Measurements.api_router_measurements, tags=["Measurements"])
 app.include_router(Recommendation.api_router_recommendation, tags=["Recommendations"])
-app.include_router(Reading.api_router_reading, tags=["Readings"])
+# app.include_router(Reading.api_router_reading, tags=["Readings"])
 app.include_router(Demo.api_router_demo, tags=["Demo"])
 app.include_router(sync.api_router_sync, tags=["Sync"])
 

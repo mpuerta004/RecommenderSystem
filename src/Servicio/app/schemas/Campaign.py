@@ -11,7 +11,7 @@ from typing import Any, Dict, Generic, List, Optional, Type, TypeVar, Union
 class CampaignBase(BaseModel):
     title:str
     start_datetime:datetime
-    cells_distance:int=50
+    cells_distance:float=50.0
     min_samples:int=12
     sampling_period:int=3600
     end_datetime:datetime

@@ -98,21 +98,7 @@ Create Table Member_Device(
     ON DELETE CASCADE
 );
 
--- -----------------------------------------------------
--- Table Reading
--- -----------------------------------------------------
-CREATE TABLE Reading (
-  id INT NOT NULL AUTO_INCREMENT,
-  no2 DOUBLE NULL DEFAULT NULL,
-  co2 DOUBLE NULL DEFAULT NULL,
-  o3 DOUBLE NULL DEFAULT NULL,
-  so02 DOUBLE NULL DEFAULT NULL,
-  pm10 DOUBLE NULL DEFAULT NULL,
-  pm25 DOUBLE NULL DEFAULT NULL,
-  pm1 DOUBLE NULL DEFAULT NULL,
-  benzene DOUBLE NULL DEFAULT NULL,
-  PRIMARY KEY (id)
-);
+
 -- -----------------------------------------------------
 -- Table Campaign
 -- -----------------------------------------------------
@@ -120,7 +106,7 @@ CREATE TABLE Campaign (
   hive_id int not null, 
   id INT NOT NULL AUTO_INCREMENT,
   start_datetime datetime NULL DEFAULT NULL,
-  cells_distance INT NULL DEFAULT NULL,
+  cells_distance float8 NULL DEFAULT NULL,
   min_samples INT NULL DEFAULT NULL,
   sampling_period INT NULL DEFAULT NULL,
   hypothesis  VARCHAR(70) NULL DEFAULT NULL,
@@ -218,7 +204,6 @@ FOREIGN KEY (cell_id)
 -- -----------------------------------------------------
 CREATE TABLE Recommendation (
   id int not null auto_increment,
-  #cell_id INT NOT NULL,
   member_id INT NOT NULL,
   sent_datetime datetime NOT NULL,
   state  VARCHAR(15),
@@ -227,9 +212,7 @@ CREATE TABLE Recommendation (
   member_current_location POINT NULL, 
   CONSTRAINT state_type CHECK (state IN ("NOTIFIED","ACCEPTED","REALIZED","NON_REALIZED")),
   PRIMARY KEY (id,member_id),
-    #FOREIGN KEY (cell_id)
-    #REFERENCES Cell (id)
-    #        ON DELETE CASCADE,
+  
     FOREIGN KEY (member_id)
     REFERENCES Member (id)
     ON DELETE CASCADE,
@@ -243,22 +226,22 @@ CREATE TABLE Recommendation (
 -- -----------------------------------------------------
 CREATE TABLE Measurement (
   id INT NOT NULL AUTO_INCREMENT,
-#  cell_id INT NOT NULL,
   member_id INT NOT NULL,
   device_id int default null, 
   datetime datetime NULL DEFAULT NULL,
   slot_id int not null, 
-  measurement_type VARCHAR(30) DEFAULT 'AIRDATA',
-  reading_id INT DEFAULT NULL,
   location POINT NULL DEFAULT NULL,
   recommendation_id int null default Null, 
+  no2 DOUBLE NULL DEFAULT NULL,
+  co2 DOUBLE NULL DEFAULT NULL,
+  o3 DOUBLE NULL DEFAULT NULL,
+  so02 DOUBLE NULL DEFAULT NULL,
+  pm10 DOUBLE NULL DEFAULT NULL,
+  pm25 DOUBLE NULL DEFAULT NULL,
+  pm1 DOUBLE NULL DEFAULT NULL,
+  benzene DOUBLE NULL DEFAULT NULL,
   PRIMARY KEY (id, member_id),
-    #FOREIGN KEY (cell_id)
-    #REFERENCES Cell (id)
-    #ON DELETE CASCADE,
-    FOREIGN KEY (reading_id)
-    REFERENCES Reading (id)
-    ON DELETE CASCADE,
+  
     FOREIGN KEY (member_id)
     REFERENCES Member (id)
     ON DELETE CASCADE,

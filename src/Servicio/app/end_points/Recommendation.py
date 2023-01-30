@@ -170,59 +170,63 @@ def create_recomendation(
 
 
 
-@api_router_recommendation.put("/{recommendation_id}", status_code=200, response_model=RecommendationSearchResults)
-def update_recommendation(
+# @api_router_recommendation.put("/{recommendation_id}", status_code=200, response_model=RecommendationSearchResults)
+# def update_recommendation(
+#     *,
+#     recommendation_id:int,
+#     member_id:int,
+#     recipe_in:RecommendationUpdate,
+#     db: Session = Depends(deps.get_db),
+# ) -> dict:
+#     """
+#     Update a Recommendation
+#     """
+#     member = crud.member.get_by_id(db=db,id=member_id)
+#     if  member is None:
+#         raise HTTPException(
+#             status_code=404, detail=f"Member with id=={member_id} not found"
+#         )
+#     recommendation=crud.recommendation.get_recommendation(db=db,member_id=member_id,recommendation_id=recommendation_id)
+
+#     if  recommendation is None:
+#         raise HTTPException(
+#             status_code=404, detail=f"Recommendation with id=={recommendation_id} not found"
+#         )
+#     if recipe_in.member_current_location!=recommendation.member_current_location or recipe_in.sent_datetime!=recommendation.sent_datetime:
+#         crud.recommendation.remove(db=db, recommendation=recommendation)
+#         return create_recomendation(db=db, member_id=member_id, recipe_in=recipe_in)
+#     else:
+#         updated_recipe = crud.recommendation.update(db=db, db_obj=recommendation, obj_in=recipe_in)
+#         db.commit()
+
+#         return {"results": list(updated_recipe)}
+
+
+@api_router_recommendation.patch("/{recommendation_id}", status_code=200, response_model=Recommendation)
+def partially_update_recommendation(
     *,
     recommendation_id:int,
     member_id:int,
-    recipe_in:RecommendationUpdate,
+    recipe_in:Union[RecommendationUpdate,Dict[str, Any]],
     db: Session = Depends(deps.get_db),
 ) -> dict:
     """
-    Update a Recommendation
+    Partially Update a Recommendation
     """
-    member = crud.member.get_by_id(db=db,id=member_id)
-    if  member is None:
-        raise HTTPException(
-            status_code=404, detail=f"Member with id=={member_id} not found"
-        )
     recommendation=crud.recommendation.get_recommendation(db=db,member_id=member_id,recommendation_id=recommendation_id)
 
     if  recommendation is None:
         raise HTTPException(
             status_code=404, detail=f"Recommendation with id=={recommendation_id} not found"
         )
-    if recipe_in.member_current_location!=recommendation.member_current_location or recipe_in.sent_datetime!=recommendation.sent_datetime:
-        crud.recommendation.remove(db=db, recommendation=recommendation)
-        return create_recomendation(db=db, member_id=member_id, recipe_in=recipe_in)
-    else:
-        updated_recipe = crud.recommendation.update(db=db, db_obj=recommendation, obj_in=recipe_in)
-        db.commit()
-
-        return {"results": list(updated_recipe)}
-
-
-# @api_router_recommendation.patch("/{recommendation_id}", status_code=200, response_model=Recommendation)
-# def partially_update_recommendation(
-#     *,
-#     recommendation_id:int,
-#     member_id:int,
-#     recipe_in:Union[RecommendationUpdate,Dict[str, Any]],
-#     db: Session = Depends(deps.get_db),
-# ) -> dict:
-#     """
-#     Partially Update a Recommendation
-#     """
-#     recommendation=crud.recommendation.get_recommendation(db=db,member_id=member_id,recommendation_id=recommendation_id)
-
-#     if  recommendation is None:
-#         raise HTTPException(
-#             status_code=404, detail=f"Recommendation with recommendation_id=={recommendation_id} not found"
-#         )
-    
-#     updated_recipe = crud.recommendation.update(db=db, db_obj=recommendation, obj_in=recipe_in)
-#     db.commit()
-#     return updated_recipe
+    if isinstance(recipe_in, dict):
+        dict_key=recipe_in.keys()
+        if "state" in dict_key:
+            dict_update={"state":recipe_in["state"], "update_datetime":datetime.utcnow()}
+            updated_recipe = crud.recommendation.update(db=db, db_obj=recommendation, obj_in=dict_update)
+            db.commit()
+            return updated_recipe
+        
 
 @api_router_recommendation.delete("/{recommendation_id}", status_code=204)
 def delete_recommendation(    *,

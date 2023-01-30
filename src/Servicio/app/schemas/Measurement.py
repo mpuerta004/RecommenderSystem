@@ -5,15 +5,23 @@ from typing import Sequence, Union
 from typing_extensions import TypedDict
 from pydantic import BaseModel, ValidationError
 from datetime import datetime, timezone
-from schemas.Reading import Reading
+# from schemas.Reading import Reading
 from schemas.Slot import Slot 
 
 
 class MeasurementBase(BaseModel):    
     datetime:datetime
-    measurement_type:str='AIRDATA' #Varchar(30) default 'AirData', #set('AirData','Sound')
-    reading_id:int=None
+    # measurement_type:str='AIRDATA' #Varchar(30) default 'AirData', #set('AirData','Sound')
+    # reading_id:int=None
     location:Point
+    no2: float
+    co2: float
+    o3:float 
+    so02:float
+    pm10:float 
+    pm25: float 
+    pm1:float 
+    benzene:float 
     
     
 
@@ -33,7 +41,7 @@ class MeasurementInDBBase(MeasurementBase):
     member_id:int #  INT,
     recommendation_id:int=None
     slot:Slot=None
-    readings:Reading=None
+    # readings:Reading=None
 
 
     
