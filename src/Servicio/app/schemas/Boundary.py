@@ -8,14 +8,14 @@ from schemas.Cell import Cell
 
 class BoundaryBase_points(BaseModel):
     centre: Point
-    radius:int
+    radius:float
     cells_distance:int
 
 
 
 class BoundaryBase(BaseModel):
     centre: Point
-    radius:int
+    radius:float
 
 class BoundaryCreate(BoundaryBase):
     pass

@@ -156,7 +156,7 @@ def partially_update_a_member(
     return updated_recipe
 
 
-@api_router_members.get("{member_id}/devices/", status_code=200, response_model=Device)
+@api_router_members.get("/{member_id}/devices/", status_code=200, response_model=Device)
 def get_member_device(
     *,
     member_id: int,

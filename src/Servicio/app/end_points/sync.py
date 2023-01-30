@@ -41,7 +41,7 @@ from schemas.Campaign_Member import Campaign_Member, Campaign_MemberCreate
 from schemas.BeeKeeper import BeeKeeper,BeeKeeperUpdate, BeeKeeperCreate
 from schemas.Hive_Member import Hive_MemberSearchResults, Hive_MemberBase, Hive_MemberCreate
 from schemas.Recommendation import Recommendation, RecommendationCreate
-from schemas.Member import Member, NewMembers
+from schemas.Member import Member, NewMembers, MemberUpdate
 from schemas.Hive import HiveUpdate
 from schemas.Priority import Priority, PriorityCreate, PrioritySearchResults
 from schemas.Cell import Cell, CellCreate, CellSearchResults, Point
@@ -102,8 +102,8 @@ def create_points_of_campaign(
                     List_points.append(poin)
     return List_points        
 
-@api_router_sync.put("sync/hives/{hive_id}", status_code=201, response_model=Hive)
-def update_hive(*,
+@api_router_sync.put("/sync/hives/{hive_id}", status_code=201, response_model=Hive)
+def update_hive_sync(*,
                 recipe_in: HiveUpdate,
                 hive_id: int,
                 db: Session = Depends(deps.get_db),
@@ -115,7 +115,7 @@ def update_hive(*,
     
     if hive is None:
             hiveCreate=HiveCreate(city=recipe_in.city, beekeeper_id=recipe_in.beekeeper_id,name=recipe_in.name)
-            return crud.hive.create(db=db, obj_in=hiveCreate,id=hive_id)
+            return crud.hive.create_hive(db=db, obj_in=hiveCreate,id=hive_id)
     updated_hive = crud.hive.update(db=db, db_obj=hive, obj_in=recipe_in)
     return updated_hive
                             
@@ -140,8 +140,8 @@ def put_a_beekeeper(
     db.commit()
     return updated_beekeeper
                             
-@api_router_sync.post("sync/hives/{hive_id}/members/", status_code=201, response_model=List[NewMembers])
-def create_points_of_campaign(
+@api_router_sync.post("/sync/hives/{hive_id}/members/", status_code=201, response_model=List[NewMembers])
+def update_members(
     *,
     hive_id:int,
     recipe_in: List[NewMembers],
@@ -152,6 +152,10 @@ def create_points_of_campaign(
     """
     result=[]
     hive= crud.hive.get(db=db, id=hive_id)
+    if hive is None:
+        raise HTTPException(
+                status_code=404, detail=f"Hive with id=={hive_id} not found"
+            )
     for element in recipe_in:
         role=element.role
         member=element.member
@@ -161,6 +165,25 @@ def create_points_of_campaign(
             member_db_new=crud.member.create_member(db=db, obj_in=member_create,id=member.id)
             
             hiveCreate=Hive_MemberCreate(hive_id=hive_id,member_id=member_db_new.id)
-            hive_member=crud.hive_member.create_hiveMember(db=db,obj_in=hiveCreate,role=role )
+            hive_member=crud.hive_member.create_hiveMember(db=db,obj_in=hiveCreate,role=role)
+            result.append(NewMembers(member=member_db_new,role=role))
+        else:
+            member_update=MemberUpdate(name=member.name, surname=member.surname,age=member.age, gender=member.gender,city=member.city,mail=member.mail, birthday=member.birthday,real_user=member.real_user)
+            member_db_new=crud.member.update(db=db,db_obj=member_db,obj_in=member_update)
+            
+            hive_member=crud.hive_member.get_by_member_hive_id(db=db, hive_id=hive_id,member_id=member_db_new.id)
+            if hive_member is None:
+                hiveCreate=Hive_MemberCreate(hive_id=hive_id,member_id=member_db_new.id)
+                hive_member=crud.hive_member.create_hiveMember(db=db,obj_in=hiveCreate,role=role)
+                result.append(NewMembers(member=member_db_new,role=role))
+            else:
+                if(hive_member.role!=role):
+                    crud.hive_member.update(db=db, db_obj=hive_member,obj_in={"role":role})
+                
+                result.append(NewMembers(member=member_db_new,role=role))
+    return result
+
+
+                
             
             

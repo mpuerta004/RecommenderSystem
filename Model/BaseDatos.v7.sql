@@ -157,7 +157,7 @@ CREATE TABLE Campaign_Member (
 
 CREATE TABLE Boundary (
     id INT NOT NULL AUTO_INCREMENT,
-    radius INT,
+    radius float8,
     centre POINT,
     PRIMARY KEY (id))
 ;
