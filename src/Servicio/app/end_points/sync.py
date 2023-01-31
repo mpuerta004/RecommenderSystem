@@ -144,7 +144,7 @@ def update_devices(
     db: Session = Depends(deps.get_db),
 ) -> dict:
     """
-    
+    synchronization the devices
     """
     result=[]
     for element in recipe_in:
@@ -171,7 +171,7 @@ def update_members(
     db: Session = Depends(deps.get_db),
 ) -> dict:
     """
-    
+    synchronization members 
     """
     result=[]
     hive= crud.hive.get(db=db, id=hive_id)
@@ -217,7 +217,7 @@ def post_members_devices(
     db: Session = Depends(deps.get_db),
 ) -> dict:
     """
-    
+    synchronization the member devices. 
     """ 
     member_device=crud.member_device.get_by_member_id(db=db, member_id=memberDevice.member_id)
     if member_device is None:
