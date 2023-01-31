@@ -10,7 +10,7 @@ from crud import crud_cell
 import deps
 import crud
 import numpy as np
-
+from datetime import timezone
 
 
 api_router_measurements = APIRouter(prefix="/members/{member_id}/measurements")
@@ -109,7 +109,7 @@ def create_measurement(
         )
         
     
-    time=recipe_in.datetime.replace(tzinfo=None)    
+    time=recipe_in.datetime.replace(tzinfo=timezone.utc)    
     cell_id=None
     surface=None
     campaign_finaly=None
@@ -117,7 +117,7 @@ def create_measurement(
     for i in campaign_member:
             a=crud.cell.get_cells_campaign(db=db,campaign_id=i.campaign_id)
             campaign=crud.campaign.get(db=db, id=i.campaign_id)
-            if campaign.start_datetime<=time and campaign.end_datetime>=time:
+            if campaign.start_datetime.replace(tzinfo=timezone.utc)   <=time and campaign.end_datetime.replace(tzinfo=timezone.utc)   >=time:
                 a=crud.cell.get_cells_campaign(db=db,campaign_id=i.campaign_id)
                 if len(a)!=0:
                     for l in a:
@@ -127,7 +127,7 @@ def create_measurement(
                             campaign_finaly=campaign
     if cell_id is None:
         raise HTTPException(
-            status_code=401, detail=f"This measurement is not from a active campaign"
+            status_code=401, detail=f"This measurement is not from a active campaign or the localization is not inside of a any cell."
         )
     #Solo deeria haber una...pero puede haber varias...    
     slot=crud.slot.get_slot_time(db=db,cell_id=cell_id,time=recipe_in.datetime)

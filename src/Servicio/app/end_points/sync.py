@@ -33,7 +33,7 @@ from typing import Any, Dict, Generic, List, Optional, Type, TypeVar, Union
 from sqlalchemy.orm import Session
 from schemas.Measurement import Measurement, MeasurementCreate, MeasurementSearchResults
 from schemas.Boundary import Boundary, BoundaryCreate, BoundarySearchResults,BoundaryBase_points
-
+from schemas.Device import Device, DeviceCreate, DeviceUpdate
 from schemas.Campaign import CampaignSearchResults, Campaign, CampaignCreate, CampaignUpdate
 from schemas.Slot import Slot, SlotCreate, SlotSearchResults
 from schemas.Campaign_Member import Campaign_Member, Campaign_MemberCreate
@@ -45,6 +45,7 @@ from schemas.Hive import HiveUpdate
 from schemas.Priority import Priority, PriorityCreate, PrioritySearchResults
 from schemas.Cell import Cell, CellCreate, CellSearchResults, Point
 from schemas.Surface import SurfaceSearchResults, Surface, SurfaceCreate
+from schemas.Member_Device import Member_DeviceCreate
 import deps
 import crud
 from datetime import datetime, timedelta
@@ -136,9 +137,35 @@ def put_a_beekeeper(
     db.commit()
     return updated_beekeeper
                             
-@api_router_sync.post("/sync/hives/{hive_id}/members/", status_code=201, response_model=List[NewMembers])
+@api_router_sync.put("/sync/device", status_code=201, response_model=List[Device])
 def update_members(
     *,
+    recipe_in: List[Device],
+    db: Session = Depends(deps.get_db),
+) -> dict:
+    """
+    
+    """
+    result=[]
+    for element in recipe_in:
+        device_id=element.id
+        device_db= crud.device.get(db=db, id=device_id)
+        if device_db is None:
+            device_create=DeviceCreate(description=element.description,year=element.year, brand=element.brand,model=element.model)
+            device_db_new=crud.device.create_device(db=db, obj_in=device_create,id=device_id)
+        
+            result.append(device_db_new)
+        else:
+            device_update=DeviceUpdate(description=element.description,year=element.year, brand=element.brand,model=element.model)
+            device_db_new=crud.member.update(db=db,db_obj=device_db,obj_in=device_update)
+            
+            result.append(device_db_new)
+    return result
+
+
+                
+@api_router_sync.put("/sync/hives/{hive_id}/members/", status_code=201, response_model=List[NewMembers])
+def update_members(
     hive_id:int,
     recipe_in: List[NewMembers],
     db: Session = Depends(deps.get_db),
@@ -182,4 +209,26 @@ def update_members(
 
                 
             
-            
+@api_router_sync.post("/hives/{hive_id}/campaigns/{campaign_id}/devices",  status_code=201, response_model=Device)   
+def update_members_devices(
+    hive_id:int,
+    campaign_id:int,
+    memberDevice:Member_DeviceCreate,
+    db: Session = Depends(deps.get_db),
+) -> dict:
+    """
+    
+    """ 
+    member_device=crud.member_device.get_by_member_id(db=db, member_id=memberDevice.member_id)
+    if member_device is None:
+        #Creamos el member_device
+        crud.member_device.create(db=db, obj_in=memberDevice)
+        return crud.device.get(db=db, id=memberDevice.device_id)
+    else:
+        #Si la entidad memeber_device esta bien pues correcto
+        if member_device.member_id==memberDevice.member_id:
+            return crud.device.get(db=db, id=memberDevice.device_id)
+        else:
+            #Si no lo actualizamos. 
+            crud.member_device.update(db=db, db_obj=member_device, obj_in=memberDevice)
+            return crud.device.get(db=db, id=memberDevice.device_id)

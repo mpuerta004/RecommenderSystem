@@ -18,7 +18,8 @@ class HiveCreate(HiveBase):
 
 
 class HiveUpdate(HiveBase):
-    pass
+    city:str
+    name:str
 
 # Properties shared by models stored in DB
 class HiveInDBBase(HiveBase):
