@@ -7,7 +7,7 @@ You have to follow these steps to be able to launch the Micro-Volunteering Engin
 6. [UNIX]: Run the FastAPI server via poetry with the bash script: `poetry run ./run.sh`
 6. [WINDOWS]: Run the FastAPI server via poetry with the Python command: `poetry run python src/Servicio/app/main.py`
 7. Open http://localhost:8001/docs <!---!> 
-
+<!-- 
 The diagram below shows the process that has to be carried out within SOCIO-BEE to set-up a campaign in a pilot where air quality measurements will be gathered in a certain area and time period in order to deliver visualizations and indicators summarizing the air quality situation and evolution in a spatiotemporal manner. 
 
 ![](./Picture_readme/QueenBeesWorkflow.drawio.png)
@@ -49,4 +49,4 @@ Use case - Example:
 
     We can visualize the campaign map with the /hives/{hive_id}/campaigns/{campaign_id}/show endpoint. In this case, the campaign has the following surface: 
     ![](./Picture_readme/Campaign_show.PNG)
-5. **DEMO** If we want to visualize how the micro-volunteer engine works, you can execute the demo endpoint in the demo section. The result is allocated to the src/Servicio/app/Pictures/Measurements and src/Servicio/app/Pictures/Recommender folders. 
+5. **DEMO** If we want to visualize how the micro-volunteer engine works, you can execute the demo endpoint in the demo section. The result is allocated to the src/Servicio/app/Pictures/Measurements and src/Servicio/app/Pictures/Recommender folders.  -->
