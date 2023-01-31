@@ -100,7 +100,7 @@ def create_points_of_campaign(
 
 
 @api_router_sync.put("/sync/hives/{hive_id}", status_code=201, response_model=Hive)
-def update_hive_sync(*,
+def update_hive(*,
                 recipe_in: HiveUpdate,
                 hive_id: int,
                 db: Session = Depends(deps.get_db),
@@ -138,7 +138,7 @@ def put_a_beekeeper(
     return updated_beekeeper
                             
 @api_router_sync.put("/sync/device", status_code=201, response_model=List[Device])
-def update_members(
+def update_devices(
     *,
     recipe_in: List[Device],
     db: Session = Depends(deps.get_db),
@@ -210,7 +210,7 @@ def update_members(
                 
             
 @api_router_sync.post("/hives/{hive_id}/campaigns/{campaign_id}/devices",  status_code=201, response_model=Device)   
-def update_members_devices(
+def post_members_devices(
     hive_id:int,
     campaign_id:int,
     memberDevice:Member_DeviceCreate,
