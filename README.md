@@ -40,7 +40,7 @@ And we can see the created device:
 6. **Associate a device with a member:** Defined at [http://localhost:8001](http://localhost:8001) in section Member at the POST endpoint [/members{member_id}/devices/{device_id}](http://localhost:8001/docs#/Members/create_member_device_members_member_id__devices__device_id__post), you can associate a device with a member. 
 ![](./Picture_readme/device_member.PNG)
 
-7. **Create a Campaign:** Defined at http://localhost:8001](http://localhost:8001) in section Campaign at the POST endpoint [/hives/{hive_id}/campaigns/](http://localhost:8001/docs#/Campaigns/create_campaign_hives__hive_id__campaigns__post)
+7. **Create a Campaign:** This endpoint requests the MVE to initialize a campaign. Defined at http://localhost:8001](http://localhost:8001) in section Campaign at the POST endpoint [/hives/{hive_id}/campaigns/](http://localhost:8001/docs#/Campaigns/create_campaign_hives__hive_id__campaigns__post)
     ![](./Picture_readme/Campaign_section.PNG)
    For example, if we want to conduct a brief campaign to collect data on air quality in a particular area, the strategy must include collecting as many measurements as possible during the campaign time (which should not be long). These characteristics should be specified in the POST request body of this endpoint (picture example).
     ![](./Picture_readme/Sync/create_campaign.PNG)
@@ -58,19 +58,20 @@ And we can see the created device:
 
 Notice that for the MVE to operate it has to be fed with certain context. This is, a Beekeeper must be nominated to a newly created hive, members have to be added to the hive for the MVE to know to whom it should recommend cells to polinize and, then, finally, the MVE would have all the context needed to be able to start issuing recommendations of cells based on hive members current locations. 
 
-1. **Synchronize beekeeper:** We have to synchronize the beekeepers. 
-At [http://localhost:8001](http://localhost:8001) in section Sync a PUT endpoint [/sync/beekeepers/{beekeeper_id}](http://localhost:8001/docs#/Sync/put_a_beekeeper_sync_beekeepers__beekeeper_id__put) has to be invoked. Click on PUT endpoint and then in the "Try it out" button, complete the Request body (picture example) and click execute. It is a PUT because the Beekeeper may already exist in the MVE but we have to ensure that the Beekeeper managed by the external client, e.g. SOCIO-BEE AcadeME, is also existing in the MVE.  
+1. **Synchronize beekeeper:** This enpoint provides MVE with context about Beekeeper of campaign’s Hive. For that, the endpoint defined at [http://localhost:8001](http://localhost:8001) in section Sync a PUT endpoint [/sync/beekeepers/{beekeeper_id}](http://localhost:8001/docs#/Sync/put_a_beekeeper_sync_beekeepers__beekeeper_id__put) has to be invoked. Click on PUT endpoint and then in the "Try it out" button, complete the Request body (picture example) and click execute. It is a PUT because the Beekeeper may already exist in the MVE but we have to ensure that the Beekeeper managed by the external client, e.g. SOCIO-BEE AcadeME, is also existing in the MVE.  
     ![](./Picture_readme/Sync/create_beekeeper.png)
 
-2. **Synchronize Hive:** We have to synchronize the hive. At [http://localhost:8001](http://localhost:8001) in secction Sync at the PUT endpoint  [/sync/hives/{hive_id}](http://localhost:8001/docs#/Sync/update_hive_sync_hives__hive_id__put). 
+2. **Synchronize Hive:** This endpoint provides MVE with context about Hive that is going to run campaign. For that, we have to synchronize the hive modelled outside the MVE. This endpoint is defined at [http://localhost:8001](http://localhost:8001) in secction Sync with the PUT endpoint  [/sync/hives/{hive_id}](http://localhost:8001/docs#/Sync/update_hive_sync_hives__hive_id__put). 
 Click on PUT endpoint and then in the "Try it out" button, complete the Request body (pìcture example) and click execute 
     ![](./Picture_readme/Sync/create_hive.png)
 
+3. **Synchronize devices:** This endpoint provides the MVE with context about devices that may be used by members of the Hive that are going to take part in campaign. This endpoint is defined at [http://localhost:8001](http://localhost:8001) in secction Sync with method PUT  [/sync/devices](http://localhost:8001/docs#/Sync/update_devices_sync_device_put). This endpoint is a PUT since if the devices reported did not exist in MVE, they are implicitly created, otherwise they are updated with the supplied details.  Click on PUT endpoint and then in the "Try it out" button, complete the Request body (pìcture example) and click execute 
+![](./Picture_readme/Sync/create_devices.PNG)
 
-3. **Synchronize Member of the hive:** We have to synchronize hive's members and their roles. At [http://localhost:8001](http://localhost:8001) in section Sync at PUT endpoint  [/sync/hives/{hive_id}/members/](http://localhost:8001/docs#/Sync/update_members_sync_hives__hive_id__members__put). Click on PUT endpoint and then in the "Try it out" button, complete the Request body (pìcture example) and click execute
+4. **Synchronize Member of the hive:** This endpoint provides the MVE with context about members of the Hive that are going to take part in campaign. We have to synchronize hive's members and their roles, with enpoint [http://localhost:8001](http://localhost:8001) in section Sync using PUT method  [/sync/hives/{hive_id}/members/](http://localhost:8001/docs#/Sync/update_members_sync_hives__hive_id__members__put). Click on PUT endpoint and then in the "Try it out" button, complete the Request body (pìcture example) and click execute
     ![](./Picture_readme/Sync/sync_hive_members.png)
 
-4. **Create a Campaign:** Defined at http://localhost:8001](http://localhost:8001) in section Campaign at the POST endpoint [/hives/{hive_id}/campaigns/](http://localhost:8001/docs#/Campaigns/create_campaign_hives__hive_id__campaigns__post)
+5. **Create a Campaign:** This endpoint requests the MVE to initialize a campaign. This endpoint is enabled to allow Queen Bees to configure a campaign where Citizen Science experiments will be executed. Notice that for the campaign to be able to be initialized, we have to ensure that the context of the campaign has been previously supplied, i.e. through methods to sync beekeeper, hive, hive member and their roles and devices which may be used by a campaign. This endpoint is defined at http://localhost:8001](http://localhost:8001) in section Campaign through POST method [/hives/{hive_id}/campaigns/](http://localhost:8001/docs#/Campaigns/create_campaign_hives__hive_id__campaigns__post)
     ![](./Picture_readme/Campaign_section.PNG)
    For example, if we want to conduct a brief campaign to collect data on air quality in a particular area, the strategy must include collecting as many measurements as possible during the campaign time (which should not be long). These characteristics should be specified in the POST request body of this endpoint (picture example).
     ![](./Picture_readme/Sync/create_campaign.PNG)
@@ -79,9 +80,5 @@ Click on PUT endpoint and then in the "Try it out" button, complete the Request 
     In addition, after the creation of the campaign, we can visualize the campaign map with the show endpoint at the campaign section [/hives/{hive_id}/campaigns/{campaign_id}/show](http://localhost:8001/docs#/Campaigns/show_a_campaign_hives__hive_id__campaigns__campaign_id__show_get) endpoint. As an example of the result: 
     ![](./Picture_readme/Campaign_show.PNG)
 
-
-5. **Synchronize devices:** Defined at [http://localhost:8001](http://localhost:8001) in secction Sync at the endpoint put  [/sync/devices](http://localhost:8001/docs#/Sync/update_devices_sync_device_put). Click on PUT endpoint and then in the "Try it out" button, complete the Request body (pìcture example) and click execute 
-![](./Picture_readme/Sync/create_devices.PNG)
-
-6. **Assign devices to users in newly created campaign:** Defined at [http://localhost:8001](http://localhost:8001) in POST endpoint [/hives/{hive_id}/campaigns/{campaign_id}/devices](http://localhost:8001/docs#/Sync/post_members_devices_hives__hive_id__campaigns__campaign_id__devices_post). Click on POST endpoint and then in the "Try it out" button, complete the Request body (pìcture example) and click execute 
+6. **Assign devices to users in newly created campaign:** This endpoint is enabled to allow Queen Bees to assign devices to each of the members of a hive taking part in a campaign. This endpoint is defined at [http://localhost:8001](http://localhost:8001) through POST command [/hives/{hive_id}/campaigns/{campaign_id}/devices](http://localhost:8001/docs#/Sync/post_members_devices_hives__hive_id__campaigns__campaign_id__devices_post). Click on POST endpoint and then in the "Try it out" button, complete the Request body (pìcture example) and click execute 
 ![](./Picture_readme/Sync/campaignMember.png)
