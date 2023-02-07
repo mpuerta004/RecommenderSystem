@@ -10,7 +10,9 @@ You have to follow these steps to be able to launch the Micro-Volunteering Engin
 6. [WINDOWS]: Run the FastAPI server via poetry with the Python command: `poetry run python src/Servicio/app/main.py`
 7. Open http://localhost:8001/docs 
 
+The diagram below shows the process that has to be carried out within SOCIO-BEE to set-up a campaign in a pilot where air quality measurements will be gathered in a certain area and time period in order to deliver visualizations and indicators summarizing the air quality situation and evolution in a spatiotemporal manner. 
 
+![](./Picture_readme/QueenBeesWorkflow.drawio.png)
 
 # Use case - Example: 
 
@@ -53,37 +55,34 @@ And we can see the created device:
 8. **DEMO** If we want to visualize how the micro-volunteering engine works, you may execute the demo endpoint in the demo section. The result generated is stored at the src/Servicio/app/Pictures/Measurements and src/Servicio/app/Pictures/Recommender folders. 
 
 
-# Use case (integrasion with SocioBee ArcadeMe)- Example: 
+# Use case (integration of MVE with external components, e.g. SOCIO-BEE AcadeME)- Example: 
 
-The diagram below shows the process that has to be carried out within SOCIO-BEE to set-up a campaign in a pilot where air quality measurements will be gathered in a certain area and time period in order to deliver visualizations and indicators summarizing the air quality situation and evolution in a spatiotemporal manner. 
-
-![](./Picture_readme/QueenBeesWorkflow.drawio.png)
-
+Notice that for the MVE to operate it has to be fed with certain context. This is, a Beekeeper must be nominated to a newly created hive, members have to be added to the hive for the MVE to know to whom it should recommend cells to polinize and, then, finally, the MVE would have all the context needed to be able to start issuing recommendations of cells based on hive members current locations. 
 
 1. **Synchronize beekeeper:** We have to synchronize the beekeepers. 
-At [http://localhost:8001](http://localhost:8001) in section Sync at endpoint put [/sync/beekeepers/{beekeeper_id}](http://localhost:8001/docs#/Sync/put_a_beekeeper_sync_beekeepers__beekeeper_id__put). Click on Put endpoint and then in the "Try it out" button, complete the Request body (picture example) and click execute 
+At [http://localhost:8001](http://localhost:8001) in section Sync a PUT endpoint [/sync/beekeepers/{beekeeper_id}](http://localhost:8001/docs#/Sync/put_a_beekeeper_sync_beekeepers__beekeeper_id__put) has to be invoked. Click on PUT endpoint and then in the "Try it out" button, complete the Request body (picture example) and click execute. It is a PUT because the Beekeeper may already exist in the MVE but we have to ensure that the Beekeeper managed by the external client, e.g. SOCIO-BEE AcadeME, is also existing in the MVE.  
     ![](./Picture_readme/Sync/create_beekeeper.png)
 
-2. **Synchronize Hive:** We have to synchronize the hive. At [http://localhost:8001](http://localhost:8001) in secction Sync at the endpoint put  [/sync/hives/{hive_id}](http://localhost:8001/docs#/Sync/update_hive_sync_hives__hive_id__put). 
-Click on Put endpoint and then in the "Try it out" button, complete the Request body (pìcture example) and click execute 
+2. **Synchronize Hive:** We have to synchronize the hive. At [http://localhost:8001](http://localhost:8001) in secction Sync at the PUT endpoint  [/sync/hives/{hive_id}](http://localhost:8001/docs#/Sync/update_hive_sync_hives__hive_id__put). 
+Click on PUT endpoint and then in the "Try it out" button, complete the Request body (pìcture example) and click execute 
     ![](./Picture_readme/Sync/create_hive.png)
 
 
-3. **Synchronize Member of the hive:** We have to synchronize hive's members and their roles. At [http://localhost:8001](http://localhost:8001) in section Sync at endpoint put  [/sync/hives/{hive_id}/members/](http://localhost:8001/docs#/Sync/update_members_sync_hives__hive_id__members__put). Click on Put endpoint and then in the "Try it out" button, complete the Request body (pìcture example) and click execute
+3. **Synchronize Member of the hive:** We have to synchronize hive's members and their roles. At [http://localhost:8001](http://localhost:8001) in section Sync at PUT endpoint  [/sync/hives/{hive_id}/members/](http://localhost:8001/docs#/Sync/update_members_sync_hives__hive_id__members__put). Click on PUT endpoint and then in the "Try it out" button, complete the Request body (pìcture example) and click execute
     ![](./Picture_readme/Sync/sync_hive_members.png)
 
-4. **Create a Campaign:** At http://localhost:8001](http://localhost:8001) in section Campaign at the endpoint post [/hives/{hive_id}/campaigns/](http://localhost:8001/docs#/Campaigns/create_campaign_hives__hive_id__campaigns__post)
+4. **Create a Campaign:** At http://localhost:8001](http://localhost:8001) in section Campaign at the POST endpoint [/hives/{hive_id}/campaigns/](http://localhost:8001/docs#/Campaigns/create_campaign_hives__hive_id__campaigns__post)
     ![](./Picture_readme/Campaign_section.PNG)
-   For example, if we want to conduct a brief campaign to collect data on air quality in a particular area, the strategy must include collecting as many measurements as feasible during the campaign time (which should not be long). These characteristics should be specified in the POST request body of this endpoint (picture example).
+   For example, if we want to conduct a brief campaign to collect data on air quality in a particular area, the strategy must include collecting as many measurements as possible during the campaign time (which should not be long). These characteristics should be specified in the POST request body of this endpoint (picture example).
     ![](./Picture_readme/Sync/create_campaign.PNG)
-    Previously creating the campaign, you can get the centres of the cells with the endpoint    [/hives/{hive_id}/campaigns/
-    /points/](http://localhost:8001/docs#/Sync/create_points_of_campaign_points__post)
+    Before creating the campaign, you can find out the centres of the cells through the following POST endpoint [/hives/{hive_id}/campaigns/
+    /points/](http://localhost:8001/docs#/Sync/create_points_of_campaign_points__post). This can be done to be able to observe where measurements during the campaign should be obtained.
     ![](./Picture_readme/Sync/Create_points.png)
     In addition, after the creation of the campaign, we can visualize the campaign map with the show endpoint at the campaign section [/hives/{hive_id}/campaigns/{campaign_id}/show](http://localhost:8001/docs#/Campaigns/show_a_campaign_hives__hive_id__campaigns__campaign_id__show_get) endpoint. As an example of the result: 
     ![](./Picture_readme/Campaign_show.PNG)
 
 
-5. **Synchronize devices:** At [http://localhost:8001](http://localhost:8001) in secction Sync at the endpoint put  [/sync/device](http://localhost:8001/docs#/Sync/update_devices_sync_device_put). Click on Put endpoint and then in the "Try it out" button, complete the Request body (pìcture example) and click execute 
+5. **Synchronize devices:** At [http://localhost:8001](http://localhost:8001) in secction Sync at the endpoint put  [/sync/device](http://localhost:8001/docs#/Sync/update_devices_sync_device_put). Click on PUT endpoint and then in the "Try it out" button, complete the Request body (pìcture example) and click execute 
 ![](./Picture_readme/Sync/create_devices.PNG)
 
 6. **Synchronize the devices carried by each user in a campaign:** Define At [http://localhost:8001](http://localhost:8001) in section Sync at the endpoint post [/hives/{hive_id}/campaigns/{campaign_id}/devices](http://localhost:8001/docs#/Sync/post_members_devices_hives__hive_id__campaigns__campaign_id__devices_post). Click on Put endpoint and then in the "Try it out" button, complete the Request body (pìcture example) and click execute 
