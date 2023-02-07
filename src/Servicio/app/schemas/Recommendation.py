@@ -24,7 +24,6 @@ import pytz
 
 class RecommendationBase(BaseModel):
     member_current_location:Point
-    sent_datetime:datetime=datetime.utcnow()
 
     
 
@@ -34,13 +33,13 @@ class RecommendationCreate(RecommendationBase):
 
 class RecommendationUpdate(BaseModel):
     state:state
-    update_datetime:datetime=datetime.utcnow()
     
 # Properties shared by models stored in DB
 class RecommendationInDBBase(RecommendationBase):
     member_id:int
     state:state
     update_datetime:datetime=datetime.utcnow()
+    sent_datetime:datetime=datetime.utcnow()
 
 
     # state_id:int

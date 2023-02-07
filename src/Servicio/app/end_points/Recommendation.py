@@ -72,7 +72,7 @@ def create_recomendation(
         raise HTTPException(
             status_code=404, detail=f"Member with id=={member_id} not found"
         )
-    time=recipe_in.sent_datetime.replace(tzinfo=timezone.utc)    
+    time=datetime.utcnow()
     campaign_member=crud.campaign_member.get_Campaigns_of_member(db=db, member_id=user.id)
     
     # hives=crud.hive_member.get_by_member_id(db=db, member_id=user.id)
@@ -136,7 +136,7 @@ def create_recomendation(
                     # print(a.cell_id)
                     # obj_state=StateCreate(db=db)
                     # state=crud.state.create_state(db=db,obj_in=obj_state)
-                    recomendation=crud.recommendation.create_recommendation_detras(db=db,obj_in=recipe_in,member_id=member_id,slot_id=cells_and_priority[i][1].slot_id,state="NOTIFIED",update_datetime=time)
+                    recomendation=crud.recommendation.create_recommendation_detras(db=db,obj_in=recipe_in,member_id=member_id,slot_id=cells_and_priority[i][1].slot_id,state="NOTIFIED",update_datetime=time,sent_datetime=time)
                     result.append(RecommendationCell(recommendation =recomendation, cell=a.cell))
 
     elif  len(cells_and_priority)!=0:
@@ -146,7 +146,7 @@ def create_recomendation(
                     # # print(a.cell_id)
                     # obj_state=StateCreate(db=db)
                     # state=crud.state.create_state(db=db,obj_in=obj_state)
-                    recomendation=crud.recommendation.create_recommendation_detras(db=db,obj_in=recipe_in,member_id=member_id,slot_id=cells_and_priority[i][1].slot_id,state="NOTIFIED",update_datetime=time)
+                    recomendation=crud.recommendation.create_recommendation_detras(db=db,obj_in=recipe_in,member_id=member_id,slot_id=cells_and_priority[i][1].slot_id,state="NOTIFIED",update_datetime=time,sent_datetime=time)
                     result.append(RecommendationCell(recommendation=recomendation, cell=a.cell))
         
     if len(cells_and_priority)==0:

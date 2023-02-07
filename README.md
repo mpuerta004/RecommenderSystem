@@ -171,8 +171,7 @@ The following diagram illustrates the main workflow that a Worker Bee will follo
         "member_current_location": {
             "Longitude": 500,
             "Latitude": 500
-        },
-        "sent_datetime": "2023-02-07T10:52:32"
+        }
     }
     ```
     ![](./Picture_readme/Sync/Create_recommendation.PNG) 
@@ -180,8 +179,7 @@ The following diagram illustrates the main workflow that a Worker Bee will follo
 9. **Inform MVE about the change of state of a recommendation:** This endpoint is enabled to indicate when a recommendation has been taken by a user (Worker Bee), i.e. the user is being directed to the cell centre. In this case the status of the recommendation would change from NOTIFIED to ACCEPTED. Besides, when a user does take a measurement, then the status of the recommendation is changed to REALIZED automatically. If a notification is never realized, after the slot sampling period is over, the status of the recommendation is changed by MVE to NON_REALIZED actuamatically. This method is defined at [http://localhost:8001](http://localhost:8001) in section Recommendations at the PATCH endpoint [/members/{member_id}/recommendations/{recommendation_id}](http://localhost:8001/docs#/Recommendations/partially_update_recommendation_members__member_id__recommendations__recommendation_id__patch) by filling out the following request body:
     ```
     {
-        "state": "ACCEPTED",
-        "update_datetime": "2023-02-07T10:52:32.505306"
+        "state": "ACCEPTED"
     }
     ```
     ![](./Picture_readme/Sync/Update_notification.PNG)  
