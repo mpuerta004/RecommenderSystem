@@ -27,17 +27,17 @@ The following diagram illustrates the main workflow that Bee Keepers will follow
 3. Appoint a Queen Bee. For a Hive to be considered as such it should have an appointed Queen Bee. Hence, in this step the Bee Keeper should ensure that a Queen Bee suitable for the envisaged campaigns has been appointed to the Hive. In SOCIO-BEE, we consider that the role of Queen Bee within a Hive should be stable. Still, we allow for a Bee Keeper to appoint a different Queen Bee when a Hive is assigned to different kinds of campaigns in the future or the previous Queen Bee become unavailable. 
 4. A Bee Keeper should be interested on the “honey generated”, i.e. results driven from the analysis of the data obtained by the campaigns managed and run by a Hive. Consequently, Beekeepers will also participate in the consumption, use, exploitation, dissemination and communication of the Hive’s campaigns’ results, during the pilots’ iterations.  
 
+![](./Picture_readme/BeekeeperWorkflow.png)
+
 ### Queen Bee manages Hive's Campaign
 The following diagram illustrates the main workflow that a Queen Bee will follow when interacting with SOCIO-BEE platform. The main responsibility of a Queen Bee is to configure and manage Citizen Science campaigns around the Air Quality (AQ) domain for the case of SOCIO-BEE. A Queen Bee provides the domain knowledge and the organizational skills to distribute the sensors and organize campaign participants effectively so that they can execute their measurement duties with the corresponding sensors (wireless air quality measurement devices).   The concrete steps that a Queen Bee will carry out aided by the web front-end of SOCIO-BEE, which interacts with the AcadeMe back-end, are as follows:
-1.	A Queen Bee configures a new campaign or accepts a campaign proposed by Worker Bees in the campaign. 
-a.	For a campaign to be configured, different sub-steps must be carried out:
-i.	A research question should be defined
-ii.	A hypothesis formulated
-iii.	An experiment defined, considering the geographical areas to be covered and the types of measurements to be taken, their frequency and duration in time.
+1.	A Queen Bee configures a new campaign or accepts a campaign proposed by Worker Bees in the campaign. For a campaign to be configured, different sub-steps must be carried out: a) A research question should be defined; b) A hypothesis formulated; c) An experiment defined, considering the geographical areas to be covered and the types of measurements to be taken, their frequency and duration in time; 
 2.	The Queen Bee creates a campaign after reviewing or refining the configuration details of such campaign to make it better suited for the campaign envisaged.
 3.	The Queen Bee assigns wearable measurement devices to the campaign participants (Worker Bees). S/he also deploys several static sensors in different geographical areas to support the campaign. Workshops and training activities may be carried out during this step prior to the official launch of the campaign. 
 4.	The Queen Bee confirms that the campaign should be started so that Worker Bees can undertake measurements.
 5.	The Queen Bee will have a very active role promoting the campaigns, generating intermediary and final results associated communication materials and partaking in events to promote the campaign execution and to publicize the results obtained after the campaign’s execution.  
+
+![](./Picture_readme/QueenBeeWorkflow.png)
 
 ### Worker Bees participate in Hive's Campaign
 The following diagram illustrates the main workflow that a Worker Bee will follow when interacting with SOCIO-BEE platform. The main responsibility of a Worker Bee is to take part in a Citizen Science campaign promoted by SOCIO-BEE, where they have to take air quality (AQ) measurements in different locations in the city, and collaborate with fellow Worker Bees and the leading Queen Bee in reflection sessions where they try to understand and interpret the data gathered at the campaigns.   The concrete steps that a Worker Bee will carry out aided by the mobile front-end of SOCIO-BEE, which interacts with the AcadeMe back-end, are as follows:
@@ -46,6 +46,7 @@ The following diagram illustrates the main workflow that a Worker Bee will follo
 3.	The Worker Bee may regularly check the visualizations accessible through the mobile app which show the status of the measured areas with Air Quality (AQ). Aided by these visualizations, the Worker Bee may also take part in Hive Assemblies where the evolution of the campaign, the intermediary results or the final results are presented, analysed and interpreted. The idea is that the Worker Bee is able to not only gather data but also to educate herself regarding air quality interpretation and possible mitigation actions that could be taken. These Hive campaign retrospective meetings may be interleaved with further measurements been taken by Worker Bees (going back to previous step). 
 4.	A Worker Bee will also support the Hive in communication and dissemination activities to spread the word about the lessons learnt whilst executing the campaign. Such lessons may be useful for their society and may eventually lead, upon the reaction of Bear type stakeholders in the design of new policies to enhance air quality in a given city. 
 
+![](./Picture_readme/WorkerBeeWorkflow.png)
 
 ## Use case 1 - Usage workflow of MVE used as an standalone module
 
