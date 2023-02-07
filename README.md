@@ -27,7 +27,7 @@ You have to follow these steps to be able to launch the Micro-Volunteering Engin
     ![](./Picture_readme/Member_post.PNG)
     
 
-4. **Associeted members with a hive with a role:**At [http://localhost:8001](http://localhost:8001) in section Hive at the endpoint post [/hives/{hive_id}/members/{member_id}/](http://localhost:8001/docs#/Hives/associate_existing_member_with_a_hive_with_specific_role_hives__hive_id__members__member_id___post) you can asociate a existing user with a hive with a role. In this way, you define the role this user has in the hive. 
+4. **Associate members with a hive with a role:** At [http://localhost:8001](http://localhost:8001) in section Hive at the endpoint post [/hives/{hive_id}/members/{member_id}/](http://localhost:8001/docs#/Hives/associate_existing_member_with_a_hive_with_specific_role_hives__hive_id__members__member_id___post) you can asociate a existing user with a hive with a role. In this way, you define the role this user has in the hive. 
 ![](./Picture_readme/associete_user_with_role.png)
 
 5. **Define devices:**  At [http://localhost:8001](http://localhost:8001) in secction Devices at the endpoint post [/devices/](http://localhost:8001/docs#/Device), you can define a device. For each device, click on the POST endpoint and then in the "Try it out" button and complete the Request body (picture example) and click execute. 
