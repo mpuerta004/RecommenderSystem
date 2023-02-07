@@ -44,8 +44,7 @@ And we can see the created device:
     ![](./Picture_readme/Campaign_section.PNG)
    For example, if we want to conduct a brief campaign to collect data on air quality in a particular area, the strategy must include collecting as many measurements as possible during the campaign time (which should not be long). These characteristics should be specified in the POST request body of this endpoint (picture example).
     ![](./Picture_readme/Sync/create_campaign.PNG)
-    Before creating the campaign, you can find out the centres of the cells through the following POST endpoint    [/hives/{hive_id}/campaigns/
-    /points/](http://localhost:8001/docs#/Sync/create_points_of_campaign_points__post). This can be done to be able to observe where measurements during the campaign should be obtained.
+    Before creating the campaign, you can find out the centres of the cells through the following POST endpoint    [/points/](http://localhost:8001/docs#/Sync/create_points_of_campaign_points__post). This can be done to be able to observe where measurements during the campaign should be obtained.
     ![](./Picture_readme/Sync/Create_points.png)
     In addition, after the creation of the campaign, we can visualize the campaign map with the show endpoint at the campaign section [/hives/{hive_id}/campaigns/{campaign_id}/show](http://localhost:8001/docs#/Campaigns/show_a_campaign_hives__hive_id__campaigns__campaign_id__show_get) endpoint. As an example of the result: 
     ![](./Picture_readme/Campaign_show.PNG)
@@ -75,8 +74,7 @@ Click on PUT endpoint and then in the "Try it out" button, complete the Request 
     ![](./Picture_readme/Campaign_section.PNG)
    For example, if we want to conduct a brief campaign to collect data on air quality in a particular area, the strategy must include collecting as many measurements as possible during the campaign time (which should not be long). These characteristics should be specified in the POST request body of this endpoint (picture example).
     ![](./Picture_readme/Sync/create_campaign.PNG)
-    Before creating the campaign, you can find out the centres of the cells through the following POST endpoint [/hives/{hive_id}/campaigns/
-    /points/](http://localhost:8001/docs#/Sync/create_points_of_campaign_points__post). This can be done to be able to observe where measurements during the campaign should be obtained.
+    Before creating the campaign, you can find out the centres of the cells through the following POST endpoint [/points/](http://localhost:8001/docs#/Sync/create_points_of_campaign_points__post). This can be done to be able to observe where measurements during the campaign should be obtained.
     ![](./Picture_readme/Sync/Create_points.png)
     In addition, after the creation of the campaign, we can visualize the campaign map with the show endpoint at the campaign section [/hives/{hive_id}/campaigns/{campaign_id}/show](http://localhost:8001/docs#/Campaigns/show_a_campaign_hives__hive_id__campaigns__campaign_id__show_get) endpoint. As an example of the result: 
     ![](./Picture_readme/Campaign_show.PNG)
