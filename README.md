@@ -53,13 +53,13 @@ The following diagram illustrates the main workflow that a Worker Bee will follo
 1. **Create a Beekeeper:**  Defined at [http://localhost:8001](http://localhost:8001) in secction Beekeeper at the POST endpoint [/beekeepers/](http://localhost:8001/docs#/BeeKeepers/create_beekeeper_beekeepers__post) you can create a new beekeeper by filling out the following request body:
     ```
     {
-    "name": "string",
-    "surname": "string",
-    "age": 0,
-    "gender": "MALE",
-    "birthday": "2023-02-07T10:53:38.000Z",
-    "city": "string",
-    "mail": "string",
+    "name": "Maite",
+    "surname": "Puerta",
+    "age": 25,
+    "gender": "FEMALE",
+    "birthday": "1997-08-07T00:00:00",
+    "city": "Bilbao",
+    "mail": "--",
     "real_user": true
     }
     ```
@@ -68,11 +68,11 @@ The following diagram illustrates the main workflow that a Worker Bee will follo
 2. **Create a Hive** Defined at [http://localhost:8001](http://localhost:8001) in secction Hives at the POST endpoint [/hives/](http://localhost:8001/docs#/Hives/create_hive_hives__post), you can create a new hive by filling out the request body of this endpoint: 
     ```
     {
-    "city": "string",
-    "beekeeper_id": 0,
-    "name": "string"
+        "city": "Bilbao",
+        "beekeeper_id": 1,
+        "name": "The best hive"
     }
-     ```
+    ```
     ![](./Picture_readme/Hive_post.PNG)
     
     We can see the newly created hive: 
@@ -81,13 +81,13 @@ The following diagram illustrates the main workflow that a Worker Bee will follo
 3. **Create Members:** Defined at [http://localhost:8001](http://localhost:8001) in section Member at the POST endpoint [/members/](http://localhost:8001/docs#/Members/create_member_members__post), you can create a new member by filling out the following request body:
      ```
     {
-    "name": "string",
-    "surname": "string",
-    "age": 0,
-    "gender": "MALE",
-    "city": "string",
-    "mail": "string",
-    "birthday": "2023-02-07T10:57:50.518Z",
+    "name": "Maite",
+    "surname": "Beldarrain",
+    "age": 25,
+    "gender": "FEMALE",
+    "city": "Bilabo",
+    "mail": "--",
+    "birthday": "1997-08-07T00:00:00",
     "real_user": true
     }
      ```
@@ -97,7 +97,7 @@ The following diagram illustrates the main workflow that a Worker Bee will follo
 4. **Associate members with a hive with a role:** Defined at [http://localhost:8001](http://localhost:8001) in section Hive at the POST endpoint [/hives/{hive_id}/members/{member_id}/](http://localhost:8001/docs#/Hives/associate_existing_member_with_a_hive_with_specific_role_hives__hive_id__members__member_id___post) you can asociate a existing user with a hive with a role. In this way, you define the role this user has in the hive by filling out the following request body:
     ```
     {
-    "role": "WorkerBee"
+    "role": "QueenBee"
     }
     ```
 ![](./Picture_readme/associete_user_with_role.png)
@@ -105,10 +105,10 @@ The following diagram illustrates the main workflow that a Worker Bee will follo
 5. **Define devices:**  Defined at [http://localhost:8001](http://localhost:8001) in secction Devices at the POST endpoint [/devices/](http://localhost:8001/docs#/Device/create_a_device_devices__post), you can define a device. For each device, click on the POST endpoint and then in the "Try it out" button and complete the Request body (picture example) and click execute and filling out the following request body:
     ```
     {
-    "description": "string",
-    "brand": "string",
-    "model": "string",
-    "year": "string"
+    "description": "Device purple",
+    "brand": "-",
+    "model": "XRT034",
+    "year": "2023"
     }
     ```
     ![](./Picture_readme/Device_post.PNG)
@@ -118,8 +118,8 @@ The following diagram illustrates the main workflow that a Worker Bee will follo
 6. **Associate a device with a member:** Defined at [http://localhost:8001](http://localhost:8001) in section Member at the POST endpoint [/members{member_id}/devices/{device_id}](http://localhost:8001/docs#/Members/create_member_device_members_member_id__devices__device_id__post), you can associate a device with a member by filling out the following request body:
     ```
     {
-    "member_id": 0,
-    "device_id": 0
+    "member_id": 1,
+    "device_id": 1
     }
     ```
     ![](./Picture_readme/device_member.PNG)
@@ -128,20 +128,20 @@ The following diagram illustrates the main workflow that a Worker Bee will follo
     ```
     {
         "campaign_metadata": {
-            "title": "string",
-            "start_datetime": "2023-02-07T11:03:08.751Z",
+            "title": "Campaign Bilbao Center 1",
+            "start_datetime": "2023-02-07T14:00:00",
             "cells_distance": 50,
-            "min_samples": 12,
-            "sampling_period": 3600,
-            "end_datetime": "2023-02-07T11:03:08.751Z",
-            "hypothesis": "string"
+            "min_samples": 8,
+            "sampling_period": 0,
+            "end_datetime": "2023-02-07T15:00:00"
+            "hypothesis": "Generate air quality mapping"
         },
         "boundary_campaign": {
             "centre": {
-            "Longitude": 0,
-            "Latitude": 0
+            "Longitude": 500,
+            "Latitude": 500
             },
-            "radius": 0
+            "radius": 300
         }
     }
     ```
@@ -152,11 +152,11 @@ The following diagram illustrates the main workflow that a Worker Bee will follo
     ```
     {
     "centre": {
-        "Longitude": 0,
-        "Latitude": 0
+        "Longitude": 500,
+        "Latitude": 500
     },
-    "radius": 0,
-    "cells_distance": 0
+    "radius": 700,
+    "cells_distance": 25
     }
     ```
     This can be done to be able to observe where measurements during the campaign should be obtained.
@@ -168,10 +168,10 @@ The following diagram illustrates the main workflow that a Worker Bee will follo
     ```
     {
         "member_current_location": {
-            "Longitude": 0,
-            "Latitude": 0
+            "Longitude": 500,
+            "Latitude": 500
         },
-        "sent_datetime": "2023-02-07T10:52:32.502003"
+        "sent_datetime": "2023-02-07T10:52:32"
     }
     ```
     ![](./Picture_readme/Sync/Create_recommendation.PNG) 
@@ -190,22 +190,23 @@ The following diagram illustrates the main workflow that a Worker Bee will follo
     {
     "datetime": "2023-02-07T11:09:23.036Z",
     "location": {
-        "Longitude": 0,
-        "Latitude": 0
+        "Longitude": 500,
+        "Latitude": 500
     },
-    "no2": 0,
-    "co2": 0,
-    "o3": 0,
-    "so02": 0,
+    "no2": 1,
+    "co2": 10,
+    "o3": 4,
+    "so02": 3,
     "pm10": 0,
     "pm25": 0,
     "pm1": 0,
-    "benzene": 0
+    "benzene": 2
     }
     ```
     ![](./Picture_readme/Sync/Create_measurement.PNG)
 
-11. **DEMO** If we want to visualize how the micro-volunteering engine works, you may execute the demo endpoint in the demo section. The result generated is stored at the src/Servicio/app/Pictures/Measurements and src/Servicio/app/Pictures/Recommender folders. 
+11. **DEMO** If we want to visualize how the micro-volunteering engine works, you may execute the demo endpoint [/demos/hives/{hive_id}/campaigns/{campaign_id}](http://localhost:8001/docs#/Demo/asignacion_recursos_demos_hives__hive_id__campaigns__campaign_id__post) in the demo section. The result generated is stored at the src/Servicio/app/Pictures/Measurements and src/Servicio/app/Pictures/Recommender folders. 
+    ![](./Picture_readme/Demo.PNG)
 
 ## Use case 2 - Usage workflow of the integration of MVE with external components, e.g. SOCIO-BEE AcadeME
    
@@ -215,13 +216,13 @@ Notice that for the MVE to operate it has to be fed with certain context. This i
     Request Body:
     ```
     {
-        "name": "string",
-        "surname": "string",
-        "age": 0,
-        "gender": "MALE",
-        "birthday": "2023-02-07T11:11:00.123Z",
-        "city": "string",
-        "mail": "string",
+        "name": "Maite",
+        "surname": "Puerta",
+        "age": 25,
+        "gender": "FEMALE",
+        "birthday": "1997-08-07T00:00:00",
+        "city": "Bilabo",
+        "mail": "-",
         "real_user": true
     }
     ```
@@ -233,9 +234,9 @@ Click on PUT endpoint and then in the "Try it out" button, complete the Request 
     Request Body:
     ```
     {
-        "city": "string",
-        "beekeeper_id": 0,
-        "name": "string"
+        "city": "Bilabo",
+        "beekeeper_id": 1,
+        "name": "The best Hive"
     }
     ```
     ![](./Picture_readme/Sync/create_hive.png)
@@ -247,11 +248,17 @@ Click on PUT endpoint and then in the "Try it out" button, complete the Request 
     ```
     [
         {
-            "description": "string",
-            "brand": "string",
-            "model": "string",
-            "year": "string",
-            "id": 0
+            "description": "Device red",
+            "brand": "-",
+            "model": "XCR5",
+            "year": "2023",
+            "id": 1
+        },{
+            "description": "Device blue",
+            "brand": "-",
+            "model": "XCR5",
+            "year": "2023",
+            "id": 2
         }
     ]
     ```
@@ -264,17 +271,31 @@ Click on PUT endpoint and then in the "Try it out" button, complete the Request 
     [
         {
             "member": {
-                "name": "string",
-                "surname": "string",
-                "age": 0,
-                "gender": "MALE",
-                "city": "string",
-                "mail": "string",
-                "birthday": "2023-02-07T11:14:03.652Z",
-                "real_user": true,
-                "id": 0
+                "name": "Maite",
+                "surname": "Puerta",
+                "age": 25,
+                "gender": "FEMALE",
+                "birthday": "1997-08-07T00:00:00",
+                "city": "Bilabo",
+                "mail": "-",
+                "real_user": true
+                "id": 1
             },
             "role": "WorkerBee"
+        },
+        {
+            "member": {
+                "name": "Maite",
+                "surname": "Puerta",
+                "age": 25,
+                "gender": "FEMALE",
+                "birthday": "1997-08-07T00:00:00",
+                "city": "Bilabo",
+                "mail": "-",
+                "real_user": true
+                "id": 2
+            },
+            "role": "QueenBee"
         }
     ]
     ```
@@ -284,20 +305,20 @@ Click on PUT endpoint and then in the "Try it out" button, complete the Request 
     ```
     {
         "campaign_metadata": {
-            "title": "string",
-            "start_datetime": "2023-02-07T11:03:08.751Z",
+            "title": "Campaign Bilbao Center 1",
+            "start_datetime": "2023-02-07T14:00:00",
             "cells_distance": 50,
-            "min_samples": 12,
-            "sampling_period": 3600,
-            "end_datetime": "2023-02-07T11:03:08.751Z",
-            "hypothesis": "string"
+            "min_samples": 8,
+            "sampling_period": 0,
+            "end_datetime": "2023-02-07T15:00:00"
+            "hypothesis": "Generate air quality mapping"
         },
         "boundary_campaign": {
             "centre": {
-            "Longitude": 0,
-            "Latitude": 0
+            "Longitude": 500,
+            "Latitude": 500
             },
-            "radius": 0
+            "radius": 300
         }
     }
     ```
@@ -307,12 +328,12 @@ Click on PUT endpoint and then in the "Try it out" button, complete the Request 
     Before creating the campaign, you can find out the centres of the cells through the following POST endpoint [/points/](http://localhost:8001/docs#/Sync/create_points_of_campaign_points__post) by filling out the following request body:
     ```
     {
-    "centre": {
-        "Longitude": 0,
-        "Latitude": 0
-    },
-    "radius": 0,
-    "cells_distance": 0
+        "centre": {
+            "Longitude": 500,
+            "Latitude": 500
+        },
+        "radius": 40,
+        "cells_distance": 100
     }
     ```
     This can be done to be able to observe where measurements during the campaign should be obtained.
@@ -324,8 +345,8 @@ Click on PUT endpoint and then in the "Try it out" button, complete the Request 
     Request Body: 
     ```
     {
-        "member_id": 0,
-        "device_id": 0
+        "member_id": 1,
+        "device_id": 1
     }
     ```
 ![](./Picture_readme/Sync/campaignMember.png)
@@ -334,8 +355,8 @@ Click on PUT endpoint and then in the "Try it out" button, complete the Request 
     ```
     {
         "member_current_location": {
-            "Longitude": 0,
-            "Latitude": 0
+            "Longitude": 500,
+            "Latitude": 500
         },
         "sent_datetime": "2023-02-07T10:52:32.502003"
     }
@@ -356,8 +377,8 @@ Click on PUT endpoint and then in the "Try it out" button, complete the Request 
     {
     "datetime": "2023-02-07T11:09:23.036Z",
     "location": {
-        "Longitude": 0,
-        "Latitude": 0
+        "Longitude": 500,
+        "Latitude": 500
     },
     "no2": 0,
     "co2": 0,
