@@ -10,7 +10,7 @@ You have to follow these steps to be able to launch the Micro-Volunteering Engin
 6. [WINDOWS]: Run the FastAPI server via poetry with the Python command: `poetry run python src/Servicio/app/main.py`
 7. Open http://localhost:8001/docs 
 
-The diagram below shows the process that has to be carried out within SOCIO-BEE to set-up a campaign in a pilot where air quality measurements will be gathered in a certain area and time period in order to deliver visualizations and indicators summarizing the air quality situation and evolution in a spatiotemporal manner. 
+The diagram below shows the process that has to be carried out within SOCIO-BEE to set-up a campaign in a pilot where air quality measurements will be gathered in a certain area and time period in order to deliver visualizations and indicators summarizing the air quality situation and evolution in a spatiotemporal manner. Essentially several steps must be carried out to configure a campaign. Once the campaign is configured the recommendation service from MVE can be requested. 
 
 ![](./Picture_readme/QueenBeesWorkflow.drawio.png)
 
@@ -49,9 +49,13 @@ And we can see the created device:
     In addition, after the creation of the campaign, we can visualize the campaign map with the show endpoint at the campaign section [/hives/{hive_id}/campaigns/{campaign_id}/show](http://localhost:8001/docs#/Campaigns/show_a_campaign_hives__hive_id__campaigns__campaign_id__show_get) endpoint. As an example of the result: 
     ![](./Picture_readme/Campaign_show.PNG)
 
+8. **Request the MVE to provide recommendations:** This endpoint is enabled to request recommendation of possible cells to which users (Worker Bees) should move in order to pollinize, i.e. grab measurements, in such point. This endpoint returns a configurable number of recommendations, currently the best nearby 3 cell locations for a given user, based on her current location. This endpoint is defined at http://localhost:8001](http://localhost:8001) in section Members through POST command [/members/{member_id}/recommendations/](http://localhost:8001/docs#/Campaigns/create_campaign_hives__hive_id__campaigns__post)
 
+9. **Inform MVE about the change of state of a recommendation:** This endpoint is enabled to indicate when a recommendation has been taken by a user (Worker Bee), i.e. the user is being directed to the cell centre. In this case the status of the recommendation would change from NOTIFIED  to ACCEPTED. Besides, when a user does take a measurement, then the status of the recommendation is changed to REALIZED. If a notification is never realized, after the slot sampling period is over, the status of the recommendation is changed by MVE to NON_REALIZED. This method is defined at http://localhost:8001](http://localhost:8001) in section Members at the PATCH endpoint [/members/{member_id}/recommendations/<recommendation-id>](http://localhost:8001/docs#/Campaigns/create_campaign_hives__hive_id__campaigns__post)
 
-8. **DEMO** If we want to visualize how the micro-volunteering engine works, you may execute the demo endpoint in the demo section. The result generated is stored at the src/Servicio/app/Pictures/Measurements and src/Servicio/app/Pictures/Recommender folders. 
+10. **Inform MVE about a measurement taken by a member of a hive:** This endpoint is enabled to indicate that a recommendation has been realized delivering a new measurement. The endpoint invocation provides actually the measurement associated to a previous recommendation. This method is defined at http://localhost:8001](http://localhost:8001) in section Members at the POST endpoint [/members/{member_id}/measurements/](http://localhost:8001/docs#/Campaigns/create_campaign_hives__hive_id__campaigns__post)
+
+11. **DEMO** If we want to visualize how the micro-volunteering engine works, you may execute the demo endpoint in the demo section. The result generated is stored at the src/Servicio/app/Pictures/Measurements and src/Servicio/app/Pictures/Recommender folders. 
 
 
 # Use case (integration of MVE with external components, e.g. SOCIO-BEE AcadeME)- Example: 
@@ -82,3 +86,10 @@ Click on PUT endpoint and then in the "Try it out" button, complete the Request 
 
 6. **Assign devices to users in newly created campaign:** This endpoint is enabled to allow Queen Bees to assign devices to each of the members of a hive taking part in a campaign. This endpoint is defined at [http://localhost:8001](http://localhost:8001) through POST command [/hives/{hive_id}/campaigns/{campaign_id}/devices](http://localhost:8001/docs#/Sync/post_members_devices_hives__hive_id__campaigns__campaign_id__devices_post). Click on POST endpoint and then in the "Try it out" button, complete the Request body (pìcture example) and click execute 
 ![](./Picture_readme/Sync/campaignMember.png)
+    
+7. **Request the MVE to provide recommendations:** This endpoint is enabled to request recommendation of possible cells to which users (Worker Bees) should move in order to pollinize, i.e. grab measurements, in such point. This endpoint returns a configurable number of recommendations, currently the best nearby 3 cell locations for a given user, based on her current location. This endpoint is defined at http://localhost:8001](http://localhost:8001) in section Members through POST command [/members/{member_id}/recommendations/](http://localhost:8001/docs#/Campaigns/create_campaign_hives__hive_id__campaigns__post)
+
+8. **Inform MVE about the change of state of a recommendation:** This endpoint is enabled to indicate when a recommendation has been taken by a user (Worker Bee), i.e. the user is being directed to the cell centre. In this case the status of the recommendation would change from NOTIFIED  to ACCEPTED. Besides, when a user does take a measurement, then the status of the recommendation is changed to REALIZED. If a notification is never realized, after the slot sampling period is over, the status of the recommendation is changed by MVE to NON_REALIZED. This method is defined at http://localhost:8001](http://localhost:8001) in section Members at the PATCH endpoint [/members/{member_id}/recommendations/<recommendation-id>](http://localhost:8001/docs#/Campaigns/create_campaign_hives__hive_id__campaigns__post)
+
+9. **Inform MVE about a measurement taken by a member of a hive:** This endpoint is enabled to indicate that a recommendation has been realized delivering a new measurement. The endpoint invocation provides actually the measurement associated to a previous recommendation. This method is defined at http://localhost:8001](http://localhost:8001) in section Members at the POST endpoint [/members/{member_id}/measurements/](http://localhost:8001/docs#/Campaigns/create_campaign_hives__hive_id__campaigns__post)
+
