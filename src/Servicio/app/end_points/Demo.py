@@ -184,7 +184,7 @@ async def asignacion_recursos(
                         y=random.randint(posiciones_y[surface_number][0],posiciones_y[surface_number][1])
 
                         a=RecommendationCreate(member_current_location={'Longitude':x,'Latitude':y},recommendation_datetime=time)
-                        recomendaciones=create_recomendation_2(db=db,member_id=user.id,recipe_in=a,cam=cam)
+                        recomendaciones=create_recomendation_2(db=db,member_id=user.id,recipe_in=a,cam=cam,time=time)
                         
                         if len(recomendaciones['results'])>0:
                             recomendacion_polinizar = RL(recomendaciones['results'])
@@ -230,12 +230,13 @@ def create_recomendation_2(
     member_id:int, 
     cam:Campaign,
     recipe_in: RecommendationCreate,
+    time:datetime,
     db: Session = Depends(deps.get_db)
 ) -> dict:
     """
     Create a new recommendation
     """
-    time=recipe_in.sent_datetime.replace(tzinfo=None)    
+    time=time
     campaing_member=crud.campaign_member.get_Campaign_Member_in_campaign(db=db,campaign_id=cam.id,member_id=member_id)
     
     # hives=crud.hive_member.get_by_member_id(db=db, member_id=user.id)
@@ -296,7 +297,7 @@ def create_recomendation_2(
                     # print(a.cell_id)
                     # obj_state=StateCreate(db=db)
                     # state=crud.state.create_state(db=db,obj_in=obj_state)
-                    recomendation=crud.recommendation.create_recommendation_detras(db=db,obj_in=recipe_in,member_id=member_id,slot_id=cells_and_priority[i][1].slot_id,state="NOTIFIED",update_datetime=time)
+                    recomendation=crud.recommendation.create_recommendation_detras(db=db,obj_in=recipe_in,member_id=member_id,slot_id=cells_and_priority[i][1].slot_id,state="NOTIFIED",update_datetime=time,sent_datetime=time)
                     result.append(recomendation)
 
     elif  len(cells_and_priority)!=0:
@@ -306,7 +307,7 @@ def create_recomendation_2(
                     # # print(a.cell_id)
                     # obj_state=StateCreate(db=db)
                     # state=crud.state.create_state(db=db,obj_in=obj_state)
-                    recomendation=crud.recommendation.create_recommendation_detras(db=db,obj_in=recipe_in,member_id=member_id,slot_id=cells_and_priority[i][1].slot_id,state="NOTIFIED",update_datetime=time)
+                    recomendation=crud.recommendation.create_recommendation_detras(db=db,obj_in=recipe_in,member_id=member_id,slot_id=cells_and_priority[i][1].slot_id,state="NOTIFIED",update_datetime=time,sent_datetime=time)
                     result.append(recomendation)
         
     if len(cells_and_priority)==0:
