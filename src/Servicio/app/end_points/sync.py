@@ -137,7 +137,7 @@ def put_a_beekeeper(
     db.commit()
     return updated_beekeeper
                             
-@api_router_sync.put("/sync/device", status_code=201, response_model=List[Device])
+@api_router_sync.put("/sync/devices", status_code=201, response_model=List[Device])
 def update_devices(
     *,
     recipe_in: List[Device],
