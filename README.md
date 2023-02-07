@@ -85,5 +85,5 @@ Click on PUT endpoint and then in the "Try it out" button, complete the Request 
 5. **Synchronize devices:** Defined at [http://localhost:8001](http://localhost:8001) in secction Sync at the endpoint put  [/sync/devices](http://localhost:8001/docs#/Sync/update_devices_sync_device_put). Click on PUT endpoint and then in the "Try it out" button, complete the Request body (pìcture example) and click execute 
 ![](./Picture_readme/Sync/create_devices.PNG)
 
-6. **Synchronize the devices carried by each user in a campaign:** Defined at [http://localhost:8001](http://localhost:8001) in section Sync at the PUT endpoint [/hives/{hive_id}/campaigns/{campaign_id}/devices](http://localhost:8001/docs#/Sync/post_members_devices_hives__hive_id__campaigns__campaign_id__devices_post). Click on PUT endpoint and then in the "Try it out" button, complete the Request body (pìcture example) and click execute 
+6. **Assign devices to users in newly created campaign:** Defined at [http://localhost:8001](http://localhost:8001) in POST endpoint [/hives/{hive_id}/campaigns/{campaign_id}/devices](http://localhost:8001/docs#/Sync/post_members_devices_hives__hive_id__campaigns__campaign_id__devices_post). Click on POST endpoint and then in the "Try it out" button, complete the Request body (pìcture example) and click execute 
 ![](./Picture_readme/Sync/campaignMember.png)
