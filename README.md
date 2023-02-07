@@ -3,6 +3,7 @@
 ## Execution
 
 You have to follow these steps to be able to launch the Micro-Volunteering Engine (MVE): 
+0. git clone https://github.com/mpuerta004/RecommenderSystem
 1. `pip install poetry` (or safer, follow the instructions: https://python-poetry.org/docs/#installation)
 2. Install dependencies `cd` into the directory where the `pyproject.toml` is located then `poetry install`
 3. [UNIX] Run `cd Model` 
