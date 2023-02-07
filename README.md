@@ -1,4 +1,6 @@
-# RUN the system 
+# SOCIO-BEE's Micro-Volunteering Engine (MVE)
+
+## Execution
 
 You have to follow these steps to be able to launch the Micro-Volunteering Engine (MVE): 
 1. `pip install poetry` (or safer, follow the instructions: https://python-poetry.org/docs/#installation)
@@ -14,7 +16,7 @@ The diagram below shows the process that has to be carried out within SOCIO-BEE 
 
 ![](./Picture_readme/QueenBeesWorkflow.drawio.png)
 
-# Use case - Example: 
+## Use case - Usage workflow of MVE used as an standalone module
 
 1. **Create a Beekeeper:**  Defined at [http://localhost:8001](http://localhost:8001) in secction Beekeeper at the POST endpoint [/beekeepers/](http://localhost:8001/docs#/BeeKeepers/create_beekeeper_beekeepers__post) you can create a new beekeeper. 
     ![](./Picture_readme/create_beekeeper_real.png)
@@ -57,9 +59,8 @@ And we can see the created device:
 
 11. **DEMO** If we want to visualize how the micro-volunteering engine works, you may execute the demo endpoint in the demo section. The result generated is stored at the src/Servicio/app/Pictures/Measurements and src/Servicio/app/Pictures/Recommender folders. 
 
-
-# Use case (integration of MVE with external components, e.g. SOCIO-BEE AcadeME)- Example: 
-
+## Use case - Usage workflow of the integration of MVE with external components, e.g. SOCIO-BEE AcadeME
+   
 Notice that for the MVE to operate it has to be fed with certain context. This is, a Beekeeper must be nominated to a newly created hive, members have to be added to the hive for the MVE to know to whom it should recommend cells to polinize and, then, finally, the MVE would have all the context needed to be able to start issuing recommendations of cells based on hive members current locations. 
 
 1. **Synchronize beekeeper:** This enpoint provides MVE with context about Beekeeper of campaign’s Hive. For that, the endpoint defined at [http://localhost:8001](http://localhost:8001) in section Sync a PUT endpoint [/sync/beekeepers/{beekeeper_id}](http://localhost:8001/docs#/Sync/put_a_beekeeper_sync_beekeepers__beekeeper_id__put) has to be invoked. Click on PUT endpoint and then in the "Try it out" button, complete the Request body (picture example) and click execute. It is a PUT because the Beekeeper may already exist in the MVE but we have to ensure that the Beekeeper managed by the external client, e.g. SOCIO-BEE AcadeME, is also existing in the MVE.  
