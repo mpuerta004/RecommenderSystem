@@ -8,7 +8,7 @@ from end_points import BeeKeeper
 from end_points import Campaign_Member
 from end_points import Cells
 from end_points import Campaigns
-from end_points import Device
+from end_points import Devices
 from end_points import Surface
 from end_points import Measurements
 from end_points import Recommendation
@@ -32,7 +32,7 @@ TEMPLATES = Jinja2Templates(directory=str(BASE_PATH / "templates"))
 
 app = FastAPI(title="Micro-volunteering Engine",
               version=1.0, openapi_url="/openapi.json")
-app.include_router(Device.api_router_device, tags=["Device"])
+app.include_router(Devices.api_router_device, tags=["Device"])
 app.include_router(BeeKeeper.api_router_beekeepers, tags=["BeeKeepers"])
 app.include_router(Members.api_router_members, tags=["Members"])
 app.include_router(Hive.api_router_hive, tags=["Hives"])
