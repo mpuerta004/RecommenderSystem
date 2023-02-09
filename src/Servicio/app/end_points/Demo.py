@@ -114,7 +114,7 @@ def reciboUser(cam:Campaign,db: Session = Depends(deps.get_db)):
         # users=crud.member.get_multi_worker_members_from_hive_id(db=db,campaign_id=cam.id)
         for i in users:
              aletorio = random.random()
-             if aletorio<0.75:
+             if aletorio>0.65:
                  us=crud.member.get_by_id(db=db,id=i.member_id)
                  usuarios_peticion.append(us)
         return usuarios_peticion
@@ -125,7 +125,7 @@ def RL(a:list()):
  
 
 @api_router_demo.post("/{campaign_id}", status_code=201, response_model=None)
-async def asignacion_recursos( 
+def asignacion_recursos( 
                               hive_id:int, 
     campaign_id:int,
     db: Session = Depends(deps.get_db)):
@@ -190,11 +190,9 @@ async def asignacion_recursos(
                         
                         if len(recomendaciones['results'])>0:
                             recomendacion_polinizar = RL(recomendaciones['results'])
-
-                            #Todo: esto en realidad es una iteracion con el front-end segun la respuesta del usuario. 
-                            # state=crud.state.get_state_from_recommendation(db=db,recommendation_id=recomendacion_polinizar.id)
-                            #Todo! no se si esto va a funcionar! 
-                            recomendacion_polinizar=crud.recommendation.update(db=db,db_obj=recomendacion_polinizar, obj_in={"state":"ACCEPTED","update_datetime":time})
+                            recomendation_coguida=crud.recommendation.get_recommendation(db=db,member_id=recomendacion_polinizar.member_id, recommendation_id=recomendacion_polinizar.id)
+                            recomendacion_polinizar=crud.recommendation.update(db=db,db_obj=recomendation_coguida, obj_in={"state":"ACCEPTED","update_datetime":time})
+                            
                             mediciones.append([user, recomendacion_polinizar, random.randint(1,600)])
 
                             show_recomendation(db=db, cam=cam, user=user, result=recomendaciones['results'],time=time,recomendation=recomendacion_polinizar)  
@@ -205,7 +203,7 @@ async def asignacion_recursos(
                 mediciones[i][2]=int(mediciones[i][2]) - 60
                 if mediciones[i][2]<=0:
                     aletorio = random.random()
-                    if aletorio<4.0:
+                    if aletorio<0.6:
                         time_polinizado = time
                         slot=crud.slot.get(db=db, id=mediciones[i][1].slot_id)
                         cell=crud.cell.get_Cell(db=db,cell_id=slot.cell_id)
@@ -215,18 +213,21 @@ async def asignacion_recursos(
                         #Ver si se registran bien mas recomendaciones con el id de la medicion correcta. 
                         device_member=crud.member_device.get_by_member_id(db=db,member_id=mediciones[i][0].id)
                         measurement=crud.measurement.create_Measurement(db=db,device_id=device_member.device_id,obj_in=creation,member_id=mediciones[i][0].id,slot_id=slot.id,recommendation_id=mediciones[i][1].id)
-                        crud.recommendation.update(db=db,db_obj=mediciones[i][1], obj_in={"state":"REALIZED","update_datetime":time_polinizado})
+                        recomendation_coguida=crud.recommendation.get_recommendation(db=db,member_id=mediciones[i][1].member_id, recommendation_id=mediciones[i][1].id)
+
+                        crud.recommendation.update(db=db,db_obj=recomendation_coguida, obj_in={"state":"REALIZED","update_datetime":time_polinizado})
                         db.commit()
                         
                         db.commit()
                     else:
                         time_polinizado = time
-                        crud.recommendation.update(db=db,db_obj=mediciones[i][1], obj_in={"state":"NON_REALIZED","update_datetime":time_polinizado})
+                        recomendation_coguida=crud.recommendation.get_recommendation(db=db,member_id=mediciones[i][1].member_id, recommendation_id=mediciones[i][1].id)
+
+                        crud.recommendation.update(db=db,db_obj=recomendation_coguida, obj_in={"state":"NON_REALIZED","update_datetime":time_polinizado})
                         db.commit()
                 else:
                     new.append(mediciones[i])
             mediciones=new
-            print("mediciones_akacenadas",len(mediciones))
         return None
 
 def create_recomendation_2(
@@ -287,7 +288,6 @@ def create_recomendation_2(
                 Cardinal_esperadiuso = Cardinal_actual
                 recommendation_accepted= crud.recommendation.get_aceptance_state_of_cell(db=db, cell_id=i[0].id)
                 Cardinal_esperadiuso=Cardinal_esperadiuso+ len(recommendation_accepted)
-                print("RECOMENDACIONES_ACWPTADAS",len(recommendation_accepted))
                 # for l in mediciones:
                 #     if l[1].cell_id== i.id:
                 #         Cardinal_esperadiuso=Cardinal_esperadiuso+1
@@ -302,7 +302,10 @@ def create_recomendation_2(
                     # print(a.cell_id)
                     # obj_state=StateCreate(db=db)
                     # state=crud.state.create_state(db=db,obj_in=obj_state)
-                    recomendation=crud.recommendation.create_recommendation_detras(db=db,obj_in=recipe_in,member_id=member_id,slot_id=cells_and_priority[i][1].slot_id,state="NOTIFIED",update_datetime=time,sent_datetime=time)
+                    recomendation=crud.recommendation.create_recommendation(db=db,obj_in=recipe_in,member_id=member_id,slot_id=cells_and_priority[i][1].slot_id,state="NOTIFIED",update_datetime=time,sent_datetime=time)
+                    db.commit()
+                    db.commit()
+
                     result.append(recomendation)
 
     elif  len(cells_and_priority)!=0:
@@ -312,7 +315,9 @@ def create_recomendation_2(
                     # # print(a.cell_id)
                     # obj_state=StateCreate(db=db)
                     # state=crud.state.create_state(db=db,obj_in=obj_state)
-                    recomendation=crud.recommendation.create_recommendation_detras(db=db,obj_in=recipe_in,member_id=member_id,slot_id=cells_and_priority[i][1].slot_id,state="NOTIFIED",update_datetime=time,sent_datetime=time)
+                    recomendation=crud.recommendation.create_recommendation(db=db,obj_in=recipe_in,member_id=member_id,slot_id=cells_and_priority[i][1].slot_id,state="NOTIFIED",update_datetime=time,sent_datetime=time)
+                    db.commit()
+                    db.commit()
                     result.append(recomendation)
         
     if len(cells_and_priority)==0:
