@@ -14,14 +14,14 @@ class MeasurementBase(BaseModel):
     # measurement_type:str='AIRDATA' #Varchar(30) default 'AirData', #set('AirData','Sound')
     # reading_id:int=None
     location:Point
-    no2: float
-    co2: float
-    o3:float 
-    so02:float
-    pm10:float 
-    pm25: float 
-    pm1:float 
-    benzene:float 
+    no2: float =0
+    co2: float=0
+    o3:float =0
+    so02:float=0
+    pm10:float =0
+    pm25: float =0
+    pm1:float =0
+    benzene:float =0 
     
     
 

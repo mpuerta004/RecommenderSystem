@@ -33,15 +33,15 @@ class RecommendationCreate(RecommendationBase):
 
 class RecommendationUpdate(BaseModel):
     state:state
+    update_datetime:datetime
+
     
 # Properties shared by models stored in DB
 class RecommendationInDBBase(RecommendationBase):
     member_id:int
     state:state
-    update_datetime:datetime=datetime.utcnow()
+    update_datetime:datetime
     sent_datetime:datetime=datetime.utcnow()
-
-
     # state_id:int
     id:int
     slot_id:int
@@ -55,10 +55,7 @@ class RecommendationInDBBase(RecommendationBase):
 
 # Properties to return to client
 class Recommendation(RecommendationInDBBase):
-    member_id:int
-    # state_id:int
-    id:int
-    slot_id:int
+    pass
 
 
 # Properties properties stored in DB

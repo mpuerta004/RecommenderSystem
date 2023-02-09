@@ -103,10 +103,10 @@ app.include_router(api_router)
 if __name__ == "__main__":
     # Use this for debugging purposes only
     import uvicorn
-    scheduler = BackgroundScheduler()
-    scheduler.add_job(final_funtion, 'interval', seconds=60)
-    scheduler.add_job(State_change, 'interval', seconds=420)
+    # scheduler = BackgroundScheduler()
+    # scheduler.add_job(final_funtion, 'interval', seconds=60)
+    # scheduler.add_job(State_change, 'interval', seconds=420)
 
-    scheduler.start()
+    # scheduler.start()
 
     uvicorn.run(app, host="0.0.0.0", port=8001, log_level="debug")

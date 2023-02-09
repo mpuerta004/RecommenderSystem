@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 from schemas.Measurement import Measurement, MeasurementCreate, MeasurementSearchResults
 from schemas.Campaign import CampaignSearchResults, Campaign, CampaignCreate, CampaignUpdate
 from schemas.Slot import Slot, SlotCreate,SlotSearchResults
-from schemas.Recommendation import Recommendation,RecommendationCreate
+from schemas.Recommendation import state,Recommendation,RecommendationCreate,RecommendationUpdate
 from schemas.Member import Member
 from schemas.Priority import Priority, PriorityCreate, PrioritySearchResults
 import deps
@@ -110,11 +110,13 @@ def prioriry_calculation_2(time:datetime, cam:Campaign, db:Session= Depends(deps
 
 def reciboUser(cam:Campaign,db: Session = Depends(deps.get_db)):
         usuarios_peticion=[]
-        users=crud.member.get_multi_worker_members_from_hive_id(db=db,campaign_id=cam.id)
+        users=crud.campaign_member.get_Campaign_Member_in_campaign_workers(db=db,campaign_id=cam.id)
+        # users=crud.member.get_multi_worker_members_from_hive_id(db=db,campaign_id=cam.id)
         for i in users:
              aletorio = random.random()
-             if aletorio>0.0:
-                 usuarios_peticion.append(i)
+             if aletorio<0.75:
+                 us=crud.member.get_by_id(db=db,id=i.member_id)
+                 usuarios_peticion.append(us)
         return usuarios_peticion
         
 
@@ -188,12 +190,13 @@ async def asignacion_recursos(
                         
                         if len(recomendaciones['results'])>0:
                             recomendacion_polinizar = RL(recomendaciones['results'])
-                            mediciones.append([user, recomendacion_polinizar, random.randint(1,600)])
 
                             #Todo: esto en realidad es una iteracion con el front-end segun la respuesta del usuario. 
                             # state=crud.state.get_state_from_recommendation(db=db,recommendation_id=recomendacion_polinizar.id)
                             #Todo! no se si esto va a funcionar! 
-                            crud.recommendation.update(db=db,db_obj=recomendacion_polinizar, obj_in={"state":"ACCEPTED","update_datetime":time})
+                            recomendacion_polinizar=crud.recommendation.update(db=db,db_obj=recomendacion_polinizar, obj_in={"state":"ACCEPTED","update_datetime":time})
+                            mediciones.append([user, recomendacion_polinizar, random.randint(1,600)])
+
                             show_recomendation(db=db, cam=cam, user=user, result=recomendaciones['results'],time=time,recomendation=recomendacion_polinizar)  
 
             new=[] 
@@ -202,10 +205,10 @@ async def asignacion_recursos(
                 mediciones[i][2]=int(mediciones[i][2]) - 60
                 if mediciones[i][2]<=0:
                     aletorio = random.random()
-                    if aletorio<1.0:
+                    if aletorio<4.0:
                         time_polinizado = time
-                        # slotcrud.slot.get(db=db, id=mediciones[i][1].slot_id)
-                        cell=crud.cell.get_Cell(db=db,cell_id=mediciones[i][1].slot.cell.id)
+                        slot=crud.slot.get(db=db, id=mediciones[i][1].slot_id)
+                        cell=crud.cell.get_Cell(db=db,cell_id=slot.cell_id)
                         Member_Device_user=crud.member_device.get_by_member_id(db=db,member_id=mediciones[i][0].id)
                         creation=MeasurementCreate(db=db, location=cell.centre,datetime=time_polinizado,device_id=Member_Device_user.device_id, recommendation_id=mediciones[i][1].id)
                         slot=crud.slot.get_slot_time(db=db, cell_id=cell.id,time=time)
@@ -223,6 +226,7 @@ async def asignacion_recursos(
                 else:
                     new.append(mediciones[i])
             mediciones=new
+            print("mediciones_akacenadas",len(mediciones))
         return None
 
 def create_recomendation_2(
@@ -267,7 +271,7 @@ def create_recomendation_2(
             centro= i[0].centre
             point= recipe_in.member_current_location
             distancia= math.sqrt((centro['Longitude'] - point['Longitude'])**2+(centro['Latitude']-point['Latitude'])**2)
-            if distancia<=250:
+            if distancia<=(i[1].cells_distance)*2:
                 List_cells_cercanas.append(i)
     lista_celdas_ordenas=[]
     if List_cells_cercanas!=[]:
@@ -283,6 +287,7 @@ def create_recomendation_2(
                 Cardinal_esperadiuso = Cardinal_actual
                 recommendation_accepted= crud.recommendation.get_aceptance_state_of_cell(db=db, cell_id=i[0].id)
                 Cardinal_esperadiuso=Cardinal_esperadiuso+ len(recommendation_accepted)
+                print("RECOMENDACIONES_ACWPTADAS",len(recommendation_accepted))
                 # for l in mediciones:
                 #     if l[1].cell_id== i.id:
                 #         Cardinal_esperadiuso=Cardinal_esperadiuso+1
@@ -359,8 +364,11 @@ def show_recomendation(*, cam:Campaign, user:Member, result:list(),time:datetime
     
     Cells_recomendadas=[]
     for i in result:
-        Cells_recomendadas.append(i.slot.cell.id)
-    cell_elejida=recomendation.slot.cell.id
+        slot=crud.slot.get_slot(db=db, slot_id=i.slot_id)
+        Cells_recomendadas.append(slot.cell_id)
+    slot=crud.slot.get_slot(db=db, slot_id=recomendation.slot_id)
+    Cells_recomendadas.append(slot.cell_id)
+    cell_elejida=slot.cell_id
     user_position=recomendation.member_current_location
     for i in cam.surfaces:
             count=count+1

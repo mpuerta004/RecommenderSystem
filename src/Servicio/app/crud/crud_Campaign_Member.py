@@ -6,7 +6,7 @@ from crud.base import CRUDBase
 from models.Campaign_Member import Campaign_Member
 from schemas.Campaign_Member import Campaign_MemberCreate, Campaign_MemberUpdate, Campaign_MemberSearchResults
 from fastapi.encoders import jsonable_encoder
-from sqlalchemy import and_
+from sqlalchemy import and_,or_
 from fastapi import HTTPException
 
 
@@ -32,6 +32,11 @@ class CRUDCampaign_Member(CRUDBase[Campaign_Member, Campaign_MemberCreate, Campa
     def get_Campaign_Member_in_campaign(self, db: Session, *, campaign_id:int, member_id:int) -> Campaign_Member:
         try:
             return db.query(Campaign_Member).filter(and_(Campaign_Member.campaign_id == campaign_id,Campaign_Member.member_id==member_id)).first()
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"Error with mysql {e}" )
+    def get_Campaign_Member_in_campaign_workers(self, db: Session, *, campaign_id:int) -> List[Campaign_Member]:
+        try:
+            return db.query(Campaign_Member).filter(and_(Campaign_Member.campaign_id == campaign_id,or_(Campaign_Member.role=="QueenBee", Campaign_Member.role=="WorkerBee" ))).all()
         except Exception as e:
             raise HTTPException(status_code=500, detail=f"Error with mysql {e}" )
     

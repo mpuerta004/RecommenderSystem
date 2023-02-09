@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 
 from typing import Any, Dict, Generic, List, Optional, Type, TypeVar, Union
 
-from schemas.Recommendation import Recommendation,RecommendationCell, RecommendationCellSearchResults, RecommendationCreate, RecommendationSearchResults, RecommendationUpdate
+from schemas.Recommendation import state, Recommendation,RecommendationCell, RecommendationCellSearchResults, RecommendationCreate, RecommendationSearchResults, RecommendationUpdate
 import deps
 import crud
 from datetime import datetime,timezone
@@ -194,7 +194,7 @@ def partially_update_recommendation(
     *,
     recommendation_id:int,
     member_id:int,
-    recipe_in:Union[RecommendationUpdate,Dict[str, Any]],
+    recipe_in:Union[state,Dict[str, Any]],
     db: Session = Depends(deps.get_db),
 ) -> dict:
     """
@@ -207,9 +207,9 @@ def partially_update_recommendation(
             status_code=404, detail=f"Recommendation with id=={recommendation_id} not found"
         )
     
-        
-    dict_update={"state":recipe_in.state, "update_datetime":datetime.utcnow()}
-    updated_recipe = crud.recommendation.update(db=db, db_obj=recommendation, obj_in=dict_update)
+    recomendation_update=RecommendationUpdate(state=recipe_in,update_datetime=datetime.utcnow())
+    # dict_update={"state":recipe_in, "update_datetime":datetime.utcnow()}
+    updated_recipe = crud.recommendation.update(db=db, db_obj=recommendation, obj_in=recomendation_update)
     db.commit()
     return updated_recipe
 
