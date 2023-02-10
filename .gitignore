@@ -2,7 +2,8 @@
 Conf.py
 /esquema.mwb.bak
 /esquema.mwb
-
+*/.avi
+*.avi
 # Byte-compiled / optimized / DLL files
 /__pycache__/
 *.py[cod]
