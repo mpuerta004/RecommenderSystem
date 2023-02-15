@@ -49,14 +49,15 @@ from schemas.Member_Device import Member_DeviceCreate
 import deps
 import crud
 from datetime import datetime, timedelta
-import math
+import math 
 import numpy as np
-
+from numpy import sin, cos, arccos, pi, round
+import geopy
+import geopy.distance
 
 
 
 api_router_sync = APIRouter()
-
 
 @api_router_sync.post("/points/", status_code=201, response_model=List)
 def create_points_of_campaign(
@@ -71,30 +72,51 @@ def create_points_of_campaign(
     radius = boundary.radius
     cells_distance=boundary.cells_distance
 
-    anchura_celdas = (cells_distance)
-    numero_celdas = radius//int(anchura_celdas) + 1
+    anchura_celdas = ((cells_distance))
+    numero_celdas = int((radius//cells_distance)) + 1
+    print(numero_celdas)
     List_points = []
-    for i in range(0, numero_celdas):
+    # Define starting point.
+    # Define a general distance object, initialized with a distance of 1 km.
+    for i in range(0, int(numero_celdas)):
         if i == 0:
             List_points.append([centre['Longitude'], centre['Latitude']])
         else:
-            centre_point_list=[
-                [centre['Longitude'], centre['Latitude']+i*anchura_celdas],
-                [centre['Longitude'], centre['Latitude']-i*anchura_celdas],
-                [centre['Longitude']+i*anchura_celdas, centre['Latitude']],
-                [centre['Longitude']-i*anchura_celdas, centre['Latitude']]]
+            start = geopy.Point(longitude=centre['Longitude'], latitude=centre['Latitude'])
+            d = geopy.distance.geodesic(kilometers = i*anchura_celdas)
+            # Use the `destination` method with a bearing of 0 degrees (which is north)
+            # in order to go from point `start` 1 km to north.
+            final1=d.destination(point=start, bearing=90)
+            final2=d.destination(point=start, bearing=270)
+            final3=d.destination(point=start, bearing=0)
+            final4=d.destination(point=start, bearing=180)
+            centre_point_list=[[final1.longitude,final1.latitude],[final2.longitude,final2.latitude],[final3.longitude,final3.latitude],[final4.longitude,final4.latitude]]
+            
+            
+                # [centre['Longitude'],round( centre['Latitude']+i*anchura_celdas,6)],
+                # [centre['Longitude'], round(centre['Latitude']-i*anchura_celdas,6)],
+                # [round(centre['Longitude']+i*anchura_celdas,6), centre['Latitude']],
+                # [round(centre['Longitude']-i*anchura_celdas,6), centre['Latitude']]]
             
             for poin in centre_point_list:
-                if np.sqrt((poin[0]-centre['Longitude'])**2 + (poin[1]-centre['Latitude'])**2) <= radius:
+                if(geopy.distance.great_circle((centre['Longitude'],centre['Latitude']),(poin[0],poin[1])).km<=radius):
                     List_points.append(poin)
-            for j in (1,numero_celdas):
-                centre_point_list=[
-                [centre['Longitude']+j*anchura_celdas,  centre['Latitude']+i*anchura_celdas],
-                [centre['Longitude']-j*anchura_celdas,  centre['Latitude']+i*anchura_celdas],
-                [centre['Longitude']+j*anchura_celdas,                                   centre['Latitude']-i*anchura_celdas],
-               [centre['Longitude']-j*anchura_celdas,                                   centre['Latitude']-i*anchura_celdas]]
+            for j in range(1,numero_celdas):
+                start = geopy.Point(latitude=final1.latitude, longitude=final1.longitude)
+                d = geopy.distance.geodesic(kilometers = j*anchura_celdas)
+                final11=d.destination(point=start, bearing=0)
+                final12=d.destination(point=start, bearing=180)
+                start2 = geopy.Point(latitude=final2.latitude, longitude=final2.longitude)
+                d2 = geopy.distance.geodesic(kilometers = j*anchura_celdas)
+                final21=d2.destination(point=start2, bearing=0)
+                final22=d2.destination(point=start2, bearing=180)
+                centre_point_list=[[final11.longitude,final11.latitude],[final12.longitude,final12.latitude],[final21.longitude,final21.latitude],[final22.longitude,final22.latitude]]
+            #     [round(centre['Longitude']+j*anchura_celdas,6),  round(centre['Latitude']+i*anchura_celdas,6)],
+            #     [round(centre['Longitude']-j*anchura_celdas,6),  round(centre['Latitude']+i*anchura_celdas,6)],
+            #     [round(centre['Longitude']+j*anchura_celdas,6),  round(centre['Latitude']-i*anchura_celdas,6)],
+            #    [round(centre['Longitude']-j*anchura_celdas,6),   round(centre['Latitude']-i*anchura_celdas,6)]]
                 for poin in centre_point_list:
-                    if np.sqrt((poin[0]-centre['Longitude'])**2 + (poin[1]-centre['Latitude'])**2) <= radius:
+                    if(geopy.distance.great_circle((centre['Longitude'],centre['Latitude']),(poin[0],poin[1])).km<=radius):
                         List_points.append(poin)
     return List_points        
 
