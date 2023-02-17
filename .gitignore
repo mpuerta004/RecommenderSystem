@@ -9,10 +9,14 @@ Conf.py
 *.py[cod]
 __pycache__/*
 */__pycache__/
+
+*/
 # C extensions
 *.so
 #Pictures! 
 *.jpeg
+*.png
+src/Servicio/app/Picture/*
 # Distribution / packaging
 .Python
 env/
@@ -72,3 +76,4 @@ foto_2.jpg
 foto_3.jpg
 foto_4.jpg
 R.session.sql
+
