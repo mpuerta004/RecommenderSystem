@@ -11,7 +11,7 @@ import crud
 from datetime import datetime,timezone
 import math
 
-
+import geopy.distance
 
 
 api_router_recommendation = APIRouter(prefix="/members/{member_id}/recommendations")
@@ -103,7 +103,8 @@ def create_recomendation(
     for i in cells: 
             centro= i[0].centre
             point= recipe_in.member_current_location
-            distancia= math.sqrt((centro['Longitude'] - point['Longitude'])**2+(centro['Latitude']-point['Latitude'])**2)
+            distancia=  (geopy.distance.GeodesicDistance((centro['Longitude'],centro['Latitude']),(point['Longitude'],point['Latitude']))).km
+
             if distancia<=250:
                 List_cells_cercanas.append(i)
     lista_celdas_ordenas=[]

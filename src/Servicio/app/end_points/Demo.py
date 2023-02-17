@@ -15,7 +15,18 @@ import math
 import numpy as np
 import cv2
 import numpy as np
-
+import io
+from PIL import Image                     
+import folium
+import numpy as np
+from numpy import sin, cos, arccos, pi, round
+import geopy
+import geopy.distance
+from folium.features import DivIcon
+import folium
+from math import sin, cos, atan2, sqrt, radians, degrees, asin
+from fastapi.responses import HTMLResponse
+from folium.plugins import HeatMap
 
 from fastapi_utils.session import FastAPISessionMaker
 
@@ -36,6 +47,9 @@ color_list=[
 (203,255,190),
 (138,198,131)
 ]
+
+color_list_h=[ '#ffc3c3', '#ffdba7', '#f8f7bb', '#cbffbe', '#8ac683'
+              ]
 
 variables_comportamiento={"user_aceptance":0.65, "user_realize":0.4, "popularidad_cell":0.85,"number_of_unpopular_cells":5}
 
@@ -105,6 +119,7 @@ def prioriry_calculation_2(time:datetime, cam:Campaign, db:Session= Depends(deps
                         priority = crud.priority.create_priority_detras(
                             db=db, obj_in=Cell_priority)
                         db.commit()
+                    
             return None
  
 
@@ -169,26 +184,47 @@ def asignacion_recursos(
             # #Tengo un usuario al que hacer una recomendacion. 
             if segundo%60==0:
                 show_a_campaign_2(hive_id=cam.hive_id,campaign_id=cam.id,time=time,db=db)
-               
-                n_surfaces=len(cam.surfaces)
-                posiciones_x=[]
-                posiciones_y=[]
-                for i in range(n_surfaces):
-                    boundary= cam.surfaces[i].boundary
-                    posiciones_x.append((boundary.centre['Longitude']-boundary.radius,boundary.centre['Longitude']+boundary.radius))
-                    posiciones_y.append((boundary.centre['Latitude']-boundary.radius,boundary.centre['Latitude']+boundary.radius))
                 
+              
+                
+              
                 list_users= reciboUser(cam,db=db)
                 if list_users!=[]:
                     for user in list_users:
-                    #Genero las recomendaciones y la que el usuario selecciona y el tiempo que va a tardar en realizar dicho recomendacion. 
-                        n=len(posiciones_y)
-                        surface_number = random.randint(0,n-1) 
-                        #Posiciones con los circulos  y cells cuadradiusas 
-                        x=random.randint(posiciones_x[surface_number][0],posiciones_x[surface_number][1])
-                        y=random.randint(posiciones_y[surface_number][0],posiciones_y[surface_number][1])
+                        #generate the user position, select randomly a surface and generate a point closer in a random direction of this surface.
 
-                        a=RecommendationCreate(member_current_location={'Longitude':x,'Latitude':y},recommendation_datetime=time)
+                        #Genero las recomendaciones y la que el usuario selecciona y el tiempo que va a tardar en realizar dicho recomendacion. 
+                        n_surfaces=len(cam.surfaces)
+                        surface_indice= random.randint(0,n_surfaces-1)
+                        boundary= cam.surfaces[surface_indice].boundary
+                        
+                        distance = random.randint(0,round(1000*(boundary.radius)))
+                        distance=distance/1000
+                        direction= random.randint(0,360)
+                        
+                        
+                        lat1 = boundary.centre['Longitude'] 
+                        lon1 = boundary.centre['Latitude'] 
+
+                        # Desired distance in kilometers
+                            # Direction in degrees
+                        direction_rad = radians(direction)
+
+                        # Earth radius in kilometers
+                        R = 6371
+
+                        # Convert coordinates to radians
+                        lat1_rad = radians(lat1)
+                        lon1_rad = radians(lon1)
+                            
+                        # Calculate the new coordinates using Vincenty formula
+                        lat2_rad = asin(sin(lat1_rad) * cos(distance / R) + cos(lat1_rad) * sin(distance / R) * cos(direction_rad))
+                        lon2_rad = lon1_rad + atan2(sin(direction_rad) * sin(distance / R) * cos(lat1_rad), cos(distance / R) - sin(lat1_rad) * sin(lat2_rad))
+                        # Convert the new coordinates to degrees
+                        lat2 = degrees(lat2_rad)
+                        lon2 = degrees(lon2_rad)
+                
+                        a=RecommendationCreate(member_current_location={'Longitude':lat2,'Latitude':lon2},recommendation_datetime=time)
                         recomendaciones=create_recomendation_2(db=db,member_id=user.id,recipe_in=a,cam=cam,time=time)
                         
                         if len(recomendaciones['results'])>0:
@@ -386,7 +422,9 @@ def create_recomendation_2(
     for i in cells: 
             centro= i[0].centre
             point= recipe_in.member_current_location
-            distancia= math.sqrt((centro['Longitude'] - point['Longitude'])**2+(centro['Latitude']-point['Latitude'])**2)
+            distancia=  (geopy.distance.GeodesicDistance((centro['Longitude'],centro['Latitude']),(point['Longitude'],point['Latitude']))).km
+            
+    
             if distancia<=(i[1].cells_distance)*2:
                 List_cells_cercanas.append(i)
     lista_celdas_ordenas=[]
@@ -490,6 +528,11 @@ def show_recomendation(*, cam:Campaign, user:Member, result:list(),time:datetime
     Cells_recomendadas.append(slot.cell_id)
     cell_elejida=slot.cell_id
     user_position=recomendation.member_current_location
+    cell_distance=cam.cells_distance
+    hipotenusa=math.sqrt(2*((cell_distance/2)**2))
+    surface=crud.surface.get(db=db, id=cam.surfaces[0].id)
+    mapObj = folium.Map(location =[surface.boundary.centre['Longitude'],surface.boundary.centre['Latitude']], zoom_start = 17)
+
     for i in cam.surfaces:
             count=count+1
             for j in i.cells:
@@ -500,137 +543,135 @@ def show_recomendation(*, cam:Campaign, user:Member, result:list(),time:datetime
                     numero=4
                 else:
                     numero=int((Cardinal_actual/cam.min_samples)//(1/4))
-                
-                color= (color_list[numero][2],color_list[numero][1],color_list[numero][0])
-                pt1=(int(j.centre['Longitude'])+j.radius,int(j.centre['Latitude'])+j.radius)
-                pt2=(int(j.centre['Longitude'])-j.radius,int(j.centre['Latitude'])-j.radius)
-                cv2.rectangle(imagen,pt1=pt1, pt2=pt2,color=color ,thickness = -1)
-                cv2.rectangle(imagen,pt1=pt1, pt2=pt2,color=(0,0,0))   
-                cv2.putText(imagen,  str(Cardinal_actual), (int(j.centre['Longitude']),int(j.centre['Latitude'])+40), cv2.FONT_HERSHEY_SIMPLEX , 0.75, (0,0,0))
-                cv2.putText(imagen,  str(j.id), (int(j.centre['Longitude']),int(j.centre['Latitude'])-40), cv2.FONT_HERSHEY_SIMPLEX , 0.4, (0,0,0))
+                    color = color_list_h[numero]
+                lat1 = j.centre['Longitude']
+                lon1 =j.centre['Latitude']
 
+                        # Desired distance in kilometers
+                distance  = hipotenusa
+                list_direction=[45,135,225,315]
+                list_point=[]
+                for dir in list_direction:
+                            # Direction in degrees
+                            direction = dir
+                            direction_rad = radians(direction)
+
+                            # Earth radius in kilometers
+                            R = 6371
+
+                            # Convert coordinates to radians
+                            lat1_rad = radians(lat1)
+                            lon1_rad = radians(lon1)
+                            
+                            # Calculate the new coordinates using Vincenty formula
+                            lat2_rad = asin(sin(lat1_rad) * cos(distance / R) + cos(lat1_rad) * sin(distance / R) * cos(direction_rad))
+                            lon2_rad = lon1_rad + atan2(sin(direction_rad) * sin(distance / R) * cos(lat1_rad), cos(distance / R) - sin(lat1_rad) * sin(lat2_rad))
+                            # Convert the new coordinates to degrees
+                            lat2 = degrees(lat2_rad)
+                            lon2 = degrees(lon2_rad)
+                            list_point.append([lat2,lon2])
+
+                line_color='black'
+                fill_color=color
+                print(color)
+                weight=1
+                text='text'
+                print(list_point)
+                folium.Polygon(locations=list_point, color=line_color, fill_color=color, 
+                                                                weight=weight, popup=(folium.Popup(text)),opacity=0.5,fill_opacity=0.75).add_to(mapObj)
+                # color= (color_list[numero][2],color_list[numero][1],color_list[numero][0])
+                # pt1=(int(j.centre['Longitude'])+j.radius,int(j.centre['Latitude'])+j.radius)
+                # pt2=(int(j.centre['Longitude'])-j.radius,int(j.centre['Latitude'])-j.radius)
+                # cv2.rectangle(imagen,pt1=pt1, pt2=pt2,color=color ,thickness = -1)
+                # cv2.rectangle(imagen,pt1=pt1, pt2=pt2,color=(0,0,0))   
+                # cv2.putText(imagen,  str(Cardinal_actual), (int(j.centre['Longitude']),int(j.centre['Latitude'])
+                # cv2.putText(imagen,  str(j.id), (int(j.centre['Longitude']),int(j.centre['Latitude'])-40), cv2.FONT_HERSHEY_SIMPLEX , 0.4, (0,0,0))
+                folium.Marker([lat1,lon1],
+                            icon=DivIcon(
+                                icon_size=(200,36),
+                                icon_anchor=(0,0),
+                                html=f'<div style="font-size: 20pt">{Cardinal_actual}</div>',
+                                )
+                            ).add_to(mapObj)
+                
                 if j.id in Cells_recomendadas:
                     if j.id== cell_elejida:
-                        cv2.drawMarker(imagen, position=(int(j.centre['Longitude']),int(j.centre['Latitude'])), color=(151,45,248), markerType=cv2.MARKER_TILTED_CROSS,markerSize= 24, thickness=5)
-                        cv2.drawMarker(imagen, position=(int(j.centre['Longitude']),int(j.centre['Latitude'])), color=(255,0,0), markerType=cv2.MARKER_SQUARE, markerSize= 20, thickness=2)
+                        folium.Marker(location =[j.centre['Longitude'],j.centre['Latitude']],icon=folium.Icon(color='red', icon='pushpin'),
+                                                             popup=f"SELECTED. Number of measurment: {Cardinal_actual}").add_to(mapObj)
+
+                        # cv2.drawMarker(imagen, position=(int(j.centre['Longitude']),int(j.centre['Latitude'])), color=(151,45,248), markerType=cv2.MARKER_TILTED_CROSS,markerSize= 24, thickness=5)
+                        # cv2.drawMarker(imagen, position=(int(j.centre['Longitude']),int(j.centre['Latitude'])), color=(255,0,0), markerType=cv2.MARKER_SQUARE, markerSize= 20, thickness=2)
 
                     else:
-                        cv2.drawMarker(imagen, position=(int(j.centre['Longitude']),int(j.centre['Latitude'])), color=(255,0,0), markerType=cv2.MARKER_SQUARE, markerSize= 20, thickness=2)
+                        folium.Marker(location =[j.centre['Longitude'],j.centre['Latitude']],popup=f"Number of measurment: {Cardinal_actual}").add_to(mapObj)
 
-    cv2.circle(imagen,color=(0,0,0),center=(int(user_position['Longitude']),int(user_position['Latitude'])), radius=10,thickness=-1) 
+                        # cv2.drawMarker(imagen, position=(int(j.centre['Longitude']),int(j.centre['Latitude'])), color=(255,0,0), markerType=cv2.MARKER_SQUARE, markerSize= 20, thickness=2)
+    #draw user position
+    folium.Marker(location=[float(user_position['Longitude']),float(user_position['Latitude'])], 
+              icon=folium.Icon(color='orange', icon='user')).add_to(mapObj)
+    
+    # cv2.circle(imagen,color=(0,0,0),center=(int(user_position['Longitude']),int(user_position['Latitude'])), radius=10,thickness=-1) 
     # res, im_png = cv2.imencode(".png", imagen)
-    direcion=f"/home/ubuntu/carpeta_compartida_docker/RecommenderSystem/src/Servicio/app/Pictures/Recomendaciones/{time.strftime('%m-%d-%Y-%H-%M-%S')}User_id{user.id}.jpeg"
+    direcion_html=f"/home/ubuntu/carpeta_compartida_docker/RecommenderSystem/src/Servicio/app/Pictures/Recomendaciones_html/{time.strftime('%m-%d-%Y-%H-%M-%S')}User_id{user.id}.html"
     # print(direcion)
-    cv2.imwrite(direcion, imagen)
+    # cv2.imwrite(direcion, imagen)
+    direcion_png=f"/home/ubuntu/carpeta_compartida_docker/RecommenderSystem/src/Servicio/app/Pictures/Recomendaciones/{time.strftime('%m-%d-%Y-%H-%M-%S')}User_id{user.id}.png"
+
+    colors = [ '#ffc3c3', '#ffdba7', '#f8f7bb', '#cbffbe', '#8ac683']
+    names = ['Initial', 'Almost Midway', 'Midway', 'Almost Finished', 'Finished']
+        # Define the names for the map-legend symbols
+    symbols = ['orange', 'blue', 'red']
+    names_simbols=["User's Position", "Recommended Points","Recommended and Selected Point"]
+
+        # Create the legend with a white background and opacity 0.5
+    legend_html = '''
+        <div style="position: fixed; 
+            bottom: 80px; left: 90px; width: 290px; height: 200px; 
+            border:2px solid grey; z-index:9999;
+            background-color: rgba(255, 255, 255, 0.75);
+            font-size:15px;">
+            <p style="margin:10px;"><b>Progress of measurements</b></p>
+            '''
+        # Add the colored boxes to the legend
+    for i in range(len(colors)):
+            legend_html += '''
+            <div style="background-color:{}; margin-left: 10px;
+                width: 28px; height: 16px; border: 2px solid #999;
+                display: inline-block;"></div>
+            <p style="display: inline-block; margin-left: 5px;">{}</p>
+            <br>
+            '''.format(colors[i], names[i])
+    legend_html += '</div>'
+    mapObj.get_root().html.add_child(folium.Element(legend_html))
+    legend_html = '''
+        <div style="position: fixed; 
+            bottom: 300px; left: 90px; width: 290px; height: 170px; 
+            border:2px solid grey; z-index:9999;
+            background-color: rgba(255, 255, 255, 0.75);
+            font-size:15px;">
+            <p style="margin:10px;"><b>Marker Legend</b></p>
+            '''
+        # Add the map-legend symbols to the legend
+    for i in range(len(symbols)):
+            legend_html += '''
+            <i class="fa fa-map-marker fa-2x"
+                    style="color:{};icon:user;margin-left: 10px;"></i>
+            <p style="display: inline-block; margin-left: 5px;">{}</p>
+            <br>
+            '''.format(symbols[i],names_simbols[i])
+        
+    legend_html += '</div>'
+
+        # Add the legend to the map
+    mapObj.get_root().html.add_child(folium.Element(legend_html))
+    mapObj.save(direcion_html)
+    img_data = mapObj._to_png(5)
+    img = Image.open(io.BytesIO(img_data))
+    img.save(direcion_png)
     return None
 
 
 
-
-
-
-# def show_recomendation_circulos(*, cam:Campaign, user:Member, result:list(),time:datetime, recomendation:Recommendation,db: Session = Depends(deps.get_db))->Any:
-#     plt.figure(figsize=(50,50))
-
-#     # fig = plt.figure()
-
-#     # imagen = 255*np.ones((1000,1500,3),dtype=np.uint8)
-#     # campañas_activas= crud.campaign.get_campaign(db=db, hive_id=hive_id, campaign_id=campaign_id)
-#     # if campañas_activas is None:
-#     #     raise HTTPException(
-#     #             status_code=404, detail=f"Campaign with campaign_id== {campaign_id}  and hive_id=={hive_id} not found"
-#     #         )
-#     # count=0
-#     # cv2.putText(imagen, f"Campaign: id={cam.id},", (100+count*600,50), cv2.FONT_HERSHEY_SIMPLEX , 0.75, (0,0,0))
-#     # cv2.putText(imagen, f"city={cam.city}", (100+count*600,80), cv2.FONT_HERSHEY_SIMPLEX , 0.75, (0,0,0))
-#     # cv2.putText(imagen, f"time={time.strftime('%m/%d/%Y, %H:%M:%S')}", (100+1*600,50), cv2.FONT_HERSHEY_SIMPLEX , 0.75, (0,0,0))
-#     # cv2.putText(imagen, f"User, user_id={user.id}", (100+1*600,80), cv2.FONT_HERSHEY_SIMPLEX , 0.75, (0,0,0))
-    
-    
-#     # cv2.putText(imagen, f"User position", (100+1*600,150), cv2.FONT_HERSHEY_SIMPLEX , 0.75, (0,0,0))
-#     # cv2.circle(imagen,color=(0,0,0),centre=(100+1*600 + 250,140), radiusius=10,thickness=-1) 
-#     # cv2.putText(imagen, f"cells recommended", (100+1*600,200), cv2.FONT_HERSHEY_SIMPLEX , 0.75, (0,0,0))
-#     # cv2.drawMarker(imagen, position=(100+1*600 + 250,190), color=(255,0,0), markerType=cv2.MARKER_SQUARE, markerSize= 20, thickness=2)
-#     # cv2.putText(imagen, f"Cell Selected", (100+1*600,250), cv2.FONT_HERSHEY_SIMPLEX , 0.75, (0,0,0))
-#     # cv2.drawMarker(imagen, position=(100+1*600 + 250,240), color=(151,45,248), markerType=cv2.MARKER_TILTED_CROSS,markerSize= 24, thickness=5)
-    
-#     Cells_recomendadas=[]
-#     for i in result:
-#         Cells_recomendadas.append(i.cell_id)
-#     cell_elejida=recomendation.cell_id
-#     user_position=recomendation.member_current_location
-#     posiciones_x=[]
-#     posiciones_y=[]
-#     for i in cam.surfaces:
-#             posiciones_x.append(int(i.centre[0]) + i.radius) 
-#             posiciones_x.append(int(i.centre[0]) - i.radius) 
-
-#             posiciones_y.append(int(i.centre[1]) + i.radius) 
-#             posiciones_y.append(int(i.centre[1]) - i.radius) 
-
-
-#             for j in i.cells:
-#                 slot=crud.slot.get_slot_time(db=db, cell_id=j.id,time=time)
-#                 prioridad = crud.priority.get_last(db=db,slot_id=slot.id,time=time)
-#                 temporal_prioridad=prioridad.temporal_priority
-                
-#                 if temporal_prioridad>2.5: # ROJO
-#                     # color=(201,191,255)
-#                     color='r'
-#                 elif temporal_prioridad<1.5: #VERDE
-#                     # color=(175,243,184)
-#                     color='g'
-#                 else: #NARANJA
-#                     # color=(191, 355, 255) 
-#                     color='y'
-#                 Cardinal_actual = crud.measurement.get_all_Measurement_from_cell_in_the_current_slot(db=db, cell_id=j.id, time=time,slot_id=slot.id)
-#                 plt.plot(int(j.centre[0]), int(j.centre[1]), 'bo',markerfacecolor=color, markersize=40)
-                
-#                 # print(temporal_prioridad/9, j.id,Cardinal_actual)
-#                 # pt1=(int(j.superior_coord[0]),int(j.superior_coord[1]))
-#                 # pt2=(int(j.inferior_coord[0]),int(j.inferior_coord[1]))
-#                 # # print(pt1, pt2)
-#                 # cv2.rectangle(imagen,pt1=pt1, pt2=pt2,color=color ,thickness = -1)
-#                 # cv2.rectangle(imagen,pt1=(int(j.superior_coord[0]),int(j.superior_coord[1])), pt2=(int(j.inferior_coord[0]),int(j.inferior_coord[1])),color=(0,0,0))   
-#                 # cv2.circle(imagen,centre=(int(j.centre[0]),int(j.centre[1])) , radiusius=j.radius, color=color, thickness=-1)
-#                 plt.text(int(j.centre[0]), int(j.centre[1]),str(Cardinal_actual),    fontdict=None)
-#                 if j.id in Cells_recomendadas:
-#                     if j.id== cell_elejida:
-#                         plt.plot(int(j.centre[0]), int(j.centre[1]),marker="h",alpha=0.75,markerfacecolor='magenta', markersize=80)
-#                         plt.plot(int(j.centre[0]), int(j.centre[1]),marker="s",alpha=0.5,markerfacecolor='blue', markersize=60)
-
-#                         # cv2.drawMarker(imagen, position=(int(j.centre[0]),int(j.centre[1])), color=(151,45,248), markerType=cv2.MARKER_TILTED_CROSS,markerSize= 24, thickness=5)
-#                         # cv2.drawMarker(imagen, position=(int(j.centre[0]),int(j.centre[1])), color=(255,0,0), markerType=cv2.MARKER_SQUARE, markerSize= 20, thickness=2)
-
-#                     else:
-#                         plt.plot(int(j.centre[0]), int(j.centre[1]),marker="s",alpha=0.5,markerfacecolor='blue', markersize=60)
-
-#                         # cv2.drawMarker(imagen, position=(int(j.centre[0]),int(j.centre[1])), color=(255,0,0), markerType=cv2.MARKER_SQUARE, markerSize= 20, thickness=2)
-
-#                 # cv2.putText(imagen, str(Cardinal_actual), (int(j.centre[0]),int(j.centre[1])), cv2.FONT_HERSHEY_SIMPLEX , 0.75, (0,0,0))
-#     plt.plot( int(user_position[0]),int(user_position[1]), marker="o", markersize=40)
-#     y=max(posiciones_y)
-#     x=min(posiciones_x)
-#     plt.text(x, y+10,f"Campaign: id={cam.id},",    fontdict=None)
-#     plt.text(x, y+8,f"city={cam.city}",    fontdict=None)
-#     plt.text(x, y+6,f"time={time.strftime('%m/%d/%Y, %H:%M:%S')}",    fontdict=None)
-#     plt.text(x, y+4,f"Campaign Start: id={cam.start_datetime.strftime('%m/%d/%Y, %H:%M:%S')},",    fontdict=None)
-    
-#     plt.text(x+5, y+10,f"User Position", fontdict=None)
-#     plt.plot(x+7, y+10,marker='o', markersize=60)
-#     plt.text(x+5, y+8,f"Recommendations",    fontdict=None)
-#     # plt.text(x+55, y+80,f"city={cam.city}",    fontdict=None)
-#     plt.plot(x+7, y+8,marker="h",alpha=0.5,markerfacecolor='magenta', markersize=60)
-
-#     plt.text(x+5, y+6,f"Selection",    fontdict=None)
-#     plt.plot(x+7, y+6,marker="s",alpha=0.5,markerfacecolor='blue', markersize=60)
-
-#     # res, im_png = cv2.imencode(".png", imagen)
-#     direcion=f"/home/ubuntu/carpeta_compartida_docker/RecommenderSystem/src/Servicio/app/Pictures/Recomendaciones/{time.strftime('%m-%d-%Y-%H-%M-%S')}User_id{user.id}.jpeg"
-#     # print(direcion)
-#     plt.savefig(direcion)
-    # cv2.imwrite(direcion, imagen)
-    
    
 
 def show_a_campaign_2(
@@ -670,6 +711,13 @@ def show_a_campaign_2(
                 status_code=404, detail=f"Campaign with campaign_id== {campaign_id}  and hive_id=={hive_id} not found"
             )
     count=0
+    surface=crud.surface.get(db=db, id=campañas_activas.surfaces[0].id)
+    mapObj = folium.Map(location =[surface.boundary.centre['Longitude'],surface.boundary.centre['Latitude']], zoom_start = 17)
+    
+    cell_distance=campañas_activas.cells_distance
+
+    hipotenusa=math.sqrt(2*((cell_distance/2)**2))
+
     cv2.putText(imagen, f"Campaign: id={campañas_activas.id},", (50,50), cv2.FONT_HERSHEY_SIMPLEX , 0.75, (0,0,0))
     cv2.putText(imagen, f"title={campañas_activas.title}", (50,80), cv2.FONT_HERSHEY_SIMPLEX , 0.75, (0,0,0))
     cv2.putText(imagen, f"time={time.strftime('%m/%d/%Y, %H:%M:%S')}", (50,110), cv2.FONT_HERSHEY_SIMPLEX , 0.75, (0,0,0))
@@ -677,37 +725,125 @@ def show_a_campaign_2(
             count=count+1
             for j in i.cells:
                 slot=crud.slot.get_slot_time(db=db, cell_id=j.id,time=time)
-                # prioridad= crud.priority.get_last(db=db,slot_id=slot.id,time=time)
-                # temporal_prioridad=prioridad.temporal_priority
-                # numero=int((temporal_prioridad+1)//(2/4))
-
-                # print(numero)
-                # if temporal_prioridad>=0.6666: # ROJO
-                #     color=(201,191,255)
-                # elif temporal_prioridad<=0.3333: #VERDE
-                #     color=(175,243,184)
-                # else: #NARANJA
-                #     color=(191, 355, 255) 
-                # print(temporal_prioridad, j.id)
+                
                 Cardinal_actual = crud.measurement.get_all_Measurement_from_cell_in_the_current_slot(db=db, cell_id=j.id, time=time,slot_id=slot.id)
                 if Cardinal_actual>=campañas_activas.min_samples:
                     numero=4
                 else:
                     numero=int((Cardinal_actual/campañas_activas.min_samples)//(1/4))
-                color= (color_list[numero][2],color_list[numero][1],color_list[numero][0])
-                pt1=(int(j.centre['Longitude'])+j.radius,int(j.centre['Latitude'])+j.radius)
-                pt2=(int(j.centre['Longitude'])-j.radius,int(j.centre['Latitude'])-j.radius)
-                # print(pt1, pt2)
-                cv2.rectangle(imagen,pt1=pt1, pt2=pt2,color=color ,thickness = -1)
-                cv2.rectangle(imagen,pt1=pt1, pt2=pt2,color=(0,0,0))   
-                cv2.putText(imagen,  str(Cardinal_actual), (int(j.centre['Longitude']),int(j.centre['Latitude'])+40), cv2.FONT_HERSHEY_SIMPLEX , 0.75, (0,0,0))
-                cv2.putText(imagen,  str(j.id), (int(j.centre['Longitude']),int(j.centre['Latitude'])-40), cv2.FONT_HERSHEY_SIMPLEX , 0.4, (0,0,0))
+                # color= (color_list[numero][2],color_list[numero][1],color_list[numero][0])
+                color = color_list_h[numero]
+                lat1 = j.centre['Longitude']
+                lon1 =j.centre['Latitude']
 
-    
+                        # Desired distance in kilometers
+                distance  = hipotenusa
+                list_direction=[45,135,225,315]
+                list_point=[]
+                for dir in list_direction:
+                            # Direction in degrees
+                            direction = dir
+                            direction_rad = radians(direction)
+
+                            # Earth radius in kilometers
+                            R = 6371
+
+                            # Convert coordinates to radians
+                            lat1_rad = radians(lat1)
+                            lon1_rad = radians(lon1)
+                            
+                            # Calculate the new coordinates using Vincenty formula
+                            lat2_rad = asin(sin(lat1_rad) * cos(distance / R) + cos(lat1_rad) * sin(distance / R) * cos(direction_rad))
+                            lon2_rad = lon1_rad + atan2(sin(direction_rad) * sin(distance / R) * cos(lat1_rad), cos(distance / R) - sin(lat1_rad) * sin(lat2_rad))
+                            # Convert the new coordinates to degrees
+                            lat2 = degrees(lat2_rad)
+                            lon2 = degrees(lon2_rad)
+                            list_point.append([lat2,lon2])
+
+                line_color='black'
+                fill_color=color
+                weight=1
+                text='text'
+                folium.Polygon(locations=list_point, color=line_color, fill_color=color, 
+                                                                    weight=weight, popup=(folium.Popup(text)),opacity=0.5,fill_opacity=0.75).add_to(mapObj)
+                    # pt1 = (int(j.centre['Longitude'])+j.radius, int(j.centre['Latitude'])+j.radius)
+                    # pt2 = (int(j.centre['Longitude'])-j.radius, int(j.centre['Latitude'])-j.radius)
+                    # # print(pt1, pt2)
+                    # cv2.rectangle(imagen, pt1=pt1, pt2=pt2, color=color, thickness=-1)
+                    # cv2.rectangle(imagen, pt1=pt1, pt2=pt2, color=(0, 0, 0))
+                folium.Marker([lat1,lon1],
+                            icon=DivIcon(
+                                icon_size=(200,36),
+                                icon_anchor=(0,0),
+                                html=f'<div style="font-size: 20pt">{Cardinal_actual}</div>',
+                                )
+                            ).add_to(mapObj)
+                # pt1=(int(j.centre['Longitude'])+j.radius,int(j.centre['Latitude'])+j.radius)
+                # pt2=(int(j.centre['Longitude'])-j.radius,int(j.centre['Latitude'])-j.radius)
+                # # print(pt1, pt2)
+                # cv2.rectangle(imagen,pt1=pt1, pt2=pt2,color=color ,thickness = -1)
+                # cv2.rectangle(imagen,pt1=pt1, pt2=pt2,color=(0,0,0))   
+                # cv2.putText(imagen,  str(Cardinal_actual), (int(j.centre['Longitude']),int(j.centre['Latitude'])+40), cv2.FONT_HERSHEY_SIMPLEX , 0.75, (0,0,0))
+                # cv2.putText(imagen,  str(j.id), (int(j.centre['Longitude']),int(j.centre['Latitude'])-40), cv2.FONT_HERSHEY_SIMPLEX , 0.4, (0,0,0))
+
     # res, im_png = cv2.imencode(".png", imagen)
-    direcion=f"/home/ubuntu/carpeta_compartida_docker/RecommenderSystem/src/Servicio/app/Pictures/Measurements/{time.strftime('%m-%d-%Y-%H-%M-%S')}.jpeg"
+    direcion_html=f"/home/ubuntu/carpeta_compartida_docker/RecommenderSystem/src/Servicio/app/Pictures/Measurements_html/{time.strftime('%m-%d-%Y-%H-%M-%S')}.html"
     # print(direcion)
-    cv2.imwrite(direcion, imagen)
+    # cv2.imwrite(direcion, imagen)
+    direcion_png=f"/home/ubuntu/carpeta_compartida_docker/RecommenderSystem/src/Servicio/app/Pictures/Measurements/{time.strftime('%m-%d-%Y-%H-%M-%S')}.png"
+    colors = [ '#ffc3c3', '#ffdba7', '#f8f7bb', '#cbffbe', '#8ac683']
+    names = ['Initial', 'Almost Midway', 'Midway', 'Almost Finished', 'Finished']
+        # Define the names for the map-legend symbols
+    symbols = ['orange', 'blue', 'red']
+    names_simbols=["User's Position", "Recommended Points","Recommended and Selected Point"]
+
+        # Create the legend with a white background and opacity 0.5
+    legend_html = '''
+        <div style="position: fixed; 
+            bottom: 80px; left: 90px; width: 290px; height: 200px; 
+            border:2px solid grey; z-index:9999;
+            background-color: rgba(255, 255, 255, 0.75);
+            font-size:15px;">
+            <p style="margin:10px;"><b>Progress of measurements</b></p>
+            '''
+        # Add the colored boxes to the legend
+    for i in range(len(colors)):
+            legend_html += '''
+            <div style="background-color:{}; margin-left: 10px;
+                width: 28px; height: 16px; border: 2px solid #999;
+                display: inline-block;"></div>
+            <p style="display: inline-block; margin-left: 5px;">{}</p>
+            <br>
+            '''.format(colors[i], names[i])
+    legend_html += '</div>'
+    mapObj.get_root().html.add_child(folium.Element(legend_html))
+    # legend_html = '''
+    #     <div style="position: fixed; 
+    #         bottom: 300px; left: 90px; width: 290px; height: 170px; 
+    #         border:2px solid grey; z-index:9999;
+    #         background-color: rgba(255, 255, 255, 0.75);
+    #         font-size:15px;">
+    #         <p style="margin:10px;"><b>Marker Legend</b></p>
+    #         '''
+    #     # Add the map-legend symbols to the legend
+    # for i in range(len(symbols)):
+    #         legend_html += '''
+    #         <i class="fa fa-map-marker fa-2x"
+    #                 style="color:{};icon:user;margin-left: 10px;"></i>
+    #         <p style="display: inline-block; margin-left: 5px;">{}</p>
+    #         <br>
+    #         '''.format(symbols[i],names_simbols[i])
+        
+    # legend_html += '</div>'
+
+    #     # Add the legend to the map
+    # mapObj.get_root().html.add_child(folium.Element(legend_html))
+    mapObj.save(direcion_html)
+    
+
+    img_data = mapObj._to_png(5)
+    img = Image.open(io.BytesIO(img_data))
+    img.save(direcion_png)
     return None
 
 

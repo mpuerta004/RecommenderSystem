@@ -27,6 +27,16 @@ import asyncio
 import numpy as np
 from starlette.responses import StreamingResponse
 from fastapi_utils.session import FastAPISessionMaker
+                       
+import folium
+import numpy as np
+from numpy import sin, cos, arccos, pi, round
+import geopy
+import geopy.distance
+from folium.features import DivIcon
+import folium
+from math import sin, cos, atan2, sqrt, radians, degrees, asin
+from fastapi.responses import HTMLResponse
 
 api_router_campaign = APIRouter(prefix="/hives/{hive_id}/campaigns")
 SQLALCHEMY_DATABASE_URL = "mysql+mysqlconnector://mve:mvepasswd123@localhost:3306/SocioBee"
@@ -39,7 +49,8 @@ color_list = [
     (203, 255, 190),
     (138, 198, 131)
 ]
-
+color_list_h=[ '#ffc3c3', '#ffdba7', '#f8f7bb', '#cbffbe', '#8ac683'
+              ]
 
 
 @api_router_campaign.get("/", status_code=200, response_model=CampaignSearchResults)
@@ -184,82 +195,102 @@ async def create_campaign(
     Surface = crud.surface.create_sur(
             db=db, campaign_id=Campaign.id, obj_in=surface_create)
     
-    anchura_celdas = (campaign_metadata.cells_distance)
-    radio=(campaign_metadata.cells_distance)//2
-    numero_celdas = int(radius)//int(anchura_celdas) + 1
+    cells_distance = Campaign.cells_distance
+    anchura_celdas = ((cells_distance))
+    radio=cells_distance/2
+    numero_celdas = int((radius//cells_distance)) +  25
+    print(numero_celdas)
 
     for i in range(0, numero_celdas):
         if i == 0:
-            try:
                 cell_create = CellCreate(surface_id=Surface.id, centre={
                     'Longitude': centre['Longitude'], 'Latitude': centre['Latitude']}, radius=radio)
                 cell = crud.cell.create_cell(
                     db=db, obj_in=cell_create, surface_id=Surface.id)
-            except:
-                raise HTTPException(
-                    status_code=404, detail=f"Problem with the conecction with mysql."
-                )
+           
         else:
-            centre_CELL_arriba = {'Longitude': centre['Longitude'],
-                                  'Latitude': centre['Latitude']+i*anchura_celdas}
-            centre_cell_abajo = {'Longitude': centre['Longitude'],
-                                 'Latitude': centre['Latitude']-i*anchura_celdas}
-            centre_cell_izq = {'Longitude': centre['Longitude'] +
-                               i*anchura_celdas, 'Latitude': centre['Latitude']}
-            centre_cell_derecha = {
-                'Longitude': centre['Longitude']-i*anchura_celdas, 'Latitude': centre['Latitude']}
-            centre_point_list = [centre_CELL_arriba, centre_cell_abajo,
-                                 centre_cell_izq,   centre_cell_derecha]
-            for poin in centre_point_list:
-                if np.sqrt((poin['Longitude']-centre['Longitude'])**2 + (poin['Latitude']-centre['Latitude'])**2) <= radius:
-                    try:
+            lat1 = centre['Longitude']
+            lon1 = centre['Latitude']
+
+            # Desired distance in kilometers
+            distance  = i*anchura_celdas
+            list_direction=[0,90,180,270]
+            list_point=[]
+            for j in list_direction:
+                # Direction in degrees
+                direction = j
+                # Convert direction to radians
+                direction_rad = radians(direction)
+
+                # Earth radius in kilometers
+                R = 6371
+                # Convert coordinates to radians
+                lat1_rad = radians(lat1)
+                lon1_rad = radians(lon1)
+
+                # Calculate the new coordinates using Vincenty formula
+                lat2_rad = asin(sin(lat1_rad) * cos(distance / R) + cos(lat1_rad) * sin(distance / R) * cos(direction_rad))
+                lon2_rad = lon1_rad + atan2(sin(direction_rad) * sin(distance / R) * cos(lat1_rad), cos(distance / R) - sin(lat1_rad) * sin(lat2_rad))
+
+                # Convert the new coordinates to degrees
+                lat2 = degrees(lat2_rad)
+                lon2 = degrees(lon2_rad)
+                list_point.append([lat2,lon2])
+                if direction==90:
+                    final1=[lon2,lat2]
+                if direction==270:
+                    final2=[lon2,lat2]
+            
+           
+            for poin in list_point:
+                if (geopy.distance.GeodesicDistance((centre['Longitude'],centre['Latitude']),(poin[0],poin[1]))).km<=radius:
+                        Point()
                         cell_create = CellCreate(
-                            surface_id=Surface.id, centre=poin, radius=radio)
+                                surface_id=Surface.id, centre={'Longitude': poin[0],'Latitude':poin[1]}, radius=radio)
                         cell = crud.cell.create_cell(
                             db=db, obj_in=cell_create, surface_id=Surface.id)
-                    except:
-                        raise HTTPException(
-                            status_code=404, detail=f"Problems with the conecction with mysql."
-                        )
-            for j in range(1, numero_celdas):
-                centre_CELL_arriba_lado_1 = {
-                    'Longitude': centre['Longitude']+j*anchura_celdas, 'Latitude': centre['Latitude']+i*anchura_celdas}
-                centre_CELL_arriba_lado_2 = {
-                    'Longitude': centre['Longitude']-j*anchura_celdas, 'Latitude': centre['Latitude']+i*anchura_celdas}
-                centre_CELL_abajo_lado_1 = {
-                    'Longitude': centre['Longitude']+j*anchura_celdas, 'Latitude': centre['Latitude']-i*anchura_celdas}
-                centre_CELL_abajo_lado_2 = {
-                    'Longitude': centre['Longitude']-j*anchura_celdas, 'Latitude': centre['Latitude']-i*anchura_celdas}
-                centre_point_list = [centre_CELL_arriba_lado_1, centre_CELL_arriba_lado_2,
-                                     centre_CELL_abajo_lado_1, centre_CELL_abajo_lado_2]
-                for poin in centre_point_list:
-                    if np.sqrt((poin['Longitude']-centre['Longitude'])**2 + (poin['Latitude']-centre['Latitude'])**2) <= radius:
+                    
+            list_point=[]
+            for j in range(1,numero_celdas):
+                distance=j*cells_distance
+
+                for z in [final1,final2]:
+                    lat1 = z[1]
+                    lon1 = z[0]
+                    list_direction=[0,180]
+                    for j in list_direction:
+                        # Direction in degrees
+                        direction = j
+                        # Convert direction to radians
+                        direction_rad = radians(direction)
+
+                        # Earth radius in kilometers
+                        R = 6371
+
+                        # Convert coordinates to radians
+                        lat1_rad = radians(lat1)
+                        lon1_rad = radians(lon1)
+
+                        # Calculate the new coordinates using Vincenty formula
+                        lat2_rad = asin(sin(lat1_rad) * cos(distance / R) + cos(lat1_rad) * sin(distance / R) * cos(direction_rad))
+                        lon2_rad = lon1_rad + atan2(sin(direction_rad) * sin(distance / R) * cos(lat1_rad), cos(distance / R) - sin(lat1_rad) * sin(lat2_rad))
+
+                        # Convert the new coordinates to degrees
+                        lat2 = degrees(lat2_rad)
+                        lon2 = degrees(lon2_rad)
+
+                        list_point.append([lat2,lon2])
+            for poin in list_point:
+        
+                if (geopy.distance.GeodesicDistance((centre['Longitude'],centre['Latitude']),(poin[0],poin[1]))).km<=radius:
                             cell_create = CellCreate(
-                                surface_id=Surface.id, centre=poin, radius=radio)
+                                surface_id=Surface.id, centre={'Longitude': poin[0],'Latitude':poin[1]}, radius=radio)
                             cell = crud.cell.create_cell(
                                 db=db, obj_in=cell_create, surface_id=Surface.id)
 
     background_tasks.add_task(create_slots, cam=Campaign)
     return Campaign
 
-
-
-
-
-"""
-Output ( "centre": [0,0], "radius": 100):
-[
-  [    0,    0  ],
-  [    0,    100  ],
-  [    0,    -100  ],
-  [    100,    0  ],
-  [    -100,    0  ],
-  [    100,    100  ],
-  [    -100,    100  ],
-  [    100,   -100  ],
-  [    -100,    -100  ]
-]
-"""
 
 
 async def create_slots(cam: Campaign):
@@ -301,16 +332,16 @@ async def create_slots(cam: Campaign):
                             priority = crud.priority.create_priority_detras(
                                     db=db, obj_in=Cell_priority)
                             db.commit()
-                        
+ 
 
-@api_router_campaign.get("/{campaign_id}/show", status_code=200)
+@api_router_campaign.get("/{campaign_id}/show", status_code=200, response_class=HTMLResponse)
 def show_a_campaign(
     *,
     hive_id: int,
     campaign_id: int,
     time: datetime,
     db: Session = Depends(deps.get_db),
-) -> Any:
+) -> HTMLResponse:
     """
     Show a campaign
     """
@@ -327,14 +358,18 @@ def show_a_campaign(
 
             # imagen = 255*np.ones(( 200+100*n_filas , 200+n_surfaces*600,3),dtype=np.uint8)
             # imagen = 255*np.ones((1000,1500,3),dtype=np.uint8)
-
+            cell_distance=campañas_activas.cells_distance
+            hipotenusa=math.sqrt(2*((cell_distance/2)**2))
             count = 0
-            cv2.putText(imagen, f"Campaign: id={campañas_activas.id},",
-                        (50, 50), cv2.FONT_HERSHEY_SIMPLEX, 0.75, (0, 0, 0))
-            cv2.putText(imagen, f"city={campañas_activas.title}",
-                        (50, 80), cv2.FONT_HERSHEY_SIMPLEX, 0.75, (0, 0, 0))
-            cv2.putText(imagen, f"time={time.strftime('%m/%d/%Y, %H:%M:%S')}",
-                        (50, 110), cv2.FONT_HERSHEY_SIMPLEX, 0.75, (0, 0, 0))
+            # cv2.putText(imagen, f"Campaign: id={campañas_activas.id},",
+            #             (50, 50), cv2.FONT_HERSHEY_SIMPLEX, 0.75, (0, 0, 0))
+            # cv2.putText(imagen, f"city={campañas_activas.title}",
+            #             (50, 80), cv2.FONT_HERSHEY_SIMPLEX, 0.75, (0, 0, 0))
+            # cv2.putText(imagen, f"time={time.strftime('%m/%d/%Y, %H:%M:%S')}",
+            #             (50, 110), cv2.FONT_HERSHEY_SIMPLEX, 0.75, (0, 0, 0))
+            surface=crud.surface.get(db=db, id=campañas_activas.surfaces[0].id)
+            mapObj = folium.Map(location =[surface.boundary.centre['Longitude'],surface.boundary.centre['Latitude']], zoom_start = 20)
+
             for i in campañas_activas.surfaces:
                 count = count+1
                 for j in i.cells:
@@ -351,23 +386,69 @@ def show_a_campaign(
                     else:
                         numero = int(
                             (Cardinal_actual/campañas_activas.min_samples)//(1/4))
-                    color = (color_list[numero][2], color_list[numero]
-                             [1], color_list[numero][0])
-                    pt1 = (int(j.centre['Longitude'])+j.radius, int(j.centre['Latitude'])+j.radius)
-                    pt2 = (int(j.centre['Longitude'])-j.radius, int(j.centre['Latitude'])-j.radius)
-                    # print(pt1, pt2)
-                    cv2.rectangle(imagen, pt1=pt1, pt2=pt2, color=color, thickness=-1)
-                    cv2.rectangle(imagen, pt1=pt1, pt2=pt2, color=(0, 0, 0))
-                    cv2.putText(imagen, str(Cardinal_actual), (int(j.centre['Longitude']), int(
-                        j.centre['Latitude'])), cv2.FONT_HERSHEY_SIMPLEX, 0.75, (0, 0, 0))
+                    color = color_list_h[numero]
+                    lat1 = j.centre['Longitude']
+                    lon1 =j.centre['Latitude']
 
-            res, im_png = cv2.imencode(".png", imagen)
+                    # Desired distance in kilometers
+                    distance  = hipotenusa
+                    list_direction=[45,135,225,315]
+                    list_point=[]
+                    for j in list_direction:
+                        # Direction in degrees
+                        direction = j
+                        direction_rad = radians(direction)
 
-            return StreamingResponse(BytesIO(im_png.tobytes()), media_type="image/png")
+                        # Earth radius in kilometers
+                        R = 6371
+
+                        # Convert coordinates to radians
+                        lat1_rad = radians(lat1)
+                        lon1_rad = radians(lon1)
+                        
+                        # Calculate the new coordinates using Vincenty formula
+                        lat2_rad = asin(sin(lat1_rad) * cos(distance / R) + cos(lat1_rad) * sin(distance / R) * cos(direction_rad))
+                        lon2_rad = lon1_rad + atan2(sin(direction_rad) * sin(distance / R) * cos(lat1_rad), cos(distance / R) - sin(lat1_rad) * sin(lat2_rad))
+                        # Convert the new coordinates to degrees
+                        lat2 = degrees(lat2_rad)
+                        lon2 = degrees(lon2_rad)
+                        list_point.append([lat2,lon2])
+
+                    line_color='black'
+                    fill_color=color
+                    print(color)
+                    weight=1
+                    text='text'
+                    print(list_point)
+                    folium.Polygon(locations=list_point, color=line_color, fill_color=color, 
+                                                                weight=weight, popup=(folium.Popup(text)),opacity=0.5,fill_opacity=0.5).add_to(mapObj)
+                    # pt1 = (int(j.centre['Longitude'])+j.radius, int(j.centre['Latitude'])+j.radius)
+                    # pt2 = (int(j.centre['Longitude'])-j.radius, int(j.centre['Latitude'])-j.radius)
+                    # # print(pt1, pt2)
+                    # cv2.rectangle(imagen, pt1=pt1, pt2=pt2, color=color, thickness=-1)
+                    # cv2.rectangle(imagen, pt1=pt1, pt2=pt2, color=(0, 0, 0))
+                    folium.Marker([lat1,lon1],
+                            icon=DivIcon(
+                                icon_size=(200,36),
+                                icon_anchor=(0,0),
+                                html=f'<div style="font-size: 20pt">{Cardinal_actual}</div>',
+                                )
+                            ).add_to(mapObj)
+                    # folium.Marker([lat1,lon1]).add_to(mapObj)
+                    # cv2.putText(imagen, str(Cardinal_actual), (int(j.centre['Longitude']), int(
+                    #     j.centre['Latitude'])), cv2.FONT_HERSHEY_SIMPLEX, 0.75, (0, 0, 0))
+           
+            mapObj.save("index.html")
+            htmlt_map=mapObj._repr_html_()
+       
+            return f"<html><body>{htmlt_map}</body></html>"
         else:
             raise HTTPException(
                 status_code=404, detail=f"Campaign with campaign_id== {campaign_id}  and hive_id=={hive_id} is not active fot the time={time}."
             )
+
+#             return StreamingResponse(BytesIO(im_png.tobytes()), media_type="image/png")
+
 
 
 @api_router_campaign.put("/{campaign_id}", status_code=201, response_model=Campaign)
@@ -413,61 +494,96 @@ def update_campaign(
                 Surface = crud.surface.create_sur(
                 db=db, campaign_id=campaign.id, obj_in=surface_create)
                 
-                anchura_celdas = (campaign.cells_distance)
-                radio=(campaign.cells_distance)//2
-                numero_celdas = radius//int(anchura_celdas) + 2
+                cells_distance = Campaign.cells_distance
+                anchura_celdas = ((cells_distance))
+                radio=cells_distance/2
+                numero_celdas = int((radius//cells_distance)) +  25
+                print(numero_celdas)
 
                 for i in range(0, numero_celdas):
                     if i == 0:
-                        try:
                             cell_create = CellCreate(surface_id=Surface.id, centre={
                                 'Longitude': centre['Longitude'], 'Latitude': centre['Latitude']}, radius=radio)
                             cell = crud.cell.create_cell(
                                 db=db, obj_in=cell_create, surface_id=Surface.id)
-                            db.commit()
-
-                        except:
-                            raise HTTPException(
-                                status_code=404, detail=f"Problem with the conecction with mysql."
-                            )
+                    
                     else:
-                        centre_CELL_arriba = {'Longitude': centre['Longitude'],
-                                            'Latitude': centre['Latitude']+i*anchura_celdas}
-                        centre_cell_abajo = {'Longitude': centre['Longitude'],
-                                            'Latitude': centre['Latitude']-i*anchura_celdas}
-                        centre_cell_izq = {'Longitude': centre['Longitude'] +
-                                        i*anchura_celdas, 'Latitude': centre['Latitude']}
-                        centre_cell_derecha = {
-                            'Longitude': centre['Longitude']-i*anchura_celdas, 'Latitude': centre['Latitude']}
-                        centre_point_list = [centre_CELL_arriba, centre_cell_abajo,
-                                            centre_cell_izq,   centre_cell_derecha]
-                        for poin in centre_point_list:
-                            if np.sqrt((poin['Longitude']-centre['Longitude'])**2 + (poin['Latitude']-centre['Latitude'])**2) <= radius:
-                                try:
+                        lat1 = centre['Longitude']
+                        lon1 = centre['Latitude']
+
+                        # Desired distance in kilometers
+                        distance  = i*anchura_celdas
+                        list_direction=[0,90,180,270]
+                        list_point=[]
+                        for j in list_direction:
+                            # Direction in degrees
+                            direction = j
+                            # Convert direction to radians
+                            direction_rad = radians(direction)
+
+                            # Earth radius in kilometers
+                            R = 6371
+                            # Convert coordinates to radians
+                            lat1_rad = radians(lat1)
+                            lon1_rad = radians(lon1)
+
+                            # Calculate the new coordinates using Vincenty formula
+                            lat2_rad = asin(sin(lat1_rad) * cos(distance / R) + cos(lat1_rad) * sin(distance / R) * cos(direction_rad))
+                            lon2_rad = lon1_rad + atan2(sin(direction_rad) * sin(distance / R) * cos(lat1_rad), cos(distance / R) - sin(lat1_rad) * sin(lat2_rad))
+
+                            # Convert the new coordinates to degrees
+                            lat2 = degrees(lat2_rad)
+                            lon2 = degrees(lon2_rad)
+                            list_point.append([lat2,lon2])
+                            if direction==90:
+                                final1=[lon2,lat2]
+                            if direction==270:
+                                final2=[lon2,lat2]
+                        
+                    
+                        for poin in list_point:
+                            if (geopy.distance.GeodesicDistance((centre['Longitude'],centre['Latitude']),(poin[0],poin[1]))).km<=radius:
+                                    Point()
                                     cell_create = CellCreate(
-                                        surface_id=Surface.id, centre=poin, radius=radio)
+                                            surface_id=Surface.id, centre={'Longitude': poin[0],'Latitude':poin[1]}, radius=radio)
                                     cell = crud.cell.create_cell(
                                         db=db, obj_in=cell_create, surface_id=Surface.id)
-                                    db.commit()
-                                except:
-                                    raise HTTPException(
-                                        status_code=404, detail=f"Problems with the conecction with mysql."
-                                    )
-                        for j in range(1, numero_celdas):
-                            centre_CELL_arriba_lado_1 = {
-                                'Longitude': centre['Longitude']+j*anchura_celdas, 'Latitude': centre['Latitude']+i*anchura_celdas}
-                            centre_CELL_arriba_lado_2 = {
-                                'Longitude': centre['Longitude']-j*anchura_celdas, 'Latitude': centre['Latitude']+i*anchura_celdas}
-                            centre_CELL_abajo_lado_1 = {
-                                'Longitude': centre['Longitude']+j*anchura_celdas, 'Latitude': centre['Latitude']-i*anchura_celdas}
-                            centre_CELL_abajo_lado_2 = {
-                                'Longitude': centre['Longitude']-j*anchura_celdas, 'Latitude': centre['Latitude']-i*anchura_celdas}
-                            centre_point_list = [centre_CELL_arriba_lado_1, centre_CELL_arriba_lado_2,
-                                                centre_CELL_abajo_lado_1, centre_CELL_abajo_lado_2]
-                            for poin in centre_point_list:
-                                if np.sqrt((poin['Longitude']-centre['Longitude'])**2 + (poin['Latitude']-centre['Latitude'])**2) <= radius:
+                                
+                        list_point=[]
+                        for j in range(1,numero_celdas):
+                            distance=j*cells_distance
+
+                            for z in [final1,final2]:
+                                lat1 = z[1]
+                                lon1 = z[0]
+                                list_direction=[0,180]
+                                for j in list_direction:
+                                    # Direction in degrees
+                                    direction = j
+                                    # Convert direction to radians
+                                    direction_rad = radians(direction)
+
+                                    # Earth radius in kilometers
+                                    R = 6371
+
+                                    # Convert coordinates to radians
+                                    lat1_rad = radians(lat1)
+                                    lon1_rad = radians(lon1)
+
+                                    # Calculate the new coordinates using Vincenty formula
+                                    lat2_rad = asin(sin(lat1_rad) * cos(distance / R) + cos(lat1_rad) * sin(distance / R) * cos(direction_rad))
+                                    lon2_rad = lon1_rad + atan2(sin(direction_rad) * sin(distance / R) * cos(lat1_rad), cos(distance / R) - sin(lat1_rad) * sin(lat2_rad))
+
+                                    # Convert the new coordinates to degrees
+                                    lat2 = degrees(lat2_rad)
+                                    lon2 = degrees(lon2_rad)
+
+                                    list_point.append([lat2,lon2])
+                        for poin in list_point:
+                    
+                            if (geopy.distance.GeodesicDistance((centre['Longitude'],centre['Latitude']),(poin[0],poin[1]))).km<=radius:
                                         cell_create = CellCreate(
-                                            surface_id=Surface.id, centre=poin, radius=radio)
+                                            surface_id=Surface.id, centre={'Longitude': poin[0],'Latitude':poin[1]}, radius=radio)
                                         cell = crud.cell.create_cell(
                                             db=db, obj_in=cell_create, surface_id=Surface.id)
                                         db.commit()
@@ -479,110 +595,3 @@ def update_campaign(
     return campaign
 
 
-# # @api_router_campaign.patch("/{campaign_id}", status_code=201, response_model=Campaign)
-# # def partially_update_campaign(
-#     *,
-#     recipe_in: Union[CampaignUpdate, Dict[str, Any]],
-#     hive_id: int,
-#     campaign_id: int,
-#     background_tasks: BackgroundTasks,
-#     db: Session = Depends(deps.get_db)
-# ) -> dict:
-#     """
-#     Partially Update a Campaign
-#     """
-#     hive=crud.hive.get(db=db, id=hive_id)
-#     if hive is None:
-#         raise HTTPException(
-#             status_code=404, detail=f"Hive with id=={hive_id} not found"
-#         )
-        
-#     campaign = crud.campaign.get_campaign(
-#         db=db, hive_id=hive_id, campaign_id=campaign_id)
-#     if  campaign is None:
-#         raise HTTPException(
-#             status_code=400, detail=f"Campaign with id=={campaign_id} not found."
-#         )
-#     if True:
-#         if datetime.utcnow() > campaign.start_datetime:
-#             raise HTTPException(
-#                 status_code=401, detail=f"You cannot modify a campaign that has already been started "
-#             )
-#         else:
-#             campaign = crud.campaign.update(
-#                 db=db, db_obj=campaign, obj_in=recipe_in)
-#             for i in campaign.surfaces:
-#                 centre = i.boundary.centre
-#                 radius = i.boundary.radius
-#                 crud.surface.remove(db=db, surface=i)
-#                 db.commit()
-#                 boundary_create = BoundaryCreate(centre=centre, radius=radius)
-#                 boundary = crud.boundary.create_boundary(db=db, obj_in=boundary_create)
-#                 surface_create = SurfaceCreate(boundary_id=boundary.id)
-#                 Surface = crud.surface.create_sur(
-#                 db=db, campaign_id=campaign.id, obj_in=surface_create)
-                
-#                 anchura_celdas = (campaign.cells_distance)
-#                 radio=(campaign.cells_distance)//2
-#                 numero_celdas = radius//int(anchura_celdas) + 1
-
-#                 for i in range(0, numero_celdas):
-#                     if i == 0:
-#                         try:
-#                             cell_create = CellCreate(surface_id=Surface.id, centre={
-#                                 'Longitude': centre['Longitude'], 'Latitude': centre['Latitude']}, radius=radio)
-#                             cell = crud.cell.create_cell(
-#                                 db=db, obj_in=cell_create, surface_id=Surface.id)
-#                             db.commit()
-
-#                         except:
-#                             raise HTTPException(
-#                                 status_code=404, detail=f"Problem with the conecction with mysql."
-#                             )
-#                     else:
-#                         centre_CELL_arriba = {'Longitude': centre['Longitude'],
-#                                             'Latitude': centre['Latitude']+i*anchura_celdas}
-#                         centre_cell_abajo = {'Longitude': centre['Longitude'],
-#                                             'Latitude': centre['Latitude']-i*anchura_celdas}
-#                         centre_cell_izq = {'Longitude': centre['Longitude'] +
-#                                         i*anchura_celdas, 'Latitude': centre['Latitude']}
-#                         centre_cell_derecha = {
-#                             'Longitude': centre['Longitude']-i*anchura_celdas, 'Latitude': centre['Latitude']}
-#                         centre_point_list = [centre_CELL_arriba, centre_cell_abajo,
-#                                             centre_cell_izq,   centre_cell_derecha]
-#                         for poin in centre_point_list:
-#                             if np.sqrt((poin['Longitude']-centre['Longitude'])**2 + (poin['Latitude']-centre['Latitude'])**2) <= radius:
-#                                 try:
-#                                     cell_create = CellCreate(
-#                                         surface_id=Surface.id, centre=poin, radius=radio)
-#                                     cell = crud.cell.create_cell(
-#                                         db=db, obj_in=cell_create, surface_id=Surface.id)
-#                                     db.commit()
-#                                 except:
-#                                     raise HTTPException(
-#                                         status_code=404, detail=f"Problems with the conecction with mysql."
-#                                     )
-#                         for j in range(1, numero_celdas):
-#                             centre_CELL_arriba_lado_1 = {
-#                                 'Longitude': centre['Longitude']+j*anchura_celdas, 'Latitude': centre['Latitude']+i*anchura_celdas}
-#                             centre_CELL_arriba_lado_2 = {
-#                                 'Longitude': centre['Longitude']-j*anchura_celdas, 'Latitude': centre['Latitude']+i*anchura_celdas}
-#                             centre_CELL_abajo_lado_1 = {
-#                                 'Longitude': centre['Longitude']+j*anchura_celdas, 'Latitude': centre['Latitude']-i*anchura_celdas}
-#                             centre_CELL_abajo_lado_2 = {
-#                                 'Longitude': centre['Longitude']-j*anchura_celdas, 'Latitude': centre['Latitude']-i*anchura_celdas}
-#                             centre_point_list = [centre_CELL_arriba_lado_1, centre_CELL_arriba_lado_2,
-#                                                 centre_CELL_abajo_lado_1, centre_CELL_abajo_lado_2]
-#                             for poin in centre_point_list:
-#                                 if np.sqrt((poin['Longitude']-centre['Longitude'])**2 + (poin['Latitude']-centre['Latitude'])**2) <= radius:
-#                                         cell_create = CellCreate(
-#                                             surface_id=Surface.id, centre=poin, radius=radio)
-#                                         cell = crud.cell.create_cell(
-#                                             db=db, obj_in=cell_create, surface_id=Surface.id)
-#                                         db.commit()
-#             background_tasks.add_task(create_slots, cam=campaign)
-#             return campaign
-#     else:
-#         campaign = crud.campaign.update(db=db, db_obj=campaign, obj_in=recipe_in)
-#     db.commit()
-#     return campaign

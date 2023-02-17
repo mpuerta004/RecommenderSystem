@@ -11,9 +11,13 @@ from schemas.Cell import Cell, CellCreate, CellSearchResults, Point
 from schemas.Surface import SurfaceSearchResults, Surface, SurfaceCreate, SurfaceUpdate
 import deps
 import crud
-from datetime import datetime
-
+from datetime import datetime                       
 import numpy as np
+from numpy import sin, cos, arccos, pi, round
+import geopy
+import geopy.distance
+import folium
+from math import sin, cos, atan2, sqrt, radians, degrees, asin
 from fastapi import BackgroundTasks
 
 
@@ -260,42 +264,100 @@ def create_surface(
     radio = (Campaign.cells_distance)//2
     numero_celdas = radius//int(anchura_celdas) + 1
 
+    cells_distance = Campaign.cells_distance
+    anchura_celdas = ((cells_distance))
+    radio=cells_distance/2
+    numero_celdas = int((radius//cells_distance)) +  25
+    print(numero_celdas)
+
     for i in range(0, numero_celdas):
         if i == 0:
                 cell_create = CellCreate(surface_id=Surface.id, centre={
                     'Longitude': centre['Longitude'], 'Latitude': centre['Latitude']}, radius=radio)
                 cell = crud.cell.create_cell(
                     db=db, obj_in=cell_create, surface_id=Surface.id)
+           
         else:
-            centre_CELL_arriba = {'Longitude': centre['Longitude'],
-                                  'Latitude': centre['Latitude']+i*anchura_celdas}
-            centre_cell_abajo = {'Longitude': centre['Longitude'],
-                                 'Latitude': centre['Latitude']-i*anchura_celdas}
-            centre_cell_izq = {'Longitude': centre['Longitude'] +
-                               i*anchura_celdas, 'Latitude': centre['Latitude']}
-            centre_cell_derecha = {
-                'Longitude': centre['Longitude']-i*anchura_celdas, 'Latitude': centre['Latitude']}
-            centre_CELL_arriba_lado_1 = {
-                    'Longitude': centre['Longitude']+i*anchura_celdas, 'Latitude': centre['Latitude']+i*anchura_celdas}
-            centre_CELL_arriba_lado_2 = {
-                    'Longitude': centre['Longitude']-i*anchura_celdas, 'Latitude': centre['Latitude']+i*anchura_celdas}
-            centre_CELL_abajo_lado_1 = {
-                    'Longitude': centre['Longitude']+i*anchura_celdas, 'Latitude': centre['Latitude']-i*anchura_celdas}
-            centre_CELL_abajo_lado_2 = {
-                    'Longitude': centre['Longitude']-i*anchura_celdas, 'Latitude': centre['Latitude']-i*anchura_celdas}
-            centre_point_list = [centre_CELL_arriba_lado_1, centre_CELL_arriba_lado_2,
-                                     centre_CELL_abajo_lado_1, centre_CELL_abajo_lado_2,centre_CELL_arriba, centre_cell_abajo,
-                                 centre_cell_izq,   centre_cell_derecha]
-            for poin in centre_point_list:
-                if np.sqrt((poin['Longitude']-centre['Longitude'])**2 + (poin['Latitude']-centre['Latitude'])**2) <= radius:
-                    # try:
+            lat1 = centre['Longitude']
+            lon1 = centre['Latitude']
+
+            # Desired distance in kilometers
+            distance  = i*anchura_celdas
+            list_direction=[0,90,180,270]
+            list_point=[]
+            for j in list_direction:
+                # Direction in degrees
+                direction = j
+                # Convert direction to radians
+                direction_rad = radians(direction)
+
+                # Earth radius in kilometers
+                R = 6371
+                # Convert coordinates to radians
+                lat1_rad = radians(lat1)
+                lon1_rad = radians(lon1)
+
+                # Calculate the new coordinates using Vincenty formula
+                lat2_rad = asin(sin(lat1_rad) * cos(distance / R) + cos(lat1_rad) * sin(distance / R) * cos(direction_rad))
+                lon2_rad = lon1_rad + atan2(sin(direction_rad) * sin(distance / R) * cos(lat1_rad), cos(distance / R) - sin(lat1_rad) * sin(lat2_rad))
+
+                # Convert the new coordinates to degrees
+                lat2 = degrees(lat2_rad)
+                lon2 = degrees(lon2_rad)
+                list_point.append([lat2,lon2])
+                if direction==90:
+                    final1=[lon2,lat2]
+                if direction==270:
+                    final2=[lon2,lat2]
+            
+           
+            for poin in list_point:
+                if (geopy.distance.GeodesicDistance((centre['Longitude'],centre['Latitude']),(poin[0],poin[1]))).km<=radius:
+                        Point()
                         cell_create = CellCreate(
-                            surface_id=Surface.id, centre=poin, radius=radio)
+                                surface_id=Surface.id, centre={'Longitude': poin[0],'Latitude':poin[1]}, radius=radio)
                         cell = crud.cell.create_cell(
                             db=db, obj_in=cell_create, surface_id=Surface.id)
-                        db.commit()
+                    
+            list_point=[]
+            for j in range(1,numero_celdas):
+                distance=j*cells_distance
 
-    db.commit()
+                for z in [final1,final2]:
+                    lat1 = z[1]
+                    lon1 = z[0]
+                    list_direction=[0,180]
+                    for j in list_direction:
+                        # Direction in degrees
+                        direction = j
+                        # Convert direction to radians
+                        direction_rad = radians(direction)
+
+                        # Earth radius in kilometers
+                        R = 6371
+
+                        # Convert coordinates to radians
+                        lat1_rad = radians(lat1)
+                        lon1_rad = radians(lon1)
+
+                        # Calculate the new coordinates using Vincenty formula
+                        lat2_rad = asin(sin(lat1_rad) * cos(distance / R) + cos(lat1_rad) * sin(distance / R) * cos(direction_rad))
+                        lon2_rad = lon1_rad + atan2(sin(direction_rad) * sin(distance / R) * cos(lat1_rad), cos(distance / R) - sin(lat1_rad) * sin(lat2_rad))
+
+                        # Convert the new coordinates to degrees
+                        lat2 = degrees(lat2_rad)
+                        lon2 = degrees(lon2_rad)
+
+                        list_point.append([lat2,lon2])
+            for poin in list_point:
+        
+                if (geopy.distance.GeodesicDistance((centre['Longitude'],centre['Latitude']),(poin[0],poin[1]))).km<=radius:
+                            cell_create = CellCreate(
+                                surface_id=Surface.id, centre={'Longitude': poin[0],'Latitude':poin[1]}, radius=radio)
+                            cell = crud.cell.create_cell(
+                                db=db, obj_in=cell_create, surface_id=Surface.id)
+
+                            db.commit()
     background_tasks.add_task(create_slots_surface, surface=Surface, hive_id=hive_id)
     db.commit()
     return Surface

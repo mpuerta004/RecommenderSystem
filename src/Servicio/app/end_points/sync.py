@@ -50,20 +50,38 @@ import deps
 import crud
 from datetime import datetime, timedelta
 import math 
+from haversine import haversine, Unit
+
 import numpy as np
 from numpy import sin, cos, arccos, pi, round
 import geopy
 import geopy.distance
 
+from math import sin, cos, atan2, sqrt, radians, degrees, asin
 
 
 api_router_sync = APIRouter()
-
+ # start = geopy.Point(longitude=centre['Longitude'], latitude=centre['Latitude'])
+            # d = geopy.distance.geodesic(kilometers = i*anchura_celdas)
+            # # Use the `destination` method with a bearing of 0 degrees (which is north)
+            # # in order to go from point `start` 1 km to north.
+            # final1=d.destination(point=start, bearing=90)
+            # final2=d.destination(point=start, bearing=270)
+            # final3=d.destination(point=start, bearing=0)
+            # final4=d.destination(point=start, bearing=180)
+            # centre_point_list=[[final1.longitude,final1.latitude],[final2.longitude,final2.latitude],[final3.longitude,final3.latitude],[final4.longitude,final4.latitude]]
+            
+            
+                # [centre['Longitude'],round( centre['Latitude']+i*anchura_celdas,6)],
+                # [centre['Longitude'], round(centre['Latitude']-i*anchura_celdas,6)],
+                # [round(centre['Longitude']+i*anchura_celdas,6), centre['Latitude']],
+                # [round(centre['Longitude']-i*anchura_celdas,6), centre['Latitude']]]
+            
 @api_router_sync.post("/points/", status_code=201, response_model=List)
 def create_points_of_campaign(
     *,
     boundary: BoundaryBase_points,
-    db: Session = Depends(deps.get_db),
+    # db: Session = Depends(deps.get_db),
 ) -> dict:
     """
     Generate the points of a campaign.
@@ -73,7 +91,7 @@ def create_points_of_campaign(
     cells_distance=boundary.cells_distance
 
     anchura_celdas = ((cells_distance))
-    numero_celdas = int((radius//cells_distance)) + 1
+    numero_celdas = int((radius//cells_distance)) +  25
     print(numero_celdas)
     List_points = []
     # Define starting point.
@@ -81,45 +99,95 @@ def create_points_of_campaign(
     for i in range(0, int(numero_celdas)):
         if i == 0:
             List_points.append([centre['Longitude'], centre['Latitude']])
+        
         else:
-            start = geopy.Point(longitude=centre['Longitude'], latitude=centre['Latitude'])
-            d = geopy.distance.geodesic(kilometers = i*anchura_celdas)
-            # Use the `destination` method with a bearing of 0 degrees (which is north)
-            # in order to go from point `start` 1 km to north.
-            final1=d.destination(point=start, bearing=90)
-            final2=d.destination(point=start, bearing=270)
-            final3=d.destination(point=start, bearing=0)
-            final4=d.destination(point=start, bearing=180)
-            centre_point_list=[[final1.longitude,final1.latitude],[final2.longitude,final2.latitude],[final3.longitude,final3.latitude],[final4.longitude,final4.latitude]]
-            
-            
-                # [centre['Longitude'],round( centre['Latitude']+i*anchura_celdas,6)],
-                # [centre['Longitude'], round(centre['Latitude']-i*anchura_celdas,6)],
-                # [round(centre['Longitude']+i*anchura_celdas,6), centre['Latitude']],
-                # [round(centre['Longitude']-i*anchura_celdas,6), centre['Latitude']]]
-            
-            for poin in centre_point_list:
-                if(geopy.distance.great_circle((centre['Longitude'],centre['Latitude']),(poin[0],poin[1])).km<=radius):
-                    List_points.append(poin)
-            for j in range(1,numero_celdas):
-                start = geopy.Point(latitude=final1.latitude, longitude=final1.longitude)
-                d = geopy.distance.geodesic(kilometers = j*anchura_celdas)
-                final11=d.destination(point=start, bearing=0)
-                final12=d.destination(point=start, bearing=180)
-                start2 = geopy.Point(latitude=final2.latitude, longitude=final2.longitude)
-                d2 = geopy.distance.geodesic(kilometers = j*anchura_celdas)
-                final21=d2.destination(point=start2, bearing=0)
-                final22=d2.destination(point=start2, bearing=180)
-                centre_point_list=[[final11.longitude,final11.latitude],[final12.longitude,final12.latitude],[final21.longitude,final21.latitude],[final22.longitude,final22.latitude]]
-            #     [round(centre['Longitude']+j*anchura_celdas,6),  round(centre['Latitude']+i*anchura_celdas,6)],
-            #     [round(centre['Longitude']-j*anchura_celdas,6),  round(centre['Latitude']+i*anchura_celdas,6)],
-            #     [round(centre['Longitude']+j*anchura_celdas,6),  round(centre['Latitude']-i*anchura_celdas,6)],
-            #    [round(centre['Longitude']-j*anchura_celdas,6),   round(centre['Latitude']-i*anchura_celdas,6)]]
-                for poin in centre_point_list:
-                    if(geopy.distance.great_circle((centre['Longitude'],centre['Latitude']),(poin[0],poin[1])).km<=radius):
-                        List_points.append(poin)
-    return List_points        
+            lat1 = centre['Longitude']
+            lon1 = centre['Latitude']
 
+            # Desired distance in kilometers
+            distance  = i*anchura_celdas
+            list_direction=[0,90,180,270]
+            list_point=[]
+            for j in list_direction:
+                # Direction in degrees
+                direction = j
+                # Convert direction to radians
+                direction_rad = radians(direction)
+
+                # Earth radius in kilometers
+                R = 6371
+                # Convert coordinates to radians
+                lat1_rad = radians(lat1)
+                lon1_rad = radians(lon1)
+
+                # Calculate the new coordinates using Vincenty formula
+                lat2_rad = asin(sin(lat1_rad) * cos(distance / R) + cos(lat1_rad) * sin(distance / R) * cos(direction_rad))
+                lon2_rad = lon1_rad + atan2(sin(direction_rad) * sin(distance / R) * cos(lat1_rad), cos(distance / R) - sin(lat1_rad) * sin(lat2_rad))
+
+                # Convert the new coordinates to degrees
+                lat2 = degrees(lat2_rad)
+                lon2 = degrees(lon2_rad)
+                list_point.append([lat2,lon2])
+                if direction==90:
+                    final1=[lon2,lat2]
+                if direction==270:
+                    final2=[lon2,lat2]
+            
+           
+            for poin in list_point:
+                if (geopy.distance.GeodesicDistance((centre['Longitude'],centre['Latitude']),(poin[0],poin[1]))).km<=radius:
+                    List_points.append(poin)
+                    # print(geopy.distance.GeodesicDistance((centre['Longitude'],centre['Latitude']),(poin[0],poin[1])).km)
+            list_point=[]
+            for j in range(1,numero_celdas):
+                distance=j*cells_distance
+
+                for z in [final1,final2]:
+                    lat1 = z[1]
+                    lon1 = z[0]
+                    list_direction=[0,180]
+                    for j in list_direction:
+                        # Direction in degrees
+                        direction = j
+                        # Convert direction to radians
+                        direction_rad = radians(direction)
+
+                        # Earth radius in kilometers
+                        R = 6371
+
+                        # Convert coordinates to radians
+                        lat1_rad = radians(lat1)
+                        lon1_rad = radians(lon1)
+
+                        # Calculate the new coordinates using Vincenty formula
+                        lat2_rad = asin(sin(lat1_rad) * cos(distance / R) + cos(lat1_rad) * sin(distance / R) * cos(direction_rad))
+                        lon2_rad = lon1_rad + atan2(sin(direction_rad) * sin(distance / R) * cos(lat1_rad), cos(distance / R) - sin(lat1_rad) * sin(lat2_rad))
+
+                        # Convert the new coordinates to degrees
+                        lat2 = degrees(lat2_rad)
+                        lon2 = degrees(lon2_rad)
+
+                        list_point.append([lat2,lon2])
+            for poin in list_point:
+        
+                if (geopy.distance.GeodesicDistance((centre['Longitude'],centre['Latitude']),(poin[0],poin[1]))).km<=radius:
+                        List_points.append(poin)
+                        # print(geopy.distance.GeodesicDistance((centre['Longitude'],centre['Latitude']),(poin[0],poin[1])).km)
+    return List_points        
+      
+                # start = geopy.Point(latitude=final1.latitude, longitude=final1.longitude)
+                # d = geopy.distance.geodesic(kilometers = j*anchura_celdas)
+                # final11=d.destination(point=start, bearing=0)
+                # final12=d.destination(point=start, bearing=180)
+                # start2 = geopy.Point(latitude=final2.latitude, longitude=final2.longitude)
+                # d2 = geopy.distance.geodesic(kilometers = j*anchura_celdas)
+                # final21=d2.destination(point=start2, bearing=0)
+                # final22=d2.destination(point=start2, bearing=180)
+                # centre_point_list=[[final11.longitude,final11.latitude],[final12.longitude,final12.latitude],[final21.longitude,final21.latitude],[final22.longitude,final22.latitude]]
+                    #     [round(centre['Longitude']+j*anchura_celdas,6),  round(centre['Latitude']+i*anchura_celdas,6)],
+                    #     [round(centre['Longitude']-j*anchura_celdas,6),  round(centre['Latitude']+i*anchura_celdas,6)],
+                    #     [round(centre['Longitude']+j*anchura_celdas,6),  round(centre['Latitude']-i*anchura_celdas,6)],
+                    #    [round(centre['Longitude']-j*anchura_celdas,6),   round(centre['Latitude']-i*anchura_celdas,6)]]
 
 @api_router_sync.put("/sync/hives/{hive_id}", status_code=201, response_model=Hive)
 def update_hive(*,
