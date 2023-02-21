@@ -204,8 +204,16 @@ The following diagram illustrates the main workflow that a Worker Bee will follo
     ```
     ![](./Picture_readme/Sync/Create_measurement.PNG)
 
-11. **DEMO** If we want to visualize how the micro-volunteering engine works, you may execute the demo endpoint [/demos/hives/{hive_id}/campaigns/{campaign_id}](http://localhost:8001/docs#/Demo/asignacion_recursos_demos_hives__hive_id__campaigns__campaign_id__post) in the demo section. The result generated is stored at the src/Servicio/app/Pictures/Measurements and src/Servicio/app/Pictures/Recommender folders. 
+11. **DEMO** If we want to visualize how the micro-volunteering engine works, you may execute the demo endpoint [/demos/hives/{hive_id}/campaigns/{campaign_id}](http://localhost:8001/docs#/Demo/asignacion_recursos_demos_hives__hive_id__campaigns__campaign_id__post) in the demo section. The result generated is stored at the src/Servicio/app/Pictures/Measurements,src/Servicio/app/Pictures/Measurements_html and src/Servicio/app/Pictures/Recommender, src/Servicio/app/Pictures/Recommender_html folders. 
     ![](./Picture_readme/Demo.PNG)
+
+
+As an example of a visualization of the recomendation, and the picture that the demo generate into the recommendation folder
+![](./Picture_readme/recomendation_visualization.png)
+
+As an ecample of the type of picture that is store in the masurements folder: 
+    ![](./Picture_readme/measurements_visualizacion_example.png)
+
 
 ## Use case 2 - Usage workflow of the integration of MVE with external components, e.g. SOCIO-BEE AcadeME
    
@@ -338,7 +346,7 @@ Click on PUT endpoint and then in the "Try it out" button, complete the Request 
     This can be done to be able to observe where measurements during the campaign should be obtained.
     ![](./Picture_readme/Sync/Create_points.png)
     In addition, after the creation of the campaign, we can visualize the campaign map with the show endpoint at the campaign section [/hives/{hive_id}/campaigns/{campaign_id}/show](http://localhost:8001/docs#/Campaigns/show_a_campaign_hives__hive_id__campaigns__campaign_id__show_get) endpoint. As an example of the result: 
-    ![](./Picture_readme/Campaign_show.PNG)
+    ![](./Picture_readme/campaign.png)
 
 6. **Assign devices to users in newly created campaign:** This endpoint is enabled to allow Queen Bees to assign devices to each of the members of a hive taking part in a campaign. This endpoint is defined at [http://localhost:8001](http://localhost:8001) through POST command [/hives/{hive_id}/campaigns/{campaign_id}/devices](http://localhost:8001/docs#/Sync/post_members_devices_hives__hive_id__campaigns__campaign_id__devices_post). Click on POST endpoint and then in the "Try it out" button, complete the Request body (pìcture example) and click execute.
     Request Body: 
@@ -361,6 +369,10 @@ Click on PUT endpoint and then in the "Try it out" button, complete the Request 
     }
     ```
     ![](./Picture_readme/Sync/Create_recommendation.PNG)
+
+    
+
+
 
 8. **Inform MVE about the change of state of a recommendation:** This endpoint is enabled to indicate when a recommendation has been taken by a user (Worker Bee), i.e. the user is being directed to the cell centre. In this case the status of the recommendation would change from NOTIFIED to ACCEPTED. Besides, when a user does take a measurement, then the status of the recommendation is changed to REALIZED automatically. If a notification is never realized, after the slot sampling period is over, the status of the recommendation is changed by MVE to NON_REALIZED actuamatically. This method is defined at [http://localhost:8001](http://localhost:8001) in section Recommendations at the PATCH endpoint [/members/{member_id}/recommendations/{recommendation_id}](http://localhost:8001/docs#/Recommendations/partially_update_recommendation_members__member_id__recommendations__recommendation_id__patch) by filling out the following request body:
     ```
