@@ -5,14 +5,14 @@
 You have to follow these steps to be able to launch the Micro-Volunteering Engine (MVE): 
 1. `git clone https://github.com/mpuerta004/RecommenderSystem` to get hold of the source code of MVE
 2. `git fetch --all`
-2. `pip install poetry` (or safer, follow the instructions: https://python-poetry.org/docs/#installation)
-3. Install dependencies `cd` into the directory where the `pyproject.toml` is located then `poetry install`
-4. [UNIX] Run `cd Model` 
-5. [UNIX] Run `sudo mysql -uroot -p < BaseDatos.v7.sql`
-6. [UNIX] Run `cd ..`
-7. [UNIX]: Run the FastAPI server via poetry with the bash script: `poetry run ./run.sh`
-8. [WINDOWS]: Run the FastAPI server via poetry with the Python command: `poetry run python src/Servicio/app/main.py`
-9. Open http://localhost:8001/docs 
+3. `pip install poetry` (or safer, follow the instructions: https://python-poetry.org/docs/#installation)
+4. Install dependencies `cd` into the directory where the `pyproject.toml` is located then `poetry install`
+5. [UNIX] Run `cd Model` 
+6. [UNIX] Run `sudo mysql -uroot -p < BaseDatos.v7.sql`
+7. [UNIX] Run `cd ..`
+8. [UNIX]: Run the FastAPI server via poetry with the bash script: `poetry run ./run.sh`
+9. [WINDOWS]: Run the FastAPI server via poetry with the Python command: `poetry run python src/Servicio/app/main.py`
+10. Open http://localhost:8001/docs 
 
 The diagram below shows the process that has to be carried out within SOCIO-BEE to set-up a campaign in a pilot where air quality measurements will be gathered in a certain area and time period in order to deliver visualizations and indicators summarizing the air quality situation and evolution in a spatiotemporal manner. Essentially several steps must be carried out to configure a campaign. Once the campaign is configured the recommendation service from MVE can be requested. 
 
