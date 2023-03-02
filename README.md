@@ -209,7 +209,7 @@ The following diagram illustrates the main workflow that a Worker Bee will follo
     ![](./Picture_readme/Demo.PNG)
 
 
-As an example of a visualization of the recomendation, and the picture that the demo generate into the recommendation folder 
+As an example of a visualization of the recomendation, and the picture that the demo generate into the recommendation folder:
 ![](./Picture_readme/recomendation_visualization.png)
 
 As an ecample of the type of picture that is store in the masurements folder:  ![](./Picture_readme/measurements_visualizacion_example.png)
