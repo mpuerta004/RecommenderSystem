@@ -51,7 +51,7 @@ color_list=[
 color_list_h=[ '#ffc3c3', '#ffdba7', '#f8f7bb', '#cbffbe', '#8ac683'
               ]
 
-variables_comportamiento={"user_aceptance":0.65, "user_realize":0.4, "popularidad_cell":0.85,"number_of_unpopular_cells":5}
+variables_comportamiento={"user_aceptance":0.35, "user_realize":0.1, "popularidad_cell":0.85,"number_of_unpopular_cells":5}
 
                    
 
@@ -233,8 +233,8 @@ def asignacion_recursos(
                             recomendacion_polinizar=crud.recommendation.update(db=db,db_obj=recomendation_coguida, obj_in={"state":"ACCEPTED","update_datetime":time})
                             
                             mediciones.append([user, recomendacion_polinizar, random.randint(1,600)])
-
-                            show_recomendation(db=db, cam=cam, user=user, result=recomendaciones['results'],time=time,recomendation=recomendacion_polinizar)  
+                            if user.id%2==0 and user.id<30:
+                                show_recomendation(db=db, cam=cam, user=user, result=recomendaciones['results'],time=time,recomendation=recomendacion_polinizar)  
 
             new=[] 
             for i in range(0,len(mediciones)):
@@ -626,7 +626,7 @@ def show_recomendation(*, cam:Campaign, user:Member, result:list(),time:datetime
         # Create the legend with a white background and opacity 0.5
     legend_html = '''
         <div style="position: fixed; 
-            bottom: 80px; left: 90px; width: 290px; height: 200px; 
+            bottom: 80px; left: 90px; width: 290px; height: 240px; 
             border:2px solid grey; z-index:9999;
             background-color: rgba(255, 255, 255, 0.75);
             font-size:15px;">
@@ -639,8 +639,10 @@ def show_recomendation(*, cam:Campaign, user:Member, result:list(),time:datetime
                 width: 28px; height: 16px; border: 2px solid #999;
                 display: inline-block;"></div>
             <p style="display: inline-block; margin-left: 5px;">{}</p>
-            <br>
+            <br> 
             '''.format(colors[i], names[i])
+    legend_html +='''
+ <div ></div><p style=display: inline-block; margin-left: 10px;">time: {}</p>    '''.format( time.strftime('%m/%d/%Y, %H:%M:%S'))
     legend_html += '</div>'
     mapObj.get_root().html.add_child(folium.Element(legend_html))
     legend_html = '''
@@ -800,7 +802,7 @@ def show_a_campaign_2(
         # Create the legend with a white background and opacity 0.5
     legend_html = '''
         <div style="position: fixed; 
-            bottom: 80px; left: 90px; width: 290px; height: 200px; 
+            bottom: 80px; left: 90px; width: 290px; height: 240px; 
             border:2px solid grey; z-index:9999;
             background-color: rgba(255, 255, 255, 0.75);
             font-size:15px;">
@@ -812,9 +814,12 @@ def show_a_campaign_2(
             <div style="background-color:{}; margin-left: 10px;
                 width: 28px; height: 16px; border: 2px solid #999;
                 display: inline-block;"></div>
-            <p style="display: inline-block; margin-left: 5px;">{}</p>
+            <p style="display: inline-block; margin-left: 10px;">{}</p>
             <br>
             '''.format(colors[i], names[i])
+    legend_html +='''
+    <div ></div><p style=display: inline-block; margin-left: 5px;">time: {}</p>
+    '''.format( time.strftime('%m/%d/%Y, %H:%M:%S'))
     legend_html += '</div>'
     mapObj.get_root().html.add_child(folium.Element(legend_html))
     # legend_html = '''

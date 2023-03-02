@@ -11,11 +11,11 @@ for i in archivos:
     img = cv2.imread(dirArchivo)
     height, width  = img.shape[:2]
 
-    cv2.putText(img, f"Recomendaciones con no popularidad en 3 o menos celdas", (80,180), cv2.FONT_HERSHEY_SIMPLEX , 1.5, (0,0,0))
+    # cv2.putText(img, f"Recomendaciones con no popularidad en 3 o menos celdas", (80,180), cv2.FONT_HERSHEY_SIMPLEX , 1.5, (0,0,0))
     img_array.append(img)
     
 
-video = cv2.VideoWriter('db0.wmv',cv2.VideoWriter_fourcc(*'mp4v'), 10, (width, height))
+video = cv2.VideoWriter('db0.wmv',cv2.VideoWriter_fourcc(*'mp4v'), 6, (width, height))
 
 
 for i in range(0, len(archivos)):
