@@ -14,8 +14,8 @@ __pycache__/*
 # C extensions
 *.so
 #Pictures! 
-*src/Servicio/app/Picture/.jpeg
-*src/Servicio/app/Picture/.png
+src/Servicio/app/Picture/*.jpeg
+src/Servicio/app/Picture/*.png
 # Distribution / packaging
 .Python
 env/
