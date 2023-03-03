@@ -14,12 +14,13 @@ __pycache__/*
 # C extensions
 *.so
 #Pictures! 
-*.jpeg
-*.png
-src/Servicio/app/Picture/*
+*src/Servicio/app/Picture/.jpeg
+*src/Servicio/app/Picture/.png
 # Distribution / packaging
 .Python
 env/
+*.mp4
+.avi
 build/
 develop-eggs/
 dist/
