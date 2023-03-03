@@ -2,8 +2,6 @@
 Conf.py
 /esquema.mwb.bak
 /esquema.mwb
-*/.avi
-*.avi
 # Byte-compiled / optimized / DLL files
 /__pycache__/
 *.py[cod]
@@ -14,13 +12,14 @@ __pycache__/*
 # C extensions
 *.so
 #Pictures! 
+*.mp4
+.avi
 src/Servicio/app/Picture/*.jpeg
 src/Servicio/app/Picture/*.png
 # Distribution / packaging
 .Python
 env/
-*.mp4
-.avi
+
 build/
 develop-eggs/
 dist/
@@ -68,13 +67,7 @@ docs/_build/
 
 # PyBuilder
 target/
-istockphoto-1287419541-612x612.jpg
-istockphoto-1386694871-170667a.jpg
 *.mkv
-Untitled.png
 Untitled.xcf
-foto_2.jpg
-foto_3.jpg
-foto_4.jpg
-R.session.sql
+
 
