@@ -12,7 +12,8 @@ __pycache__/*
 # C extensions
 *.so
 #Pictures! 
-*.mp4
+*/.mp4
+
 .avi
 src/Servicio/app/Picture/*.jpeg
 src/Servicio/app/Picture/*.png
