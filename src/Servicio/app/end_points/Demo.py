@@ -5,10 +5,12 @@ from sqlalchemy.orm import Session
 from schemas.Measurement import Measurement, MeasurementCreate, MeasurementSearchResults
 from schemas.Campaign import CampaignSearchResults, Campaign, CampaignCreate, CampaignUpdate
 from schemas.Slot import Slot, SlotCreate,SlotSearchResults
-from schemas.Recommendation import state,Recommendation,RecommendationCreate,RecommendationUpdate
+from schemas.Recommendation import state,Recommendation,RecommendationCreate,RecommendationUpdate,RecommendationCell
 from schemas.Member import Member
 from schemas.Priority import Priority, PriorityCreate, PrioritySearchResults
 import deps
+from datetime import datetime, timezone
+
 import crud
 from datetime import datetime, timedelta
 import math
@@ -51,7 +53,7 @@ color_list=[
 color_list_h=[ '#ffc3c3', '#ffdba7', '#f8f7bb', '#cbffbe', '#8ac683'
               ]
 
-variables_comportamiento={"user_aceptance":0.35, "user_realize":0.1, "popularidad_cell":0.85,"number_of_unpopular_cells":5}
+variables_comportamiento={"user_aceptance":0.65, "user_realize":0.3, "popularidad_cell":0.85,"number_of_unpopular_cells":5}
 
                    
 
@@ -69,13 +71,13 @@ def prioriry_calculation_2(time:datetime, cam:Campaign, db:Session= Depends(deps
             # date = datetime(year=a.year, month=a.month, day=a.day,
             #                 hour=a.hour, minute=a.minute, second=a.second)
             # for cam in campaigns:
-            if time >= cam.start_datetime and time <= cam.end_datetime:
+            if time >= cam.start_datetime.replace(tzinfo=timezone.utc)  and time < cam.end_datetime.replace(tzinfo=timezone.utc) :
                 surfaces=crud.surface.get_multi_surface_from_campaign_id(db=db,campaign_id=cam.id)
                 for sur in surfaces:
                     for cells in sur.cells:
                 # for cells in cam.cells:
                         momento = time
-                        if momento >= (cam.start_datetime+timedelta(seconds=cam.sampling_period)):
+                        if momento >= (cam.start_datetime+timedelta(seconds=cam.sampling_period)).replace(tzinfo=timezone.utc) :
                             slot_pasado = crud.slot.get_slot_time(db=db, cell_id=cells.id, time=(
                                  momento - timedelta(seconds=cam.sampling_period)))
                             Cardinal_pasado =  crud.measurement.get_all_Measurement_from_cell_in_the_current_slot(
@@ -93,7 +95,7 @@ def prioriry_calculation_2(time:datetime, cam:Campaign, db:Session= Depends(deps
                         # b = max(2, cam.min_samples - int(Cardinal_pasado))
                         # a = max(2, cam.min_samples - int(Cardinal_actual))
                         # result = math.log(a) * math.log(b, int(Cardinal_actual) + 2)
-                        init=momento  - cam.start_datetime
+                        init=momento  - cam.start_datetime.replace(tzinfo=timezone.utc) 
                         
                         a =  init - timedelta(seconds= ((init).total_seconds()//cam.sampling_period)*cam.sampling_period)
                         if cam.min_samples==0:
@@ -133,6 +135,18 @@ def reciboUser(cam:Campaign,db: Session = Depends(deps.get_db)):
                  us=crud.member.get_by_id(db=db,id=i.member_id)
                  usuarios_peticion.append(us)
         return usuarios_peticion
+
+def reciboUser(db: Session = Depends(deps.get_db)):
+        usuarios_peticion=[]
+        users=crud.member.get_all(db=db)
+        
+        # users=crud.member.get_multi_worker_members_from_hive_id(db=db,campaign_id=cam.id)
+        for i in users:
+             aletorio = random.random()
+             if aletorio>variables_comportamiento["user_aceptance"]:
+                 usuarios_peticion.append(i)
+        return usuarios_peticion
+        
         
 
 def RL(a:list()):
@@ -153,6 +167,126 @@ def RL_con_popularidad(a:List[Recommendation], dic_of_popularity,db: Session = D
     return random.choice(list_result)  
 
 
+
+@api_router_demo.post("/demo4/", status_code=201, response_model=None)
+def asignacion_recursos_all( 
+    db: Session = Depends(deps.get_db)):
+        """
+        DEMO!
+        """
+        initial= datetime.utcnow()
+        start=datetime(year=2023,month=2,day=17,hour=10,minute=37,second=16).replace(tzinfo=timezone.utc) 
+        end=datetime(year=2023,month=2,day=17,hour=12,minute=37,second=16).replace(tzinfo=timezone.utc) 
+        
+        mediciones=[]
+        
+        # cam=crud.campaign.get_campaign(db=db,hive_id=hive_id,campaign_id=campaign_id)
+       
+        dur=int((end - start).total_seconds())
+        
+        for segundo in range(60,int(dur),60):
+            random.seed()
+            print("----------------------------------------------------------------------", segundo)
+            time = start + timedelta(seconds=segundo)
+            campaigns = crud.campaign.get_all_active_campaign(db=db,time=time)
+            for cam in campaigns:
+                prioriry_calculation_2(time=time,cam=cam, db=db)
+                show_a_campaign_2(hive_id=cam.hive_id,campaign_id=cam.id,time=time,db=db)
+            if segundo%60==0:
+                list_users= reciboUser(db=db)
+                if list_users!=[]:
+                    for user in list_users:
+                        #generate the user position, select randomly a surface and generate a point closer in a random direction of this surface.
+                        
+                        
+                        list_campaign=crud.campaign_member.get_Campaigns_of_member(db=db,member_id=user.id,time=time)
+                        #Genero las recomendaciones y la que el usuario selecciona y el tiempo que va a tardar en realizar dicho recomendacion. 
+                        n_campaign=random.randint(0,len(list_campaign)-1)
+                        cam=crud.campaign.get(db=db, id= list_campaign[n_campaign].campaign_id)
+                        
+                        n_surfaces=len(cam.surfaces)
+                        surface_indice= random.randint(0,n_surfaces-1)
+                        boundary= cam.surfaces[surface_indice].boundary
+                        distance =random.randint(0,round(1000*(boundary.radius + cam.cells_distance)))
+
+                        distance=distance/1000
+                        direction= random.randint(0,360)
+                        
+                        
+                        lat1 = boundary.centre['Longitude'] 
+                        lon1 = boundary.centre['Latitude'] 
+
+                        # Desired distance in kilometers
+                            # Direction in degrees
+                        direction_rad = radians(direction)
+
+                        # Earth radius in kilometers
+                        R = 6371
+
+                        # Convert coordinates to radians
+                        lat1_rad = radians(lat1)
+                        lon1_rad = radians(lon1)
+                            
+                        # Calculate the new coordinates using Vincenty formula
+                        lat2_rad = asin(sin(lat1_rad) * cos(distance / R) + cos(lat1_rad) * sin(distance / R) * cos(direction_rad))
+                        lon2_rad = lon1_rad + atan2(sin(direction_rad) * sin(distance / R) * cos(lat1_rad), cos(distance / R) - sin(lat1_rad) * sin(lat2_rad))
+                        # Convert the new coordinates to degrees
+                        lat2 = degrees(lat2_rad)
+                        lon2 = degrees(lon2_rad)
+                
+                        a=RecommendationCreate(member_current_location={'Longitude':lat2,'Latitude':lon2},recommendation_datetime=time)
+                        # recomendaciones=create_recomendation_2(db=db,member_id=user.id,recipe_in=a,cam=cam,time=time)
+                        recomendaciones=create_recomendation_3(db=db, member_id=user.id, recipe_in=a,time=time)
+                        if len(recomendaciones['results'])>0:
+                            recomendacion_polinizar = RL(recomendaciones['results'])
+                            recomendation_coguida=crud.recommendation.get_recommendation(db=db,member_id=recomendacion_polinizar.member_id, recommendation_id=recomendacion_polinizar.id)
+                            recomendacion_polinizar=crud.recommendation.update(db=db,db_obj=recomendation_coguida, obj_in={"state":"ACCEPTED","update_datetime":time})
+                            
+                            mediciones.append([user, recomendacion_polinizar, random.randint(1,600)])
+                            if user.id%2==0 :
+                            # slot=crud.slot.get_slot(db=db,slot_id=recomendacion_polinizar.slot_id)
+                            # cell=crud.cell.get_Cell(db=db, cell_id=slot.cell_id)
+                            # surface_id=cell.surface_id
+                            # cam=crud.campaign.get_campaign_from_surface(db=db,surface_id=int(surface_id))
+                            # cam=crud.campaign.get_campaign_from_cell(db=db, cell_id=slot.cell_id)
+                                #TODO! tremendo error pero oye....
+                                show_recomendation(db=db, cam=cam, user=user, result=recomendaciones['results'],time=time,recomendation=recomendacion_polinizar)  
+
+            new=[] 
+            for i in range(0,len(mediciones)):
+                #Anterior approach cuando declaramos el tiempo que el uusario iba a tardar en realizarlo 
+                mediciones[i][2]=int(mediciones[i][2]) - 60
+                if mediciones[i][2]<=0:
+                    aletorio = random.random()
+                    if aletorio>variables_comportamiento["user_realize"]:
+                        time_polinizado = time
+                        slot=crud.slot.get(db=db, id=mediciones[i][1].slot_id)
+                        cell=crud.cell.get_Cell(db=db,cell_id=slot.cell_id)
+                        Member_Device_user=crud.member_device.get_by_member_id(db=db,member_id=mediciones[i][0].id)
+                        creation=MeasurementCreate(db=db, location=cell.centre,datetime=time_polinizado,device_id=Member_Device_user.device_id, recommendation_id=mediciones[i][1].id)
+                        slot=crud.slot.get_slot_time(db=db, cell_id=cell.id,time=time)
+                        #Ver si se registran bien mas recomendaciones con el id de la medicion correcta. 
+                        device_member=crud.member_device.get_by_member_id(db=db,member_id=mediciones[i][0].id)
+                        measurement=crud.measurement.create_Measurement(db=db,device_id=device_member.device_id,obj_in=creation,member_id=mediciones[i][0].id,slot_id=slot.id,recommendation_id=mediciones[i][1].id)
+                        recomendation_coguida=crud.recommendation.get_recommendation(db=db,member_id=mediciones[i][1].member_id, recommendation_id=mediciones[i][1].id)
+
+                        crud.recommendation.update(db=db,db_obj=recomendation_coguida, obj_in={"state":"REALIZED","update_datetime":time_polinizado})
+                        db.commit()
+                        
+                        db.commit()
+                    else:
+                        time_polinizado = time
+                        recomendation_coguida=crud.recommendation.get_recommendation(db=db,member_id=mediciones[i][1].member_id, recommendation_id=mediciones[i][1].id)
+
+                        crud.recommendation.update(db=db,db_obj=recomendation_coguida, obj_in={"state":"NON_REALIZED","update_datetime":time_polinizado})
+                        db.commit()
+                else:
+                    new.append(mediciones[i])
+            mediciones=new
+        final= datetime.utcnow()
+        print((final-initial))
+        return None
+
 @api_router_demo.post("/{campaign_id}", status_code=201, response_model=None)
 def asignacion_recursos( 
                               hive_id:int, 
@@ -161,6 +295,8 @@ def asignacion_recursos(
         """
         DEMO!
         """
+        initial= datetime.utcnow()
+
         mediciones=[]
         cam=crud.campaign.get_campaign(db=db,hive_id=hive_id,campaign_id=campaign_id)
        
@@ -183,7 +319,7 @@ def asignacion_recursos(
             #         db.commit()
             # #Tengo un usuario al que hacer una recomendacion. 
             if segundo%60==0:
-                show_a_campaign_2(hive_id=cam.hive_id,campaign_id=cam.id,time=time,db=db)
+                #show_a_campaign_2(hive_id=cam.hive_id,campaign_id=cam.id,time=time,db=db)
                 
               
                 
@@ -197,8 +333,8 @@ def asignacion_recursos(
                         n_surfaces=len(cam.surfaces)
                         surface_indice= random.randint(0,n_surfaces-1)
                         boundary= cam.surfaces[surface_indice].boundary
-                        
-                        distance = random.randint(0,round(1000*(boundary.radius)))
+                        distance =random.randint(0,round(1000*(boundary.radius + cam.cells_distance)))
+
                         distance=distance/1000
                         direction= random.randint(0,360)
                         
@@ -233,8 +369,8 @@ def asignacion_recursos(
                             recomendacion_polinizar=crud.recommendation.update(db=db,db_obj=recomendation_coguida, obj_in={"state":"ACCEPTED","update_datetime":time})
                             
                             mediciones.append([user, recomendacion_polinizar, random.randint(1,600)])
-                            if user.id%2==0 and user.id<30:
-                                show_recomendation(db=db, cam=cam, user=user, result=recomendaciones['results'],time=time,recomendation=recomendacion_polinizar)  
+                            # if user.id%2==0 and user.id<30:
+                                # show_recomendation(db=db, cam=cam, user=user, result=recomendaciones['results'],time=time,recomendation=recomendacion_polinizar)  
 
             new=[] 
             for i in range(0,len(mediciones)):
@@ -267,6 +403,8 @@ def asignacion_recursos(
                 else:
                     new.append(mediciones[i])
             mediciones=new
+        final= datetime.utcnow()
+        print((final-initial))
         return None
 
 
@@ -287,20 +425,21 @@ def asignacion_recursos_con_popularidad_mucha(
         for i in cells_of_campaign:
             dics_of_popularity[str(i.id)] = 0.0 
         cells_id=list(dics_of_popularity.keys())
-        print(cells_id)
+        # print(cells_id)
         numero_minimo=min(variables_comportamiento["number_of_unpopular_cells"],len(cells_id))
         for i in range(0,numero_minimo):
             random.seed()
             kay=random.choice(cells_id)
             dics_of_popularity[str(kay)] = variables_comportamiento["popularidad_cell"]
-        print(dics_of_popularity)
+        # print(dics_of_popularity)
         
         dur=(cam.end_datetime - cam.start_datetime).total_seconds()
+       
+                
         for segundo in range(60,int(dur),60):
             random.seed()
             print("----------------------------------------------------------------------", segundo)
             time = cam.start_datetime + timedelta(seconds=segundo)
-            
             prioriry_calculation_2(time=time,db=db,cam=cam)
             # print("----------------------------------------")
             # if segundo%120 ==0:
@@ -314,27 +453,43 @@ def asignacion_recursos_con_popularidad_mucha(
             #         db.commit()
             # #Tengo un usuario al que hacer una recomendacion. 
             if segundo%60==0:
-                show_a_campaign_2(hive_id=cam.hive_id,campaign_id=cam.id,time=time,db=db)
+                # show_a_campaign_2(hive_id=cam.hive_id,campaign_id=cam.id,time=time,db=db)
                
-                n_surfaces=len(cam.surfaces)
-                posiciones_x=[]
-                posiciones_y=[]
-                for i in range(n_surfaces):
-                    boundary= cam.surfaces[i].boundary
-                    posiciones_x.append((boundary.centre['Longitude']-boundary.radius,boundary.centre['Longitude']+boundary.radius))
-                    posiciones_y.append((boundary.centre['Latitude']-boundary.radius,boundary.centre['Latitude']+boundary.radius))
-                
+
                 list_users= reciboUser(cam,db=db)
                 if list_users!=[]:
                     for user in list_users:
-                    #Genero las recomendaciones y la que el usuario selecciona y el tiempo que va a tardar en realizar dicho recomendacion. 
-                        n=len(posiciones_y)
-                        surface_number = random.randint(0,n-1) 
-                        #Posiciones con los circulos  y cells cuadradiusas 
-                        x=random.randint(posiciones_x[surface_number][0],posiciones_x[surface_number][1])
-                        y=random.randint(posiciones_y[surface_number][0],posiciones_y[surface_number][1])
+                        n_surfaces=len(cam.surfaces)
+                        surface_indice= random.randint(0,n_surfaces-1)
+                        boundary= cam.surfaces[surface_indice].boundary
+                        
+                        distance = random.randint(0,round(1000*(boundary.radius + cam.cells_distance)))
+                        distance=distance/1000
+                        direction= random.randint(0,360)
+                        
+                        
+                        lat1 = boundary.centre['Longitude'] 
+                        lon1 = boundary.centre['Latitude'] 
 
-                        a=RecommendationCreate(member_current_location={'Longitude':x,'Latitude':y},recommendation_datetime=time)
+                        # Desired distance in kilometers
+                            # Direction in degrees
+                        direction_rad = radians(direction)
+
+                        # Earth radius in kilometers
+                        R = 6371
+
+                        # Convert coordinates to radians
+                        lat1_rad = radians(lat1)
+                        lon1_rad = radians(lon1)
+                            
+                        # Calculate the new coordinates using Vincenty formula
+                        lat2_rad = asin(sin(lat1_rad) * cos(distance / R) + cos(lat1_rad) * sin(distance / R) * cos(direction_rad))
+                        lon2_rad = lon1_rad + atan2(sin(direction_rad) * sin(distance / R) * cos(lat1_rad), cos(distance / R) - sin(lat1_rad) * sin(lat2_rad))
+                        # Convert the new coordinates to degrees
+                        lat2 = degrees(lat2_rad)
+                        lon2 = degrees(lon2_rad)
+                
+                        a=RecommendationCreate(member_current_location={'Longitude':lat2,'Latitude':lon2},recommendation_datetime=time)
                         recomendaciones=create_recomendation_2(db=db,member_id=user.id,recipe_in=a,cam=cam,time=time)
                         
                         if len(recomendaciones['results'])>0:
@@ -345,7 +500,7 @@ def asignacion_recursos_con_popularidad_mucha(
                                 
                                 mediciones.append([user, recomendacion_polinizar, random.randint(1,600)])
 
-                                show_recomendation(db=db, cam=cam, user=user, result=recomendaciones['results'],time=time,recomendation=recomendacion_polinizar)  
+                                # show_recomendation(db=db, cam=cam, user=user, result=recomendaciones['results'],time=time,recomendation=recomendacion_polinizar)  
 
             new=[] 
             for i in range(0,len(mediciones)):
@@ -378,7 +533,112 @@ def asignacion_recursos_con_popularidad_mucha(
                 else:
                     new.append(mediciones[i])
             mediciones=new
+        
         return None
+ 
+from datetime import datetime,timezone
+
+
+
+def create_recomendation_3(
+    *, 
+    member_id:int, 
+    recipe_in: RecommendationCreate,
+    time:datetime,
+    db: Session = Depends(deps.get_db)
+) -> dict:
+    """
+    Create recomendation
+    """
+    user = crud.member.get_by_id(db=db,id=member_id)
+    if user is None:
+        raise HTTPException(
+            status_code=404, detail=f"Member with id=={member_id} not found"
+        )
+    time=time
+    campaign_member=crud.campaign_member.get_Campaigns_of_member(db=db, member_id=user.id,time=time)
+    
+    # hives=crud.hive_member.get_by_member_id(db=db, member_id=user.id)
+    # for i in hive
+    #     if not (i.hive_id in  hives):
+    #         hives.append(i.hive_id)
+    #     print(i.role)
+    #     if i.role =="WorkerBee" or i.role=="QueenBee":
+    #         admi=True
+    # if admi:
+        #Calcular las celdas 
+    List_cells_cercanas=[]
+    cells=[]
+    # for i in hives:
+    #         campaign=crud.campaign.get_campaigns_from_hive_id_active(db=db,hive_id=i.hive_id,time=time)
+    for i in campaign_member:
+        if(i.role=="QueenBee" or i.role=="WorkerBee"):
+            campaign=crud.campaign.get(db=db,id=i.campaign_id)
+            if campaign.start_datetime.replace(tzinfo=timezone.utc)    <=time and (campaign.end_datetime.replace(tzinfo=timezone.utc)    )>time:
+                        a=crud.cell.get_cells_campaign(db=db,campaign_id=i.campaign_id)
+                        if len(a)!=0:
+                            for l in a:
+                                cells.append([l,campaign]) 
+    if len(cells)==0: 
+            raise HTTPException(
+            status_code=404, detail=f"The user dont participate as WB or QB in any active campaign"
+        )
+    for i in cells: 
+            centro= i[0].centre
+            point= recipe_in.member_current_location
+            distancia=  (geopy.distance.GeodesicDistance((centro['Longitude'],centro['Latitude']),(point['Longitude'],point['Latitude']))).km
+
+            if distancia<=250:
+                List_cells_cercanas.append(i)
+    lista_celdas_ordenas=[]
+    if List_cells_cercanas!=[]:
+            lista_celdas_ordenas=List_cells_cercanas
+    else:
+            lista_celdas_ordenas=cells
+    cells_and_priority=[]
+    for i in lista_celdas_ordenas:
+                cam = i[1]
+                slot=crud.slot.get_slot_time(db=db,cell_id=i[0].id,time=time)                
+                priority=crud.priority.get_last(db=db,slot_id=slot.id,time=time)
+                if priority is None:
+                    print(slot.id)
+                Cardinal_actual = crud.measurement.get_all_Measurement_from_cell_in_the_current_slot(db=db, cell_id=i[0].id, time=time,slot_id=slot.id)
+                Cardinal_esperadiuso = Cardinal_actual
+                recommendation_accepted= crud.recommendation.get_aceptance_state_of_cell(db=db, cell_id=i[0].id)
+                Cardinal_esperadiuso=Cardinal_esperadiuso+ len(recommendation_accepted)
+                # for l in mediciones:
+                #     if l[1].cell_id== i.id:
+                #         Cardinal_esperadiuso=Cardinal_esperadiuso+1
+                if Cardinal_esperadiuso < cam.min_samples or cam.min_samples==0:
+                    cells_and_priority.append((i[0],priority, math.sqrt((i[0].centre['Longitude'] - point['Longitude'])**2+(i[0].centre['Latitude']-point['Latitude'])**2),priority.temporal_priority,Cardinal_esperadiuso,Cardinal_actual))
+    cells_and_priority.sort(key=lambda Cell: (-Cell[4], Cell[1].temporal_priority, -Cell[2] ),reverse=True)
+    result=[]
+        
+    if len(cells_and_priority)>=3:
+                for i in range(0,3):
+                    a=crud.slot.get_slot(db=db, slot_id=cells_and_priority[i][1].slot_id)
+                    # print(a.cell_id)
+                    # obj_state=StateCreate(db=db)
+                    # state=crud.state.create_state(db=db,obj_in=obj_state)
+                    recomendation=crud.recommendation.create_recommendation_detras(db=db,obj_in=recipe_in,member_id=member_id,slot_id=cells_and_priority[i][1].slot_id,state="NOTIFIED",update_datetime=time,sent_datetime=time)
+                    result.append(recomendation)
+
+    elif  len(cells_and_priority)!=0:
+                for i in range(0,len(cells_and_priority)):
+                    a=crud.slot.get_slot(db=db, slot_id=cells_and_priority[i][1].slot_id)
+                    cell_id=a.cell_id
+                    # # print(a.cell_id)
+                    # obj_state=StateCreate(db=db)
+                    # state=crud.state.create_state(db=db,obj_in=obj_state)
+                    recomendation=crud.recommendation.create_recommendation_detras(db=db,obj_in=recipe_in,member_id=member_id,slot_id=cells_and_priority[i][1].slot_id,state="NOTIFIED",update_datetime=time,sent_datetime=time)
+                    result.append(recomendation)
+        
+    if len(cells_and_priority)==0:
+            return {"results": []}
+    
+    return {"results": result}
+    
+
 
 
 def create_recomendation_2(
@@ -416,9 +676,7 @@ def create_recomendation_2(
                             for l in a:
                                 cells.append([l,campaign]) 
     if len(cells)==0: 
-            raise HTTPException(
-            status_code=404, detail=f"The user dont participate as WB or QB in any active campaign"
-        )
+            return {"results": []}
     for i in cells: 
             centro= i[0].centre
             point= recipe_in.member_current_location
@@ -498,7 +756,7 @@ def show_recomendation(*, cam:Campaign, user:Member, result:list(),time:datetime
                
     # x=random.randint(100, n_surfaces*700)
     # y=random.randint(100, 100*n_filas
-    imagen = 255*np.ones(( 1500, 1500,3),dtype=np.uint8)
+    # imagen = 255*np.ones(( 1500, 1500,3),dtype=np.uint8)
 
     # imagen = 255*np.ones(( 500+100*n_filas , 200+n_surfaces*600,3),dtype=np.uint8)
     # campañas_activas= crud.campaign.get_campaign(db=db, hive_id=hive_id, campaign_id=campaign_id)
@@ -507,18 +765,18 @@ def show_recomendation(*, cam:Campaign, user:Member, result:list(),time:datetime
     #             status_code=404, detail=f"Campaign with campaign_id== {campaign_id}  and hive_id=={hive_id} not found"
     #         )
     count=0
-    cv2.putText(imagen, f"Campaign: id={cam.id},", (50,50), cv2.FONT_HERSHEY_SIMPLEX , 0.75, (0,0,0))
-    cv2.putText(imagen, f"title={cam.title}", (50,80), cv2.FONT_HERSHEY_SIMPLEX , 0.75, (0,0,0))
-    cv2.putText(imagen, f"time={time.strftime('%m/%d/%Y, %H:%M:%S')}", (50,110), cv2.FONT_HERSHEY_SIMPLEX , 0.75, (0,0,0))
-    cv2.putText(imagen, f"User, user_id={user.id}", (50,140), cv2.FONT_HERSHEY_SIMPLEX , 0.75, (0,0,0))
+    # cv2.putText(imagen, f"Campaign: id={cam.id},", (50,50), cv2.FONT_HERSHEY_SIMPLEX , 0.75, (0,0,0))
+    # cv2.putText(imagen, f"title={cam.title}", (50,80), cv2.FONT_HERSHEY_SIMPLEX , 0.75, (0,0,0))
+    # cv2.putText(imagen, f"time={time.strftime('%m/%d/%Y, %H:%M:%S')}", (50,110), cv2.FONT_HERSHEY_SIMPLEX , 0.75, (0,0,0))
+    # cv2.putText(imagen, f"User, user_id={user.id}", (50,140), cv2.FONT_HERSHEY_SIMPLEX , 0.75, (0,0,0))
     
     
-    cv2.putText(imagen, f"User Position", (500+50,50), cv2.FONT_HERSHEY_SIMPLEX , 0.75, (0,0,0))
-    cv2.circle(imagen,color=(0,0,0),center=(500 ,45), radius=10,thickness=-1) 
-    cv2.putText(imagen, f"Cells Recommended", (500 +50,80), cv2.FONT_HERSHEY_SIMPLEX , 0.75, (0,0,0))
-    cv2.drawMarker(imagen, position=(500,70), color=(255,0,0), markerType=cv2.MARKER_SQUARE, markerSize= 20, thickness=2)
-    cv2.putText(imagen, f"Cell Selected", (500+50,110), cv2.FONT_HERSHEY_SIMPLEX , 0.75, (0,0,0))
-    cv2.drawMarker(imagen, position=(500 ,100), color=(151,45,248), markerType=cv2.MARKER_TILTED_CROSS,markerSize= 24, thickness=5)
+    # cv2.putText(imagen, f"User Position", (500+50,50), cv2.FONT_HERSHEY_SIMPLEX , 0.75, (0,0,0))
+    # cv2.circle(imagen,color=(0,0,0),center=(500 ,45), radius=10,thickness=-1) 
+    # cv2.putText(imagen, f"Cells Recommended", (500 +50,80), cv2.FONT_HERSHEY_SIMPLEX , 0.75, (0,0,0))
+    # cv2.drawMarker(imagen, position=(500,70), color=(255,0,0), markerType=cv2.MARKER_SQUARE, markerSize= 20, thickness=2)
+    # cv2.putText(imagen, f"Cell Selected", (500+50,110), cv2.FONT_HERSHEY_SIMPLEX , 0.75, (0,0,0))
+    # cv2.drawMarker(imagen, position=(500 ,100), color=(151,45,248), markerType=cv2.MARKER_TILTED_CROSS,markerSize= 24, thickness=5)
     
     Cells_recomendadas=[]
     for i in result:
@@ -540,7 +798,7 @@ def show_recomendation(*, cam:Campaign, user:Member, result:list(),time:datetime
                 #Ponermos el color en funcion de la cantidad de datos no de la prioridad. 
                 Cardinal_actual = crud.measurement.get_all_Measurement_from_cell_in_the_current_slot(db=db, cell_id=j.id, time=time,slot_id=slot.id)
                 if Cardinal_actual>=cam.min_samples:
-                    numero=4
+                    color=color_list_h[4]
                 else:
                     numero=int((Cardinal_actual/cam.min_samples)//(1/4))
                     color = color_list_h[numero]
@@ -573,10 +831,10 @@ def show_recomendation(*, cam:Campaign, user:Member, result:list(),time:datetime
 
                 line_color='black'
                 fill_color=color
-                print(color)
+                # print(color)
                 weight=1
                 text='text'
-                print(list_point)
+                # print(list_point)
                 folium.Polygon(locations=list_point, color=line_color, fill_color=color, 
                                                                 weight=weight, popup=(folium.Popup(text)),opacity=0.5,fill_opacity=0.75).add_to(mapObj)
                 # color= (color_list[numero][2],color_list[numero][1],color_list[numero][0])
@@ -612,10 +870,10 @@ def show_recomendation(*, cam:Campaign, user:Member, result:list(),time:datetime
     
     # cv2.circle(imagen,color=(0,0,0),center=(int(user_position['Longitude']),int(user_position['Latitude'])), radius=10,thickness=-1) 
     # res, im_png = cv2.imencode(".png", imagen)
-    direcion_html=f"/home/ubuntu/carpeta_compartida_docker/RecommenderSystem/src/Servicio/app/Pictures/Recomendaciones_html/{time.strftime('%m-%d-%Y-%H-%M-%S')}User_id{user.id}.html"
+    direcion_html=f"/home/ubuntu/carpeta_compartida_docker/RecommenderSystem/src/Servicio/app/Pictures/Recomendaciones_html/{time.strftime('%m-%d-%Y-%H-%M-%S')}User_id{user.id}Cam{cam.id}HI{cam.hive_id}.html"
     # print(direcion)
     # cv2.imwrite(direcion, imagen)
-    direcion_png=f"/home/ubuntu/carpeta_compartida_docker/RecommenderSystem/src/Servicio/app/Pictures/Recomendaciones/{time.strftime('%m-%d-%Y-%H-%M-%S')}User_id{user.id}.png"
+    direcion_png=f"/home/ubuntu/carpeta_compartida_docker/RecommenderSystem/src/Servicio/app/Pictures/Recomendaciones/{time.strftime('%m-%d-%Y-%H-%M-%S')}User_id{user.id}.Cam{cam.id}Hi{cam.hive_id}.png"
 
     colors = [ '#ffc3c3', '#ffdba7', '#f8f7bb', '#cbffbe', '#8ac683']
     names = ['Initial', 'Almost Midway', 'Midway', 'Almost Finished', 'Finished']
@@ -647,7 +905,7 @@ def show_recomendation(*, cam:Campaign, user:Member, result:list(),time:datetime
     mapObj.get_root().html.add_child(folium.Element(legend_html))
     legend_html = '''
         <div style="position: fixed; 
-            bottom: 300px; left: 90px; width: 290px; height: 170px; 
+            bottom: 350px; left: 90px; width: 290px; height: 170px; 
             border:2px solid grey; z-index:9999;
             background-color: rgba(255, 255, 255, 0.75);
             font-size:15px;">
@@ -672,9 +930,6 @@ def show_recomendation(*, cam:Campaign, user:Member, result:list(),time:datetime
     img.save(direcion_png)
     return None
 
-
-
-   
 
 def show_a_campaign_2(
     *,
@@ -789,10 +1044,10 @@ def show_a_campaign_2(
                 # cv2.putText(imagen,  str(j.id), (int(j.centre['Longitude']),int(j.centre['Latitude'])-40), cv2.FONT_HERSHEY_SIMPLEX , 0.4, (0,0,0))
 
     # res, im_png = cv2.imencode(".png", imagen)
-    direcion_html=f"/home/ubuntu/carpeta_compartida_docker/RecommenderSystem/src/Servicio/app/Pictures/Measurements_html/{time.strftime('%m-%d-%Y-%H-%M-%S')}.html"
+    direcion_html=f"/home/ubuntu/carpeta_compartida_docker/RecommenderSystem/src/Servicio/app/Pictures/Measurements_html/{time.strftime('%m-%d-%Y-%H-%M-%S')}Cam{campañas_activas.id}Hi{campañas_activas.hive_id}.html"
     # print(direcion)
     # cv2.imwrite(direcion, imagen)
-    direcion_png=f"/home/ubuntu/carpeta_compartida_docker/RecommenderSystem/src/Servicio/app/Pictures/Measurements/{time.strftime('%m-%d-%Y-%H-%M-%S')}.png"
+    direcion_png=f"/home/ubuntu/carpeta_compartida_docker/RecommenderSystem/src/Servicio/app/Pictures/Measurements/{time.strftime('%m-%d-%Y-%H-%M-%S')}Cam{campañas_activas.id}Hi{campañas_activas.hive_id}.png"
     colors = [ '#ffc3c3', '#ffdba7', '#f8f7bb', '#cbffbe', '#8ac683']
     names = ['Initial', 'Almost Midway', 'Midway', 'Almost Finished', 'Finished']
         # Define the names for the map-legend symbols

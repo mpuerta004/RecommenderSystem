@@ -3,7 +3,7 @@ import os
 
 img_array = []
 
-path = r"/home/ubuntu/carpeta_compartida_docker/RecommenderSystem/src/Servicio/app/Pictures/Measurements"
+path = r"/home/ubuntu/carpeta_compartida_docker/RecommenderSystem/src/Servicio/app/Pictures/Recomendaciones"
 archivos = sorted(os.listdir(path))
 for i in archivos: 
     dirArchivo = path + "/" + i
@@ -15,7 +15,7 @@ for i in archivos:
     img_array.append(img)
     
 
-video = cv2.VideoWriter('db0.wmv',cv2.VideoWriter_fourcc(*'mp4v'), 6, (width, height))
+video = cv2.VideoWriter('db0.wmv',cv2.VideoWriter_fourcc(*'mp4v'), 3, (width, height))
 
 
 for i in range(0, len(archivos)):

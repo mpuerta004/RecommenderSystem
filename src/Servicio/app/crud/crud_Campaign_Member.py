@@ -1,8 +1,9 @@
 from typing import Any, Dict, Optional, Union, List
 
 from sqlalchemy.orm import Session
-
+from datetime import datetime, timedelta
 from crud.base import CRUDBase
+from models.Campaign import Campaign
 from models.Campaign_Member import Campaign_Member
 from schemas.Campaign_Member import Campaign_MemberCreate, Campaign_MemberUpdate, Campaign_MemberSearchResults
 from fastapi.encoders import jsonable_encoder
@@ -46,9 +47,9 @@ class CRUDCampaign_Member(CRUDBase[Campaign_Member, Campaign_MemberCreate, Campa
         except Exception as e:
             raise HTTPException(status_code=500, detail=f"Error with mysql {e}" )
     
-    def get_Campaigns_of_member(self, db: Session, *, member_id:int) -> List[Campaign_Member]:
+    def get_Campaigns_of_member(self, db: Session, *, member_id:int,time:datetime) -> List[Campaign_Member]:
         try:
-            return db.query(Campaign_Member).filter(Campaign_Member.member_id == member_id).all()
+            return db.query(Campaign_Member).join(Campaign).filter(and_(Campaign_Member.member_id == member_id, Campaign_Member.campaign_id==Campaign.id, Campaign.start_datetime<=time, time<=Campaign.end_datetime )).all()
         except Exception as e:
             raise HTTPException(status_code=500, detail=f"Error with mysql {e}" )
     
