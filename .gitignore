@@ -13,6 +13,7 @@ __pycache__/*
 *.so
 #Pictures! 
 */.mp4
+*.mp4
 
 .avi
 src/Servicio/app/Picture/*.jpeg
