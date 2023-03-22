@@ -59,11 +59,11 @@ async def prioriry_calculation() -> None:
         List_campaigns = crud.campaign.get_all_active_campaign(db=db,time=time)
         for cam in List_campaigns:
             Demo.prioriry_calculation_2(time=time,cam=cam, db=db)
-    
         db.close()
     return None
 
-
+   
+   
 async def state_calculation()->None:
     with sessionmaker.context_session() as db:
         list_of_recommendations= crud.recommendation.get_aceptance_and_notified_state(db=db)

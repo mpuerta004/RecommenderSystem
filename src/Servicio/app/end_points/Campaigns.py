@@ -42,13 +42,7 @@ api_router_campaign = APIRouter(prefix="/hives/{hive_id}/campaigns")
 SQLALCHEMY_DATABASE_URL = "mysql+mysqlconnector://mve:mvepasswd123@localhost:3306/SocioBee"
 sessionmaker = FastAPISessionMaker(SQLALCHEMY_DATABASE_URL)
 
-color_list = [
-    (255, 195, 195),
-    (255, 219, 167),
-    (248, 247, 187),
-    (203, 255, 190),
-    (138, 198, 131)
-]
+#List of colors for the cells
 color_list_h=[ '#ffc3c3', '#ffdba7', '#f8f7bb', '#cbffbe', '#8ac683'
               ]
 
@@ -333,7 +327,7 @@ async def create_slots(cam: Campaign):
                                     db=db, obj_in=Cell_priority)
                             db.commit()
  
-
+#########                         Show Endpoint                   #########
 @api_router_campaign.get("/{campaign_id}/show", status_code=200, response_class=HTMLResponse)
 def show_a_campaign(
     *,
@@ -345,62 +339,54 @@ def show_a_campaign(
     """
     Show a campaign
     """
-    
-    campañas_activas = crud.campaign.get_campaign(
+    #get campaign
+    campaign = crud.campaign.get_campaign(
         db=db, hive_id=hive_id, campaign_id=campaign_id)
-    if campañas_activas is None:
+    #Verify if the campaign exist
+    if campaign is None:
         raise HTTPException(
             status_code=404, detail=f"Campaign with id== {campaign_id}  not found"
         )
-    else:
-        if time >= campañas_activas.start_datetime and time <= (campañas_activas.end_datetime):
-            imagen = 255*np.ones((1500, 1500, 3), dtype=np.uint8)
+        
+    #verify that campaign is active
+    if campaign.start_datetime.replace(tzinfo=timezone.utc)<=time.replace(tzinfo=timezone.utc)  and time.replace(tzinfo=timezone.utc)  <= campaign.end_datetime.replace(tzinfo=timezone.utc):
 
-            # imagen = 255*np.ones(( 200+100*n_filas , 200+n_surfaces*600,3),dtype=np.uint8)
-            # imagen = 255*np.ones((1000,1500,3),dtype=np.uint8)
-            cell_distance=campañas_activas.cells_distance
+            cell_distance=campaign.cells_distance
             hipotenusa=math.sqrt(2*((cell_distance/2)**2))
-            count = 0
-            # cv2.putText(imagen, f"Campaign: id={campañas_activas.id},",
-            #             (50, 50), cv2.FONT_HERSHEY_SIMPLEX, 0.75, (0, 0, 0))
-            # cv2.putText(imagen, f"city={campañas_activas.title}",
-            #             (50, 80), cv2.FONT_HERSHEY_SIMPLEX, 0.75, (0, 0, 0))
-            # cv2.putText(imagen, f"time={time.strftime('%m/%d/%Y, %H:%M:%S')}",
-            #             (50, 110), cv2.FONT_HERSHEY_SIMPLEX, 0.75, (0, 0, 0))
-            surface=crud.surface.get(db=db, id=campañas_activas.surfaces[0].id)
+            #Get the first surface to create the initial map. 
+            surface=crud.surface.get(db=db, id=campaign.surfaces[0].id)
+            #Create the map
             mapObj = folium.Map(location =[surface.boundary.centre['Longitude'],surface.boundary.centre['Latitude']], zoom_start = 20)
-
-            for i in campañas_activas.surfaces:
-                count = count+1
-                for j in i.cells:
+            #Add the information of each surface of the campaign in the map
+            for surface in campaign.surfaces:
+                #Draw each cell in the map with the color depending on the number of samples
+                for j in surface.cells:
+                    #Calculate the number of samples in the current slot of the cell
                     slot = crud.slot.get_slot_time(db=db, cell_id=j.id, time=time)
-                    try:
-                        Cardinal_actual = crud.measurement.get_all_Measurement_from_cell_in_the_current_slot(
+                    Cardinal_actual = crud.measurement.get_all_Measurement_from_cell_in_the_current_slot(
                         db=db, cell_id=j.id, time=time, slot_id=slot.id)
-                    except:
-                            raise HTTPException(
-                                    status_code=404, detail=f"Problem with the conecction with mysql."
-                                )
-                    if Cardinal_actual >= campañas_activas.min_samples:
+                   
+                    #Calculate the color of the cell based on the number of samples
+                    if Cardinal_actual >= campaign.min_samples:
                         numero = 4
                     else:
                         numero = int(
-                            (Cardinal_actual/campañas_activas.min_samples)//(1/4))
+                            (Cardinal_actual/campaign.min_samples)//(1/4))
                     color = color_list_h[numero]
+                   
+                    #Calculate the coordinates of the corners of the cell to draw it in the map with the calculated color
                     lat1 = j.centre['Longitude']
                     lon1 =j.centre['Latitude']
 
-                    # Desired distance in kilometers
-                    distance  = hipotenusa
-                    list_direction=[45,135,225,315]
-                    list_point=[]
+                    distance  = hipotenusa  # Distance in Km of the center to the corner of each cell
+
+                    list_direction=[45,135,225,315] #List of the directions of the corners of each cell from the center
+                    list_courner_points_of_cell=[]
                     for j in list_direction:
                         # Direction in degrees
                         direction = j
                         direction_rad = radians(direction)
-
-                        # Earth radius in kilometers
-                        R = 6371
+                        R = 6371  # Earth radius in kilometers
 
                         # Convert coordinates to radians
                         lat1_rad = radians(lat1)
@@ -412,21 +398,13 @@ def show_a_campaign(
                         # Convert the new coordinates to degrees
                         lat2 = degrees(lat2_rad)
                         lon2 = degrees(lon2_rad)
-                        list_point.append([lat2,lon2])
-
-                    line_color='black'
-                    fill_color=color
-                    print(color)
-                    weight=1
-                    text='text'
-                    print(list_point)
-                    folium.Polygon(locations=list_point, color=line_color, fill_color=color, 
-                                                                weight=weight, popup=(folium.Popup(text)),opacity=0.5,fill_opacity=0.5).add_to(mapObj)
-                    # pt1 = (int(j.centre['Longitude'])+j.radius, int(j.centre['Latitude'])+j.radius)
-                    # pt2 = (int(j.centre['Longitude'])-j.radius, int(j.centre['Latitude'])-j.radius)
-                    # # print(pt1, pt2)
-                    # cv2.rectangle(imagen, pt1=pt1, pt2=pt2, color=color, thickness=-1)
-                    # cv2.rectangle(imagen, pt1=pt1, pt2=pt2, color=(0, 0, 0))
+                        list_courner_points_of_cell.append([lat2,lon2])
+                    #Draw the cell
+                    text=f'Numer of measurements: {Cardinal_actual}'
+                    folium.Polygon(locations=list_courner_points_of_cell, color='black', fill_color=color, 
+                                                                weight=1, popup=(folium.Popup(text)),opacity=0.5,fill_opacity=0.5).add_to(mapObj)
+                    
+                    #Draw the cardinal direction of the cell in the center of this cell. (for the .png picture)
                     folium.Marker([lat1,lon1],
                             icon=DivIcon(
                                 icon_size=(200,36),
@@ -434,23 +412,18 @@ def show_a_campaign(
                                 html=f'<div style="font-size: 20pt">{Cardinal_actual}</div>',
                                 )
                             ).add_to(mapObj)
-                    # folium.Marker([lat1,lon1]).add_to(mapObj)
-                    # cv2.putText(imagen, str(Cardinal_actual), (int(j.centre['Longitude']), int(
-                    #     j.centre['Latitude'])), cv2.FONT_HERSHEY_SIMPLEX, 0.75, (0, 0, 0))
-           
+            #Save the map in a html file and return
             mapObj.save("index.html")
             htmlt_map=mapObj._repr_html_()
-       
             return f"<html><body>{htmlt_map}</body></html>"
-        else:
+    else:
             raise HTTPException(
-                status_code=404, detail=f"Campaign with campaign_id== {campaign_id}  and hive_id=={hive_id} is not active fot the time={time}."
+                status_code=404, detail=f"Campaign with campaign_id={campaign_id}  and hive_id={hive_id} is not active fot the time={time}."
             )
 
-#             return StreamingResponse(BytesIO(im_png.tobytes()), media_type="image/png")
 
 
-
+######  PUT Endpoint ######
 @api_router_campaign.put("/{campaign_id}", status_code=201, response_model=Campaign)
 def update_campaign(
     *,
