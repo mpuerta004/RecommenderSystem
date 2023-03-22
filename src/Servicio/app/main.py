@@ -52,7 +52,7 @@ async def prioriry_calculation() -> None:
     """
     Create the priorirty af all campaign based on the measurements
     """
-    await  asyncio.sleep(1)
+    # await  asyncio.sleep(1)
     with sessionmaker.context_session() as db:
         time= datetime.utcnow()
         
@@ -101,10 +101,10 @@ if __name__ == "__main__":
     ## Use this for debugging purposes only
     import uvicorn
     # #Add this line to run the system. 
-    # scheduler = BackgroundScheduler()
-    # scheduler.add_job(final_funtion, 'interval', seconds=60)
-    # scheduler.add_job(State_change, 'interval', seconds=420)
+    scheduler = BackgroundScheduler()
+    scheduler.add_job(final_funtion, 'interval', seconds=120)
+    scheduler.add_job(State_change, 'interval', seconds=420)
 
-    # scheduler.start()
+    scheduler.start()
 
     uvicorn.run(app, host="0.0.0.0", port=8001, log_level="debug")

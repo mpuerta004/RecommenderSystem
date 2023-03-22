@@ -47,9 +47,9 @@ class CRUDCampaign_Member(CRUDBase[Campaign_Member, Campaign_MemberCreate, Campa
         except Exception as e:
             raise HTTPException(status_code=500, detail=f"Error with mysql {e}" )
     
-    def get_Campaigns_of_member(self, db: Session, *, member_id:int,time:datetime) -> List[Campaign_Member]:
+    def get_Campaigns_of_member(self, db: Session, *, member_id:int) -> List[Campaign_Member]:
         try:
-            return db.query(Campaign_Member).join(Campaign).filter(and_(Campaign_Member.member_id == member_id, Campaign_Member.campaign_id==Campaign.id, Campaign.start_datetime<=time, time<=Campaign.end_datetime )).all()
+            return db.query(Campaign_Member).filter(and_(Campaign_Member.member_id == member_id, Campaign_Member.campaign_id==Campaign.id)).all()
         except Exception as e:
             raise HTTPException(status_code=500, detail=f"Error with mysql {e}" )
     

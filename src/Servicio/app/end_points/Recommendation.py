@@ -91,7 +91,9 @@ def create_recomendation(
     for i in campaign_member:
         if(i.role=="QueenBee" or i.role=="WorkerBee"):
             campaign=crud.campaign.get(db=db,id=i.campaign_id)
-            if campaign.start_datetime.replace(tzinfo=timezone.utc)    <=time and (campaign.end_datetime.replace(tzinfo=timezone.utc)    )>=time:
+            print(time)
+            print(campaign.start_datetime.replace(tzinfo=timezone.utc))
+            if campaign.start_datetime.replace(tzinfo=timezone.utc) <=time.replace(tzinfo=timezone.utc) and time.replace(tzinfo=timezone.utc)<=campaign.end_datetime.replace(tzinfo=timezone.utc):
                         a=crud.cell.get_cells_campaign(db=db,campaign_id=i.campaign_id)
                         if len(a)!=0:
                             for l in a:

@@ -71,13 +71,13 @@ def prioriry_calculation_2(time:datetime, cam:Campaign, db:Session= Depends(deps
             # date = datetime(year=a.year, month=a.month, day=a.day,
             #                 hour=a.hour, minute=a.minute, second=a.second)
             # for cam in campaigns:
-            if time >= cam.start_datetime.replace(tzinfo=timezone.utc)  and time < cam.end_datetime.replace(tzinfo=timezone.utc) :
+            if cam.start_datetime.replace(tzinfo=timezone.utc)<=time.replace(tzinfo=timezone.utc) and time.replace(tzinfo=timezone.utc) < cam.end_datetime.replace(tzinfo=timezone.utc) :
                 surfaces=crud.surface.get_multi_surface_from_campaign_id(db=db,campaign_id=cam.id)
                 for sur in surfaces:
                     for cells in sur.cells:
                 # for cells in cam.cells:
                         momento = time
-                        if momento >= (cam.start_datetime+timedelta(seconds=cam.sampling_period)).replace(tzinfo=timezone.utc) :
+                        if (cam.start_datetime+timedelta(seconds=cam.sampling_period)).replace(tzinfo=timezone.utc)<=momento.replace(tzinfo=timezone.utc) :
                             slot_pasado = crud.slot.get_slot_time(db=db, cell_id=cells.id, time=(
                                  momento - timedelta(seconds=cam.sampling_period)))
                             Cardinal_pasado =  crud.measurement.get_all_Measurement_from_cell_in_the_current_slot(
@@ -95,7 +95,7 @@ def prioriry_calculation_2(time:datetime, cam:Campaign, db:Session= Depends(deps
                         # b = max(2, cam.min_samples - int(Cardinal_pasado))
                         # a = max(2, cam.min_samples - int(Cardinal_actual))
                         # result = math.log(a) * math.log(b, int(Cardinal_actual) + 2)
-                        init=momento  - cam.start_datetime.replace(tzinfo=timezone.utc) 
+                        init=momento.replace(tzinfo=timezone.utc)   - cam.start_datetime.replace(tzinfo=timezone.utc) 
                         
                         a =  init - timedelta(seconds= ((init).total_seconds()//cam.sampling_period)*cam.sampling_period)
                         if cam.min_samples==0:
@@ -556,7 +556,7 @@ def create_recomendation_3(
             status_code=404, detail=f"Member with id=={member_id} not found"
         )
     time=time
-    campaign_member=crud.campaign_member.get_Campaigns_of_member(db=db, member_id=user.id,time=time)
+    campaign_member=crud.campaign_member.get_Campaigns_of_member(db=db, member_id=user.id)
     
     # hives=crud.hive_member.get_by_member_id(db=db, member_id=user.id)
     # for i in hive
