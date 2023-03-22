@@ -1,0 +1,80 @@
+
+hive_1-> 90 (1-90)
+{
+    "campaign_metadata": {
+      "title": "string",
+      "start_datetime": "2023-02-17T10:37:16.476Z",
+      "cells_distance": 0.05,
+      "min_samples": 8,
+      "sampling_period": 3600,
+      "end_datetime": "2023-02-17T12:37:16.476Z",
+      "hypothesis": "string"
+    },
+    "boundary_campaign": {
+      "centre": {
+        "Longitude": 43.25872911550869,
+        "Latitude":  -2.9413343701121923
+      },
+      "radius": 0.1
+    }
+  }
+
+  {
+    "campaign_metadata": {
+      "title": "string",
+      "start_datetime": "2023-02-17T10:37:16.476Z",
+      "cells_distance": 0.05,
+      "min_samples": 8,
+      "sampling_period": 3600,
+      "end_datetime": "2023-02-17T12:37:16.476Z",
+      "hypothesis": "string"
+    },
+    "boundary_campaign": {
+      "centre": {
+        "Longitude": 43.26082692613042,
+        "Latitude":   -2.94984424685043
+      },
+      "radius": 0.1
+    }
+  }
+hive_2 -> 89 (91-180) 
+  {
+    "campaign_metadata": {
+      "title": "string",
+      "start_datetime": "2023-02-17T10:37:16.476Z",
+      "cells_distance": 0.05,
+      "min_samples": 4,
+      "sampling_period": 3600,
+      "end_datetime": "2023-02-17T12:37:16.476Z",
+      "hypothesis": "string"
+    },
+    "boundary_campaign": {
+      "centre": {
+        "Longitude": 43.2708147358349,
+        "Latitude":  -2.9510082267726254
+      },
+      "radius": 0.22
+    }
+  }
+
+  hive_3 -> 50 (181-230)
+  {
+    "campaign_metadata": {
+      "title": "string",
+      "start_datetime": "2023-02-17T10:37:16.476Z",
+      "cells_distance": 0.05,
+      "min_samples": 4,
+      "sampling_period": 3600,
+      "end_datetime": "2023-02-17T12:37:16.476Z",
+      "hypothesis": "string"
+    },
+    "boundary_campaign": {
+      "centre": {
+        "Longitude": 43.249676203510596,
+        "Latitude":   -2.9105355773927997
+      },
+      "radius": 0.1
+    }
+  }
+
+

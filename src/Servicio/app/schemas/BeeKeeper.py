@@ -7,7 +7,7 @@ class gender_type(str, Enum):
     MALE="MALE"
     NOBINARY="NOBINARY"
     FEMALE="FEMALE"
-    NOANSER='NOANSER' 
+    NOANSER="NOANSWER" 
     
     
 class BeeKeeperBase(BaseModel):

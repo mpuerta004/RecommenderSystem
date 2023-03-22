@@ -26,8 +26,8 @@ CREATE TABLE Member (
   age INT NULL DEFAULT NULL,
   mail  varchar(50) not null,
   city VARCHAR(30) NULL DEFAULT NULL,
-  gender Varchar(30) default 'NOANSER',
-  CONSTRAINT gender_type CHECK (gender IN ("NOBINARY","MALE","FEMALE",'NOANSER')),
+  gender Varchar(30) default 'NOANSWER',
+  CONSTRAINT gender_type CHECK (gender IN ("NOBINARY","MALE","FEMALE",'NOANSWER')),
   real_user  BOOLEAN,
   PRIMARY KEY (id)
   );
@@ -40,9 +40,9 @@ CREATE TABLE  BeeKeeper(
   age INT NULL DEFAULT NULL,
   mail  varchar(50) not null,
   city VARCHAR(30) NULL DEFAULT NULL,
-  gender Varchar(30) not null default 'NOANSER',
+  gender Varchar(30) not null default 'NOANSWER',
   real_user  BOOLEAN,
-  CONSTRAINT gender_type_beekeeper CHECK (gender IN ("NOBINARY","MALE","FEMALE",'NOANSER')),
+  CONSTRAINT gender_type_beekeeper CHECK (gender IN ("NOBINARY","MALE","FEMALE",'NOANSWER')),
   PRIMARY KEY (id)
   );
 

@@ -36,14 +36,12 @@ app.include_router(Devices.api_router_device, tags=["Device"])
 app.include_router(BeeKeeper.api_router_beekeepers, tags=["BeeKeepers"])
 app.include_router(Members.api_router_members, tags=["Members"])
 app.include_router(Hive.api_router_hive, tags=["Hives"])
-
 app.include_router(Campaigns.api_router_campaign, tags=["Campaigns"])
 app.include_router(Campaign_Member.api_router_campaign_member, tags=["Campaign - Member"])
 app.include_router(Surface.api_router_surface, tags=["Surfaces"])
 app.include_router(Cells.api_router_cell, tags=["Cells"])
 app.include_router(Measurements.api_router_measurements, tags=["Measurements"])
 app.include_router(Recommendation.api_router_recommendation, tags=["Recommendations"])
-# app.include_router(Reading.api_router_reading, tags=["Readings"])
 app.include_router(Demo.api_router_demo, tags=["Demo"])
 app.include_router(sync.api_router_sync, tags=["Sync"])
 
@@ -52,15 +50,14 @@ api_router = APIRouter()
 
 async def prioriry_calculation() -> None:
     """
-    Create the priorirty based on the measurements
+    Create the priorirty af all campaign based on the measurements
     """
     await  asyncio.sleep(1)
-    print("HELOS ")
     with sessionmaker.context_session() as db:
         time= datetime.utcnow()
-        print(time)
-        campaigns = crud.campaign.get_all_active_campaign(db=db,time=time)
-        for cam in campaigns:
+        
+        List_campaigns = crud.campaign.get_all_active_campaign(db=db,time=time)
+        for cam in List_campaigns:
             Demo.prioriry_calculation_2(time=time,cam=cam, db=db)
     
         db.close()
@@ -101,7 +98,7 @@ def State_change():
 app.include_router(api_router)
 
 if __name__ == "__main__":
-    # Use this for debugging purposes only
+    ## Use this for debugging purposes only
     import uvicorn
     # #Add this line to run the system. 
     # scheduler = BackgroundScheduler()
