@@ -2,8 +2,6 @@ from pydantic import BaseModel
 from typing import Sequence
 from schemas.Point import Point
 
-from schemas.Cell import Cell
-
 
 
 class BoundaryBase_points(BaseModel):
@@ -27,19 +25,16 @@ class BoundaryUpdate(BoundaryBase):
 # Properties shared by models stored in DB
 class BoundaryInDBBase(BoundaryBase):
     id:int 
-    # cells:Sequence[Cell]
     class Config:
         orm_mode = True
 
 
 # Properties to return to client
 class Boundary(BoundaryInDBBase):
-
     pass
 
-
 # Properties properties stored in DB
-class RecipeInDB(BoundaryInDBBase):
+class BoundaryInDB(BoundaryInDBBase):
     pass
 
 

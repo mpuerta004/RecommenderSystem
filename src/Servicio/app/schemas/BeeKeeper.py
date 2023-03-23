@@ -21,25 +21,17 @@ class BeeKeeperBase(BaseModel):
     real_user:bool=True
 
     
-    # device_id:int=None
-
-# # Properties to receive via API on creation
-class BeeKeeperCreate(BeeKeeperBase):
-     pass
-    
 
 # Properties to receive via API on creation
 class BeeKeeperCreate(BeeKeeperBase):
     pass
     
 
-
-
 # Properties to receive via API on update
 class BeeKeeperUpdate(BeeKeeperBase):
     pass
 
-
+# Properties shared by BeeKeepers stored in DB
 class BeeKeeperInDBBase(BeeKeeperBase):
     id: int = None
 

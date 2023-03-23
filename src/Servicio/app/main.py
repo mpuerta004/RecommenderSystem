@@ -1,25 +1,14 @@
-from fastapi import BackgroundTasks, FastAPI
-from fastapi import FastAPI, APIRouter, Query, HTTPException, Request, Depends
-from fastapi.templating import Jinja2Templates
-from pathlib import Path
-from end_points import Hive
-from end_points import Members
-from end_points import BeeKeeper
-from end_points import Campaign_Member
-from end_points import Cells
-from end_points import Campaigns
-from end_points import Devices
-from end_points import Surface
-from end_points import Measurements
-from end_points import Recommendation
-from end_points import Demo
-from end_points import sync
-from fastapi_utils.session import FastAPISessionMaker
-from apscheduler.schedulers.background import BackgroundScheduler
-from datetime import datetime, timedelta
 import asyncio
+from datetime import datetime, timedelta
+from pathlib import Path
 import crud
-
+from apscheduler.schedulers.background import BackgroundScheduler
+from end_points import (BeeKeeper, Campaign_Member, Campaigns, Cells, Demo,
+                        Devices, Hive, Measurements, Members, Recommendation,
+                        Surface, sync)
+from fastapi import (APIRouter, FastAPI)
+from fastapi.templating import Jinja2Templates
+from fastapi_utils.session import FastAPISessionMaker
 
 SQLALCHEMY_DATABASE_URL = "mysql+mysqlconnector://mve:mvepasswd123@localhost:3306/SocioBee"
 sessionmaker = FastAPISessionMaker(SQLALCHEMY_DATABASE_URL)
@@ -29,7 +18,7 @@ ROOT = Path(__file__).resolve().parent.parent
 BASE_PATH = Path(__file__).resolve().parent
 TEMPLATES = Jinja2Templates(directory=str(BASE_PATH / "templates"))
 
-
+#Add the sections of the API
 app = FastAPI(title="Micro-volunteering Engine",
               version=1.0, openapi_url="/openapi.json")
 app.include_router(Devices.api_router_device, tags=["Device"])
@@ -55,7 +44,6 @@ async def prioriry_calculation() -> None:
     # await  asyncio.sleep(1)
     with sessionmaker.context_session() as db:
         time= datetime.utcnow()
-        
         List_campaigns = crud.campaign.get_all_active_campaign(db=db,time=time)
         for cam in List_campaigns:
             Demo.prioriry_calculation_2(time=time,cam=cam, db=db)
@@ -69,27 +57,20 @@ async def state_calculation()->None:
         list_of_recommendations= crud.recommendation.get_aceptance_and_notified_state(db=db)
         for i in list_of_recommendations:
             a = datetime.utcnow()
-            print(a)
             Current_time = datetime(year=a.year, month=a.month, day=a.day,
                         hour=a.hour, minute=a.minute, second=a.second)
             if (Current_time - i.update_datetime) > timedelta(minutes=7):
                 crud.recommendation.update(db=db,db_obj=i, obj_in={"state":"NON_REALIZED","update_datetime":Current_time})
+                db.close()
                 db.commit()         
                        
-#Funcion sensores automaticos: 
-# cell_statics=crud.cell.get_statics(db=db, campaign_id=cam.id)                
-#                 for i in cell_statics:
-#                     Measurementcreate= MeasurementCreate(cell_id=i.id, datetime=date,location=i.centre)
-#                     slot=crud.slot.get_slot_time(db=db,cell_id=i.id,time=date)
-#                     crud.measurement.create_Measurement(db=db, slot_id=slot.id,member_id=)
 
-
-
-
+#Funtions that automaticaly calculate the priority.
 def final_funtion():
     asyncio.run(prioriry_calculation())
     print("He terminado!")
-    
+
+#Funtions that automaticaly calculate the update of the states. 
 def State_change():
     asyncio.run(state_calculation())
     print("He terminado!")
@@ -97,14 +78,17 @@ def State_change():
 
 app.include_router(api_router)
 
+
+
 if __name__ == "__main__":
     ## Use this for debugging purposes only
     import uvicorn
-    # #Add this line to run the system. 
-    scheduler = BackgroundScheduler()
-    scheduler.add_job(final_funtion, 'interval', seconds=120)
-    scheduler.add_job(State_change, 'interval', seconds=420)
 
-    scheduler.start()
+    # #Add this line to run the system. 
+    # scheduler = BackgroundScheduler()
+    # scheduler.add_job(final_funtion, 'interval', seconds=120)
+    # scheduler.add_job(State_change, 'interval', seconds=420)
+
+    # scheduler.start()
 
     uvicorn.run(app, host="0.0.0.0", port=8001, log_level="debug")

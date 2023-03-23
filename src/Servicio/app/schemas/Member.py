@@ -29,17 +29,11 @@ class MemberBase(BaseModel):
     real_user:bool=True
     # device_id:int=None
 
-# # Properties to receive via API on creation
-class MemberCreate(MemberBase):
-     pass
-    
 
 # Properties to receive via API on creation
 class MemberCreate(MemberBase):
     pass
     
-
-
 
 # Properties to receive via API on update
 class MemberUpdate(MemberBase):
@@ -57,44 +51,21 @@ class MemberInDBBase(MemberBase):
 class Member(MemberInDBBase):
     pass
 
+# Properties properties stored in DB
 class MemberInDB(MemberInDBBase):
     pass
+
 
 class MemberSearchResults(BaseModel):
     results: Sequence[Member]
 
 
+#These are two new classes that I have created to be able to create a new role and a new member with a role
 class NewRole(BaseModel):
-    role: role #Union["QueenBee" or "Participant"]
+    role: role 
 
 
 class NewMembers(BaseModel):
     member: Member
     role:role
     
-
-# # Properties to receive via API on update
-# class MemberUpdate(MemberBase):
-#     pass
-
-
-# class MemberInDBBase(MemberBase):
-#     id: int = None
-#     hive_id:int
-
-#     class Config:
-#         orm_mode = True
-
-
-# # Additional properties to return via API
-# class Member(MemberBase):
-#     id:int
-    
-#     #campaigns:CampaignSearchResults
-#     class Config:
-#         orm_mode = True
-
-
-
-# class MemberSearchResults(BaseModel):
-#     results: Sequence[Member]

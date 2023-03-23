@@ -27,7 +27,7 @@ from models.Cell import Cell
 from sqlalchemy import and_, extract
 
 class CRUDPriority(CRUDBase[Priority, PriorityCreate,PriorityUpdate]):
-    def get_last(self,*, db: Session,  slot_id:int,time:datetime) -> Priority:
+    def get_last(self,*, db: Session,  slot_id:int,time:datetime) -> Priority or Any:
         try:
             return db.query(Priority).filter(and_(Priority.slot_id == slot_id, Priority.datetime<=time)).order_by(Priority.datetime.desc()).first()
         except Exception as e:

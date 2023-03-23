@@ -8,11 +8,10 @@ from typing import Any, Dict, Generic, List, Optional, Type, TypeVar, Union
 from schemas.Recommendation import state, Recommendation,RecommendationCell, RecommendationCellSearchResults, RecommendationCreate, RecommendationSearchResults, RecommendationUpdate
 import deps
 import crud
-from datetime import datetime,timezone
+from datetime import datetime,timezone, timedelta
 import math
 
 import geopy.distance
-
 
 api_router_recommendation = APIRouter(prefix="/members/{member_id}/recommendations")
 
@@ -91,8 +90,6 @@ def create_recomendation(
     for i in campaign_member:
         if(i.role=="QueenBee" or i.role=="WorkerBee"):
             campaign=crud.campaign.get(db=db,id=i.campaign_id)
-            print(time)
-            print(campaign.start_datetime.replace(tzinfo=timezone.utc))
             if campaign.start_datetime.replace(tzinfo=timezone.utc) <=time.replace(tzinfo=timezone.utc) and time.replace(tzinfo=timezone.utc)<=campaign.end_datetime.replace(tzinfo=timezone.utc):
                         a=crud.cell.get_cells_campaign(db=db,campaign_id=i.campaign_id)
                         if len(a)!=0:
@@ -107,7 +104,7 @@ def create_recomendation(
             point= recipe_in.member_current_location
             distancia=  (geopy.distance.GeodesicDistance((centro['Longitude'],centro['Latitude']),(point['Longitude'],point['Latitude']))).km
 
-            if distancia<=250:
+            if distancia<=(i[1].cells_distance)*2:
                 List_cells_cercanas.append(i)
     lista_celdas_ordenas=[]
     if List_cells_cercanas!=[]:
@@ -120,7 +117,10 @@ def create_recomendation(
                 slot=crud.slot.get_slot_time(db=db,cell_id=i[0].id,time=time)                
                 priority=crud.priority.get_last(db=db,slot_id=slot.id,time=time)
                 if priority is None:
-                    print(slot.id)
+                    priority_temporal = 0
+                else:
+                    priority_temporal=priority.temporal_priority
+
                 Cardinal_actual = crud.measurement.get_all_Measurement_from_cell_in_the_current_slot(db=db, cell_id=i[0].id, time=time,slot_id=slot.id)
                 Cardinal_esperadiuso = Cardinal_actual
                 recommendation_accepted= crud.recommendation.get_aceptance_state_of_cell(db=db, cell_id=i[0].id)
@@ -129,28 +129,33 @@ def create_recomendation(
                 #     if l[1].cell_id== i.id:
                 #         Cardinal_esperadiuso=Cardinal_esperadiuso+1
                 if Cardinal_esperadiuso < cam.min_samples or cam.min_samples==0:
-                    cells_and_priority.append((i[0],priority, math.sqrt((i[0].centre['Longitude'] - point['Longitude'])**2+(i[0].centre['Latitude']-point['Latitude'])**2),priority.temporal_priority,Cardinal_esperadiuso,Cardinal_actual))
-    cells_and_priority.sort(key=lambda Cell: (-Cell[4], Cell[1].temporal_priority, -Cell[2] ),reverse=True)
+                    cells_and_priority.append((i[0],
+                                               priority_temporal,
+                                               math.sqrt((i[0].centre['Longitude'] - point['Longitude'])**2+(i[0].centre['Latitude']-point['Latitude'])**2),
+                                               Cardinal_esperadiuso,
+                                               Cardinal_actual,
+                                               slot))
+    cells_and_priority.sort(key=lambda Cell: (-Cell[3], Cell[1], -Cell[2] ),reverse=True)
     result=[]
         
     if len(cells_and_priority)>=3:
                 for i in range(0,3):
-                    a=crud.slot.get_slot(db=db, slot_id=cells_and_priority[i][1].slot_id)
+                    a=cells_and_priority[i][5]
                     # print(a.cell_id)
                     # obj_state=StateCreate(db=db)
                     # state=crud.state.create_state(db=db,obj_in=obj_state)
-                    recomendation=crud.recommendation.create_recommendation_detras(db=db,obj_in=recipe_in,member_id=member_id,slot_id=cells_and_priority[i][1].slot_id,state="NOTIFIED",update_datetime=time,sent_datetime=time)
-                    result.append(RecommendationCell(recommendation =recomendation, cell=a.cell))
+                    recomendation=crud.recommendation.create_recommendation_detras(db=db,obj_in=recipe_in,member_id=member_id,slot_id=cells_and_priority[i][5].id,state="NOTIFIED",update_datetime=time,sent_datetime=time)
+                    result.append(RecommendationCell(recommendation =recomendation, cell=a.cell_id))
 
     elif  len(cells_and_priority)!=0:
                 for i in range(0,len(cells_and_priority)):
-                    a=crud.slot.get_slot(db=db, slot_id=cells_and_priority[i][1].slot_id)
-                    cell_id=a.cell_id
+                    a=cells_and_priority[i][5]
+                    # cell_id=a.cell_id
                     # # print(a.cell_id)
                     # obj_state=StateCreate(db=db)
                     # state=crud.state.create_state(db=db,obj_in=obj_state)
-                    recomendation=crud.recommendation.create_recommendation_detras(db=db,obj_in=recipe_in,member_id=member_id,slot_id=cells_and_priority[i][1].slot_id,state="NOTIFIED",update_datetime=time,sent_datetime=time)
-                    result.append(RecommendationCell(recommendation=recomendation, cell=a.cell))
+                    recomendation=crud.recommendation.create_recommendation_detras(db=db,obj_in=recipe_in,member_id=member_id,slot_id=cells_and_priority[i][5].id,state="NOTIFIED",update_datetime=time,sent_datetime=time)
+                    result.append(RecommendationCell(recommendation=recomendation, cell=a.cell_id))
         
     if len(cells_and_priority)==0:
             return {"results": []}

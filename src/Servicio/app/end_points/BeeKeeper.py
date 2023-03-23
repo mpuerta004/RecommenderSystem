@@ -13,7 +13,7 @@ import crud
 
 api_router_beekeepers = APIRouter(prefix="/beekeepers")
 
-
+##########                         GET POST                          ##########
 @api_router_beekeepers.get("/{beekeeper_id}", status_code=200, response_model=BeeKeeper)
 def get_a_beekeeper(
     *,
@@ -23,14 +23,19 @@ def get_a_beekeeper(
     """
     Get a BeeKeeper
     """
+    #Get the beekeeper from the database
     beekeeper = crud.beekeeper.get_by_id(db=db, id=Beekeeper_id)
-    
+    #Verify if the beekeeper exists
     if beekeeper is None:
             raise HTTPException(
                 status_code=404, detail=f"BeeKeeper with BeeKeeper_id=={Beekeeper_id} not found"
             )
+    #Return the beekeeper
     return beekeeper
 
+
+
+##########                         DELETE Endpoint                        ##########
 @api_router_beekeepers.delete("/{beekeeper_id}", status_code=204)
 def delete_beekeeper(*,
                      beekeeper_id: int,
@@ -39,44 +44,43 @@ def delete_beekeeper(*,
     """
     Delete a BeeKeeper.
     """
+    #Get the beekeeper from the database
     beekeeper = crud.beekeeper.get_by_id(db=db, id=beekeeper_id)
-    
-    
+    #Verify if the beekeeper exists
     if beekeeper is None:
             raise HTTPException(
                 status_code=404, detail=f"BeeKeeper with id=={beekeeper_id} not found"
         )
-    try:
-        crud.beekeeper.remove(db=db, beekeeper=beekeeper)
-    except Exception as e:
-        raise HTTPException(
-            status_code=500, detail=f"Error removing the Beekeeper entity: {e}"
-        )
+    #Delete the beekeeper (if error hapens, then this methods send the problem)
+    crud.beekeeper.remove(db=db, beekeeper=beekeeper)
     return {"ok": True}
 
-
+##########                         POST Endpoint                          ##########
 @api_router_beekeepers.post("/", status_code=201, response_model=BeeKeeper)
 def create_beekeeper(
     *,
-    recipe_in: BeeKeeperCreate,
+    beekeeper_create: BeeKeeperCreate,
     db: Session = Depends(deps.get_db)
 ) -> dict:
     """
     Create a new BeeKeeper of the hive in the database.
     """
-    list_device_id=crud.beekeeper.get_beekeepers_id(db=db)
-    if len(list_device_id)==0:
+    #Calculate the id of the new beekeeper
+    list_beekeeper_id=crud.beekeeper.get_beekeepers_id(db=db)
+    if len(list_beekeeper_id)==0:
             maximo=1
     else:
-        maximo=0
-        for (i,) in list_device_id:
-            if maximo<i:
-                maximo=i
-        maximo=maximo+1    
-    BeeKeeper_new = crud.beekeeper.create_beekeeper(db=db, obj_in=recipe_in, id=maximo)
+        id=0
+        for (i,) in list_beekeeper_id:
+            if id<i:
+                id=i
+        #Plus one to the max id to obtain a new id
+        id=id+1    
+    #Create the new beekeeper with the recipe_in and the id calculated
+    BeeKeeper_new = crud.beekeeper.create_beekeeper(db=db, obj_in=beekeeper_create, id=maximo)
     return BeeKeeper_new
 
-
+##########                         PUT Endpoint                          ##########
 @api_router_beekeepers.put("/{beekeeper_id}", status_code=201, response_model=BeeKeeper)
 def put_a_beekeeper(
     *,
@@ -87,18 +91,19 @@ def put_a_beekeeper(
     """
     Update a BeeKeeper
     """
+    #Get the beekeeper from the database
     beekeeper = crud.beekeeper.get_by_id(db=db, id=beekeeper_id)
-    
+    #Verify if the beekeeper exists
     if beekeeper is None:
         raise HTTPException(
             status_code=404, detail=f"BeeKeeper with BeeKeeper_id=={beekeeper_id} not found"
                 )
+    #Update the beekeeper
     updated_beekeeper = crud.beekeeper.update(
             db=db, db_obj=beekeeper, obj_in=recipe_in)
-    db.commit()
     return updated_beekeeper
 
-
+########## PATCH Endpoint ##########
 @api_router_beekeepers.patch("/{beekeeper_id}", status_code=201, response_model=BeeKeeper)
 def patch_a_beekeeper(
     *,
@@ -109,18 +114,15 @@ def patch_a_beekeeper(
     """
     Update a BeeKeeper
     """
+    #Get the beekeeper from the database
     beekeeper = crud.beekeeper.get_by_id(db=db, id=beekeeper_id)
-    
+    #Verify if the beekeeper exists
     if beekeeper is None:
             raise HTTPException(
             status_code=404, detail=f"BeeKeeper with BeeKeeper_id=={beekeeper_id} not found"
                 )
-    try:
-        updated_beekeeper = crud.beekeeper.update(
+    #Update the beekeeper
+    updated_beekeeper = crud.beekeeper.update(
             db=db, db_obj=beekeeper, obj_in=recipe_in)
-        db.commit()
-    except Exception as e:
-        raise HTTPException(
-            status_code=500, detail=f"Error updating the BeeKeeper entity: {e}"
-        )
+   
     return updated_beekeeper

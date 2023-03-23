@@ -1,11 +1,9 @@
 from typing import Any, Dict, Generic, List, Optional, Type, TypeVar, Union
-
+from db.base_class import Base
+from fastapi import HTTPException
 from fastapi.encoders import jsonable_encoder
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
-from fastapi import HTTPException
-
-from db.base_class import Base
 
 ModelType = TypeVar("ModelType", bound=Base)
 CreateSchemaType = TypeVar("CreateSchemaType", bound=BaseModel)
@@ -29,7 +27,7 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
             raise HTTPException(
                 status_code=500, detail=f"Error with mysql {e}"
             )
-        
+    #Get a list of objects from the database
     def get_multi(
         self, db: Session, *, skip: int = 0, limit: int = 100
     ) -> List[ModelType]:
@@ -39,7 +37,8 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
             raise HTTPException(
                 status_code=500, detail=f"Error with mysql: {e}"
             )
-
+            
+    #Create a new object in the database
     def create(self, db: Session, *, obj_in: CreateSchemaType) -> ModelType:
         try:
            
@@ -53,7 +52,7 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
             raise HTTPException(
                 status_code=500, detail=f"Error with mysql: {e}"
             )
-            
+    #Update an object in the database            
     def update(        self,
         db: Session,
         *,
@@ -78,7 +77,7 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
             raise HTTPException(
                 status_code=500, detail=f"Error with mysql: {e}"
             )
-
+    #Remove a object from the database
     def remove(self, db: Session, *, id: int) -> ModelType:
         try:
             obj = db.query(self.model).get(id)
