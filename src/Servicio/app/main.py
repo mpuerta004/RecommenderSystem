@@ -61,9 +61,9 @@ async def state_calculation()->None:
                         hour=a.hour, minute=a.minute, second=a.second)
             if (Current_time - i.update_datetime) > timedelta(minutes=7):
                 crud.recommendation.update(db=db,db_obj=i, obj_in={"state":"NON_REALIZED","update_datetime":Current_time})
-                db.close()
-                db.commit()         
-                       
+                db.commit()  
+        db.close()
+    return None
 
 #Funtions that automaticaly calculate the priority.
 def final_funtion():
@@ -85,10 +85,10 @@ if __name__ == "__main__":
     import uvicorn
 
     # #Add this line to run the system. 
-    # scheduler = BackgroundScheduler()
-    # scheduler.add_job(final_funtion, 'interval', seconds=120)
-    # scheduler.add_job(State_change, 'interval', seconds=420)
+    scheduler = BackgroundScheduler()
+    scheduler.add_job(final_funtion, 'interval', seconds=120)
+    scheduler.add_job(State_change, 'interval', seconds=420)
 
-    # scheduler.start()
+    scheduler.start()
 
     uvicorn.run(app, host="0.0.0.0", port=8001, log_level="debug")
