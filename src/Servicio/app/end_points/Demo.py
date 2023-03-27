@@ -1,6 +1,5 @@
 from fastapi import FastAPI, APIRouter, Query, HTTPException, Request, Depends
 from typing import Optional, Any, List
-from pathlib import Path
 from sqlalchemy.orm import Session
 from schemas.Measurement import Measurement, MeasurementCreate, MeasurementSearchResults
 from schemas.Campaign import CampaignSearchResults, Campaign, CampaignCreate, CampaignUpdate
@@ -191,7 +190,7 @@ def asignacion_recursos_all(
             campaigns = crud.campaign.get_all_active_campaign(db=db,time=time)
             for cam in campaigns:
                 prioriry_calculation_2(time=time,cam=cam, db=db)
-                show_a_campaign_2(hive_id=cam.hive_id,campaign_id=cam.id,time=time,db=db)
+                # show_a_campaign_2(hive_id=cam.hive_id,campaign_id=cam.id,time=time,db=db)
             if segundo%60==0:
                 list_users= reciboUser(db=db)
                 if list_users!=[]:
@@ -243,14 +242,9 @@ def asignacion_recursos_all(
                             recomendacion_polinizar=crud.recommendation.update(db=db,db_obj=recomendation_coguida, obj_in={"state":"ACCEPTED","update_datetime":time})
                             
                             mediciones.append([user, recomendacion_polinizar, random.randint(1,600)])
-                            if user.id%2==0 :
-                            # slot=crud.slot.get_slot(db=db,slot_id=recomendacion_polinizar.slot_id)
-                            # cell=crud.cell.get_Cell(db=db, cell_id=slot.cell_id)
-                            # surface_id=cell.surface_id
-                            # cam=crud.campaign.get_campaign_from_surface(db=db,surface_id=int(surface_id))
-                            # cam=crud.campaign.get_campaign_from_cell(db=db, cell_id=slot.cell_id)
+                            # if user.id%2==0 :
                                 #TODO! tremendo error pero oye....
-                                show_recomendation(db=db, cam=cam, user=user, result=recomendaciones['results'],time=time,recomendation=recomendacion_polinizar)  
+                                # show_recomendation(db=db, cam=cam, user=user, result=recomendaciones['results'],time=time,recomendation=recomendacion_polinizar)  
 
             new=[] 
             for i in range(0,len(mediciones)):
@@ -319,7 +313,7 @@ def asignacion_recursos(
             #         db.commit()
             # #Tengo un usuario al que hacer una recomendacion. 
             if segundo%60==0:
-                show_a_campaign_2(hive_id=cam.hive_id,campaign_id=cam.id,time=time,db=db)
+                # show_a_campaign_2(hive_id=cam.hive_id,campaign_id=cam.id,time=time,db=db)
               
                 list_users= reciboUser_1(db=db,cam=cam)
                 if list_users!=[]:
@@ -366,8 +360,8 @@ def asignacion_recursos(
                             recomendacion_polinizar=crud.recommendation.update(db=db,db_obj=recomendation_coguida, obj_in={"state":"ACCEPTED","update_datetime":time})
                             
                             mediciones.append([user, recomendacion_polinizar, random.randint(1,600)])
-                            if user.id%2==0 and user.id<30:
-                                show_recomendation(db=db, cam=cam, user=user, result=recomendaciones['results'],time=time,recomendation=recomendacion_polinizar)  
+                            # if user.id%2==0 and user.id<30:
+                            #     show_recomendation(db=db, cam=cam, user=user, result=recomendaciones['results'],time=time,recomendation=recomendacion_polinizar)  
 
             new=[] 
             for i in range(0,len(mediciones)):
@@ -449,53 +443,52 @@ def asignacion_recursos_con_popularidad_mucha(
             #         crud.measurement.create_Measurement(db=db, slot_id=slot.id,member_id=user_static.id, obj_in=Measurementcreate)
             #         db.commit()
             # #Tengo un usuario al que hacer una recomendacion. 
-            if segundo%60==0:
-                # show_a_campaign_2(hive_id=cam.hive_id,campaign_id=cam.id,time=time,db=db)
+            
+            # show_a_campaign_2(hive_id=cam.hive_id,campaign_id=cam.id,time=time,db=db)
                
 
-                list_users= reciboUser(cam,db=db)
-                if list_users!=[]:
-                    for user in list_users:
-                        n_surfaces=len(cam.surfaces)
-                        surface_indice= random.randint(0,n_surfaces-1)
-                        boundary= cam.surfaces[surface_indice].boundary
+            list_users= reciboUser(cam,db=db)
+            if list_users!=[]:
+                for user in list_users:
+                    n_surfaces=len(cam.surfaces)
+                    surface_indice= random.randint(0,n_surfaces-1)
+                    boundary= cam.surfaces[surface_indice].boundary
                         
-                        distance = random.randint(0,round(1000*(boundary.radius + cam.cells_distance)))
-                        distance=distance/1000
-                        direction= random.randint(0,360)
+                    distance = random.randint(0,round(1000*(boundary.radius + cam.cells_distance)))
+                    distance=distance/1000
+                    direction= random.randint(0,360)
                         
                         
-                        lat1 = boundary.centre['Longitude'] 
-                        lon1 = boundary.centre['Latitude'] 
+                    lat1 = boundary.centre['Longitude'] 
+                    lon1 = boundary.centre['Latitude'] 
 
-                        # Desired distance in kilometers
-                            # Direction in degrees
-                        direction_rad = radians(direction)
+                    # Desired distance in kilometers
+                        # Direction in degrees
+                    direction_rad = radians(direction)
 
-                        # Earth radius in kilometers
-                        R = 6371
+                    # Earth radius in kilometers
+                    R = 6371
 
-                        # Convert coordinates to radians
-                        lat1_rad = radians(lat1)
-                        lon1_rad = radians(lon1)
-                            
-                        # Calculate the new coordinates using Vincenty formula
-                        lat2_rad = asin(sin(lat1_rad) * cos(distance / R) + cos(lat1_rad) * sin(distance / R) * cos(direction_rad))
-                        lon2_rad = lon1_rad + atan2(sin(direction_rad) * sin(distance / R) * cos(lat1_rad), cos(distance / R) - sin(lat1_rad) * sin(lat2_rad))
-                        # Convert the new coordinates to degrees
-                        lat2 = degrees(lat2_rad)
-                        lon2 = degrees(lon2_rad)
+                    # Convert coordinates to radians
+                    lat1_rad = radians(lat1)
+                    lon1_rad = radians(lon1)                            
+                    # Calculate the new coordinates using Vincenty formula
+                    lat2_rad = asin(sin(lat1_rad) * cos(distance / R) + cos(lat1_rad) * sin(distance / R) * cos(direction_rad))
+                    lon2_rad = lon1_rad + atan2(sin(direction_rad) * sin(distance / R) * cos(lat1_rad), cos(distance / R) - sin(lat1_rad) * sin(lat2_rad))
+                    # Convert the new coordinates to degrees
+                    lat2 = degrees(lat2_rad)
+                    lon2 = degrees(lon2_rad)
                 
-                        a=RecommendationCreate(member_current_location={'Longitude':lat2,'Latitude':lon2},recommendation_datetime=time)
-                        recomendaciones=create_recomendation_2(db=db,member_id=user.id,recipe_in=a,cam=cam,time=time)
+                    a=RecommendationCreate(member_current_location={'Longitude':lat2,'Latitude':lon2},recommendation_datetime=time)
+                    recomendaciones=create_recomendation_2(db=db,member_id=user.id,recipe_in=a,cam=cam,time=time)
                         
-                        if len(recomendaciones['results'])>0:
-                            recomendacion_polinizar = RL_con_popularidad(a=recomendaciones['results'],dic_of_popularity=dics_of_popularity,db=db)
-                            if recomendacion_polinizar is not None:
-                                recomendation_coguida=crud.recommendation.get_recommendation(db=db,member_id=recomendacion_polinizar.member_id, recommendation_id=recomendacion_polinizar.id)
-                                recomendacion_polinizar=crud.recommendation.update(db=db,db_obj=recomendation_coguida, obj_in={"state":"ACCEPTED","update_datetime":time})
+                    if len(recomendaciones['results'])>0:
+                        recomendacion_polinizar = RL_con_popularidad(a=recomendaciones['results'],dic_of_popularity=dics_of_popularity,db=db)
+                        if recomendacion_polinizar is not None:
+                            recomendation_coguida=crud.recommendation.get_recommendation(db=db,member_id=recomendacion_polinizar.member_id, recommendation_id=recomendacion_polinizar.id)
+                            recomendacion_polinizar=crud.recommendation.update(db=db,db_obj=recomendation_coguida, obj_in={"state":"ACCEPTED","update_datetime":time})
                                 
-                                mediciones.append([user, recomendacion_polinizar, random.randint(1,600)])
+                            mediciones.append([user, recomendacion_polinizar, random.randint(1,600)])
 
                                 # show_recomendation(db=db, cam=cam, user=user, result=recomendaciones['results'],time=time,recomendation=recomendacion_polinizar)  
 
@@ -620,22 +613,11 @@ def create_recomendation_3(
         
     if len(cells_and_priority)>=3:
                 for i in range(0,3):
-                    print(cells_and_priority[i])
-                    a=cells_and_priority[i][5]
-                    # print(a.cell_id)
-                    # obj_state=StateCreate(db=db)
-                    # state=crud.state.create_state(db=db,obj_in=obj_state)
                     recomendation=crud.recommendation.create_recommendation_detras(db=db,obj_in=recipe_in,member_id=member_id,slot_id=cells_and_priority[i][5].id,state="NOTIFIED",update_datetime=time,sent_datetime=time)
                     result.append(recomendation)
 
     elif  len(cells_and_priority)!=0:
                 for i in range(0,len(cells_and_priority)):
-                    print(cells_and_priority[i])
-                    a=cells_and_priority[i][5]
-                    # cell_id=a.cell_id
-                    # # print(a.cell_id)
-                    # obj_state=StateCreate(db=db)
-                    # state=crud.state.create_state(db=db,obj_in=obj_state)
                     recomendation=crud.recommendation.create_recommendation_detras(db=db,obj_in=recipe_in,member_id=member_id,slot_id=cells_and_priority[i][5].id,state="NOTIFIED",update_datetime=time,sent_datetime=time)
                     result.append(recomendation)
         
@@ -724,10 +706,6 @@ def create_recomendation_2(
         
     if len(cells_and_priority)>=3:
                 for i in range(0,3):
-                    # a=cells_and_priority[i][5]
-                    # print(a.cell_id)
-                    # obj_state=StateCreate(db=db)
-                    # state=crud.state.create_state(db=db,obj_in=obj_state)
                     recomendation=crud.recommendation.create_recommendation(db=db,obj_in=recipe_in,member_id=member_id,slot_id=cells_and_priority[i][5].id,state="NOTIFIED",update_datetime=time,sent_datetime=time)
                     db.commit()
                     db.commit()
@@ -736,11 +714,7 @@ def create_recomendation_2(
 
     elif  len(cells_and_priority)!=0:
                 for i in range(0,len(cells_and_priority)):
-                    # a=cells_and_priority[i][5]
-                    # cell_id=a.cell_id
-                    # # print(a.cell_id)
-                    # obj_state=StateCreate(db=db)
-                    # state=crud.state.create_state(db=db,obj_in=obj_state)
+                 
                     recomendation=crud.recommendation.create_recommendation(db=db,obj_in=recipe_in,member_id=member_id,slot_id=cells_and_priority[i][5].id,state="NOTIFIED",update_datetime=time,sent_datetime=time)
                     db.commit()
                     db.commit()

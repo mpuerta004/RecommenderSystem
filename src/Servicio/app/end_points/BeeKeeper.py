@@ -66,17 +66,7 @@ def create_beekeeper(
     Create a new BeeKeeper of the hive in the database.
     """
     #Calculate the id of the new beekeeper
-    list_beekeeper_id=crud.beekeeper.get_beekeepers_id(db=db)
-    if len(list_beekeeper_id)==0:
-            maximo=1
-    else:
-        id=0
-        for (i,) in list_beekeeper_id:
-            if id<i:
-                id=i
-        #Plus one to the max id to obtain a new id
-        id=id+1    
-    #Create the new beekeeper with the recipe_in and the id calculated
+    maximo=crud.beekeeper.maximun_id(db=db) + 1
     BeeKeeper_new = crud.beekeeper.create_beekeeper(db=db, obj_in=beekeeper_create, id=maximo)
     return BeeKeeper_new
 

@@ -1,13 +1,15 @@
-from fastapi import FastAPI, APIRouter, Query, HTTPException, Request, Depends
 from typing import Any, Dict, Generic, List, Optional, Type, TypeVar, Union
-from sqlalchemy.orm import Session
-from schemas.Device import Device, DeviceCreate, DeviceSearchResults,DeviceUpdate
-import deps
 import crud
+import deps
+from fastapi import APIRouter, Depends, FastAPI, HTTPException, Query, Request
+from schemas.Device import (Device, DeviceCreate, DeviceSearchResults,
+                            DeviceUpdate)
+from sqlalchemy.orm import Session
 
 api_router_device = APIRouter(prefix="/devices")
 
-#----------------------------------------------------- GET -----------------------
+
+#########################   GET  ########################################
 @api_router_device.get("/{device_id}", status_code=200, response_model=Device)
 def get_device(
     *,
@@ -17,64 +19,55 @@ def get_device(
     """
     Fetch a single device by ID
     """
+    # Get the device from the database based on the ID
     device = crud.device.get(db=db, id=device_id)
-    
-
-    if  device is None:
-            raise HTTPException(
-                status_code=404, detail=f"device with id=={device_id} not found"
-            )
+    # Verify if the device exists
+    if device is None:
+        raise HTTPException(
+            status_code=404, detail=f"device with id=={device_id} not found"
+        )
     return device
 
-
-@api_router_device.post("/",status_code=201, response_model=Device)
-def create_a_device(    *, 
-                recipe_in: DeviceCreate,
-                db: Session = Depends(deps.get_db)
-                ) -> dict:
+######## POST ########
+@api_router_device.post("/", status_code=201, response_model=Device)
+def create_a_device(*,
+                    recipe_in: DeviceCreate,
+                    db: Session = Depends(deps.get_db)
+                    ) -> dict:
     """
     Create a new device in the database.
     """
-    try:
-        list_device_id=crud.device.get_devices_id(db=db)
-        if len(list_device_id)==0:
-            maximo=1
-        else:
-            maximo=0
-            for (i,) in list_device_id:
-                if maximo<i:
-                    maximo=i
-        maximo=maximo+1
-        device = crud.device.create_device(db=db, obj_in=recipe_in,id=maximo)
-    except Exception as e:
-        raise HTTPException(
-            status_code=500, detail=f"Error creating the Device entity: {e}"
-        )
+    """
+    Calculate the id of the new device.
+    """   
+    maximo = crud.device.get_max_id(db=db) +1
+    #Create the new device
+    device = crud.device.create_device(db=db, obj_in=recipe_in, id=maximo)
+
     return device
 
-
+######## Delete ########
 @api_router_device.delete("/{device_id}", status_code=204)
 def delete_device(*,
-    device_id:int,
-    db: Session = Depends(deps.get_db)
-):
+                  device_id: int,
+                  db: Session = Depends(deps.get_db)
+                  ):
     """
     Remove a device in the database.
     """
-    device=crud.device.get(db=db,id=device_id)
-    
-    if  device is None:
-            raise HTTPException(
-                status_code=404, detail=f"Device with id=={device_id} not found"            )
-    try:
-        crud.device.remove(db=db, device=device)
-    except Exception as e:
+    #Get the device from the database based on the ID
+    device = crud.device.get(db=db, id=device_id)
+    #Verify if the device exists
+    if device is None:
         raise HTTPException(
-            status_code=500, detail=f"Error removing the Device entity: {e}"
-        )
-    return  {"ok": True}
+            status_code=404, detail=f"Device with id=={device_id} not found")
+    #Delete the device
+    crud.device.remove(db=db, device=device)
+
+    return {"ok": True}
 
 
+######### PATCH ########
 @api_router_device.patch("/{device_id}", status_code=201, response_model=Device)
 def parcially_update_a_device(
     *,
@@ -85,24 +78,21 @@ def parcially_update_a_device(
     """
     Partially update a Device entity
     """
+    #Get the device from the database based on the ID
     device = crud.device.get(db=db, id=device_id)
-    
+    #Verify if the device exists
     if device is None:
-            raise HTTPException(
-            status_code=404, detail=f"Device with id=={device_id} not found"
-                )
-    try:
-        updated_device = crud.beekeeper.update(db=db, db_obj=device, obj_in=recipe_in)
-        db.commit()
-    except Exception as e:
         raise HTTPException(
-            status_code=500, detail=f"Error updating the Device entity: {e}"
+            status_code=404, detail=f"Device with id=={device_id} not found"
         )
+    #Update the device in the database (we dont need a try/except because the function update already has it)
+    updated_device = crud.beekeeper.update(db=db, db_obj=device, obj_in=recipe_in)
+    db.commit()
+   
     return updated_device
 
 
-
-
+############## PUT ##############
 @api_router_device.put("/{device_id}", status_code=201, response_model=Device)
 def update_a_device(
     *,
@@ -113,17 +103,14 @@ def update_a_device(
     """
     Partially update a Device entity
     """
+    #Get the device from the database based on the ID
     device = crud.device.get(db=db, id=device_id)
-    
+    #Verify if the device exists
     if device is None:
-            raise HTTPException(
-            status_code=404, detail=f"Device with id=={device_id} not found"
-                )
-    try:
-        updated_device = crud.beekeeper.update(db=db, db_obj=device, obj_in=recipe_in)
-        db.commit()
-    except Exception as e:
         raise HTTPException(
-            status_code=500, detail=f"Error updating the Device entity: {e}"
+            status_code=404, detail=f"Device with id=={device_id} not found"
         )
+    #Update the device in the database (we dont need a try/except because the function update already has it)
+    updated_device = crud.beekeeper.update(db=db, db_obj=device, obj_in=recipe_in)
+    db.commit()
     return updated_device

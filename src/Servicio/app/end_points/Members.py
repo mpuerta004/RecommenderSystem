@@ -69,15 +69,9 @@ def create_member(
     """
     Create a new member. 
     """
-    list_member_id=crud.member.get_member_id(db=db)
-    if len(list_member_id)==0:
-            maximo=1
-    else:
-        maximo=0
-        for (i,) in list_member_id:
-            if maximo<i:
-                maximo=i
-        maximo=maximo+1
+    
+   
+    maximo=crud.member.maximun_id(db=db)+1
     member_new = crud.member.create_member(db=db, obj_in=recipe_in,id=maximo)
         
     return member_new

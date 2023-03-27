@@ -9,7 +9,7 @@ from schemas.Member import MemberCreate, MemberUpdate, MemberSearchResults
 from fastapi.encoders import jsonable_encoder
 from models.Campaign_Member import Campaign_Member
 from sqlalchemy import and_, extract
-
+from sqlalchemy import func
 
 class CRUDMember(CRUDBase[Member, MemberCreate, MemberUpdate]):
     
@@ -18,8 +18,7 @@ class CRUDMember(CRUDBase[Member, MemberCreate, MemberUpdate]):
               return db.query(Member).join(Campaign_Member).filter(and_(Campaign_Member.hive_id== hive_id,Campaign_Member.member_id==Member.id)).limit(limit).all()
           except Exception as e:
                         raise HTTPException(status_code=500, detail=f"Error with mysql {e}" )
-   
-        
+    
      def get_static_user(   self, db: Session, *, hive_id:int ) -> Member:
           try:
               return db.query(Member).join(Campaign_Member).filter(and_(Campaign_Member.hive_id== hive_id,Campaign_Member.member_id==Member.id,Member.real_user==False)).first()
@@ -83,14 +82,12 @@ class CRUDMember(CRUDBase[Member, MemberCreate, MemberUpdate]):
               except Exception as e:
                             raise HTTPException(status_code=500, detail=f"Error with mysql {e}" )
        
-     def get_member_id(self,*, db: Session) -> List[int]:
-                try:
-                        return db.query(Member.id).all()
-                except Exception as e:
-                        raise HTTPException(
-                        status_code=500, detail=f"Error with mysql {e}"
-                )
 
-
+     def maximun_id(self,*, db: Session) -> int:
+          try:
+              return db.query(func.max(Member.id)).scalar()
+          except Exception as e:
+                        raise HTTPException(status_code=500, detail=f"Error with mysql {e}" )
+        
 
 member = CRUDMember(Member)

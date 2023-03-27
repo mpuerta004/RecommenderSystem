@@ -8,6 +8,7 @@ from sqlalchemy import and_, extract
 from fastapi import HTTPException
 
 from sqlalchemy.orm import Session
+from sqlalchemy import func
 
 from crud.base import CRUDBase
 from fastapi.encoders import jsonable_encoder
@@ -32,12 +33,11 @@ class CRUDDevice(CRUDBase[Device, DeviceCreate, DeviceUpdate]):
                      return db_obj
               except Exception as e:
                             raise HTTPException(status_code=500, detail=f"Error with mysql {e}" )
-       def get_devices_id(self,*, db: Session) -> List[int]:
-        try:
-            return db.query(Device.id).all()
-        except Exception as e:
-            raise HTTPException(
-                status_code=500, detail=f"Error with mysql {e}"
-            )
-
+       
+       def maximun_id(self,*, db: Session) -> int:
+          try:
+              return db.query(func.max(Device.id)).scalar()
+          except Exception as e:
+                        raise HTTPException(status_code=500, detail=f"Error with mysql {e}" )
+        
 device = CRUDDevice(Device)

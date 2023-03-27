@@ -8,6 +8,7 @@ import deps
 import folium
 import geopy
 import geopy.distance
+from datetime import datetime, timedelta
 from sqlalchemy.orm import Session
 from fastapi import (APIRouter, BackgroundTasks, Depends,
                      HTTPException, Query)
@@ -24,6 +25,8 @@ from schemas.Cell import CellCreate, CellSearchResults, Point
 from schemas.Priority import Priority, PriorityCreate, PrioritySearchResults
 from schemas.Slot import Slot, SlotCreate, SlotSearchResults
 from schemas.Surface import Surface, SurfaceCreate, SurfaceSearchResults
+
+
 
 api_router_campaign = APIRouter(prefix="/hives/{hive_id}/campaigns")
 SQLALCHEMY_DATABASE_URL = "mysql+mysqlconnector://mve:mvepasswd123@localhost:3306/SocioBee"
@@ -226,9 +229,9 @@ async def create_campaign(
     cells_distance = Campaign.cells_distance
     anchura_celdas = ((cells_distance))
     radio = cells_distance/2
-    n_cells = int((radius//cells_distance)) + 25 
+    n_cells_in_radius = int((radius//cells_distance)) + 25 
 
-    for i in range(0, n_cells):
+    for i in range(0, n_cells_in_radius):
         if i == 0:
             cell_create = CellCreate(surface_id=Surface.id, centre={
                 'Longitude': centre['Longitude'], 'Latitude': centre['Latitude']}, radius=radio)
@@ -243,16 +246,13 @@ async def create_campaign(
             list_direction = [0, 90, 180, 270]
             list_point = []
             for j in list_direction:
-                # Direction in degrees
-                direction = j
-                # Convert direction to radians
-                direction_rad = radians(direction)
-
-                # Earth radius in kilometers
-                R = 6371
-                # Convert coordinates to radians
-                lat1_rad = radians(lat1)
-                lon1_rad = radians(lon1)
+               
+                
+                direction = j  # Direction in degrees
+                direction_rad = radians(direction)  # Convert direction to radians
+                R = 6371 # Earth radius in kilometers
+                lat1_rad = radians(lat1) # Convert coordinates to radians
+                lon1_rad = radians(lon1)# Convert coordinates to radians
 
                 # Calculate the new coordinates using Vincenty formula
                 lat2_rad = asin(sin(lat1_rad) * cos(distance / R) +
@@ -264,22 +264,22 @@ async def create_campaign(
                 lat2 = degrees(lat2_rad)
                 lon2 = degrees(lon2_rad)
                 list_point.append([lat2, lon2])
+                print(lat2,lon2)
                 if direction == 90:
                     final1 = [lon2, lat2]
                 if direction == 270:
                     final2 = [lon2, lat2]
-
+            #Verify if the center of this cell is inside the boundary (Circle)
             for poin in list_point:
                 if (geopy.distance.GeodesicDistance((centre['Longitude'], centre['Latitude']), (poin[0], poin[1]))).km <= radius:
-                    Point()
                     cell_create = CellCreate(
                         surface_id=Surface.id, centre={'Longitude': poin[0], 'Latitude': poin[1]}, radius=radio)
                     cell = crud.cell.create_cell(
                         db=db, obj_in=cell_create, surface_id=Surface.id)
 
             list_point = []
-            #All: this check could go better... I'm overdoing it.
-            for j in range(1, n_cells):
+            #Step 3 of the picture
+            for j in range(1, n_cells_in_radius):
                 distance = j*cells_distance
 
                 for z in [final1, final2]:
@@ -287,17 +287,12 @@ async def create_campaign(
                     lon1 = z[0]
                     list_direction = [0, 180]
                     for j in list_direction:
-                        # Direction in degrees
-                        direction = j
-                        # Convert direction to radians
-                        direction_rad = radians(direction)
-
-                        # Earth radius in kilometers
-                        R = 6371
-
-                        # Convert coordinates to radians
-                        lat1_rad = radians(lat1)
-                        lon1_rad = radians(lon1)
+                        
+                        direction = j # Direction in degrees
+                        direction_rad = radians(direction) # Convert direction to radians
+                        R = 6371# Earth radius in kilometers
+                        lat1_rad = radians(lat1)  # Convert coordinates to radians
+                        lon1_rad = radians(lon1) # Convert coordinates to radians
 
                         # Calculate the new coordinates using Vincenty formula
                         lat2_rad = asin(sin(lat1_rad) * cos(distance / R) +
@@ -311,7 +306,7 @@ async def create_campaign(
 
                         list_point.append([lat2, lon2])
             for poin in list_point:
-
+                #Verify if the center of this cell is inside the boundary (Circle) 
                 if (geopy.distance.GeodesicDistance((centre['Longitude'], centre['Latitude']), (poin[0], poin[1]))).km <= radius:
                     cell_create = CellCreate(
                         surface_id=Surface.id, centre={'Longitude': poin[0], 'Latitude': poin[1]}, radius=radio)
@@ -319,9 +314,8 @@ async def create_campaign(
                         db=db, obj_in=cell_create, surface_id=Surface.id)
 
     """
-    When the Cells are created we create the slots of each cell in the background due to a campaign can have too much slot
-    (1 slot per cell and samplings periods we have.) 
-    If we have 2 hour of campaign duration and a sampling period of 1 hour -> then per 1 cell we have 2 slots. 
+    When the Cells are created we create the slots of each cell in the background due to a campaign can have too much slots.
+        EXAMPLE: If we have 2 hour of campaign duration and a sampling period of 1 hour -> then per 1 cell we have 2 slots. 
     """
     background_tasks.add_task(create_slots, cam=Campaign)
     return Campaign
@@ -373,6 +367,7 @@ async def create_slots(cam: Campaign):
                         db.commit()
 
 
+
 #########                         Show Endpoint                   #########
 @api_router_campaign.get("/{campaign_id}/show", status_code=200, response_class=HTMLResponse)
 def show_a_campaign(
@@ -385,7 +380,7 @@ def show_a_campaign(
     """
     Show a campaign
     """
-    # get campaign
+    # Get campaign
     campaign = crud.campaign.get_campaign(
         db=db, hive_id=hive_id, campaign_id=campaign_id)
     # Verify if the campaign exist
@@ -413,27 +408,27 @@ def show_a_campaign(
                 Cardinal_actual = crud.measurement.get_all_Measurement_from_cell_in_the_current_slot(
                     db=db, cell_id=j.id, time=time, slot_id=slot.id)
 
-                # Calculate the color of the cell based on the number of samples
+                """
+                Calculate the color of the cell based on the number of samples. 
+                """
                 if Cardinal_actual >= campaign.min_samples:
                     numero = 4
                 else:
                     numero = int(
                         (Cardinal_actual/campaign.min_samples)//(1/4))
                 color = color_list_h[numero]
-
+                """We have to calculate the corners of each cell to draw it in the map."""
                 # Calculate the coordinates of the corners of the cell to draw it in the map with the calculated color
                 lat1 = j.centre['Longitude']
                 lon1 = j.centre['Latitude']
 
                 distance = hipotenusa  # Distance in Km of the center to the corner of each cell
-
                 # List of the directions of the corners of each cell from the center
                 list_direction = [45, 135, 225, 315]
                 list_courner_points_of_cell = []
                 for l in list_direction:
                     # Direction in degrees
-                    direction = l
-                    direction_rad = radians(direction)
+                    direction_rad = radians(l)
                     R = 6371  # Earth radius in kilometers
 
                     # Convert coordinates to radians
@@ -485,69 +480,81 @@ def update_campaign(
     """
     Update Campaign 
     """
+    #Get the hive
     hive = crud.hive.get(db=db, id=hive_id)
+    #Verify if the hive exist
     if hive is None:
         raise HTTPException(
             status_code=404, detail=f"Hive with id=={hive_id} not found"
         )
-
+    #Get the campaign
     campaign = crud.campaign.get_campaign(
         db=db, hive_id=hive_id, campaign_id=campaign_id)
+    #Verify if the campaign exist
     if campaign is None:
         raise HTTPException(
             status_code=400, detail=f"Campaign with id=={campaign_id} not found."
         )
+    """
+    If we update the end, start time, cells distance, sampling period or min samples we have to update the campaign entity and remove the cells, slot, boundary and surface and create again if campaign is not active.
+    If campaign is active then we can not modify it.
+    """
     if recipe_in.start_datetime != campaign.start_datetime or recipe_in.end_datetime != campaign.end_datetime or recipe_in.cells_distance != campaign.cells_distance or recipe_in.sampling_period != campaign.sampling_period or recipe_in.min_samples != campaign.min_samples:
-        if datetime.utcnow() > campaign.start_datetime:
+        #Verify if the campaign is active (time)
+        if datetime.utcnow() > (campaign.start_datetime).replace(tzinfo=timezone.utc):
             raise HTTPException(
-                status_code=401, detail=f"You cannot modify a campaign that has already been started "
+                status_code=401, detail=f"Yan active campaign cannot be modified."
             )
         else:
+            #Change the timezone of the start and end date
+            recipe_in.start_datetime = recipe_in.start_datetime.replace(
+                tzinfo=timezone.utc)
+            #Change the timezone of the start and end date
+            recipe_in.end_datetime = recipe_in.end_datetime.replace(
+                tzinfo=timezone.utc)
+            #Update the campaign
             campaign = crud.campaign.update(
                 db=db, db_obj=campaign, obj_in=recipe_in)
+            #Remove the cells, slot, boundary and surface
             for i in campaign.surfaces:
                 centre = i.boundary.centre
                 radius = i.boundary.radius
+                #Remove the surface -> implicity this remove the boundary and the cells and slots.
                 crud.surface.remove(db=db, surface=i)
                 db.commit()
+                #Create the surface, boundary and cells
                 boundary_create = BoundaryCreate(centre=centre, radius=radius)
                 boundary = crud.boundary.create_boundary(db=db, obj_in=boundary_create)
                 surface_create = SurfaceCreate(boundary_id=boundary.id)
                 Surface = crud.surface.create_sur(
                     db=db, campaign_id=campaign.id, obj_in=surface_create)
-
+                #Create the cells
                 cells_distance = Campaign.cells_distance
                 anchura_celdas = ((cells_distance))
                 radio = cells_distance/2
-                numero_celdas = int((radius//cells_distance)) + 25
-                print(numero_celdas)
+                n_cells_in_radius = int((radius//cells_distance)) + 25
 
-                for i in range(0, numero_celdas):
+                for i in range(0, n_cells_in_radius):
                     if i == 0:
                         cell_create = CellCreate(surface_id=Surface.id, centre={
                             'Longitude': centre['Longitude'], 'Latitude': centre['Latitude']}, radius=radio)
                         cell = crud.cell.create_cell(
                             db=db, obj_in=cell_create, surface_id=Surface.id)
-
                     else:
                         lat1 = centre['Longitude']
                         lon1 = centre['Latitude']
-
+                        
                         # Desired distance in kilometers
                         distance = i*anchura_celdas
                         list_direction = [0, 90, 180, 270]
                         list_point = []
                         for j in list_direction:
-                            # Direction in degrees
-                            direction = j
-                            # Convert direction to radians
-                            direction_rad = radians(direction)
-
-                            # Earth radius in kilometers
-                            R = 6371
-                            # Convert coordinates to radians
-                            lat1_rad = radians(lat1)
-                            lon1_rad = radians(lon1)
+                        
+                            direction = j  # Direction in degrees
+                            direction_rad = radians(direction)  # Convert direction to radians
+                            R = 6371 # Earth radius in kilometers
+                            lat1_rad = radians(lat1) # Convert coordinates to radians
+                            lon1_rad = radians(lon1)# Convert coordinates to radians
 
                             # Calculate the new coordinates using Vincenty formula
                             lat2_rad = asin(sin(lat1_rad) * cos(distance / R) +
@@ -563,17 +570,17 @@ def update_campaign(
                                 final1 = [lon2, lat2]
                             if direction == 270:
                                 final2 = [lon2, lat2]
-
+                        #Verify if the center of this cell is inside the boundary (Circle)
                         for poin in list_point:
                             if (geopy.distance.GeodesicDistance((centre['Longitude'], centre['Latitude']), (poin[0], poin[1]))).km <= radius:
-                                Point()
                                 cell_create = CellCreate(
                                     surface_id=Surface.id, centre={'Longitude': poin[0], 'Latitude': poin[1]}, radius=radio)
                                 cell = crud.cell.create_cell(
                                     db=db, obj_in=cell_create, surface_id=Surface.id)
 
                         list_point = []
-                        for j in range(1, numero_celdas):
+                        #Step 3 of the picture
+                        for j in range(1, n_cells_in_radius):
                             distance = j*cells_distance
 
                             for z in [final1, final2]:
@@ -581,21 +588,16 @@ def update_campaign(
                                 lon1 = z[0]
                                 list_direction = [0, 180]
                                 for j in list_direction:
-                                    # Direction in degrees
-                                    direction = j
-                                    # Convert direction to radians
-                                    direction_rad = radians(direction)
-
-                                    # Earth radius in kilometers
-                                    R = 6371
-
-                                    # Convert coordinates to radians
-                                    lat1_rad = radians(lat1)
-                                    lon1_rad = radians(lon1)
+                                    
+                                    direction = j # Direction in degrees
+                                    direction_rad = radians(direction) # Convert direction to radians
+                                    R = 6371# Earth radius in kilometers
+                                    lat1_rad = radians(lat1)  # Convert coordinates to radians
+                                    lon1_rad = radians(lon1) # Convert coordinates to radians
 
                                     # Calculate the new coordinates using Vincenty formula
-                                    lat2_rad = asin(
-                                        sin(lat1_rad) * cos(distance / R) + cos(lat1_rad) * sin(distance / R) * cos(direction_rad))
+                                    lat2_rad = asin(sin(lat1_rad) * cos(distance / R) +
+                                                    cos(lat1_rad) * sin(distance / R) * cos(direction_rad))
                                     lon2_rad = lon1_rad + atan2(sin(direction_rad) * sin(distance / R) * cos(
                                         lat1_rad), cos(distance / R) - sin(lat1_rad) * sin(lat2_rad))
 
@@ -605,14 +607,18 @@ def update_campaign(
 
                                     list_point.append([lat2, lon2])
                         for poin in list_point:
-
+                            #Verify if the center of this cell is inside the boundary (Circle) 
                             if (geopy.distance.GeodesicDistance((centre['Longitude'], centre['Latitude']), (poin[0], poin[1]))).km <= radius:
                                 cell_create = CellCreate(
                                     surface_id=Surface.id, centre={'Longitude': poin[0], 'Latitude': poin[1]}, radius=radio)
                                 cell = crud.cell.create_cell(
                                     db=db, obj_in=cell_create, surface_id=Surface.id)
-                                db.commit()
-            background_tasks.add_task(create_slots, cam=campaign)
+
+                """
+                When the Cells are created we create the slots of each cell in the background due to a campaign can have too much slots.
+                    EXAMPLE: If we have 2 hour of campaign duration and a sampling period of 1 hour -> then per 1 cell we have 2 slots. 
+                """
+                background_tasks.add_task(create_slots, cam=Campaign)
             return campaign
     else:
         campaign = crud.campaign.update(db=db, db_obj=campaign, obj_in=recipe_in)

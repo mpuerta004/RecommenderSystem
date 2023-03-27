@@ -1,18 +1,21 @@
-from fastapi import FastAPI, APIRouter, Query, HTTPException, Request, Depends
-from typing import Any, Dict, Generic, List, Optional, Type, TypeVar, Union, Optional
-from sqlalchemy.orm import Session
-from schemas.Hive import Hive, HiveCreate, HiveSearchResults, HiveUpdate
-from schemas.Member import MemberCreate, MemberSearchResults
 from datetime import datetime
-from schemas.Hive_Member import Hive_Member,Hive_MemberCreate,Hive_MemberUpdate
-from schemas.Campaign_Member import Campaign_Member,Campaign_MemberCreate
-import deps
+from typing import Any, Dict, Generic, List, Optional, Type, TypeVar, Union
+
 import crud
+import deps
+from fastapi import APIRouter, Depends, FastAPI, HTTPException, Query, Request
+from schemas.Campaign_Member import Campaign_Member, Campaign_MemberCreate
+from schemas.Hive import Hive, HiveCreate, HiveSearchResults, HiveUpdate
+from schemas.Hive_Member import (Hive_Member, Hive_MemberCreate,
+                                 Hive_MemberUpdate)
+from schemas.Member import MemberCreate, MemberSearchResults
 from schemas.newMember import NewRole
+from sqlalchemy.orm import Session
 
 api_router_hive = APIRouter(prefix="/hives")
 
 
+########### GET HIVE BY ID ################
 @api_router_hive.get("/{hive_id}", status_code=200, response_model=Hive)
 def get_hive(
     *,
@@ -22,14 +25,16 @@ def get_hive(
     """
     Fetch a single Hive by ID
     """
-    result = crud.hive.get(db=db, id=hive_id)
-    if result is None:
+    #get the hive from the database based on the ID
+    hive = crud.hive.get(db=db, id=hive_id)
+    #verify if the hive exists
+    if hive is None:
             raise HTTPException(
                 status_code=404, detail=f"Hive with id=={hive_id} not found"
             )
-    return result
+    return hive
 
-
+########### post ################
 @api_router_hive.post("/", status_code=201, response_model=Hive)
 def create_hive(*,
                 recipe_in: HiveCreate,
@@ -38,30 +43,32 @@ def create_hive(*,
     """
     Create a new hive in the database.
     """
+    #get the beekeeper from the database based on the ID
     beekeeper=crud.beekeeper.get_by_id(db=db,id=recipe_in.beekeeper_id)
-    
+    #Verify if the beekeeper exists
     if beekeeper is None:
             raise HTTPException(
                 status_code=404, detail=f"Beekeeper with id=={recipe_in.beekeeper_id} not found"
             )
-    try:
-        list_member_id=crud.hive.get_hive_id(db=db)
-        if len(list_member_id)==0:
+    """Calculate the id of the new hive."""
+    #Get the list of id of the hives in the database.
+    list_hive_id=crud.hive.get_hive_id(db=db)
+    #Verify if the list is empty, then the id is 1
+    if len(list_hive_id)==0:
             maximo=1
-        else:
-            maximo=0
-            for (i,) in list_member_id:
+    #If the list is not empty, then the id is the max id + 1
+    else:
+        maximo=0
+        for (i,) in list_hive_id:
                 if maximo<i:
                     maximo=i
-            maximo=maximo+1
-        hive = crud.hive.create_hive(db=db, obj_in=recipe_in,id=maximo)
-    except Exception as e:
-        raise HTTPException(
-            status_code=500, detail=f"Error creating the Hive: {e}"
-        )
+        maximo=maximo+1
+    #Create the new hive
+    hive = crud.hive.create_hive(db=db, obj_in=recipe_in,id=maximo)
+    
     return hive
 
-
+############### PUT ################
 @api_router_hive.put("/{hive_id}", status_code=201, response_model=Hive)
 def update_hive(*,
                 recipe_in: HiveUpdate,
@@ -71,16 +78,18 @@ def update_hive(*,
     """
     Update Hive in the database.
     """
+    #Get the hive from the database based on the ID
     hive = crud.hive.get(db, id=hive_id)
-    
+    #Verify if the hive exists
     if hive is None:
             raise HTTPException(
                 status_code=404, detail=f"Hive with ID: {hive_id} not found."
             )
+    #Update the hive
     updated_hive = crud.hive.update(db=db, db_obj=hive, obj_in=recipe_in)
     return updated_hive
 
-
+########### PATCH ################
 @api_router_hive.patch("/{hive_id}", status_code=201, response_model=Hive)
 def update_parcial_hive(*,
                         recipe_in: Union[HiveUpdate, Dict[str, Any]],
@@ -90,21 +99,21 @@ def update_parcial_hive(*,
     """
     Update recipe in the database.
     """
+    #Get the hive from the database based on the ID
     hive = crud.hive.get(db, id=hive_id)
-    
+    #Verify if the hive exists
     if hive is None:
             raise HTTPException(
                 status_code=404, detail=f"Hive with ID: {hive_id} not found."
             )
-    try:
-        updated_hive = crud.hive.update(db=db, db_obj=hive, obj_in=recipe_in)
-    except Exception as e:
-        raise HTTPException(
-            status_code=500, detail=f"Error updaiting the Hive: {e}"
-        )
+    #Update the hive
+    updated_hive = crud.hive.update(db=db, db_obj=hive, obj_in=recipe_in)
+   
     return updated_hive
 
 
+
+########### DELETE ################
 @api_router_hive.delete("/{hive_id}", status_code=204)
 def delete_hive(*,
                 hive_id: int,
@@ -113,22 +122,27 @@ def delete_hive(*,
     """
     Delete a hive in the database.
     """
+    #Get the hive from the database based on the ID
     hive = crud.hive.get(db, id=hive_id)
-    
+    #Verify if the hive exists
     if hive is None:
             raise HTTPException(
                 status_code=404, detail=f"Hive with ID: {hive_id} not found."
             )
-    try:
-        crud.hive.remove(db=db, hive=hive)
-    except Exception as e:
-        raise HTTPException(
-            status_code=500, detail=f"Error deleting the Hive: {e}"
-        )
+    #Delete the hive
+    crud.hive.remove(db=db, hive=hive)
+   
     return {"ok": True}
 
 
 
+
+
+
+
+
+
+########## GEt all hives of a hive ###########
 @api_router_hive.get("/{hive_id}/members",  status_code=200, response_model=MemberSearchResults)
 def get_real_members_of_hive(
     *,
@@ -138,22 +152,22 @@ def get_real_members_of_hive(
     """
     Fetch all members of the Hive
     """
+    #get the hive from the database based on the ID
     hive= crud.hive.get(db=db, id=hive_id)
-   
+    #verify if the hive exists	
     if hive is None:
         raise HTTPException(
             status_code=404, detail=f"Hive with id=={hive_id} not found"
         )
+    #get the Hive_member entities that has the feature hive_id the recived hive_id
     Hive_Members=crud.hive_member.get_by_hive_id(db=db, hive_id=hive_id)
     
-    # if  Hive_Members is []:
-    #     raise HTTPException(
-    #         status_code=404, detail=f"this hive has no members"
-    #     )
-        
+    #Calculate the list of members that are real users 
     List_members=[]
     for i in Hive_Members:
+        #Get the user
         user=crud.member.get_by_id(db=db, id=i.member_id)
+        #Add to the list if is not None and if it is a real user
         if user!=None:
             if user.real_user==True:
                 List_members.append(user)
@@ -161,7 +175,7 @@ def get_real_members_of_hive(
 
 
 
-
+####################### POST member #################3333
 @api_router_hive.post("/{hive_id}/members/", status_code=201, response_model=Hive_Member)
 def create_a_new_member_for_a_hive_with_especific_role(
     *,    
@@ -173,23 +187,18 @@ def create_a_new_member_for_a_hive_with_especific_role(
     """
     Create a new member of the hive in the database with a specific role. 
     """ 
+    #Get the hive from the database based on the ID
     hive=crud.hive.get(db=db, id=hive_id)
-    
+    #Verify if the hive exists
     if hive is None: 
          raise HTTPException(
                 status_code=404, detail=f"Hive with ID: {hive_id} not found."
             )    
-    #Create the hiveMember
-    list_member_id=crud.member.get_member_id(db=db)
-    if len(list_member_id)==0:
-            maximo=1
-    else:
-        maximo=0
-        for (i,) in list_member_id:
-            if maximo<i:
-                maximo=i
-        maximo=maximo+1
+    #Calculate the maximun id of the member identities in the database and add 1
+    maximo=crud.member.maximun_id(db=db) +1 
+    #create the new member
     member_new = crud.member.create_member(db=db, obj_in=member,id=maximo)
+
 
     hiveMember=crud.hive_member.get_by_member_hive_id(db=db, hive_id=hive_id,member_id=member_new.id)
     
