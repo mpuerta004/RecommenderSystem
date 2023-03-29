@@ -206,7 +206,8 @@ async def create_campaign(
     for i in hive_members:
         #Verify that I dont register the queen bee again
         if i.member_id != QueenBee.member_id:
-            role = Campaign_MemberCreate(role="WorkerBee")
+            #Add the member with the role that this member has in the hive. 
+            role = Campaign_MemberCreate(role=i.role)
             role_WB = crud.campaign_member.create_Campaign_Member(
                 db=db, obj_in=role, campaign_id=Campaign.id, member_id=i.member_id)
         

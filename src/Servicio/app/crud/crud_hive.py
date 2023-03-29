@@ -9,6 +9,7 @@ from pydantic import BaseModel
 from sqlalchemy.orm import Session
 from sqlalchemy import Integer, String, Column, Boolean, ForeignKey, DateTime, ARRAY, Float
 from fastapi import FastAPI, APIRouter, Query, HTTPException, Request, Depends
+from sqlalchemy import func
 
 from db.base_class import Base
 
@@ -46,13 +47,15 @@ class CRUDHive(CRUDBase[Hive, HiveCreate, HiveUpdate]):
                      return db_obj
               except Exception as e:
                             raise HTTPException(status_code=500, detail=f"Error with mysql {e}" )
-        def get_hive_id(self,*, db: Session) -> List[int]:
+        
+        
+                
+        def maximun_id(self,*, db: Session) -> int:
                 try:
-                        return db.query(Hive.id).all()
+                        return db.query(func.max(Hive.id)).scalar()
                 except Exception as e:
-                        raise HTTPException(
-                        status_code=500, detail=f"Error with mysql {e}"
-                )
+                        raise HTTPException(status_code=500, detail=f"Error with mysql {e}" )
+        
 
 
 
