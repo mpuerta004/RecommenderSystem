@@ -16,8 +16,8 @@ __pycache__/*
 *.mp4
 
 .avi
-*src/Servicio/app/Picture/*.jpeg
-*src/Servicio/app/Picture/*.png
+*/src/Servicio/app/Picture/*.jpeg
+*/src/Servicio/app/Picture/*.png
 # Distribution / packaging
 .Python
 env/
