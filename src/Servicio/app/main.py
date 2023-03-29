@@ -9,6 +9,7 @@ from end_points import (BeeKeeper, Campaign_Member, Campaigns, Cells, Demo,
 from fastapi import (APIRouter, FastAPI)
 from fastapi.templating import Jinja2Templates
 from fastapi_utils.session import FastAPISessionMaker
+from datetime import datetime, timezone,timedelta
 
 SQLALCHEMY_DATABASE_URL = "mysql+mysqlconnector://mve:mvepasswd123@localhost:3306/SocioBee"
 sessionmaker = FastAPISessionMaker(SQLALCHEMY_DATABASE_URL)
@@ -56,12 +57,22 @@ async def state_calculation()->None:
     with sessionmaker.context_session() as db:
         list_of_recommendations= crud.recommendation.get_aceptance_and_notified_state(db=db)
         for i in list_of_recommendations:
+            slot=crud.slot.get_slot(db=db,slot_id=i.slot_id)
+            cell_id=slot.cell_id
+            
+            cam=crud.campaign.get_campaign_from_cell(db=db, cell_id=cell_id)
+        
             a = datetime.utcnow()
             Current_time = datetime(year=a.year, month=a.month, day=a.day,
                         hour=a.hour, minute=a.minute, second=a.second)
-            if (Current_time - i.update_datetime) > timedelta(minutes=7):
-                crud.recommendation.update(db=db,db_obj=i, obj_in={"state":"NON_REALIZED","update_datetime":Current_time})
-                db.commit()  
+            
+            
+            if cam.start_datetime.replace(tzinfo=timezone.utc)<=a.replace(tzinfo=timezone.utc) and a.replace(tzinfo=timezone.utc) < cam.end_datetime.replace(tzinfo=timezone.utc) :
+
+                if (Current_time - i.update_datetime) > timedelta(minutes=7):
+                    print("Modificiacion")
+                    crud.recommendation.update(db=db,db_obj=i, obj_in={"state":"NON_REALIZED","update_datetime":Current_time})
+                    db.commit()  
         db.close()
     return None
 

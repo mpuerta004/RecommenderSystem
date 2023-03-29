@@ -47,7 +47,7 @@ class CRUDCampaign(CRUDBase[Campaign, CampaignCreate, CampaignUpdate]):
   
   def get_campaign_from_cell(self, db: Session, *,  cell_id:int) ->Campaign:
     try:
-      return db.query(Campaign).join(Surface, Cell).filter(and_(Campaign.id==Surface.campaign_id, Cell.surface_id==Surface.id,Cell.id==cell_id)).first()
+      return db.query(Campaign).join(Surface).join(Cell).filter(and_(Campaign.id==Surface.campaign_id, Cell.surface_id==Surface.id,Cell.id==cell_id)).first()
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error with mysql {e}" )
   
