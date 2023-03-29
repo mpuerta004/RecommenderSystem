@@ -2,6 +2,7 @@ from fastapi import FastAPI, APIRouter, Query, HTTPException, Request, Depends
 
 from sqlalchemy.orm import Session
 
+from vincenty import vincenty
 
 from typing import Any, Dict, Generic, List, Optional, Type, TypeVar, Union
 
@@ -11,7 +12,6 @@ import crud
 from datetime import datetime,timezone, timedelta
 import math
 
-import geopy.distance
 
 api_router_recommendation = APIRouter(prefix="/members/{member_id}/recommendations")
 
@@ -100,9 +100,9 @@ def create_recomendation(
             status_code=404, detail=f"The user dont participate as WB or QB in any active campaign"
         )
     for i in cells: 
-            centro= i[0].centre
+            centre= i[0].centre
             point= recipe_in.member_current_location
-            distancia=  (geopy.distance.GeodesicDistance((centro['Longitude'],centro['Latitude']),(point['Longitude'],point['Latitude']))).km
+            distancia = vincenty(( centre['Latitude'],centre['Longitude']), ( point['Latitude'],(point['Longitude'])))
 
             if distancia<=(i[1].cells_distance)*2:
                 List_cells_cercanas.append(i)

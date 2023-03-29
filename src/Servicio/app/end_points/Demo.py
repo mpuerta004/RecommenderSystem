@@ -9,7 +9,8 @@ from schemas.Member import Member
 from schemas.Priority import Priority, PriorityCreate, PrioritySearchResults
 import deps
 from datetime import datetime, timezone,timedelta
-
+from vincenty import vincenty
+from end_points.funtionalities import get_point_at_distance
 import crud
 from datetime import datetime, timedelta
 import math
@@ -21,8 +22,6 @@ from PIL import Image
 import folium
 import numpy as np
 from numpy import sin, cos, arccos, pi, round
-import geopy
-import geopy.distance
 from folium.features import DivIcon
 import folium
 from math import sin, cos, atan2, sqrt, radians, degrees, asin
@@ -190,7 +189,7 @@ def asignacion_recursos_all(
             campaigns = crud.campaign.get_all_active_campaign(db=db,time=time)
             for cam in campaigns:
                 prioriry_calculation_2(time=time,cam=cam, db=db)
-                # show_a_campaign_2(hive_id=cam.hive_id,campaign_id=cam.id,time=time,db=db)
+                show_a_campaign_2(hive_id=cam.hive_id,campaign_id=cam.id,time=time,db=db)
             if segundo%60==0:
                 list_users= reciboUser(db=db)
                 if list_users!=[]:
@@ -212,28 +211,12 @@ def asignacion_recursos_all(
                         direction= random.randint(0,360)
                         
                         
-                        lat1 = boundary.centre['Longitude'] 
-                        lon1 = boundary.centre['Latitude'] 
-
-                        # Desired distance in kilometers
-                            # Direction in degrees
-                        direction_rad = radians(direction)
-
-                        # Earth radius in kilometers
-                        R = 6371
-
-                        # Convert coordinates to radians
-                        lat1_rad = radians(lat1)
-                        lon1_rad = radians(lon1)
-                            
-                        # Calculate the new coordinates using Vincenty formula
-                        lat2_rad = asin(sin(lat1_rad) * cos(distance / R) + cos(lat1_rad) * sin(distance / R) * cos(direction_rad))
-                        lon2_rad = lon1_rad + atan2(sin(direction_rad) * sin(distance / R) * cos(lat1_rad), cos(distance / R) - sin(lat1_rad) * sin(lat2_rad))
-                        # Convert the new coordinates to degrees
-                        lat2 = degrees(lat2_rad)
-                        lon2 = degrees(lon2_rad)
+                        lon1 = boundary.centre['Longitude'] 
+                        lat1 = boundary.centre['Latitude'] 
+                        lat2,lon2=get_point_at_distance(lat1=lat1,lon1=lon1,d=distance,bearing=direction)
+                       
                 
-                        a=RecommendationCreate(member_current_location={'Longitude':lat2,'Latitude':lon2},recommendation_datetime=time)
+                        a=RecommendationCreate(member_current_location={'Longitude':lon2,'Latitude':lat2},recommendation_datetime=time)
                         # recomendaciones=create_recomendation_2(db=db,member_id=user.id,recipe_in=a,cam=cam,time=time)
                         recomendaciones=create_recomendation_3(db=db, member_id=user.id, recipe_in=a,time=time)
                         if len(recomendaciones['results'])>0:
@@ -242,9 +225,8 @@ def asignacion_recursos_all(
                             recomendacion_polinizar=crud.recommendation.update(db=db,db_obj=recomendation_coguida, obj_in={"state":"ACCEPTED","update_datetime":time})
                             
                             mediciones.append([user, recomendacion_polinizar, random.randint(1,600)])
-                            # if user.id%2==0 :
-                                #TODO! tremendo error pero oye....
-                                # show_recomendation(db=db, cam=cam, user=user, result=recomendaciones['results'],time=time,recomendation=recomendacion_polinizar)  
+                            if user.id%2==0 :
+                                show_recomendation(db=db, cam=cam, user=user, result=recomendaciones['results'],time=time,recomendation=recomendacion_polinizar)  
 
             new=[] 
             for i in range(0,len(mediciones)):
@@ -330,28 +312,11 @@ def asignacion_recursos(
                         direction= random.randint(0,360)
                         
                         
-                        lat1 = boundary.centre['Longitude'] 
-                        lon1 = boundary.centre['Latitude'] 
-
-                        # Desired distance in kilometers
-                            # Direction in degrees
-                        direction_rad = radians(direction)
-
-                        # Earth radius in kilometers
-                        R = 6371
-
-                        # Convert coordinates to radians
-                        lat1_rad = radians(lat1)
-                        lon1_rad = radians(lon1)
-                            
-                        # Calculate the new coordinates using Vincenty formula
-                        lat2_rad = asin(sin(lat1_rad) * cos(distance / R) + cos(lat1_rad) * sin(distance / R) * cos(direction_rad))
-                        lon2_rad = lon1_rad + atan2(sin(direction_rad) * sin(distance / R) * cos(lat1_rad), cos(distance / R) - sin(lat1_rad) * sin(lat2_rad))
-                        # Convert the new coordinates to degrees
-                        lat2 = degrees(lat2_rad)
-                        lon2 = degrees(lon2_rad)
-                
-                        a=RecommendationCreate(member_current_location={'Longitude':lat2,'Latitude':lon2},recommendation_datetime=time)
+                        lon1 = boundary.centre['Longitude'] 
+                        lat1 = boundary.centre['Latitude'] 
+                        lat2,lon2=get_point_at_distance(lat1=lat1,lon1=lon1,d=distance,bearing=direction)
+                     
+                        a=RecommendationCreate(member_current_location={'Longitude':lon2,'Latitude':lat2},recommendation_datetime=time)
                         recomendaciones=create_recomendation_2(db=db,member_id=user.id,recipe_in=a,cam=cam,time=time)
                         
                         if len(recomendaciones['results'])>0:
@@ -360,8 +325,8 @@ def asignacion_recursos(
                             recomendacion_polinizar=crud.recommendation.update(db=db,db_obj=recomendation_coguida, obj_in={"state":"ACCEPTED","update_datetime":time})
                             
                             mediciones.append([user, recomendacion_polinizar, random.randint(1,600)])
-                            # if user.id%2==0 and user.id<30:
-                            #     show_recomendation(db=db, cam=cam, user=user, result=recomendaciones['results'],time=time,recomendation=recomendacion_polinizar)  
+                            if user.id%2==0 and user.id<30:
+                                show_recomendation(db=db, cam=cam, user=user, result=recomendaciones['results'],time=time,recomendation=recomendacion_polinizar)  
 
             new=[] 
             for i in range(0,len(mediciones)):
@@ -382,8 +347,6 @@ def asignacion_recursos(
                         recomendation_coguida=crud.recommendation.get_recommendation(db=db,member_id=mediciones[i][1].member_id, recommendation_id=mediciones[i][1].id)
 
                         crud.recommendation.update(db=db,db_obj=recomendation_coguida, obj_in={"state":"REALIZED","update_datetime":time_polinizado})
-                        db.commit()
-                        
                         db.commit()
                     else:
                         time_polinizado = time
@@ -459,27 +422,11 @@ def asignacion_recursos_con_popularidad_mucha(
                     direction= random.randint(0,360)
                         
                         
-                    lat1 = boundary.centre['Longitude'] 
-                    lon1 = boundary.centre['Latitude'] 
-
-                    # Desired distance in kilometers
-                        # Direction in degrees
-                    direction_rad = radians(direction)
-
-                    # Earth radius in kilometers
-                    R = 6371
-
-                    # Convert coordinates to radians
-                    lat1_rad = radians(lat1)
-                    lon1_rad = radians(lon1)                            
-                    # Calculate the new coordinates using Vincenty formula
-                    lat2_rad = asin(sin(lat1_rad) * cos(distance / R) + cos(lat1_rad) * sin(distance / R) * cos(direction_rad))
-                    lon2_rad = lon1_rad + atan2(sin(direction_rad) * sin(distance / R) * cos(lat1_rad), cos(distance / R) - sin(lat1_rad) * sin(lat2_rad))
-                    # Convert the new coordinates to degrees
-                    lat2 = degrees(lat2_rad)
-                    lon2 = degrees(lon2_rad)
-                
-                    a=RecommendationCreate(member_current_location={'Longitude':lat2,'Latitude':lon2},recommendation_datetime=time)
+                    lon1 = boundary.centre['Longitude'] 
+                    lat1 = boundary.centre['Latitude'] 
+                    lat2,lon2=get_point_at_distance(lon1=lon1,lat1=lat1,d=distance,bearing=direction)
+                    
+                    a=RecommendationCreate(member_current_location={'Longitude':lon2,'Latitude':lat2},recommendation_datetime=time)
                     recomendaciones=create_recomendation_2(db=db,member_id=user.id,recipe_in=a,cam=cam,time=time)
                         
                     if len(recomendaciones['results'])>0:
@@ -490,7 +437,7 @@ def asignacion_recursos_con_popularidad_mucha(
                                 
                             mediciones.append([user, recomendacion_polinizar, random.randint(1,600)])
 
-                                # show_recomendation(db=db, cam=cam, user=user, result=recomendaciones['results'],time=time,recomendation=recomendacion_polinizar)  
+                            show_recomendation(db=db, cam=cam, user=user, result=recomendaciones['results'],time=time,recomendation=recomendacion_polinizar)  
 
             new=[] 
             for i in range(0,len(mediciones)):
@@ -574,9 +521,9 @@ def create_recomendation_3(
             status_code=404, detail=f"The user dont participate as WB or QB in any active campaign"
         )
     for i in cells: 
-            centro= i[0].centre
+            centre = i[0].centre
             point= recipe_in.member_current_location
-            distancia=  (geopy.distance.GeodesicDistance((centro['Longitude'],centro['Latitude']),(point['Longitude'],point['Latitude']))).km
+            distancia = vincenty( (centre['Latitude'],centre['Longitude']), ( point['Latitude'],(point['Longitude'])))
 
             if distancia<=(i[1].cells_distance)*2:
                 List_cells_cercanas.append(i)
@@ -604,7 +551,7 @@ def create_recomendation_3(
                 if Cardinal_esperadiuso < cam.min_samples or cam.min_samples==0:
                     cells_and_priority.append((i[0],
                                                priority_temporal, 
-                                               math.sqrt((i[0].centre['Longitude'] - point['Longitude'])**2+(i[0].centre['Latitude']-point['Latitude'])**2),
+                                               vincenty( (point['Latitude'],point['Longitude']), (i[0].centre['Latitude'],i[0].centre['Longitude'] )),
                                                Cardinal_esperadiuso,
                                                Cardinal_actual,
                                                slot))
@@ -666,10 +613,12 @@ def create_recomendation_2(
     if len(cells)==0: 
             return {"results": []}
     for i in cells: 
-            centro= i[0].centre
+            centre= i[0].centre
             point= recipe_in.member_current_location
-            distancia=  (geopy.distance.GeodesicDistance((centro['Longitude'],centro['Latitude']),(point['Longitude'],point['Latitude']))).km
-            
+            if centre['Latitude'] == point['Latitude'] and centre['Longitude'] == point['Longitude']:
+                distancia=0
+            else:
+                distancia = vincenty( (centre['Latitude'],centre['Longitude']), ( point['Latitude'],(point['Longitude'])) )           
     
             if distancia<=(i[1].cells_distance)*2:
                 List_cells_cercanas.append(i)
@@ -697,7 +646,7 @@ def create_recomendation_2(
                 if Cardinal_esperadiuso < cam.min_samples or cam.min_samples==0:
                     cells_and_priority.append((i[0],
                                                priority_temporal,
-                                                math.sqrt((i[0].centre['Longitude'] - point['Longitude'])**2+(i[0].centre['Latitude']-point['Latitude'])**2),
+                                               vincenty( (point['Latitude'],point['Longitude']), (i[0].centre['Latitude'],i[0].centre['Longitude'] )),
                                                 Cardinal_esperadiuso,
                                                 Cardinal_actual,slot))
     #Order by less promise to polinaze the cell (acepted recommendation), more prioriry and less distance
@@ -778,7 +727,7 @@ def show_recomendation(*, cam:Campaign, user:Member, result:list(),time:datetime
     cell_distance=cam.cells_distance
     hipotenusa=math.sqrt(2*((cell_distance/2)**2))
     surface=crud.surface.get(db=db, id=cam.surfaces[0].id)
-    mapObj = folium.Map(location =[surface.boundary.centre['Longitude'],surface.boundary.centre['Latitude']], zoom_start = 17)
+    mapObj = folium.Map(location =[surface.boundary.centre['Latitude'],surface.boundary.centre['Longitude']], zoom_start = 17)
 
     for i in cam.surfaces:
             count=count+1
@@ -791,32 +740,18 @@ def show_recomendation(*, cam:Campaign, user:Member, result:list(),time:datetime
                 else:
                     numero=int((Cardinal_actual/cam.min_samples)//(1/4))
                     color = color_list_h[numero]
-                lat1 = j.centre['Longitude']
-                lon1 =j.centre['Latitude']
+                lon1 = j.centre['Longitude']
+                lat1 =j.centre['Latitude']
 
                         # Desired distance in kilometers
                 distance  = hipotenusa
                 list_direction=[45,135,225,315]
                 list_point=[]
                 for dir in list_direction:
+                    lat2,lon2=get_point_at_distance(lat1=lat1,lon1=lon1,d=distance,bearing=dir)
                             # Direction in degrees
-                            direction = dir
-                            direction_rad = radians(direction)
-
-                            # Earth radius in kilometers
-                            R = 6371
-
-                            # Convert coordinates to radians
-                            lat1_rad = radians(lat1)
-                            lon1_rad = radians(lon1)
                             
-                            # Calculate the new coordinates using Vincenty formula
-                            lat2_rad = asin(sin(lat1_rad) * cos(distance / R) + cos(lat1_rad) * sin(distance / R) * cos(direction_rad))
-                            lon2_rad = lon1_rad + atan2(sin(direction_rad) * sin(distance / R) * cos(lat1_rad), cos(distance / R) - sin(lat1_rad) * sin(lat2_rad))
-                            # Convert the new coordinates to degrees
-                            lat2 = degrees(lat2_rad)
-                            lon2 = degrees(lon2_rad)
-                            list_point.append([lat2,lon2])
+                    list_point.append([lat2,lon2])
 
                 line_color='black'
                 fill_color=color
@@ -843,18 +778,18 @@ def show_recomendation(*, cam:Campaign, user:Member, result:list(),time:datetime
                 
                 if j.id in Cells_recomendadas:
                     if j.id== cell_elejida:
-                        folium.Marker(location =[j.centre['Longitude'],j.centre['Latitude']],icon=folium.Icon(color='red', icon='pushpin'),
+                        folium.Marker(location =[j.centre['Latitude'],j.centre['Longitude']],icon=folium.Icon(color='red', icon='pushpin'),
                                                              popup=f"SELECTED. Number of measurment: {Cardinal_actual}").add_to(mapObj)
 
                         # cv2.drawMarker(imagen, position=(int(j.centre['Longitude']),int(j.centre['Latitude'])), color=(151,45,248), markerType=cv2.MARKER_TILTED_CROSS,markerSize= 24, thickness=5)
                         # cv2.drawMarker(imagen, position=(int(j.centre['Longitude']),int(j.centre['Latitude'])), color=(255,0,0), markerType=cv2.MARKER_SQUARE, markerSize= 20, thickness=2)
 
                     else:
-                        folium.Marker(location =[j.centre['Longitude'],j.centre['Latitude']],popup=f"Number of measurment: {Cardinal_actual}").add_to(mapObj)
+                        folium.Marker(location =[j.centre['Latitude'],j.centre['Longitude']],popup=f"Number of measurment: {Cardinal_actual}").add_to(mapObj)
 
                         # cv2.drawMarker(imagen, position=(int(j.centre['Longitude']),int(j.centre['Latitude'])), color=(255,0,0), markerType=cv2.MARKER_SQUARE, markerSize= 20, thickness=2)
     #draw user position
-    folium.Marker(location=[float(user_position['Longitude']),float(user_position['Latitude'])], 
+    folium.Marker(location=[float(user_position['Latitude']),float(user_position['Longitude'])], 
               icon=folium.Icon(color='orange', icon='user')).add_to(mapObj)
     
     # cv2.circle(imagen,color=(0,0,0),center=(int(user_position['Longitude']),int(user_position['Latitude'])), radius=10,thickness=-1) 
@@ -958,15 +893,13 @@ def show_a_campaign_2(
             )
     count=0
     surface=crud.surface.get(db=db, id=campañas_activas.surfaces[0].id)
-    mapObj = folium.Map(location =[surface.boundary.centre['Longitude'],surface.boundary.centre['Latitude']], zoom_start = 17)
+    mapObj = folium.Map(location =[surface.boundary.centre['Latitude'],surface.boundary.centre['Longitude']], zoom_start = 17)
     
     cell_distance=campañas_activas.cells_distance
 
     hipotenusa=math.sqrt(2*((cell_distance/2)**2))
 
-    cv2.putText(imagen, f"Campaign: id={campañas_activas.id},", (50,50), cv2.FONT_HERSHEY_SIMPLEX , 0.75, (0,0,0))
-    cv2.putText(imagen, f"title={campañas_activas.title}", (50,80), cv2.FONT_HERSHEY_SIMPLEX , 0.75, (0,0,0))
-    cv2.putText(imagen, f"time={time.strftime('%m/%d/%Y, %H:%M:%S')}", (50,110), cv2.FONT_HERSHEY_SIMPLEX , 0.75, (0,0,0))
+   
     for i in campañas_activas.surfaces:
             count=count+1
             for j in i.cells:
@@ -979,32 +912,17 @@ def show_a_campaign_2(
                     numero=int((Cardinal_actual/campañas_activas.min_samples)//(1/4))
                 # color= (color_list[numero][2],color_list[numero][1],color_list[numero][0])
                 color = color_list_h[numero]
-                lat1 = j.centre['Longitude']
-                lon1 =j.centre['Latitude']
+                lon1 = j.centre['Longitude']
+                lat1 =j.centre['Latitude']
 
                         # Desired distance in kilometers
                 distance  = hipotenusa
                 list_direction=[45,135,225,315]
                 list_point=[]
                 for dir in list_direction:
-                            # Direction in degrees
-                            direction = dir
-                            direction_rad = radians(direction)
-
-                            # Earth radius in kilometers
-                            R = 6371
-
-                            # Convert coordinates to radians
-                            lat1_rad = radians(lat1)
-                            lon1_rad = radians(lon1)
-                            
-                            # Calculate the new coordinates using Vincenty formula
-                            lat2_rad = asin(sin(lat1_rad) * cos(distance / R) + cos(lat1_rad) * sin(distance / R) * cos(direction_rad))
-                            lon2_rad = lon1_rad + atan2(sin(direction_rad) * sin(distance / R) * cos(lat1_rad), cos(distance / R) - sin(lat1_rad) * sin(lat2_rad))
-                            # Convert the new coordinates to degrees
-                            lat2 = degrees(lat2_rad)
-                            lon2 = degrees(lon2_rad)
-                            list_point.append([lat2,lon2])
+                    lat2,lon2=get_point_at_distance(lat1=lat1,lon1=lon1,d=distance,bearing=dir)
+                    
+                    list_point.append([lat2,lon2])
 
                 line_color='black'
                 fill_color=color

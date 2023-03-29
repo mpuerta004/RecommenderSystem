@@ -2,6 +2,7 @@ from fastapi_utils.session import FastAPISessionMaker
 import asyncio
 from fastapi import APIRouter, Query, HTTPException, Request, Depends
 from sqlalchemy.orm import Session
+from vincenty import vincenty
 
 from schemas.Slot import Slot, SlotCreate, SlotSearchResults
 from schemas.Boundary import Boundary, BoundaryCreate, BoundarySearchResults, BoundaryUpdate
@@ -10,12 +11,11 @@ from datetime import datetime, timedelta
 from schemas.Cell import Cell, CellCreate, CellSearchResults, Point
 from schemas.Surface import SurfaceSearchResults, Surface, SurfaceCreate, SurfaceUpdate
 import deps
+from end_points.funtionalities import create_cells_for_a_surface, create_slots_per_surface
 import crud
 from datetime import datetime                       
 import numpy as np
 from numpy import sin, cos, arccos, pi, round
-import geopy
-import geopy.distance
 import folium
 from math import sin, cos, atan2, sqrt, radians, degrees, asin
 from fastapi import BackgroundTasks
@@ -127,63 +127,9 @@ def parcially_update_surface(
         Surface = crud.surface.create_sur(
             db=db, campaign_id=campaign_id, obj_in=surface_create)
 
-        anchura_celdas = (Campaign.cells_distance)
-        radio=(Campaign.cells_distance)//2
-        numero_celdas = radius//anchura_celdas + 1
+        create_cells_for_a_surface(db=db,surface=Surface, campaign=Campaign,centre=centre, radius=radius) 
 
-        for i in range(0, numero_celdas):
-            if i == 0:
-                try:
-                    cell_create = CellCreate(surface_id=Surface.id, centre={
-                        'Longitude': centre['Longitude'], 'Latitude': centre['Latitude']}, radius=radio)
-                    cell = crud.cell.create_cell(
-                        db=db, obj_in=cell_create, surface_id=Surface.id)
-                    db.commit()
-                except:
-                    raise HTTPException(
-                        status_code=404, detail=f"Problem with the conecction with mysql."
-                    )
-            else:
-                centre_CELL_arriba = {'Longitude': centre['Longitude'],
-                                    'Latitude': centre['Latitude']+i*anchura_celdas}
-                centre_cell_abajo = {'Longitude': centre['Longitude'],
-                                    'Latitude': centre['Latitude']-i*anchura_celdas}
-                centre_cell_izq = {'Longitude': centre['Longitude'] +
-                                i*anchura_celdas, 'Latitude': centre['Latitude']}
-                centre_cell_derecha = {
-                    'Longitude': centre['Longitude']-i*anchura_celdas, 'Latitude': centre['Latitude']}
-                centre_point_list = [centre_CELL_arriba, centre_cell_abajo,
-                                    centre_cell_izq,   centre_cell_derecha]
-                for poin in centre_point_list:
-                    if np.sqrt((poin['Longitude']-centre['Longitude'])**2 + (poin['Latitude']-centre['Latitude'])**2) <= radius:
-                        try:
-                            cell_create = CellCreate(
-                                surface_id=Surface.id, centre=poin, radius=radio)
-                            cell = crud.cell.create_cell(
-                                db=db, obj_in=cell_create, surface_id=Surface.id)
-                            db.commit()
-                        except:
-                            raise HTTPException(
-                                status_code=404, detail=f"Problems with the conecction with mysql."
-                            )
-                for j in range(1, numero_celdas):
-                    centre_CELL_arriba_lado_1 = {
-                        'Longitude': centre['Longitude']+j*anchura_celdas, 'Latitude': centre['Latitude']+i*anchura_celdas}
-                    centre_CELL_arriba_lado_2 = {
-                        'Longitude': centre['Longitude']-j*anchura_celdas, 'Latitude': centre['Latitude']+i*anchura_celdas}
-                    centre_CELL_abajo_lado_1 = {
-                        'Longitude': centre['Longitude']+j*anchura_celdas, 'Latitude': centre['Latitude']-i*anchura_celdas}
-                    centre_CELL_abajo_lado_2 = {
-                        'Longitude': centre['Longitude']-j*anchura_celdas, 'Latitude': centre['Latitude']-i*anchura_celdas}
-                    centre_point_list = [centre_CELL_arriba_lado_1, centre_CELL_arriba_lado_2,
-                                        centre_CELL_abajo_lado_1, centre_CELL_abajo_lado_2]
-                    for poin in centre_point_list:
-                        if np.sqrt((poin['Longitude']-centre['Longitude'])**2 + (poin['Latitude']-centre['Latitude'])**2) <= radius:
-                                cell_create = CellCreate(
-                                    surface_id=Surface.id, centre=poin, radius=radio)
-                                cell = crud.cell.create_cell(
-                                    db=db, obj_in=cell_create, surface_id=Surface.id)
-                                db.commit()
+        
         background_tasks.add_task(create_slots_surface, surface=Surface, hive_id=hive_id)
         db.commit()
         # updated_recipe = crud.boundary.update(db=db, db_obj=boundary, obj_in=recipe_in)
@@ -260,105 +206,14 @@ def create_surface(
 
     radius = boundary.radius
     centre = boundary.centre
-    anchura_celdas = (Campaign.cells_distance)
-    radio = (Campaign.cells_distance)//2
-    numero_celdas = radius//int(anchura_celdas) + 1
 
-    cells_distance = Campaign.cells_distance
-    anchura_celdas = ((cells_distance))
-    radio=cells_distance/2
-    numero_celdas = int((radius//cells_distance)) +  25
-    print(numero_celdas)
+    
+    create_cells_for_a_surface(db=db, surface=Surface, campaign=Campaign,centre=centre,radius=radius)
+    
+    
+    create_slots_per_surface(db=db, sur=Surface,cam=Campaign)
 
-    for i in range(0, numero_celdas):
-        if i == 0:
-                cell_create = CellCreate(surface_id=Surface.id, centre={
-                    'Longitude': centre['Longitude'], 'Latitude': centre['Latitude']}, radius=radio)
-                cell = crud.cell.create_cell(
-                    db=db, obj_in=cell_create, surface_id=Surface.id)
-           
-        else:
-            lat1 = centre['Longitude']
-            lon1 = centre['Latitude']
-
-            # Desired distance in kilometers
-            distance  = i*anchura_celdas
-            list_direction=[0,90,180,270]
-            list_point=[]
-            for j in list_direction:
-                # Direction in degrees
-                direction = j
-                # Convert direction to radians
-                direction_rad = radians(direction)
-
-                # Earth radius in kilometers
-                R = 6371
-                # Convert coordinates to radians
-                lat1_rad = radians(lat1)
-                lon1_rad = radians(lon1)
-
-                # Calculate the new coordinates using Vincenty formula
-                lat2_rad = asin(sin(lat1_rad) * cos(distance / R) + cos(lat1_rad) * sin(distance / R) * cos(direction_rad))
-                lon2_rad = lon1_rad + atan2(sin(direction_rad) * sin(distance / R) * cos(lat1_rad), cos(distance / R) - sin(lat1_rad) * sin(lat2_rad))
-
-                # Convert the new coordinates to degrees
-                lat2 = degrees(lat2_rad)
-                lon2 = degrees(lon2_rad)
-                list_point.append([lat2,lon2])
-                if direction==90:
-                    final1=[lon2,lat2]
-                if direction==270:
-                    final2=[lon2,lat2]
-            
-           
-            for poin in list_point:
-                if (geopy.distance.GeodesicDistance((centre['Longitude'],centre['Latitude']),(poin[0],poin[1]))).km<=radius:
-                        Point()
-                        cell_create = CellCreate(
-                                surface_id=Surface.id, centre={'Longitude': poin[0],'Latitude':poin[1]}, radius=radio)
-                        cell = crud.cell.create_cell(
-                            db=db, obj_in=cell_create, surface_id=Surface.id)
-                    
-            list_point=[]
-            for j in range(1,numero_celdas):
-                distance=j*cells_distance
-
-                for z in [final1,final2]:
-                    lat1 = z[1]
-                    lon1 = z[0]
-                    list_direction=[0,180]
-                    for j in list_direction:
-                        # Direction in degrees
-                        direction = j
-                        # Convert direction to radians
-                        direction_rad = radians(direction)
-
-                        # Earth radius in kilometers
-                        R = 6371
-
-                        # Convert coordinates to radians
-                        lat1_rad = radians(lat1)
-                        lon1_rad = radians(lon1)
-
-                        # Calculate the new coordinates using Vincenty formula
-                        lat2_rad = asin(sin(lat1_rad) * cos(distance / R) + cos(lat1_rad) * sin(distance / R) * cos(direction_rad))
-                        lon2_rad = lon1_rad + atan2(sin(direction_rad) * sin(distance / R) * cos(lat1_rad), cos(distance / R) - sin(lat1_rad) * sin(lat2_rad))
-
-                        # Convert the new coordinates to degrees
-                        lat2 = degrees(lat2_rad)
-                        lon2 = degrees(lon2_rad)
-
-                        list_point.append([lat2,lon2])
-            for poin in list_point:
-        
-                if (geopy.distance.GeodesicDistance((centre['Longitude'],centre['Latitude']),(poin[0],poin[1]))).km<=radius:
-                            cell_create = CellCreate(
-                                surface_id=Surface.id, centre={'Longitude': poin[0],'Latitude':poin[1]}, radius=radio)
-                            cell = crud.cell.create_cell(
-                                db=db, obj_in=cell_create, surface_id=Surface.id)
-
-                            db.commit()
-    background_tasks.add_task(create_slots_surface, surface=Surface, hive_id=hive_id)
+    # background_tasks.add_task(create_slots_surface, surface=Surface, hive_id=hive_id)
     db.commit()
     return Surface
 
@@ -367,45 +222,3 @@ SQLALCHEMY_DATABASE_URL = "mysql+mysqlconnector://root:mypasswd@localhost:3306/S
 sessionmaker = FastAPISessionMaker(SQLALCHEMY_DATABASE_URL)
 
 
-async def create_slots_surface(surface: Surface, hive_id: int):
-    """
-    Create all the slot of each cells of the surface. 
-    """
-    await asyncio.sleep(3)
-    with sessionmaker.context_session() as db:
-        cam = crud.campaign.get_campaign(
-            db=db, hive_id=hive_id, campaign_id=surface.campaign_id)
-        duration= cam.end_datetime - cam.start_datetime 
-        n_slot = int(duration.total_seconds()//cam.sampling_period)
-        if duration.total_seconds() % cam.sampling_period != 0:
-                n_slot = n_slot+1
-        for i in range(n_slot):
-            time_extra = i*cam.sampling_period
-
-            start = cam.start_datetime + timedelta(seconds=time_extra )
-            end = start + timedelta(seconds=cam.sampling_period-1)
-            if end > cam.end_datetime:
-                end = cam.end_datetime
-            for sur in cam.surfaces:
-                for cell in sur.cells:
-                    slot_create = SlotCreate(
-                        cell_id=cell.id, start_datetime=start, end_datetime=end)
-                    slot = crud.slot.create_slot_detras(db=db, obj_in=slot_create)
-                    db.commit()
-
-                    if start == cam.start_datetime:
-                        Cardinal_pasado = 0
-                        Cardinal_actual = 0
-                        init = 0
-                        if cam.min_samples==0:
-                                result= 0
-                        else:
-                                result=-Cardinal_actual/cam.min_samples                         # b = max(2, cam.min_samples - int(Cardinal_pasado))
-                        # a = max(2, cam.min_samples - int(Cardinal_actual))
-                        # result = math.log(a) * math.log(b, int(Cardinal_actual) + 2)
-                        trendy = 0.0
-                        Cell_priority = PriorityCreate(
-                            slot_id=slot.id, datetime=start, temporal_priority=result, trend_priority=trendy)  # ,cell_id=cells.id)
-                        priority = crud.priority.create_priority_detras(
-                            db=db, obj_in=Cell_priority)
-                        db.commit()

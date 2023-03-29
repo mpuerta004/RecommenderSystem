@@ -4,7 +4,8 @@ from datetime import datetime, timedelta
 from typing import Any, Dict, Generic, List, Optional, Type, TypeVar, Union
 import crud
 import deps
-import geopy.distance
+from vincenty import vincenty
+
 from crud import crud_cell
 from fastapi import (APIRouter, BackgroundTasks, Depends, FastAPI,
                      HTTPException, Query, Request)
@@ -14,7 +15,7 @@ from schemas.Priority import Priority, PriorityCreate, PrioritySearchResults
 from schemas.Slot import Slot, SlotCreate, SlotSearchResults
 from schemas.Surface import Surface, SurfaceCreate, SurfaceSearchResults
 from sqlalchemy.orm import Session
-
+from end_points.funtionalities import create_slots_per_cell
 SQLALCHEMY_DATABASE_URL = "mysql+mysqlconnector://root:mypasswd@localhost:3306/SocioBee"
 sessionmaker = FastAPISessionMaker(SQLALCHEMY_DATABASE_URL)
 
@@ -197,53 +198,19 @@ def create_cell(
     # Verify if the center of the new cell is inside the surface
     centre = surface.boundary.centre
     point = recipe_in.centre
-    if (geopy.distance.GeodesicDistance((centre['Longitude'], centre['Latitude']), (point[0], point[1]))).km <= surface.boundary.radius:
+    distance = vincenty(( centre['Latitude'],centre['Longitude']), ( point[1],point[0]))
+    if distance <= surface.boundary.radius:
         cell = crud.cell.create_cell(db=db, obj_in=recipe_in, surface_id=surface_id)
-        background_tasks.add_task(create_slots_cell, surface, hive_id, cell.id)
+        
+        create_slots_per_cell(db=db, cam=Campaign, cell=cell)
+        
+
         return cell
     else:
         raise HTTPException(
             status_code=400, detail=f"INVALID REQUEST: The cell does not have the centre inside the surface"
         )
 
-
-async def create_slots_cell(surface: Surface, hive_id: int, cell_id: int):
-    """
-    Create all the slot of each cells of the campaign. 
-    """
-    with sessionmaker.context_session() as db:
-        # Get the campaign
-        cam = crud.campaign.get_campaign(
-            db=db, hive_id=hive_id, campaign_id=surface.campaign_id)
-        # Calculate the number of slot associeted a one cell we have.
-        duration = cam.end_datetime - cam.start_datetime
-        n_slot = int(duration.total_seconds()//cam.sampling_period)
-        if duration.total_seconds() % cam.sampling_period != 0:
-            n_slot = n_slot+1
-        # Create the slots
-        for i in range(n_slot):
-            time_extra = i*cam.sampling_period
-            # Calculate the time and end_time of each slot.
-            start = cam.start_datetime + timedelta(seconds=time_extra)
-            end = start + timedelta(seconds=cam.sampling_period-1)
-
-            if end > cam.end_datetime:
-                end = cam.end_datetime
-
-            slot_create = SlotCreate(
-                cell_id=cell_id, start_datetime=start, end_datetime=end)
-            slot = crud.slot.create_slot_detras(db=db, obj_in=slot_create)
-            db.commit()
-            if start == cam.start_datetime:
-                result = 0
-                # a = max(2, cam.min_samples - int(Cardinal_actual))
-                # result = math.log(a) * math.log(b, int(Cardinal_actual) + 2)
-                trendy = 0.0
-                Cell_priority = PriorityCreate(
-                    slot_id=slot.id, datetime=start, temporal_priority=result, trend_priority=trendy)  
-                priority = crud.priority.create_priority_detras(
-                    db=db, obj_in=Cell_priority)
-                db.commit()
 
 ########## PUT -update a cell- enpoint   ##########
 @api_router_cell.put("/{cell_id}", status_code=201, response_model=Cell)
@@ -300,7 +267,9 @@ def update_cell(
     centre = surface.boundary.centre
     point = recipe_in.centre
     radius=surface.boundary.radius
-    if (geopy.distance.GeodesicDistance((centre['Longitude'], centre['Latitude']), (point[0], point[1]))).km <= radius:
+    distance = vincenty(( centre['Latitude'],centre['Longitude']), ( point[1],point[0]))
+
+    if distance <= radius:
         updated_cell= crud.cell.update(db=db, db_obj=cell, obj_in=recipe_in)
         db.commit()
         return updated_cell
@@ -310,30 +279,3 @@ def update_cell(
         )
 
 
-# @api_router_cell.patch("/{cell_id}", status_code=201, response_model=Cell)
-# def update_parcially_cell(
-#     *,
-#     recipe_in: Union[CellUpdate,Dict[str, Any]],
-#     hive_id:int,
-#     campaign_id:int,
-#     surface_id:int,
-#     cell_id:int,
-#     db: Session = Depends(deps.get_db)
-# ) -> dict:
-#     """
-#      Partially Update Campaign with campaign_id
-#     """
-#     cell = crud.cell.get_Cell(db=db,cell_id=cell_id)
-#     # .get_campaign(db=db,hive_id=hive_id,campaign_id=campaign_id)
-#     if not cell:
-#         raise HTTPException(
-#             status_code=400, detail=f"Recipe with hive_id=={hive_id} and campaign_id=={campaign_id} and surface_id={surface_id} not found."
-#         )
-#     # if recipe.submitter_id != current_user.id:
-#     #     raise HTTPException(
-#     #         status_code=403, detail=f"You can only update your recipes."
-#     #     )
-
-#     updated_recipe = crud.cell.update(db=db, db_obj=cell, obj_in=recipe_in)
-#     db.commit()
-#     return updated_recipe

@@ -6,8 +6,7 @@ from typing import Any, Dict, Generic, List, Optional, Type, TypeVar, Union
 import crud
 import deps
 import folium
-import geopy
-import geopy.distance
+from vincenty import vincenty
 from datetime import datetime, timedelta
 from sqlalchemy.orm import Session
 from fastapi import (APIRouter, BackgroundTasks, Depends,
@@ -16,6 +15,7 @@ from fastapi.responses import HTMLResponse
 from fastapi_utils.session import FastAPISessionMaker
 from folium.features import DivIcon
 from numpy import arccos, cos, pi, round, sin
+from vincenty import vincenty
 
 from schemas.Boundary import BoundaryCreate
 from schemas.Campaign import (Campaign, CampaignCreate, CampaignSearchResults,
@@ -26,6 +26,7 @@ from schemas.Priority import Priority, PriorityCreate, PrioritySearchResults
 from schemas.Slot import Slot, SlotCreate, SlotSearchResults
 from schemas.Surface import Surface, SurfaceCreate, SurfaceSearchResults
 
+from end_points.funtionalities import create_slots_campaign, create_cells_for_a_surface, get_point_at_distance
 
 
 api_router_campaign = APIRouter(prefix="/hives/{hive_id}/campaigns")
@@ -125,6 +126,7 @@ def delete_campaign(*,
     return {"ok": True}
 
 
+
 ###### POST ENDPOINT - CREATE CAMPAIGN #####
 @api_router_campaign.post("/", status_code=201, response_model=Campaign)
 async def create_campaign(
@@ -210,7 +212,7 @@ async def create_campaign(
             role = Campaign_MemberCreate(role=i.role)
             role_WB = crud.campaign_member.create_Campaign_Member(
                 db=db, obj_in=role, campaign_id=Campaign.id, member_id=i.member_id)
-        
+
     # Create the boundary
     boundary_campaign = crud.boundary.create_boundary(
         db=db, obj_in=boundary_campaign)
@@ -219,155 +221,18 @@ async def create_campaign(
     Surface = crud.surface.create_sur(
         db=db, campaign_id=Campaign.id, obj_in=surface_create)
 
-    """
-    Calculate the center of each cell of the campaign. 
-    (NOTE: This process is ilustrated in this picture: https://drive.google.com/file/d/1ZRoUNJo2tU_Cg33OGdLkZILhpkomv03m/view?usp=sharing)
-    """
+   
     #General variables
     centre = boundary_campaign.centre
     radius = boundary_campaign.radius    
+    create_cells_for_a_surface(db=db,surface=Surface, campaign=Campaign,centre=centre, radius=radius) 
     
-    cells_distance = Campaign.cells_distance
-    anchura_celdas = ((cells_distance))
-    radio = cells_distance/2
-    n_cells_in_radius = int((radius//cells_distance)) + 25 
-
-    for i in range(0, n_cells_in_radius):
-        if i == 0:
-            cell_create = CellCreate(surface_id=Surface.id, centre={
-                'Longitude': centre['Longitude'], 'Latitude': centre['Latitude']}, radius=radio)
-            cell = crud.cell.create_cell(
-                db=db, obj_in=cell_create, surface_id=Surface.id)
-        else:
-            lat1 = centre['Longitude']
-            lon1 = centre['Latitude']
-            
-            # Desired distance in kilometers
-            distance = i*anchura_celdas
-            list_direction = [0, 90, 180, 270]
-            list_point = []
-            for j in list_direction:
-               
-                
-                direction = j  # Direction in degrees
-                direction_rad = radians(direction)  # Convert direction to radians
-                R = 6371 # Earth radius in kilometers
-                lat1_rad = radians(lat1) # Convert coordinates to radians
-                lon1_rad = radians(lon1)# Convert coordinates to radians
-
-                # Calculate the new coordinates using Vincenty formula
-                lat2_rad = asin(sin(lat1_rad) * cos(distance / R) +
-                                cos(lat1_rad) * sin(distance / R) * cos(direction_rad))
-                lon2_rad = lon1_rad + atan2(sin(direction_rad) * sin(distance / R) * cos(
-                    lat1_rad), cos(distance / R) - sin(lat1_rad) * sin(lat2_rad))
-
-                # Convert the new coordinates to degrees
-                lat2 = degrees(lat2_rad)
-                lon2 = degrees(lon2_rad)
-                list_point.append([lat2, lon2])
-                print(lat2,lon2)
-                if direction == 90:
-                    final1 = [lon2, lat2]
-                if direction == 270:
-                    final2 = [lon2, lat2]
-            #Verify if the center of this cell is inside the boundary (Circle)
-            for poin in list_point:
-                if (geopy.distance.GeodesicDistance((centre['Longitude'], centre['Latitude']), (poin[0], poin[1]))).km <= radius:
-                    cell_create = CellCreate(
-                        surface_id=Surface.id, centre={'Longitude': poin[0], 'Latitude': poin[1]}, radius=radio)
-                    cell = crud.cell.create_cell(
-                        db=db, obj_in=cell_create, surface_id=Surface.id)
-
-            list_point = []
-            #Step 3 of the picture
-            for j in range(1, n_cells_in_radius):
-                distance = j*cells_distance
-
-                for z in [final1, final2]:
-                    lat1 = z[1]
-                    lon1 = z[0]
-                    list_direction = [0, 180]
-                    for j in list_direction:
-                        
-                        direction = j # Direction in degrees
-                        direction_rad = radians(direction) # Convert direction to radians
-                        R = 6371# Earth radius in kilometers
-                        lat1_rad = radians(lat1)  # Convert coordinates to radians
-                        lon1_rad = radians(lon1) # Convert coordinates to radians
-
-                        # Calculate the new coordinates using Vincenty formula
-                        lat2_rad = asin(sin(lat1_rad) * cos(distance / R) +
-                                        cos(lat1_rad) * sin(distance / R) * cos(direction_rad))
-                        lon2_rad = lon1_rad + atan2(sin(direction_rad) * sin(distance / R) * cos(
-                            lat1_rad), cos(distance / R) - sin(lat1_rad) * sin(lat2_rad))
-
-                        # Convert the new coordinates to degrees
-                        lat2 = degrees(lat2_rad)
-                        lon2 = degrees(lon2_rad)
-
-                        list_point.append([lat2, lon2])
-            for poin in list_point:
-                #Verify if the center of this cell is inside the boundary (Circle) 
-                if (geopy.distance.GeodesicDistance((centre['Longitude'], centre['Latitude']), (poin[0], poin[1]))).km <= radius:
-                    cell_create = CellCreate(
-                        surface_id=Surface.id, centre={'Longitude': poin[0], 'Latitude': poin[1]}, radius=radio)
-                    cell = crud.cell.create_cell(
-                        db=db, obj_in=cell_create, surface_id=Surface.id)
-
     """
     When the Cells are created we create the slots of each cell in the background due to a campaign can have too much slots.
         EXAMPLE: If we have 2 hour of campaign duration and a sampling period of 1 hour -> then per 1 cell we have 2 slots. 
     """
-    background_tasks.add_task(create_slots, cam=Campaign)
+    create_slots_campaign(db=db, cam=Campaign)
     return Campaign
-
-
-async def create_slots(cam: Campaign):
-    """
-    Create all the slot of each cells of the campaign. 
-    """
-    with sessionmaker.context_session() as db:
-        #Calculate the number of slot associeted a one cell we have. 
-        duration = cam.end_datetime - cam.start_datetime
-        n_slot = int(duration.total_seconds()//cam.sampling_period)
-        
-        if duration.total_seconds() % cam.sampling_period != 0:
-            n_slot = n_slot+1
-            
-        #Create the slots
-        for i in range(n_slot):
-            time_extra = i*cam.sampling_period
-            #Calculate the time and end_time of each slot. 
-            start = cam.start_datetime + timedelta(seconds=time_extra)
-            end = start + timedelta(seconds=cam.sampling_period - 1)
-            # If the end time is greater than the end time of the campaign, we set the end time to the end time of the slot.
-            if end > cam.end_datetime:
-                end = cam.end_datetime
-            # With the start and end time of the slot, we have to create the slot for each cell of the campaign and each of their surfaces. 
-            for sur in cam.surfaces:
-                for cell in sur.cells:
-                    slot_create = SlotCreate(
-                        cell_id=cell.id, start_datetime=start, end_datetime=end)
-                    slot = crud.slot.create_slot_detras(db=db, obj_in=slot_create)
-                    db.commit()
-                
-                    if start == cam.start_datetime:
-                        Cardinal_actual = 0
-                        if cam.min_samples == 0:
-                            result = 0
-                        else:
-                            result = 0
-                        # b = max(2, cam.min_samples - int(Cardinal_pasado))
-                        # a = max(2, cam.min_samples - int(Cardinal_actual))
-                        # result = math.log(a) * math.log(b, int(Cardinal_actual) + 2)
-                        trendy = 0.0
-                        Cell_priority = PriorityCreate(
-                            slot_id=slot.id, datetime=start, temporal_priority=result, trend_priority=trendy)
-                        priority = crud.priority.create_priority_detras(
-                            db=db, obj_in=Cell_priority)
-                        db.commit()
-
-
 
 #########                         Show Endpoint                   #########
 @api_router_campaign.get("/{campaign_id}/show", status_code=200, response_class=HTMLResponse)
@@ -399,15 +264,15 @@ def show_a_campaign(
         surface = crud.surface.get(db=db, id=campaign.surfaces[0].id)
         # Create the map
         mapObj = folium.Map(location=[
-                            surface.boundary.centre['Longitude'], surface.boundary.centre['Latitude']], zoom_start=20)
+                            surface.boundary.centre['Latitude'],surface.boundary.centre['Longitude']], zoom_start=20)
         # Add the information of each surface of the campaign in the map
         for surface in campaign.surfaces:
             # Draw each cell in the map with the color depending on the number of samples
-            for j in surface.cells:
+            for cell in surface.cells:
                 # Calculate the number of samples in the current slot of the cell
-                slot = crud.slot.get_slot_time(db=db, cell_id=j.id, time=time)
+                slot = crud.slot.get_slot_time(db=db, cell_id=cell.id, time=time)
                 Cardinal_actual = crud.measurement.get_all_Measurement_from_cell_in_the_current_slot(
-                    db=db, cell_id=j.id, time=time, slot_id=slot.id)
+                    db=db, cell_id=cell.id, time=time, slot_id=slot.id)
 
                 """
                 Calculate the color of the cell based on the number of samples. 
@@ -420,31 +285,17 @@ def show_a_campaign(
                 color = color_list_h[numero]
                 """We have to calculate the corners of each cell to draw it in the map."""
                 # Calculate the coordinates of the corners of the cell to draw it in the map with the calculated color
-                lat1 = j.centre['Longitude']
-                lon1 = j.centre['Latitude']
-
+                lat1 = cell.centre['Latitude']
+                lon1 = cell.centre['Longitude']
                 distance = hipotenusa  # Distance in Km of the center to the corner of each cell
                 # List of the directions of the corners of each cell from the center
                 list_direction = [45, 135, 225, 315]
                 list_courner_points_of_cell = []
                 for l in list_direction:
                     # Direction in degrees
-                    direction_rad = radians(l)
-                    R = 6371  # Earth radius in kilometers
-
-                    # Convert coordinates to radians
-                    lat1_rad = radians(lat1)
-                    lon1_rad = radians(lon1)
-
-                    # Calculate the new coordinates using Vincenty formula
-                    lat2_rad = asin(sin(lat1_rad) * cos(distance / R) +
-                                    cos(lat1_rad) * sin(distance / R) * cos(direction_rad))
-                    lon2_rad = lon1_rad + atan2(sin(direction_rad) * sin(distance / R) * cos(
-                        lat1_rad), cos(distance / R) - sin(lat1_rad) * sin(lat2_rad))
-                    # Convert the new coordinates to degrees
-                    lat2 = degrees(lat2_rad)
-                    lon2 = degrees(lon2_rad)
-                    list_courner_points_of_cell.append([lat2, lon2])
+                    lat2,lon2=get_point_at_distance(lat1=lat1,lon1=lon1,bearing=l,d=distance)
+                    # NOTE: first lat because i use the list as an input to the folium funtion. 
+                    list_courner_points_of_cell.append([lat2,lon2])
                 # Draw the cell
                 text = f'Numer of measurements: {Cardinal_actual}'
                 folium.Polygon(locations=list_courner_points_of_cell, color='black', fill_color=color,
@@ -517,7 +368,8 @@ def update_campaign(
             campaign = crud.campaign.update(
                 db=db, db_obj=campaign, obj_in=recipe_in)
             #Remove the cells, slot, boundary and surface
-            for i in campaign.surfaces:
+            list_of_surfaces=campaign.surfaces
+            for i in list_of_surfaces:
                 centre = i.boundary.centre
                 radius = i.boundary.radius
                 #Remove the surface -> implicity this remove the boundary and the cells and slots.
@@ -530,96 +382,15 @@ def update_campaign(
                 Surface = crud.surface.create_sur(
                     db=db, campaign_id=campaign.id, obj_in=surface_create)
                 #Create the cells
-                cells_distance = Campaign.cells_distance
-                anchura_celdas = ((cells_distance))
-                radio = cells_distance/2
-                n_cells_in_radius = int((radius//cells_distance)) + 25
+                create_cells_for_a_surface(db=db,surface=Surface, campaign=campaign,centre=centre, radius=radius) 
 
-                for i in range(0, n_cells_in_radius):
-                    if i == 0:
-                        cell_create = CellCreate(surface_id=Surface.id, centre={
-                            'Longitude': centre['Longitude'], 'Latitude': centre['Latitude']}, radius=radio)
-                        cell = crud.cell.create_cell(
-                            db=db, obj_in=cell_create, surface_id=Surface.id)
-                    else:
-                        lat1 = centre['Longitude']
-                        lon1 = centre['Latitude']
-                        
-                        # Desired distance in kilometers
-                        distance = i*anchura_celdas
-                        list_direction = [0, 90, 180, 270]
-                        list_point = []
-                        for j in list_direction:
-                        
-                            direction = j  # Direction in degrees
-                            direction_rad = radians(direction)  # Convert direction to radians
-                            R = 6371 # Earth radius in kilometers
-                            lat1_rad = radians(lat1) # Convert coordinates to radians
-                            lon1_rad = radians(lon1)# Convert coordinates to radians
-
-                            # Calculate the new coordinates using Vincenty formula
-                            lat2_rad = asin(sin(lat1_rad) * cos(distance / R) +
-                                            cos(lat1_rad) * sin(distance / R) * cos(direction_rad))
-                            lon2_rad = lon1_rad + atan2(sin(direction_rad) * sin(distance / R) * cos(
-                                lat1_rad), cos(distance / R) - sin(lat1_rad) * sin(lat2_rad))
-
-                            # Convert the new coordinates to degrees
-                            lat2 = degrees(lat2_rad)
-                            lon2 = degrees(lon2_rad)
-                            list_point.append([lat2, lon2])
-                            if direction == 90:
-                                final1 = [lon2, lat2]
-                            if direction == 270:
-                                final2 = [lon2, lat2]
-                        #Verify if the center of this cell is inside the boundary (Circle)
-                        for poin in list_point:
-                            if (geopy.distance.GeodesicDistance((centre['Longitude'], centre['Latitude']), (poin[0], poin[1]))).km <= radius:
-                                cell_create = CellCreate(
-                                    surface_id=Surface.id, centre={'Longitude': poin[0], 'Latitude': poin[1]}, radius=radio)
-                                cell = crud.cell.create_cell(
-                                    db=db, obj_in=cell_create, surface_id=Surface.id)
-
-                        list_point = []
-                        #Step 3 of the picture
-                        for j in range(1, n_cells_in_radius):
-                            distance = j*cells_distance
-
-                            for z in [final1, final2]:
-                                lat1 = z[1]
-                                lon1 = z[0]
-                                list_direction = [0, 180]
-                                for j in list_direction:
-                                    
-                                    direction = j # Direction in degrees
-                                    direction_rad = radians(direction) # Convert direction to radians
-                                    R = 6371# Earth radius in kilometers
-                                    lat1_rad = radians(lat1)  # Convert coordinates to radians
-                                    lon1_rad = radians(lon1) # Convert coordinates to radians
-
-                                    # Calculate the new coordinates using Vincenty formula
-                                    lat2_rad = asin(sin(lat1_rad) * cos(distance / R) +
-                                                    cos(lat1_rad) * sin(distance / R) * cos(direction_rad))
-                                    lon2_rad = lon1_rad + atan2(sin(direction_rad) * sin(distance / R) * cos(
-                                        lat1_rad), cos(distance / R) - sin(lat1_rad) * sin(lat2_rad))
-
-                                    # Convert the new coordinates to degrees
-                                    lat2 = degrees(lat2_rad)
-                                    lon2 = degrees(lon2_rad)
-
-                                    list_point.append([lat2, lon2])
-                        for poin in list_point:
-                            #Verify if the center of this cell is inside the boundary (Circle) 
-                            if (geopy.distance.GeodesicDistance((centre['Longitude'], centre['Latitude']), (poin[0], poin[1]))).km <= radius:
-                                cell_create = CellCreate(
-                                    surface_id=Surface.id, centre={'Longitude': poin[0], 'Latitude': poin[1]}, radius=radio)
-                                cell = crud.cell.create_cell(
-                                    db=db, obj_in=cell_create, surface_id=Surface.id)
+                
 
                 """
                 When the Cells are created we create the slots of each cell in the background due to a campaign can have too much slots.
                     EXAMPLE: If we have 2 hour of campaign duration and a sampling period of 1 hour -> then per 1 cell we have 2 slots. 
                 """
-                background_tasks.add_task(create_slots, cam=Campaign)
+                create_slots(db=db, cam=campaign)
             return campaign
     else:
         campaign = crud.campaign.update(db=db, db_obj=campaign, obj_in=recipe_in)
