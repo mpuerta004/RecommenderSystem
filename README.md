@@ -52,8 +52,6 @@ The following diagram illustrates the main workflow that a Worker Bee will follo
 
 ## Use case 1 - Usage workflow of MVE used as an standalone module
 
-0. **Descomment the main-file lines to automatically execute the necessary events.** These lines execute an event from time to time to be sure of the correct behaviour of the system. 
-
 1. **Create a Beekeeper:**  Defined at [http://localhost:8001](http://localhost:8001) in secction Beekeeper at the POST endpoint [/beekeepers/](http://localhost:8001/docs#/BeeKeepers/create_beekeeper_beekeepers__post) you can create a new beekeeper by filling out the following request body:
     ```
     {
