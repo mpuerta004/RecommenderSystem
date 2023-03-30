@@ -201,7 +201,7 @@ def create_cell(
     distance = vincenty(( centre['Latitude'],centre['Longitude']), ( point[1],point[0]))
     if distance <= surface.boundary.radius:
         cell = crud.cell.create_cell(db=db, obj_in=recipe_in, surface_id=surface_id)
-        
+        db.commit()
         create_slots_per_cell(db=db, cam=Campaign, cell=cell)
         
 

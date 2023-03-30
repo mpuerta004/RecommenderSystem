@@ -30,8 +30,7 @@ from end_points.funtionalities import create_slots_campaign, create_cells_for_a_
 
 
 api_router_campaign = APIRouter(prefix="/hives/{hive_id}/campaigns")
-SQLALCHEMY_DATABASE_URL = "mysql+mysqlconnector://mve:mvepasswd123@localhost:3306/SocioBee"
-sessionmaker = FastAPISessionMaker(SQLALCHEMY_DATABASE_URL)
+
 
 
 # List of colors for the cells
@@ -141,22 +140,19 @@ async def create_campaign(
     #Change the timezone of the start and end date
     campaign_metadata.start_datetime = campaign_metadata.start_datetime.replace(
         tzinfo=timezone.utc)
-    #Change the timezone of the start and end date
     campaign_metadata.end_datetime = campaign_metadata.end_datetime.replace(
         tzinfo=timezone.utc)
     
-    #Obtein the hive of the campaign
+    #Obtein the hive of the campaign and verify if the hive exists
     hive = crud.hive.get(db=db, id=hive_id)
-    #Verify if the hive exists
     if hive is None:
         raise HTTPException(
             status_code=404, detail=f"Hive with id=={hive_id} not found"
         )
 
-    #Obtein the QueenBee of the hive
+    #Obtein the QueenBee of the hive and verify if the hive has a QueenBee
     QueenBee = crud.hive_member.get_by_role_hive(
         db=db, hive_id=hive_id, role="QueenBee")
-    #Verify if the hive has a QueenBee
     if QueenBee is None:
         raise HTTPException(
             status_code=404, detail=f"This Hive haven`t a QueenBee"
@@ -169,7 +165,7 @@ async def create_campaign(
     In this case the sampling_peirod ha to be the all campaing duration!!!! -> that its only one slot. 
     """
     if campaign_metadata.sampling_period == 0:
-        duration = campaign_metadata.end_datetime - campaign_metadata.start_datetime
+        duration = campaign_metadata.end_datetime - campaign_metadata.start_datetime        
         campaign_metadata.sampling_period = duration.total_seconds()
     
     """

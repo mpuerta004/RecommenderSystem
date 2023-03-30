@@ -175,8 +175,7 @@ def create_surface(
     hive_id: int,
     campaign_id: int,
     boundary: BoundaryCreate,
-    db: Session = Depends(deps.get_db),
-    background_tasks: BackgroundTasks
+    db: Session = Depends(deps.get_db)
 
 ) -> dict:
     """
@@ -216,7 +215,6 @@ def create_surface(
     return Surface
 
 
-SQLALCHEMY_DATABASE_URL = "mysql+mysqlconnector://root:mypasswd@localhost:3306/SocioBee"
-sessionmaker = FastAPISessionMaker(SQLALCHEMY_DATABASE_URL)
+
 
 
