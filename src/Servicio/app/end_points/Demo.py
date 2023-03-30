@@ -617,6 +617,7 @@ def create_recomendation_2(
             point= recipe_in.member_current_location
             if centre['Latitude'] == point['Latitude'] and centre['Longitude'] == point['Longitude']:
                 distancia=0
+                print("Distancia 0")
             else:
                 distancia = vincenty( (centre['Latitude'],centre['Longitude']), ( point['Latitude'],(point['Longitude'])) )           
     
