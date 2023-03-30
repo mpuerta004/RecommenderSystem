@@ -42,6 +42,7 @@ def get_point_at_distance(lat1, lon1, d, bearing, R=6371):
 
 def create_cells_for_a_surface(surface: Surface, campaign: Campaign, centre, radius, db: Session = Depends(deps.get_db)):
     """
+    This funtion create the cells of a one surface of the campaign. 
     Calculate the center of each cell of the campaign. 
     (NOTE: This process is ilustrated in this picture: https://drive.google.com/file/d/1ZRoUNJo2tU_Cg33OGdLkZILhpkomv03m/view?usp=sharing)
     """
@@ -83,6 +84,8 @@ def create_cells_for_a_surface(surface: Surface, campaign: Campaign, centre, rad
                         surface_id=surface.id, centre={'Longitude': poin[0], 'Latitude': poin[1]}, radius=radio)
                     cell = crud.cell.create_cell(
                         db=db, obj_in=cell_create, surface_id=surface.id)
+                    db.commit()
+
 
             list_point = []
             # Step 3 of the picture
@@ -105,6 +108,7 @@ def create_cells_for_a_surface(surface: Surface, campaign: Campaign, centre, rad
                         surface_id=surface.id, centre={'Longitude': poin[0], 'Latitude': poin[1]}, radius=radio)
                     cell = crud.cell.create_cell(
                         db=db, obj_in=cell_create, surface_id=surface.id)
+                    db.commit()
     return True
 
 
@@ -172,12 +176,8 @@ def create_slots_campaign(cam: Campaign, db: Session = Depends(deps.get_db)):
     Create all the slot of each cells of the campaign. 
     """
     # Calculate the number of slot associeted a one cell we have.
-    duration = cam.end_datetime - cam.start_datetime
-    n_slot = int(duration.total_seconds()//cam.sampling_period)
 
-    if duration.total_seconds() % cam.sampling_period != 0:
-        n_slot = n_slot+1
-
+   
     for sur in cam.surfaces:
         create_slots_per_surface(sur=sur, cam=cam, db=db)
     return True

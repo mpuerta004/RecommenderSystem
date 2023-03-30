@@ -9,7 +9,7 @@ import folium
 from vincenty import vincenty
 from datetime import datetime, timedelta
 from sqlalchemy.orm import Session
-from fastapi import (APIRouter, BackgroundTasks, Depends,
+from fastapi import (APIRouter, Depends,
                      HTTPException, Query)
 from fastapi.responses import HTMLResponse
 from fastapi_utils.session import FastAPISessionMaker
@@ -134,9 +134,7 @@ async def create_campaign(
     hive_id: int,
     campaign_metadata: CampaignCreate,
     boundary_campaign: BoundaryCreate,
-    db: Session = Depends(deps.get_db),
-    background_tasks: BackgroundTasks
-) -> dict:
+    db: Session = Depends(deps.get_db)) -> dict:
     """
      Create a new campaing in the database.
     """
@@ -326,7 +324,6 @@ def update_campaign(
     recipe_in: CampaignUpdate,
     hive_id: int,
     campaign_id: int,
-    background_tasks: BackgroundTasks,
     db: Session = Depends(deps.get_db)
 ) -> dict:
     """
@@ -385,12 +382,11 @@ def update_campaign(
                 create_cells_for_a_surface(db=db,surface=Surface, campaign=campaign,centre=centre, radius=radius) 
 
                 
-
                 """
                 When the Cells are created we create the slots of each cell in the background due to a campaign can have too much slots.
                     EXAMPLE: If we have 2 hour of campaign duration and a sampling period of 1 hour -> then per 1 cell we have 2 slots. 
                 """
-                create_slots(db=db, cam=campaign)
+                create_slots_campaign(db=db, cam=campaign)
             return campaign
     else:
         campaign = crud.campaign.update(db=db, db_obj=campaign, obj_in=recipe_in)

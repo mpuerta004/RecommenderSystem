@@ -677,45 +677,8 @@ def create_recomendation_2(
 
 
 def show_recomendation(*, cam:Campaign, user:Member, result:list(),time:datetime, recomendation:Recommendation,db: Session = Depends(deps.get_db))->Any:
-    # fig = plt.figure()
-    # 
-    # n_surfaces=len(cam.surfaces)
-    # n_filas = 1
-    # for i in cam.surfaces:
-    #                     a=len(i.cells)
-    #                     b=(a//5) +1
-    #                     if a%5!=0:
-    #                         b=b+1
-    #                     if n_filas<b:
-    #                         n_filas=b
-    # n_filas=n_filas+1
-                
-                
-               
-               
-    # x=random.randint(100, n_surfaces*700)
-    # y=random.randint(100, 100*n_filas
-    # imagen = 255*np.ones(( 1500, 1500,3),dtype=np.uint8)
-
-    # imagen = 255*np.ones(( 500+100*n_filas , 200+n_surfaces*600,3),dtype=np.uint8)
-    # campañas_activas= crud.campaign.get_campaign(db=db, hive_id=hive_id, campaign_id=campaign_id)
-    # if campañas_activas is None:
-    #     raise HTTPException(
-    #             status_code=404, detail=f"Campaign with campaign_id== {campaign_id}  and hive_id=={hive_id} not found"
-    #         )
+    
     count=0
-    # cv2.putText(imagen, f"Campaign: id={cam.id},", (50,50), cv2.FONT_HERSHEY_SIMPLEX , 0.75, (0,0,0))
-    # cv2.putText(imagen, f"title={cam.title}", (50,80), cv2.FONT_HERSHEY_SIMPLEX , 0.75, (0,0,0))
-    # cv2.putText(imagen, f"time={time.strftime('%m/%d/%Y, %H:%M:%S')}", (50,110), cv2.FONT_HERSHEY_SIMPLEX , 0.75, (0,0,0))
-    # cv2.putText(imagen, f"User, user_id={user.id}", (50,140), cv2.FONT_HERSHEY_SIMPLEX , 0.75, (0,0,0))
-    
-    
-    # cv2.putText(imagen, f"User Position", (500+50,50), cv2.FONT_HERSHEY_SIMPLEX , 0.75, (0,0,0))
-    # cv2.circle(imagen,color=(0,0,0),center=(500 ,45), radius=10,thickness=-1) 
-    # cv2.putText(imagen, f"Cells Recommended", (500 +50,80), cv2.FONT_HERSHEY_SIMPLEX , 0.75, (0,0,0))
-    # cv2.drawMarker(imagen, position=(500,70), color=(255,0,0), markerType=cv2.MARKER_SQUARE, markerSize= 20, thickness=2)
-    # cv2.putText(imagen, f"Cell Selected", (500+50,110), cv2.FONT_HERSHEY_SIMPLEX , 0.75, (0,0,0))
-    # cv2.drawMarker(imagen, position=(500 ,100), color=(151,45,248), markerType=cv2.MARKER_TILTED_CROSS,markerSize= 24, thickness=5)
     
     Cells_recomendadas=[]
     for i in result:
@@ -762,13 +725,7 @@ def show_recomendation(*, cam:Campaign, user:Member, result:list(),time:datetime
                 # print(list_point)
                 folium.Polygon(locations=list_point, color=line_color, fill_color=color, 
                                                                 weight=weight, popup=(folium.Popup(text)),opacity=0.5,fill_opacity=0.75).add_to(mapObj)
-                # color= (color_list[numero][2],color_list[numero][1],color_list[numero][0])
-                # pt1=(int(j.centre['Longitude'])+j.radius,int(j.centre['Latitude'])+j.radius)
-                # pt2=(int(j.centre['Longitude'])-j.radius,int(j.centre['Latitude'])-j.radius)
-                # cv2.rectangle(imagen,pt1=pt1, pt2=pt2,color=color ,thickness = -1)
-                # cv2.rectangle(imagen,pt1=pt1, pt2=pt2,color=(0,0,0))   
-                # cv2.putText(imagen,  str(Cardinal_actual), (int(j.centre['Longitude']),int(j.centre['Latitude'])
-                # cv2.putText(imagen,  str(j.id), (int(j.centre['Longitude']),int(j.centre['Latitude'])-40), cv2.FONT_HERSHEY_SIMPLEX , 0.4, (0,0,0))
+                
                 folium.Marker([lat1,lon1],
                             icon=DivIcon(
                                 icon_size=(200,36),
@@ -782,22 +739,17 @@ def show_recomendation(*, cam:Campaign, user:Member, result:list(),time:datetime
                         folium.Marker(location =[j.centre['Latitude'],j.centre['Longitude']],icon=folium.Icon(color='red', icon='pushpin'),
                                                              popup=f"SELECTED. Number of measurment: {Cardinal_actual}").add_to(mapObj)
 
-                        # cv2.drawMarker(imagen, position=(int(j.centre['Longitude']),int(j.centre['Latitude'])), color=(151,45,248), markerType=cv2.MARKER_TILTED_CROSS,markerSize= 24, thickness=5)
-                        # cv2.drawMarker(imagen, position=(int(j.centre['Longitude']),int(j.centre['Latitude'])), color=(255,0,0), markerType=cv2.MARKER_SQUARE, markerSize= 20, thickness=2)
-
+                      
                     else:
                         folium.Marker(location =[j.centre['Latitude'],j.centre['Longitude']],popup=f"Number of measurment: {Cardinal_actual}").add_to(mapObj)
 
-                        # cv2.drawMarker(imagen, position=(int(j.centre['Longitude']),int(j.centre['Latitude'])), color=(255,0,0), markerType=cv2.MARKER_SQUARE, markerSize= 20, thickness=2)
     #draw user position
     folium.Marker(location=[float(user_position['Latitude']),float(user_position['Longitude'])], 
               icon=folium.Icon(color='orange', icon='user')).add_to(mapObj)
     
-    # cv2.circle(imagen,color=(0,0,0),center=(int(user_position['Longitude']),int(user_position['Latitude'])), radius=10,thickness=-1) 
-    # res, im_png = cv2.imencode(".png", imagen)
+   
     direcion_html=f"/home/ubuntu/carpeta_compartida_docker/RecommenderSystem/src/Servicio/app/Pictures/Recomendaciones_html/{time.strftime('%m-%d-%Y-%H-%M-%S')}User_id{user.id}Cam{cam.id}HI{cam.hive_id}.html"
-    # print(direcion)
-    # cv2.imwrite(direcion, imagen)
+    
     direcion_png=f"/home/ubuntu/carpeta_compartida_docker/RecommenderSystem/src/Servicio/app/Pictures/Recomendaciones/{time.strftime('%m-%d-%Y-%H-%M-%S')}User_id{user.id}.Cam{cam.id}Hi{cam.hive_id}.png"
 
     colors = [ '#ffc3c3', '#ffdba7', '#f8f7bb', '#cbffbe', '#8ac683']
@@ -867,26 +819,7 @@ def show_a_campaign_2(
     """
     Show a campaign
     """
-    # campañas_activas= crud.campaign.get_campaign(db=db, hive_id=hive_id, campaign_id=campaign_id)
-
-    # plt.figure(figsize=(50,50))
-    # n_surfaces=len(campañas_activas.surfaces)
-    # n_filas = 1
-    # for i in campañas_activas.surfaces:
-    #                     a=len(i.cells)
-    #                     b=(a//5) +1
-    #                     if a%5!=0:
-    #                         b=b+1
-    #                     if n_filas<b:
-    #                         n_filas=b
-    # n_filas=n_filas+1
-                 
-    # x=random.randint(100, n_surfaces*700)
-    # y=random.randint(100, 100*n_filas)
-    imagen = 255*np.ones(( 1500, 1500,3),dtype=np.uint8)
-
-    # imagen = 255*np.ones(( 200+100*n_filas , 200+n_surfaces*600,3),dtype=np.uint8)
-    # imagen = 255*np.ones((1000,1500,3),dtype=np.uint8)
+    
     campañas_activas= crud.campaign.get_campaign(db=db, hive_id=hive_id, campaign_id=campaign_id)
     if campañas_activas is None:
         raise HTTPException(
@@ -931,11 +864,7 @@ def show_a_campaign_2(
                 text='text'
                 folium.Polygon(locations=list_point, color=line_color, fill_color=color, 
                                                                     weight=weight, popup=(folium.Popup(text)),opacity=0.5,fill_opacity=0.75).add_to(mapObj)
-                    # pt1 = (int(j.centre['Longitude'])+j.radius, int(j.centre['Latitude'])+j.radius)
-                    # pt2 = (int(j.centre['Longitude'])-j.radius, int(j.centre['Latitude'])-j.radius)
-                    # # print(pt1, pt2)
-                    # cv2.rectangle(imagen, pt1=pt1, pt2=pt2, color=color, thickness=-1)
-                    # cv2.rectangle(imagen, pt1=pt1, pt2=pt2, color=(0, 0, 0))
+                    
                 folium.Marker([lat1,lon1],
                             icon=DivIcon(
                                 icon_size=(200,36),
@@ -943,14 +872,7 @@ def show_a_campaign_2(
                                 html=f'<div style="font-size: 20pt">{Cardinal_actual}</div>',
                                 )
                             ).add_to(mapObj)
-                # pt1=(int(j.centre['Longitude'])+j.radius,int(j.centre['Latitude'])+j.radius)
-                # pt2=(int(j.centre['Longitude'])-j.radius,int(j.centre['Latitude'])-j.radius)
-                # # print(pt1, pt2)
-                # cv2.rectangle(imagen,pt1=pt1, pt2=pt2,color=color ,thickness = -1)
-                # cv2.rectangle(imagen,pt1=pt1, pt2=pt2,color=(0,0,0))   
-                # cv2.putText(imagen,  str(Cardinal_actual), (int(j.centre['Longitude']),int(j.centre['Latitude'])+40), cv2.FONT_HERSHEY_SIMPLEX , 0.75, (0,0,0))
-                # cv2.putText(imagen,  str(j.id), (int(j.centre['Longitude']),int(j.centre['Latitude'])-40), cv2.FONT_HERSHEY_SIMPLEX , 0.4, (0,0,0))
-
+               
     # res, im_png = cv2.imencode(".png", imagen)
     direcion_html=f"/home/ubuntu/carpeta_compartida_docker/RecommenderSystem/src/Servicio/app/Pictures/Measurements_html/{time.strftime('%m-%d-%Y-%H-%M-%S')}Cam{campañas_activas.id}Hi{campañas_activas.hive_id}.html"
     # print(direcion)
@@ -1014,60 +936,3 @@ def show_a_campaign_2(
     img.save(direcion_png)
     return None
 
-
-    # imagen = 255*np.ones((1000,1500,3),dtype=np.uint8)
-    # campañas_activas= cam #crud.campaign.get_campaign(db=db, hive_id=hive_id, campaign_id=campaign_id)
-    # if campañas_activas is None:
-    #     raise HTTPException(
-    #             status_code=404, detail=f"Campaign with campaign_id== {campaign_id}  and hive_id=={hive_id} not found"
-    #         )
-    # # count=0
-    
-    
-    # posiciones_x=[]
-    # posiciones_y=[]
-    # for i in campañas_activas.surfaces:
-           
-    #         posiciones_x.append(int(i.centre[0]) + i.radius) 
-    #         posiciones_x.append(int(i.centre[0]) - i.radius) 
-
-    #         posiciones_y.append(int(i.centre[1]) + i.radius)   
-    #         posiciones_y.append(int(i.centre[1]) - i.radius)   
-
-    #         for j in i.cells:
-    #             slot=crud.slot.get_slot_time(db=db, cell_id=j.id,time=time)
-    #             prioridad = crud.priority.get_last(db=db,slot_id=slot.id,time=time)
-    #             temporal_prioridad=prioridad.temporal_priority
-    #             if temporal_prioridad>2.5: # ROJO
-    #                 # color=(201,191,255)
-    #                 color='r'
-    #             elif temporal_prioridad<1.5: #VERDE
-    #                 # color=(175,243,184)
-    #                 color='g'
-    #             else: #NARANJA
-    #                 # color=(191, 355, 255) 
-    #                 color='y'
-    #             Cardinal_actual = crud.measurement.get_all_Measurement_from_cell_in_the_current_slot(db=db, cell_id=j.id, time=time,slot_id=slot.id)
-    #             plt.plot(int(j.centre[0]), int(j.centre[1]), 'bo',markerfacecolor=color, markersize=40)
-                
-    #             # print(temporal_prioridad/9, j.id,Cardinal_actual)
-    #             # pt1=(int(j.superior_coord[0]),int(j.superior_coord[1]))
-    #             # pt2=(int(j.inferior_coord[0]),int(j.inferior_coord[1]))
-    #             # # print(pt1, pt2)
-    #             # cv2.rectangle(imagen,pt1=pt1, pt2=pt2,color=color ,thickness = -1)
-    #             # cv2.rectangle(imagen,pt1=(int(j.superior_coord[0]),int(j.superior_coord[1])), pt2=(int(j.inferior_coord[0]),int(j.inferior_coord[1])),color=(0,0,0))   
-    #             # cv2.circle(imagen,centre=(int(j.centre[0]),int(j.centre[1])) , radiusius=j.radius, color=color, thickness=-1)
-    #             plt.text(int(j.centre[0]), int(j.centre[1]),str(Cardinal_actual),    fontdict=None)
-    #             # cv2.putText(imagen, str(Cardinal_actual), (int(j.centre[0]),int(j.centre[1])), cv2.FONT_HERSHEY_SIMPLEX , 0.75, (0,0,0))
-    # y=max(posiciones_y)
-    # x=min(posiciones_x)
-    # plt.text(x, y+10,f"Campaign: id={campañas_activas.id},",    fontdict=None)
-    # plt.text(x, y+8,f"city={campañas_activas.city}",    fontdict=None)
-    # plt.text(x, y+6,f"time={time.strftime('%m/%d/%Y, %H:%M:%S')}",    fontdict=None)
-    # plt.text(x, y+4,f"Campaign Start: id={campañas_activas.start_datetime.strftime('%m/%d/%Y, %H:%M:%S')},",    fontdict=None)
-    # plt.text(x, y+4,f"Campaign Start: id={campañas_activas.start_datetime.strftime('%m/%d/%Y, %H:%M:%S')},",    fontdict=None)
-    # res, im_png = cv2.imencode(".png", imagen)
-    direcion=f"/home/ubuntu/carpeta_compartida_docker/RecommenderSystem/src/Servicio/app/Pictures/Measurements/{time.strftime('%m-%d-%Y-%H-%M-%S')}.jpeg"
-    # print(direcion)
-    plt.savefig(direcion)
-    # cv2.imwrite(direcion, imagen)

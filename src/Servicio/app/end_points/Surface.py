@@ -128,9 +128,7 @@ def parcially_update_surface(
             db=db, campaign_id=campaign_id, obj_in=surface_create)
 
         create_cells_for_a_surface(db=db,surface=Surface, campaign=Campaign,centre=centre, radius=radius) 
-
-        
-        background_tasks.add_task(create_slots_surface, surface=Surface, hive_id=hive_id)
+        create_slots_per_surface(db=db, sur=Surface, cam=Campaign)
         db.commit()
         # updated_recipe = crud.boundary.update(db=db, db_obj=boundary, obj_in=recipe_in)
         # db.commit()

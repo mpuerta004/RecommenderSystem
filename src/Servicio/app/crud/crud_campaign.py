@@ -4,7 +4,7 @@ from schemas.Surface import Surface
 from fastapi import HTTPException
 
 from schemas.Campaign import CampaignCreate, CampaignUpdate
-from typing import Any, Dict, Optional, Union, List
+from typing import Any, Dict, Optional, Union, List, Tuple
 from fastapi.encoders import jsonable_encoder
 from schemas.Cell import Cell
 from sqlalchemy.orm import Session
@@ -45,15 +45,9 @@ class CRUDCampaign(CRUDBase[Campaign, CampaignCreate, CampaignUpdate]):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error with mysql {e}" )
   
-  def get_campaign_from_cell(self, db: Session, *,  cell_id:int) ->Campaign:
+  def get_campaign_from_surface(self,db: Session,*,  surface_id:int) ->Tuple[Campaign, Surface]:
     try:
-      return db.query(Campaign).join(Surface).join(Cell).filter(and_(Campaign.id==Surface.campaign_id, Cell.surface_id==Surface.id,Cell.id==cell_id)).first()
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error with mysql {e}" )
-  
-  def get_campaign_from_surface(self,db: Session,*,  surface_id:int) ->Campaign:
-    try:
-      return db.query(Campaign).join(Surface).filter(and_(Campaign.id==Surface.campaign_id,Surface.id==surface_id)).first()
+      return db.query(Campaign, Surface).filter(and_(Surface.campaign_id==Campaign.id,Surface.id==surface_id)).first()
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error with mysql {e}" )
       

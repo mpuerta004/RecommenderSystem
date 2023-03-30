@@ -61,17 +61,8 @@ async def state_calculation()->None:
                         hour=a.hour, minute=a.minute, second=a.second)
             
         for i in list_of_recommendations:
-            # # For simulation only! 
-            # slot=crud.slot.get_slot(db=db,slot_id=i.slot_id)
-            # cell_id=slot.cell_id
-            # cell=crud.cell.get_Cell(db=db,cell_id=cell_id)
-            
-            # cam,surface=crud.campaign.get_campaign_from_surface(db=db, surface_id=cell.surface_id)
-        
           
-            
-            # if cam.start_datetime.replace(tzinfo=timezone.utc)<=a.replace(tzinfo=timezone.utc) and a.replace(tzinfo=timezone.utc) < cam.end_datetime.replace(tzinfo=timezone.utc) :
-            if (Current_time > i.update_datetime):
+            if (Current_time > i.update_datetime): # It is necessary to run demo 
                 if (Current_time - i.update_datetime) > timedelta(minutes=7):
                     print("Modificiacion")
                     crud.recommendation.update(db=db,db_obj=i, obj_in={"state":"NON_REALIZED","update_datetime":Current_time})
