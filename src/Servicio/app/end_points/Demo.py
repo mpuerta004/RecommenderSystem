@@ -10,7 +10,7 @@ from schemas.Priority import Priority, PriorityCreate, PrioritySearchResults
 import deps
 from datetime import datetime, timezone,timedelta
 from vincenty import vincenty
-from end_points.funtionalities import get_point_at_distance
+from end_points.funtionalities import get_point_at_distance,prioriry_calculation
 import crud
 from datetime import datetime, timedelta
 import math
@@ -55,72 +55,6 @@ variables_comportamiento={"user_aceptance":0.65, "user_realize":0.3, "popularida
 
                    
 
-def prioriry_calculation_2(time:datetime, cam:Campaign, db:Session= Depends(deps.get_db)) -> None:
-            """
-            Create the priorirty based on the measurements
-            """
-    
-            # with sessionmaker.context_session() as db:
-            db.refresh(cam)
-            campaign_new=crud.campaign.get_campaign(db=db,hive_id=cam.hive_id,campaign_id=cam.id)
-            campaigns = campaign_new
-            # a = datetime.utcnow()
-            # print(a)
-            # date = datetime(year=a.year, month=a.month, day=a.day,
-            #                 hour=a.hour, minute=a.minute, second=a.second)
-            # for cam in campaigns:
-            if cam.start_datetime.replace(tzinfo=timezone.utc)<=time.replace(tzinfo=timezone.utc) and time.replace(tzinfo=timezone.utc) < cam.end_datetime.replace(tzinfo=timezone.utc) :
-                surfaces=crud.surface.get_multi_surface_from_campaign_id(db=db,campaign_id=cam.id)
-                for sur in surfaces:
-                    for cells in sur.cells:
-                # for cells in cam.cells:
-                        momento = time
-                        if (cam.start_datetime+timedelta(seconds=cam.sampling_period)).replace(tzinfo=timezone.utc)<=momento.replace(tzinfo=timezone.utc) :
-                            slot_pasado = crud.slot.get_slot_time(db=db, cell_id=cells.id, time=(
-                                 momento - timedelta(seconds=cam.sampling_period)))
-                            Cardinal_pasado =  crud.measurement.get_all_Measurement_from_cell_in_the_current_slot(
-                            db=db, cell_id=cells.id, time=slot_pasado.end_datetime, slot_id=slot_pasado.id)
-                        else:
-                            Cardinal_pasado = 0
-                        db.commit()
-                        slot = crud.slot.get_slot_time(
-                            db=db, cell_id=cells.id, time=time)
-                        if slot is None:
-                            print("Cuidado")
-                            print(time)
-                            print(f"Tengo id -> cell_id {cells.id} y slot {slot} ")
-                        Cardinal_actual = crud.measurement.get_all_Measurement_from_cell_in_the_current_slot(db=db, cell_id=cells.id, time=time,slot_id=slot.id)
-                        # b = max(2, cam.min_samples - int(Cardinal_pasado))
-                        # a = max(2, cam.min_samples - int(Cardinal_actual))
-                        # result = math.log(a) * math.log(b, int(Cardinal_actual) + 2)
-                        init=momento.replace(tzinfo=timezone.utc)   - cam.start_datetime.replace(tzinfo=timezone.utc) 
-                        
-                        a =  init - timedelta(seconds= ((init).total_seconds()//cam.sampling_period)*cam.sampling_period)
-                        if cam.min_samples==0:
-                            result= a.total_seconds()/cam.sampling_period
-                        else:
-                            result=-Cardinal_actual/cam.min_samples + a.total_seconds()/cam.sampling_period
-                        total_measurements = crud.measurement.get_all_Measurement_campaign(
-                            db=db, campaign_id=cam.id, time=time)
-                        if total_measurements==0:
-                            trendy=0.0
-                        else:
-                            measurement_of_cell = crud.measurement.get_all_Measurement_from_cell(
-                                db=db, cell_id=cells.id,time=time )
-                            
-                            n_cells = crud.cell.get_count_cells(db=db, campaign_id=cam.id)
-                            trendy = (measurement_of_cell/total_measurements)*n_cells
-                        # print("calculo popularidad popularidad", trendy)
-                        # print("calculo prioridad", result)
-                        # Maximo de la prioridad temporal -> 8.908297157282622
-                        # Minimo -> 0.1820547846864113
-                        Cell_priority = PriorityCreate(
-                            slot_id=slot.id, datetime=time, temporal_priority=result, trend_priority=trendy)  # ,cell_id=cells.id)
-                        priority = crud.priority.create_priority_detras(
-                            db=db, obj_in=Cell_priority)
-                        db.commit()
-                    
-            return None
  
 
 def reciboUser_1(cam:Campaign,db: Session = Depends(deps.get_db)):
@@ -188,7 +122,7 @@ def asignacion_recursos_all(
             time = start + timedelta(seconds=segundo)
             campaigns = crud.campaign.get_all_active_campaign(db=db,time=time)
             for cam in campaigns:
-                prioriry_calculation_2(time=time,cam=cam, db=db)
+                prioriry_calculation(time=time,cam=cam, db=db)
                 show_a_campaign_2(hive_id=cam.hive_id,campaign_id=cam.id,time=time,db=db)
             if segundo%60==0:
                 list_users= reciboUser(db=db)
@@ -225,8 +159,8 @@ def asignacion_recursos_all(
                             recomendacion_polinizar=crud.recommendation.update(db=db,db_obj=recomendation_coguida, obj_in={"state":"ACCEPTED","update_datetime":time})
                             
                             mediciones.append([user, recomendacion_polinizar, random.randint(1,600)])
-                            if user.id%2==0 :
-                                show_recomendation(db=db, cam=cam, user=user, result=recomendaciones['results'],time=time,recomendation=recomendacion_polinizar)  
+                            # if user.id%2==0 :
+                            #     show_recomendation(db=db, cam=cam, user=user, result=recomendaciones['results'],time=time,recomendation=recomendacion_polinizar)  
 
             new=[] 
             for i in range(0,len(mediciones)):
@@ -282,7 +216,7 @@ def asignacion_recursos(
             print("----------------------------------------------------------------------", segundo)
             time = cam.start_datetime + timedelta(seconds=segundo)
             
-            prioriry_calculation_2(time=time,db=db,cam=cam)
+            prioriry_calculation(time=time,db=db,cam=cam)
             # print("----------------------------------------")
             # if segundo%120 ==0:
             #     # time = cam.start_datetime + timedelta(seconds=segundo)
@@ -325,8 +259,8 @@ def asignacion_recursos(
                             recomendacion_polinizar=crud.recommendation.update(db=db,db_obj=recomendation_coguida, obj_in={"state":"ACCEPTED","update_datetime":time})
                             
                             mediciones.append([user, recomendacion_polinizar, random.randint(1,600)])
-                            if user.id%2==0 and user.id<30:
-                                show_recomendation(db=db, cam=cam, user=user, result=recomendaciones['results'],time=time,recomendation=recomendacion_polinizar)  
+                            # if user.id%2==0 and user.id<30:
+                            #     show_recomendation(db=db, cam=cam, user=user, result=recomendaciones['results'],time=time,recomendation=recomendacion_polinizar)  
 
             new=[] 
             for i in range(0,len(mediciones)):
@@ -394,7 +328,7 @@ def asignacion_recursos_con_popularidad_mucha(
             random.seed()
             print("----------------------------------------------------------------------", segundo)
             time = cam.start_datetime + timedelta(seconds=segundo)
-            prioriry_calculation_2(time=time,db=db,cam=cam)
+            prioriry_calculation(time=time,db=db,cam=cam)
             # print("----------------------------------------")
             # if segundo%120 ==0:
             #     # time = cam.start_datetime + timedelta(seconds=segundo)
@@ -437,7 +371,7 @@ def asignacion_recursos_con_popularidad_mucha(
                                 
                             mediciones.append([user, recomendacion_polinizar, random.randint(1,600)])
 
-                            show_recomendation(db=db, cam=cam, user=user, result=recomendaciones['results'],time=time,recomendation=recomendacion_polinizar)  
+                            # show_recomendation(db=db, cam=cam, user=user, result=recomendaciones['results'],time=time,recomendation=recomendacion_polinizar)  
 
             new=[] 
             for i in range(0,len(mediciones)):
@@ -615,11 +549,11 @@ def create_recomendation_2(
     for i in cells: 
             centre= i[0].centre
             point= recipe_in.member_current_location
-            if centre['Latitude'] == point['Latitude'] and centre['Longitude'] == point['Longitude']:
-                distancia=0
-                print("Distancia 0")
-            else:
-                distancia = vincenty( (centre['Latitude'],centre['Longitude']), ( point['Latitude'],(point['Longitude'])) )           
+            # if centre['Latitude'] == point['Latitude'] and centre['Longitude'] == point['Longitude']:
+            #     distancia=0
+            #     print("Distancia 0")
+            # else:
+            distancia = vincenty( (centre['Latitude'],centre['Longitude']), ( point['Latitude'],(point['Longitude'])) )           
     
             if distancia<=(i[1].cells_distance)*2:
                 List_cells_cercanas.append(i)

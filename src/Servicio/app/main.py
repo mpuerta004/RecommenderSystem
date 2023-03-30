@@ -10,7 +10,7 @@ from fastapi import (APIRouter, FastAPI)
 from fastapi.templating import Jinja2Templates
 from fastapi_utils.session import FastAPISessionMaker
 from datetime import datetime, timezone,timedelta
-
+from end_points.funtionalities import prioriry_calculation
 SQLALCHEMY_DATABASE_URL = "mysql+mysqlconnector://mve:mvepasswd123@localhost:3306/SocioBee"
 sessionmaker = FastAPISessionMaker(SQLALCHEMY_DATABASE_URL)
 
@@ -38,7 +38,7 @@ app.include_router(sync.api_router_sync, tags=["Sync"])
 api_router = APIRouter()
 
 
-async def prioriry_calculation() -> None:
+async def prioriry_calculation_main() -> None:
     """
     Create the priorirty af all campaign based on the measurements
     """
@@ -47,7 +47,7 @@ async def prioriry_calculation() -> None:
         time= datetime.utcnow()
         List_campaigns = crud.campaign.get_all_active_campaign(db=db,time=time)
         for cam in List_campaigns:
-            Demo.prioriry_calculation_2(time=time,cam=cam, db=db)
+            prioriry_calculation(time=time,cam=cam, db=db)
         db.close()
     return None
 
