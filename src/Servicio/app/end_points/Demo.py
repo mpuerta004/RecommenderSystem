@@ -123,7 +123,7 @@ def asignacion_recursos_all(
             campaigns = crud.campaign.get_all_active_campaign(db=db,time=time)
             for cam in campaigns:
                 prioriry_calculation(time=time,cam=cam, db=db)
-                show_a_campaign_2(hive_id=cam.hive_id,campaign_id=cam.id,time=time,db=db)
+                # show_a_campaign_2(hive_id=cam.hive_id,campaign_id=cam.id,time=time,db=db)
             if segundo%60==0:
                 list_users= reciboUser(db=db)
                 if list_users!=[]:
@@ -229,7 +229,7 @@ def asignacion_recursos(
             #         db.commit()
             # #Tengo un usuario al que hacer una recomendacion. 
             if segundo%60==0:
-                show_a_campaign_2(hive_id=cam.hive_id,campaign_id=cam.id,time=time,db=db)
+                # show_a_campaign_2(hive_id=cam.hive_id,campaign_id=cam.id,time=time,db=db)
               
                 list_users= reciboUser_1(db=db,cam=cam)
                 if list_users!=[]:

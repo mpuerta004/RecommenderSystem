@@ -16,8 +16,7 @@ from schemas.Slot import Slot, SlotCreate, SlotSearchResults
 from schemas.Surface import Surface, SurfaceCreate, SurfaceSearchResults
 from sqlalchemy.orm import Session
 from end_points.funtionalities import create_slots_per_cell
-SQLALCHEMY_DATABASE_URL = "mysql+mysqlconnector://root:mypasswd@localhost:3306/SocioBee"
-sessionmaker = FastAPISessionMaker(SQLALCHEMY_DATABASE_URL)
+
 
 api_router_cell = APIRouter(prefix="/surfaces/{surface_id}/cells")
 

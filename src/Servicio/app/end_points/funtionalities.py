@@ -1,17 +1,18 @@
 import asyncio
 import math
-import deps
 from datetime import datetime, timedelta, timezone
 from math import asin, atan2, cos, degrees, radians, sin, sqrt
 from typing import Any, Dict, Generic, List, Optional, Type, TypeVar, Union
+
 import crud
+import deps
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query
 from numpy import arccos, cos, pi, round, sin
 from schemas.Boundary import BoundaryCreate
 from schemas.Campaign import (Campaign, CampaignCreate, CampaignSearchResults,
                               CampaignUpdate)
 from schemas.Campaign_Member import Campaign_MemberCreate
-from schemas.Cell import CellCreate, CellSearchResults, Point, Cell
+from schemas.Cell import Cell, CellCreate, CellSearchResults, Point
 from schemas.Priority import Priority, PriorityCreate, PrioritySearchResults
 from schemas.Slot import Slot, SlotCreate, SlotSearchResults
 from schemas.Surface import Surface, SurfaceCreate, SurfaceSearchResults
@@ -117,7 +118,7 @@ def prioriry_calculation(time: datetime, cam: Campaign, db: Session = Depends(de
     """
 
     db.refresh(cam)
-   
+
     if cam.start_datetime.replace(tzinfo=timezone.utc) <= time.replace(tzinfo=timezone.utc) and time.replace(tzinfo=timezone.utc) < cam.end_datetime.replace(tzinfo=timezone.utc):
         surfaces = crud.surface.get_multi_surface_from_campaign_id(
             db=db, campaign_id=cam.id)
@@ -125,7 +126,7 @@ def prioriry_calculation(time: datetime, cam: Campaign, db: Session = Depends(de
             for cells in sur.cells:
                 # for cells in cam.cells:
                 momento = time
-                #Verify if momento is not in the first slot
+                # Verify if momento is not in the first slot
                 # if (cam.start_datetime+timedelta(seconds=cam.sampling_period)).replace(tzinfo=timezone.utc) <= momento.replace(tzinfo=timezone.utc):
                 #     slot_pasado = crud.slot.get_slot_time(db=db, cell_id=cells.id, time=(
                 #         momento - timedelta(seconds=cam.sampling_period-1)))
@@ -150,16 +151,16 @@ def prioriry_calculation(time: datetime, cam: Campaign, db: Session = Depends(de
 
                 a = init - timedelta(seconds=((init).total_seconds() //
                                      cam.sampling_period)*cam.sampling_period)
-                if cam.min_samples == 0: # To dont have a infinite reward. 
-                    result = ( a.total_seconds() - Cardinal_actual) /cam.sampling_period 
+                if cam.min_samples == 0:  # To dont have a infinite reward.
+                    result = (a.total_seconds() - Cardinal_actual) / cam.sampling_period
                 else:
                     if Cardinal_actual == cam.min_samples:
-                        result=-1.0
+                        result = -1.0
                     else:
-                        result =  a.total_seconds()/cam.sampling_period -Cardinal_actual/cam.min_samples
+                        result = a.total_seconds()/cam.sampling_period - Cardinal_actual/cam.min_samples
                 total_measurements = crud.measurement.get_all_Measurement_campaign(
                     db=db, campaign_id=cam.id, time=time)
-                if total_measurements == 0:
+                if total_measurements == 0.0:  # Important not divide by 0.0.
                     trendy = 0.0
                 else:
                     measurement_of_cell = crud.measurement.get_all_Measurement_from_cell(

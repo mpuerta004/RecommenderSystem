@@ -42,6 +42,7 @@ class CRUDSurface(CRUDBase[Surface, SurfaceCreate, SurfaceUpdate]):
             db.delete(obj)
             db.commit()
             return obj
+         
          except Exception as e:
                         raise HTTPException(status_code=500, detail=f"Error with mysql {e}" )
    
