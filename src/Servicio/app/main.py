@@ -72,7 +72,7 @@ async def state_calculation()->None:
 
 #Funtions that automaticaly calculate the priority.
 def final_funtion():
-    asyncio.run(prioriry_calculation())
+    asyncio.run(prioriry_calculation_main())
     print("He terminado!")
 
 #Funtions that automaticaly calculate the update of the states. 

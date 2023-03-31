@@ -1,8 +1,8 @@
+import math
 from datetime import timezone
 from pathlib import Path
 from typing import Any, List, Optional
-from vincenty import vincenty
-import math
+
 import crud
 import deps
 import numpy as np
@@ -13,10 +13,11 @@ from schemas.Cell import Cell, CellCreate, CellSearchResults, Point
 from schemas.Measurement import (Measurement, MeasurementCreate,
                                  MeasurementSearchResults, MeasurementUpdate)
 from sqlalchemy.orm import Session
+from vincenty import vincenty
 
 api_router_measurements = APIRouter(prefix="/members/{member_id}/measurements")
 
-########### GEt all measurements of a member ############
+########### Get all measurements of a member ############
 @api_router_measurements.get("/", status_code=200, response_model=MeasurementSearchResults)
 def search_all_measurements_of_member(*,
                                       member_id: int,
@@ -66,7 +67,7 @@ def get_measurement(*,
 def delete_measurement(*,
                        member_id: int,
                        measurement_id: int,
-                       db: Session = Depends(deps.get_db),
+                       db: Session = Depends(deps.get_db)
                        ):
     """
     Delete a measurement in the database.

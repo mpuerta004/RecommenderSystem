@@ -386,11 +386,11 @@ def update_the_role_of_a_member_in_hive(
         raise HTTPException(
             status_code=404, detail=f"This member is not in the hive. "
         )
-    # IF the new role is a QueenBee, we need to verify if there is already a QueenBee in the hive.
+    # If the new role is a QueenBee, we need to verify if there is already a QueenBee in the hive.
     if role.role == "QueenBee":
         QueenBee = crud.hive_member.get_by_role_hive(
             db=db, hive_id=hive_id, role="QueenBee")
-        # IF we dont have a QueenBee in the hive, we can not run a campaign.
+        # If we dont have a QueenBee in the hive, we can not run a campaign.
         # NOTE: MVE dont verify THIS
         if QueenBee is None:
 

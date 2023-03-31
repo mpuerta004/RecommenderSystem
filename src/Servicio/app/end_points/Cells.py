@@ -211,7 +211,7 @@ def create_cell(
         )
 
 
-########## PUT -update a cell- enpoint   ##########
+########## PUT - update a cell- enpoint   ##########
 @api_router_cell.put("/{cell_id}", status_code=201, response_model=Cell)
 def update_cell(
     *,
@@ -225,13 +225,10 @@ def update_cell(
     """
     Update cell 
     """
-    """
-    Checks! 
-    """
+   
     
-    #Obtain the hive
+    #Obtain the hive and Verify if the hive exists
     hive = crud.hive.get(db=db, id=hive_id)
-    #Verify if the hive exists
     if hive is None:
         raise HTTPException(
             status_code=404, detail=f"Hive with id=={hive_id} not found")
