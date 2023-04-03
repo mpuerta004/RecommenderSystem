@@ -127,7 +127,7 @@ def get_a_beekeeper(
     db: Session = Depends(deps.get_db),
 ) -> dict:
     """
-    Get a BeeKeeper
+    Get a Hive of the beekeeper.
     """
     #Get the beekeeper from the database and verify if exists
     beekeeper = crud.beekeeper.get_by_id(db=db, id=beekeeper_id)

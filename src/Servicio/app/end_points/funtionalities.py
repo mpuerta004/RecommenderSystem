@@ -204,7 +204,6 @@ def create_List_of_points_for_a_boundary(cells_distance, centre, radius):
                     lon1=lon1, lat1=lat1, d=distance, bearing=direction)
 
                 list_point.append([lon2, lat2])
-                # print(lat2,lon2)
                 if direction == 90:
                     final1 = [lon2, lat2]
                 if direction == 270:
