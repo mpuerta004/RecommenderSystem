@@ -50,7 +50,6 @@ import deps
 import crud
 from datetime import datetime, timedelta
 import math 
-from haversine import haversine, Unit
 from vincenty import vincenty
 import numpy as np
 from numpy import sin, cos, arccos, pi, round

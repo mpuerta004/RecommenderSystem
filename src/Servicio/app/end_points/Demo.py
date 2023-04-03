@@ -16,7 +16,6 @@ import crud
 from datetime import datetime, timedelta
 import math
 import numpy as np
-import cv2
 import numpy as np
 import io
 from PIL import Image                     
@@ -38,7 +37,7 @@ SQLALCHEMY_DATABASE_URL = "mysql+mysqlconnector://mve:mvepasswd123@localhost:330
 sessionmaker = FastAPISessionMaker(SQLALCHEMY_DATABASE_URL)
 
 import numpy as np 
-import matplotlib.pyplot as plt
+
 
 
 color_list=[

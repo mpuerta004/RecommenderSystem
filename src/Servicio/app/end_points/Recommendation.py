@@ -15,7 +15,7 @@ from end_points.funtionalities import prioriry_calculation
 
 api_router_recommendation = APIRouter(prefix="/members/{member_id}/recommendations")
 
-
+################################ GET  Recommendation ########################################
 @api_router_recommendation.get("/", status_code=200, response_model=RecommendationSearchResults)
 def search_all_recommendations_of_member(
     *,
@@ -25,15 +25,19 @@ def search_all_recommendations_of_member(
     """
     Search all recommendations of a member
     """
+    #Get the member and verify if it exists
     member = crud.member.get_by_id(db=db, id=member_id)
     if member is None:
         raise HTTPException(
             status_code=404, detail=f"Member with id=={member_id} not found"
         )
+    #return the list of recommendations of the member
     measurement = crud.recommendation.get_All_Recommendation(db=db, member_id=member_id)
     return {"results": list(measurement)}
 
 
+
+################################ GET  Recommendation ########################################
 @api_router_recommendation.get("/{recommendation_id}", status_code=200, response_model=RecommendationSearchResults)
 def get_recommendation(
     *,
@@ -44,11 +48,14 @@ def get_recommendation(
     """
     Get a recommendation 
     """
+    
+    #Get the member and verify if it exists
     member = crud.member.get_by_id(db=db, id=member_id)
     if member is None:
         raise HTTPException(
             status_code=404, detail=f"Member with id=={member_id} not found"
         )
+    #Get the recommendation and verify if it exists
     result = crud.recommendation.get_recommendation(
         db=db, recommendation_id=recommendation_id, member_id=member_id)
     if result is None:
@@ -58,6 +65,7 @@ def get_recommendation(
     return {"results": result}
 
 
+####################################### POST ########################################
 @api_router_recommendation.post("/", status_code=201, response_model=RecommendationCellSearchResults)
 def create_recomendation(
     *,
@@ -68,11 +76,13 @@ def create_recomendation(
     """
     Create recomendation
     """
+    #Get the member and verify if it exists
     user = crud.member.get_by_id(db=db, id=member_id)
     if user is None:
         raise HTTPException(
             status_code=404, detail=f"Member with id=={member_id} not found"
         )
+    #Get 
     time = datetime.utcnow()
     campaign_member = crud.campaign_member.get_Campaigns_of_member(
         db=db, member_id=user.id)
