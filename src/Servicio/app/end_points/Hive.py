@@ -52,7 +52,11 @@ def create_hive(*,
         )
         
     """Calculate the id of the new hive."""
-    maximo= crud.hive.maximun_id(db=db) +1
+    id=crud.hive.maximun_id(db=db) 
+    if id is None:
+        maximo=1
+    else:
+        maximo= id +1
     hive = crud.hive.create_hive(db=db, obj_in=recipe_in, id=maximo)
 
     return hive
@@ -178,7 +182,11 @@ def create_a_new_member_for_a_hive_with_especific_role(
             db=db, hive_id=hive_id, role="QueenBee")
         if QueenBee is None:
             # Calculate the maximun id of the member identities in the database and add 1
-            maximo = crud.member.maximun_id(db=db) + 1
+            id=crud.member.maximun_id(db=db)
+            if id is None: 
+                maximo=1
+            else:
+                maximo = id + 1
             # create the new member
             member_new = crud.member.create_member(db=db, obj_in=member, id=maximo)
             # Insert the new member in the hive though the Hive_Member entity
@@ -203,7 +211,11 @@ def create_a_new_member_for_a_hive_with_especific_role(
             )
     else:
         # Calculate the maximun id of the member identities in the database and add 1
-        maximo = crud.member.maximun_id(db=db) + 1
+        id= crud.member.maximun_id(db=db)
+        if id is None:
+            maximo=1
+        else:
+            maximo = crud.member.maximun_id(db=db) + 1
         # create the new member
         member_new = crud.member.create_member(db=db, obj_in=member, id=maximo)
         # Insert the new member in the hive though the Hive_Member entity

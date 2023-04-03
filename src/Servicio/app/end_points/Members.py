@@ -68,7 +68,11 @@ def create_member(
     Create a new member. 
     """
     # Get the last id and add 1 to create a new id
-    maximo = crud.member.maximun_id(db=db)+1
+    id= crud.member.maximun_id(db=db)
+    if id is None:
+        id=1
+    else:
+        maximo = id+1
     # create the new member
     member_new = crud.member.create_member(db=db, obj_in=recipe_in, id=maximo)
 

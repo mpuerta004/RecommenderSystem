@@ -38,7 +38,11 @@ def create_a_device(*,
     Create a new device in the database.
     """
     # Calculate the id of the new device.
-    maximo = crud.device.get_max_id(db=db) +1
+    id= crud.device.maximun_id(db=db)
+    if id is None:
+        maximo=1
+    else:
+        maximo = id +1
     #Create the new device
     device = crud.device.create_device(db=db, obj_in=recipe_in, id=maximo)
 
