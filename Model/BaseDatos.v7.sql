@@ -1,19 +1,19 @@
 /* DELETE 'SocioBee' database*/
-DROP DATABASE IF EXISTS SocioBee;
+DROP DATABASE IF EXISTS SocioBeeMVE;
 /* DELETE USER 'mve' AT LOCAL SERVER*/
 DROP USER IF EXISTS 'mve'@'localhost';
 DROP USER IF EXISTS 'mve_automatic'@'localhost';
 
 
-CREATE DATABASE SocioBee;
-Use SocioBee;
+CREATE DATABASE SocioBeeMVE;
+Use SocioBeeMVE;
 
 /* CREATE THE USER 'spq' AT LOCAL SERVER WITH PASSWORD 'spq' */
 CREATE USER IF NOT EXISTS 'mve'@'localhost' IDENTIFIED BY 'mvepasswd123';
 CREATE USER IF NOT EXISTS 'mve_automatic'@'localhost' IDENTIFIED BY 'mvepasswd123';
 
-GRANT ALL PRIVILEGES ON SocioBee.*  TO 'mve'@'localhost';
-GRANT ALL PRIVILEGES ON SocioBee.*  TO 'mve_automatic'@'localhost';
+GRANT ALL PRIVILEGES ON SocioBeeMVE.*  TO 'mve'@'localhost';
+GRANT ALL PRIVILEGES ON SocioBeeMVE.*  TO 'mve_automatic'@'localhost';
 
 -- -----------------------------------------------------
 -- Table Member

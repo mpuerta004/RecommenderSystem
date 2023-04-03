@@ -33,7 +33,7 @@ from fastapi_utils.session import FastAPISessionMaker
 # from end_points.Recommendation import create_recomendation
 import random
 api_router_demo = APIRouter(prefix="/demos/hives/{hive_id}/campaigns")
-SQLALCHEMY_DATABASE_URL = "mysql+mysqlconnector://mve:mvepasswd123@localhost:3306/SocioBee"
+SQLALCHEMY_DATABASE_URL = "mysql+mysqlconnector://mve:mvepasswd123@localhost:3306/SocioBeeMVE"
 sessionmaker = FastAPISessionMaker(SQLALCHEMY_DATABASE_URL)
 
 import numpy as np 
@@ -235,8 +235,6 @@ def asignacion_recursos(
                 if list_users!=[]:
                     for user in list_users:
                         #generate the user position, select randomly a surface and generate a point closer in a random direction of this surface.
-
-                        #Genero las recomendaciones y la que el usuario selecciona y el tiempo que va a tardar en realizar dicho recomendacion. 
                         n_surfaces=len(cam.surfaces)
                         surface_indice= random.randint(0,n_surfaces-1)
                         boundary= cam.surfaces[surface_indice].boundary

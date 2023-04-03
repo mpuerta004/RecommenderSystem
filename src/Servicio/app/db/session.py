@@ -4,7 +4,7 @@ from sqlalchemy.orm import sessionmaker
 
 
 # mysql.connector.connect(host='localhost', user='mve', passwd='mvepassword', db='SocioBee')
-SQLALCHEMY_DATABASE_URL = "mysql+mysqlconnector://mve:mvepasswd123@localhost:3306/SocioBee"
+SQLALCHEMY_DATABASE_URL = "mysql+mysqlconnector://mve:mvepasswd123@localhost:3306/SocioBeeMVE"
 # SQLALCHEMY_DATABASE_URL = "postgresql://user:password@postgresserver/db"
 
 # SQLALCHEMY_DATABASE_URL = (
