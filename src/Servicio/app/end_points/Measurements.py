@@ -144,9 +144,9 @@ def create_measurement(
 
                             if distance <= hipotenusa:
                                 list_posible_cells_surface_campaign_distance.append((cell, surface, campaign, distance))
-    
+    #List of close cells in where user could was.
     list_posible_cells_surface_campaign_distance.sort(key=lambda tuple: (-tuple[3] ),reverse=True)
-                   
+    # Se these cells are sort by the distance ->  the first one is the most sure               
     cell_id = list_posible_cells_surface_campaign_distance[0][0].id
     surface = list_posible_cells_surface_campaign_distance[0][1]
     campaign_finaly = list_posible_cells_surface_campaign_distance[0][2]

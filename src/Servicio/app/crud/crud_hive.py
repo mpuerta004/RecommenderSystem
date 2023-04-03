@@ -56,7 +56,15 @@ class CRUDHive(CRUDBase[Hive, HiveCreate, HiveUpdate]):
                 except Exception as e:
                         raise HTTPException(status_code=500, detail=f"Error with mysql {e}" )
         
-
-
+        def get_by_beekeeper_id(self, *, beekeeper_id:int, db:Session) -> List[Hive]:
+                try:
+                        return db.query(Hive).filter(Hive.beekeeper_id==beekeeper_id).all()
+                except Exception as e:
+                        raise HTTPException(status_code=500, detail=f"Error with mysql {e}" )           
+        def get_by_id(self, *, id:int, db:Session) -> Hive:	
+                try:
+                        return db.query(Hive).filter(Hive.id==id).first()
+                except Exception as e:
+                        raise HTTPException(status_code=500, detail=f"Error with mysql {e}" )           
 
 hive = CRUDHive(Hive)

@@ -5,6 +5,7 @@ from typing import Any, Dict, Generic, List, Optional, Type, TypeVar, Union
 from typing import Optional, Any, List
 from sqlalchemy.orm import Session
 
+from schemas.Hive import HiveSearchResults
 from schemas.Member import Member,MemberCreate,MemberSearchResults, MemberUpdate
 from schemas.Member_Device import Member_DeviceCreate
 from schemas.Member_Device import Member_Device,Member_DeviceUpdate
@@ -289,3 +290,32 @@ def delete_member_device(    *,
 
 
    
+   
+@api_router_members.get("/{member_id}/hives", status_code=200, response_model=HiveSearchResults)
+def get_a_member(
+    *,
+    member_id:int,
+    db: Session = Depends(deps.get_db),
+) -> Cell:
+    """
+    Get hives of the 
+    """
+    
+    
+    user=crud.member.get_by_id(db=db, id=member_id)
+
+    if  user is None:
+        raise HTTPException(
+            status_code=404, detail=f"Member with id=={member_id} not found"
+        )
+            
+    List_hive_member=crud.hive_member.get_by_member_id(db=db, member_id=member_id)
+    list_hive=[]
+    for i in List_hive_member:
+        hive=crud.hive.get_by_id(db=db, id=i.hive_id)
+        if hive is not None:
+            
+            list_hive.append(hive)
+
+    
+    return{"results": list_hive}
