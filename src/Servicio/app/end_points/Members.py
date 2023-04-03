@@ -284,7 +284,5 @@ def get_a_member(
         #Get the hives
         hive = crud.hive.get_by_id(db=db, id=i.hive_id)
         if hive is not None:
-
             list_hive.append(hive)
-
     return {"results": list_hive}
