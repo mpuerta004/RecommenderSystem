@@ -1,4 +1,7 @@
 /* DELETE 'SocioBee' database*/
+
+SET FOREIGN_KEY_CHECKS=0;
+SET GLOBAL validate_password.policy=LOW;
 DROP DATABASE IF EXISTS SocioBeeMVE;
 /* DELETE USER 'mve' AT LOCAL SERVER*/
 DROP USER IF EXISTS 'mve'@'localhost';
