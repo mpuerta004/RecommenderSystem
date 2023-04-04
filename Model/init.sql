@@ -7,14 +7,17 @@ DROP USER IF EXISTS 'mve_automatic'@'localhost';
 CREATE DATABASE SocioBeeMVE;
 use SocioBeeMVE;
 
-/* CREATE THE USER 'spq' AT LOCAL SERVER WITH PASSWORD 'spq' */
+/* CREATE THE USER 'mve' AT LOCAL and REMOTE SERVER WITH PASSWORD 'mvepasswd123' */
 CREATE USER IF NOT EXISTS 'mve'@'localhost' IDENTIFIED BY 'mvepasswd123';
 CREATE USER IF NOT EXISTS 'mve'@'%' IDENTIFIED BY 'mvepasswd123';
 CREATE USER IF NOT EXISTS 'mve_automatic'@'localhost' IDENTIFIED BY 'mvepasswd123';
 CREATE USER IF NOT EXISTS 'mve_automatic'@'%' IDENTIFIED BY 'mvepasswd123';
 
 GRANT ALL PRIVILEGES ON SocioBeeMVE.*  TO 'mve'@'localhost';
+GRANT ALL PRIVILEGES ON SocioBeeMVE.*  TO 'mve'@'%';
 GRANT ALL PRIVILEGES ON SocioBeeMVE.*  TO 'mve_automatic'@'localhost';
+GRANT ALL PRIVILEGES ON SocioBeeMVE.*  TO 'mve_automatic'@'%';
+
 
 -- -----------------------------------------------------
 -- Table Member
@@ -32,7 +35,11 @@ CREATE TABLE Member (
   real_user  BOOLEAN,
   PRIMARY KEY (id)
   );
+<<<<<<< HEAD
   
+=======
+
+>>>>>>> ad47609c031067c6e49107c2e45ab2c9fc91669c
 CREATE TABLE  BeeKeeper(
   id INT NOT NULL,
   birthday datetime,
@@ -213,7 +220,11 @@ CREATE TABLE Recommendation (
   member_current_location POINT NULL, 
   CONSTRAINT state_type CHECK (state IN ("NOTIFIED","ACCEPTED","REALIZED","NON_REALIZED")),
   PRIMARY KEY (id,member_id),
+<<<<<<< HEAD
   
+=======
+
+>>>>>>> ad47609c031067c6e49107c2e45ab2c9fc91669c
     FOREIGN KEY (member_id)
     REFERENCES Member (id)
     ON DELETE CASCADE,
@@ -242,7 +253,11 @@ CREATE TABLE Measurement (
   pm1 DOUBLE NULL DEFAULT NULL,
   benzene DOUBLE NULL DEFAULT NULL,
   PRIMARY KEY (id, member_id),
+<<<<<<< HEAD
   
+=======
+
+>>>>>>> ad47609c031067c6e49107c2e45ab2c9fc91669c
     FOREIGN KEY (member_id)
     REFERENCES Member (id)
     ON DELETE CASCADE,
@@ -271,5 +286,9 @@ CREATE TABLE Priority (
   PRIMARY KEY (slot_id, datetime),
     FOREIGN KEY (slot_id)
     REFERENCES Slot (id)
+<<<<<<< HEAD
     ON DELETE CASCADE);
 
+=======
+    ON DELETE CASCADE);
+>>>>>>> ad47609c031067c6e49107c2e45ab2c9fc91669c
