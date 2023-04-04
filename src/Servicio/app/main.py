@@ -11,7 +11,7 @@ from fastapi.templating import Jinja2Templates
 from fastapi_utils.session import FastAPISessionMaker
 from datetime import datetime, timezone,timedelta
 from end_points.funtionalities import prioriry_calculation
-SQLALCHEMY_DATABASE_URL = "mysql+mysqlconnector://mve:mvepasswd123@localhost:3306/SocioBeeMVE"
+SQLALCHEMY_DATABASE_URL = "mysql+mysqlconnector://root:mypasswd@mysql:3306/SocioBeeMVE"
 sessionmaker = FastAPISessionMaker(SQLALCHEMY_DATABASE_URL)
 
 

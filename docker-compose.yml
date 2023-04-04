@@ -1,0 +1,53 @@
+version: '3'
+services:
+  # proxy:
+  #     build: ./proxy
+  #     networks:
+  #       - frontend
+  mysql:
+    image: mysql
+    volumes:
+    - ./Model/init.sql:/docker-entrypoint-initdb.d/dump.sql
+    container_name: mysql
+    # networks:
+    #   - db
+    command: --default-authentication-plugin=mysql_native_password
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: mypasswd
+    ports:
+      - "3306:3306"
+    
+  api:
+    depends_on:
+      - mysql
+    container_name: MVE
+    platform: linux/x86_64
+    build: .
+    links:
+    - mysql
+    # networks:
+    #   - db
+    #   - api
+    restart: always
+    tty: true
+    # volumes:
+    #   - ".:/home/ubuntu/carpeta_compartida_docker/RecommenderSystem"
+    ports:
+      - 8001:8001
+    environment:
+      - APP_SECRET_STRING=archmage
+      - DATABASE_USERNAME=mve
+      - DATABASE_PASSWORD=mvepasswd123
+      - DATABASE=SocioBeeMVE
+      - DATABASE_HOST=mysql
+# networks:
+#   db:
+#     # Use a custom driver
+#     driver: custom-driver-1
+#   api:
+#     # Use a custom driver which takes special options
+#     driver: custom-driver-2
+#     driver_opts:
+#       foo: "1"
+#       bar: "2"
