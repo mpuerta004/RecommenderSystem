@@ -2,7 +2,13 @@
 
 ## Execution
 
-You have to follow these steps to be able to launch the Micro-Volunteering Engine (MVE): 
+You may launch with the support of Docker the Micro-Volunteering Engine (MVE). For that follow these steps:
+1. `git clone https://github.com/mpuerta004/RecommenderSystem` to get hold of the source code of MVE
+2. `cd RecommenderSystem`
+3. `docker-compose up`
+4. Visit the following URL in your browser: http://localhost:8001/docs
+
+Alternatively, you may follow these manual steps to be able to launch the Micro-Volunteering Engine (MVE): 
 1. `git clone https://github.com/mpuerta004/RecommenderSystem` to get hold of the source code of MVE
 2. `git fetch --all`
 3. `pip install poetry` (or safer, follow the instructions: https://python-poetry.org/docs/#installation)
