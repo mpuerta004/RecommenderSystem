@@ -21,6 +21,7 @@ folium = "^0.14.0"
 vincenty = "^0.1.4"
 pillow = "^9.5.0"
 selenium = "^4.8.3"
+pytz = "^2023.3"
 
 
 [build-system]

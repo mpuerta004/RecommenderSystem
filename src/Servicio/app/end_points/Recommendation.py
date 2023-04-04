@@ -161,8 +161,9 @@ def create_recomendation(
             slot = cells_and_priority[i][5]
             recomendation = crud.recommendation.create_recommendation_detras(
                 db=db, obj_in=recipe_in, member_id=member_id, slot_id=slot.id, state="NOTIFIED", update_datetime=time, sent_datetime=time)
+            cell=crud.cell.get(db=db,id=slot.cell_id)
             result.append(RecommendationCell(
-                recommendation=recomendation, cell=slot.cell_id))
+                recommendation=recomendation, cell=cell))
         return {"results": result}
 
     else:
