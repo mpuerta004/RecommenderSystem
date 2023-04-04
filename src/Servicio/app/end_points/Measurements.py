@@ -141,9 +141,10 @@ def create_measurement(
                     hipotenusa = math.sqrt(2*((campaign.cells_distance/2)**2))
                     if list_cells is not []:
                         for cell in list_cells:
-                            distance = vincenty(( centre['Latitude'],centre['Longitude']), ( recipe_in.location['Latitude'],recipe_in.location['Longitude']))
+                            
+                            distance2 = vincenty(( cell.centre['Latitude'],cell.centre['Longitude']), ( recipe_in.location['Latitude'],recipe_in.location['Longitude']))
 
-                            if distance <= hipotenusa:
+                            if distance2 <= hipotenusa:
                                 list_posible_cells_surface_campaign_distance.append((cell, surface, campaign, distance))
     if list_posible_cells_surface_campaign_distance == []:
         raise HTTPException(
