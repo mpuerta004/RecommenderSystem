@@ -82,53 +82,51 @@ def create_recomendation(
         raise HTTPException(
             status_code=404, detail=f"Member with id=={member_id} not found"
         )
-    #Get 
+    #Get time and campaign of the member
     time = datetime.utcnow()
     campaign_member = crud.campaign_member.get_Campaigns_of_member(
         db=db, member_id=user.id)
+    
+    # We will calculate the cells and the campaign in where the user is. 
+    List_cells_cercanas = [] #List of cells that are close to the user
+    cells = [] # Lits of tuple (cell, campaign) 
+    user_position= recipe_in.member_current_location
 
-    # hives=crud.hive_member.get_by_member_id(db=db, member_id=user.id)
-    # for i in hive
-    #     if not (i.hive_id in  hives):
-    #         hives.append(i.hive_id)
-    #     print(i.role)
-    #     if i.role =="WorkerBee" or i.role=="QueenBee":
-    #         admi=True
-    # if admi:
-    # Calcular las celdas
-    List_cells_cercanas = []
-    cells = []
-    # for i in hives:
-    #         campaign=crud.campaign.get_campaigns_from_hive_id_active(db=db,hive_id=i.hive_id,time=time)
     for i in campaign_member:
         if (i.role == "QueenBee" or i.role == "WorkerBee"):
             campaign = crud.campaign.get(db=db, id=i.campaign_id)
             if campaign.start_datetime.replace(tzinfo=timezone.utc) <= time.replace(tzinfo=timezone.utc) and time.replace(tzinfo=timezone.utc) <= campaign.end_datetime.replace(tzinfo=timezone.utc):
                 a = crud.cell.get_cells_campaign(db=db, campaign_id=i.campaign_id)
+                cell_distance= campaign.cells_distance
                 if len(a) != 0:
-                    for l in a:
-                        cells.append([l, campaign])
-    if len(cells) == 0:
+                    for cell in a:
+                        distancia = vincenty(
+                                        (cell.centre['Latitude'], cell.centre['Longitude']), (user_position['Latitude'], (user_position['Longitude'])))
+                        
+                        if distancia <= (cell_distance)*2:
+                                List_cells_cercanas.append((cell, campaign, distancia))
+                        # cells.append([cell, campaign])
+    # if len(cells) == 0:
+    #     raise HTTPException(
+    #         status_code=404, detail=f"The user dont participate as WB or QB in any active campaign"
+    #     )
+    # for i in cells:
+    #     centre = i[0].centre
+    #     point = recipe_in.member_current_location
+    #     distancia = vincenty(
+    #         (centre['Latitude'], centre['Longitude']), (point['Latitude'], (point['Longitude'])))
+
+    #     if distancia <= (i[1].cells_distance)*2:
+    #         List_cells_cercanas.append(i)
+    
+    #We will order the cells by priority
+    if List_cells_cercanas == []:
         raise HTTPException(
             status_code=404, detail=f"The user dont participate as WB or QB in any active campaign"
-        )
-    for i in cells:
-        centre = i[0].centre
-        point = recipe_in.member_current_location
-        distancia = vincenty(
-            (centre['Latitude'], centre['Longitude']), (point['Latitude'], (point['Longitude'])))
-
-        if distancia <= (i[1].cells_distance)*2:
-            List_cells_cercanas.append(i)
-    lista_celdas_ordenas = []
-    if List_cells_cercanas != []:
-        lista_celdas_ordenas = List_cells_cercanas
-    else:
-        lista_celdas_ordenas = cells
+         )
     cells_and_priority = []
-    for i in lista_celdas_ordenas:
-        cam = i[1]
-        slot = crud.slot.get_slot_time(db=db, cell_id=i[0].id, time=time)
+    for (cell,cam,distancia) in List_cells_cercanas:
+        slot = crud.slot.get_slot_time(db=db, cell_id=cell.id, time=time)
         priority = crud.priority.get_last(db=db, slot_id=slot.id, time=time)
         #ESTO solo va a ocurrir cuando el slot acaba de empezar y todavia no se ha ejecutado el evento, Dado que acabamos de empezar el slot de tiempo, la cardinalidad sera 0 y ademas el % de mediciones en el tiempo tambien sera 0 
         if priority is None:
@@ -137,18 +135,17 @@ def create_recomendation(
             priority_temporal = priority.temporal_priority
 
         Cardinal_actual = crud.measurement.get_all_Measurement_from_cell_in_the_current_slot(
-            db=db, cell_id=i[0].id, time=time, slot_id=slot.id)
+            db=db, cell_id=cell.id, time=time, slot_id=slot.id)
         Cardinal_esperadiuso = Cardinal_actual
         recommendation_accepted = crud.recommendation.get_aceptance_state_of_cell(
-            db=db, cell_id=i[0].id)
+            db=db, cell_id=cell.id)
         Cardinal_esperadiuso = Cardinal_esperadiuso + len(recommendation_accepted)
         
         if Cardinal_esperadiuso < cam.min_samples or cam.min_samples == 0:
             cells_and_priority.append((
-                i[0],
+                cell,
                 priority_temporal,
-                vincenty((point['Latitude'], point['Longitude']),
-                         (i[0].centre['Latitude'], i[0].centre['Longitude'])),
+                distancia,
                 Cardinal_esperadiuso,
                 Cardinal_actual,
                 slot))
@@ -169,37 +166,6 @@ def create_recomendation(
     else:
         return {"results": []}
 
-
-# @api_router_recommendation.put("/{recommendation_id}", status_code=200, response_model=RecommendationSearchResults)
-# def update_recommendation(
-#     *,
-#     recommendation_id:int,
-#     member_id:int,
-#     recipe_in:RecommendationUpdate,
-#     db: Session = Depends(deps.get_db),
-# ) -> dict:
-#     """
-#     Update a Recommendation
-#     """
-#     member = crud.member.get_by_id(db=db,id=member_id)
-#     if  member is None:
-#         raise HTTPException(
-#             status_code=404, detail=f"Member with id=={member_id} not found"
-#         )
-#     recommendation=crud.recommendation.get_recommendation(db=db,member_id=member_id,recommendation_id=recommendation_id)
-
-#     if  recommendation is None:
-#         raise HTTPException(
-#             status_code=404, detail=f"Recommendation with id=={recommendation_id} not found"
-#         )
-#     if recipe_in.member_current_location!=recommendation.member_current_location or recipe_in.sent_datetime!=recommendation.sent_datetime:
-#         crud.recommendation.remove(db=db, recommendation=recommendation)
-#         return create_recomendation(db=db, member_id=member_id, recipe_in=recipe_in)
-#     else:
-#         updated_recipe = crud.recommendation.update(db=db, db_obj=recommendation, obj_in=recipe_in)
-#         db.commit()
-
-#         return {"results": list(updated_recipe)}
 
 
 @api_router_recommendation.patch("/{recommendation_id}", status_code=200, response_model=Recommendation)
