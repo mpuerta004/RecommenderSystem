@@ -1,5 +1,6 @@
 {
     "recommendations": [
-        "mtxr.sqltools-driver-mysql"
+        "mtxr.sqltools-driver-mysql",
+        "github.copilot"
     ]
 }
