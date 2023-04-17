@@ -189,10 +189,14 @@ async def create_campaign(
             a temporal register of the member of the campaign, so we can find if a concrete member was in a
             campaign even when this member go out of this hive. 
     """
-    id=crud.campaign.maximun_id(db=db) +1 
+    id=crud.campaign.maximun_id(db=db) 
+    if id is None:
+        maximo=1
+    else:
+        maximo=id + 1
     #Create the campaign
     Campaign = crud.campaign.create_cam(
-        db=db, obj_in=campaign_metadata, hive_id=hive_id,id=id)
+        db=db, obj_in=campaign_metadata, hive_id=hive_id,id=maximo)
     
     #Add the QueenBee to the campaign in the Campaign_Member table
     role = Campaign_MemberCreate(role="QueenBee")
