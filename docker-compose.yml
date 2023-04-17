@@ -31,7 +31,8 @@ services:
     #   - api
     restart: always
     tty: true
-    # volumes:
+    volumes:
+    - /c/Users/mpuer/Desktop/recommendersystem:/recommendersystem
     #   - ".:/home/ubuntu/carpeta_compartida_docker/RecommenderSystem"
     ports:
       - 8001:8001
