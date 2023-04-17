@@ -12,14 +12,15 @@ from datetime import datetime, timedelta
 
 from crud.base import CRUDBase
 from sqlalchemy import and_, extract
+from sqlalchemy import func
 
 
 class CRUDCampaign(CRUDBase[Campaign, CampaignCreate, CampaignUpdate]):
   
-  def create_cam(self, db: Session, *, obj_in: CampaignCreate, hive_id: int) -> Campaign:
+  def create_cam(self, db: Session, *, obj_in: CampaignCreate, hive_id: int, id:int) -> Campaign:
     try:
       obj_in_data = jsonable_encoder(obj_in)
-      db_obj = self.model(**obj_in_data, hive_id=hive_id)  # type: ignore
+      db_obj = self.model(**obj_in_data, hive_id=hive_id, id=id)  # type: ignore
       db.add(db_obj)
       db.commit()
       db.refresh(db_obj)
@@ -65,7 +66,11 @@ class CRUDCampaign(CRUDBase[Campaign, CampaignCreate, CampaignUpdate]):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error with mysql {e}" )  
   
-  
+  def maximun_id(self,*, db: Session) -> int:
+          try:
+              return db.query(func.max(Campaign.id)).scalar()
+          except Exception as e:
+                        raise HTTPException(status_code=500, detail=f"Error with mysql {e}" )
   
   def remove(self, db: Session, *, campaign:Campaign) -> Campaign:
     try:

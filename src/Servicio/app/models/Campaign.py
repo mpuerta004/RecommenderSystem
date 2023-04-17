@@ -8,6 +8,7 @@ from models.Hive import Hive
 
 class Campaign(Base):
     __tablename__='Campaign'
+    id=Column(Integer, primary_key=True, index=True, unique=True,  nullable=False)
     hive_id=Column(Integer,ForeignKey(Hive.id, ondelete="CASCADE"),primary_key=True)
     id=Column(Integer, unique=True, primary_key=True, autoincrement=True) 
     title=Column(String, nullable=True)

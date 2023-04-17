@@ -6,8 +6,7 @@ from schemas.Cell import Cell
 from schemas.Campaign_Member import Campaign_Member
 from typing import Any, Dict, Generic, List, Optional, Type, TypeVar, Union
 
-
-
+from schemas.Boundary import BoundaryCreate
 class CampaignBase(BaseModel):
     title:str
     start_datetime:datetime
@@ -18,7 +17,9 @@ class CampaignBase(BaseModel):
     hypothesis:str
     
     
-    
+class CampaignSing(BaseModel):
+    campaignMetadata: CampaignBase
+    boundary_metadata: BoundaryCreate=None
 
 
 class CampaignCreate(CampaignBase):
