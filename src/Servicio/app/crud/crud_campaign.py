@@ -59,12 +59,23 @@ class CRUDCampaign(CRUDBase[Campaign, CampaignCreate, CampaignUpdate]):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error with mysql {e}" )  
   
+  def get_all_active_campaign_for_a_hive( self,  hive_id:int,time:datetime, db: Session) ->List[Campaign]:
+    try:
+
+      return db.query(Campaign).filter(and_(Campaign.start_datetime<=time, time<=Campaign.end_datetime, Campaign.hive_id==hive_id)).all()
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error with mysql {e}" )  
+  
+  
+  
   def get_all_active_campaign( self,  time:datetime, db: Session) ->List[Campaign]:
     try:
 
       return db.query(Campaign).filter(and_(Campaign.start_datetime<=time, time<=Campaign.end_datetime)).all()
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error with mysql {e}" )  
+  
+  
   
   def maximun_id(self,*, db: Session) -> int:
           try:

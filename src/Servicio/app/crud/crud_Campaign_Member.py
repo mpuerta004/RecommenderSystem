@@ -10,7 +10,7 @@ from fastapi.encoders import jsonable_encoder
 from sqlalchemy import and_,or_
 from fastapi import HTTPException
 
-
+from models.Hive_Member import Hive_Member
 class CRUDCampaign_Member(CRUDBase[Campaign_Member, Campaign_MemberCreate, Campaign_MemberUpdate]):
     def create_Campaign_Member(self, db: Session, *, obj_in: Campaign_MemberCreate,campaign_id:int,member_id:int) -> Campaign_Member:
         try:
@@ -49,7 +49,13 @@ class CRUDCampaign_Member(CRUDBase[Campaign_Member, Campaign_MemberCreate, Campa
     
     def get_Campaigns_of_member(self, db: Session, *, member_id:int) -> List[Campaign_Member]:
         try:
-            return db.query(Campaign_Member).filter(and_(Campaign_Member.member_id == member_id, Campaign_Member.campaign_id==Campaign.id)).all()
+            return db.query(Campaign_Member).filter(and_(Campaign_Member.member_id == member_id)).all()
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"Error with mysql {e}" )
+    
+    def get_Campaigns_of_member_of_hive(self, db: Session, *, member_id:int,hive_id:int) -> List[Campaign_Member]:
+        try:
+            return db.query(Campaign_Member).join(Hive_Member, Campaign_Member.member_id==Hive_Member.member_id).filter(and_(Campaign_Member.member_id == member_id, Hive_Member.member_id==member_id, Hive_Member.hive_id==hive_id)).all()
         except Exception as e:
             raise HTTPException(status_code=500, detail=f"Error with mysql {e}" )
     
