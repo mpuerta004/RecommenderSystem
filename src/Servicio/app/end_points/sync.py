@@ -58,7 +58,7 @@ from end_points.funtionalities import create_List_of_points_for_a_boundary
 from math import sin, cos, atan2, sqrt, radians, degrees, asin
 
 
-api_router_sync = APIRouter()
+api_router_sync = APIRouter(prefix="/sync")
 
 @api_router_sync.post("/points/", status_code=201, response_model=List)
 def create_points_of_campaign(
@@ -75,7 +75,7 @@ def create_points_of_campaign(
     return create_List_of_points_for_a_boundary(cells_distance=cells_distance,centre=centre, radius=radius)
    
     
-@api_router_sync.put("/sync/hives/{hive_id}", status_code=201, response_model=Hive)
+@api_router_sync.put("/hives/{hive_id}", status_code=201, response_model=Hive)
 def update_hive(*,
                 recipe_in: HiveUpdate,
                 hive_id: int,
@@ -93,7 +93,7 @@ def update_hive(*,
     return updated_hive
                             
 
-@api_router_sync.put("/sync/beekeepers/{beekeeper_id}", status_code=201, response_model=BeeKeeper)
+@api_router_sync.put("/beekeepers/{beekeeper_id}", status_code=201, response_model=BeeKeeper)
 def put_a_beekeeper(
     *,
     beekeeper_id: int,
@@ -113,7 +113,7 @@ def put_a_beekeeper(
     db.commit()
     return updated_beekeeper
                             
-@api_router_sync.put("/sync/devices", status_code=201, response_model=List[Device])
+@api_router_sync.put("/devices", status_code=201, response_model=List[Device])
 def update_devices(
     *,
     recipe_in: List[Device],
@@ -140,7 +140,7 @@ def update_devices(
 
 
                 
-@api_router_sync.put("/sync/hives/{hive_id}/members/", status_code=201, response_model=List[NewMembers])
+@api_router_sync.put("/hives/{hive_id}/members/", status_code=201, response_model=List[NewMembers])
 def update_members(
     hive_id:int,
     recipe_in: List[NewMembers],
@@ -212,7 +212,7 @@ def post_members_devices(
 
 
 ######  PUT Endpoint ######
-@api_router_sync.put("/campaigns/{campaign_id}", status_code=201, response_model=Campaign)
+@api_router_sync.put("/hives/{hive_id}/campaigns/{campaign_id}", status_code=201, response_model=Campaign)
 def update_campaign(
     *,
     recipe_in: CampaignSing,

@@ -150,7 +150,7 @@ def asignacion_recursos_hive(
         campaigns = crud.campaign.get_all_active_campaign_for_a_hive(db=db, time=time,hive_id=hive_id)
         for cam in campaigns:
             prioriry_calculation(time=time, cam=cam, db=db)
-            show_a_campaign_2(hive_id=cam.hive_id, campaign_id=cam.id, time=time, db=db)
+        show_hive(hive_id=hive_id, time=time, db=db)
         
         #Get the list of all WorkerBee and QueenBee  
         list_users = reciboUser_hive(db=db, hive_id=hive_id)
@@ -808,7 +808,7 @@ def show_recomendation(*, cam: Campaign, user: Member, result: list(), time: dat
     hipotenusa = math.sqrt(2*((cell_distance/2)**2))
     surface = crud.surface.get(db=db, id=cam.surfaces[0].id)
     mapObj = folium.Map(location=[surface.boundary.centre['Latitude'],
-                        surface.boundary.centre['Longitude']], zoom_start=17)
+                        surface.boundary.centre['Longitude']], zoom_start=16)
     List_campaign=crud.campaign.get_all_active_campaign_for_a_hive(db=db, hive_id=cam.hive_id,time=time)
     for cam in List_campaign:
         for i in cam.surfaces:
@@ -942,14 +942,14 @@ def show_a_campaign_2(
 
     campañas_activas = crud.campaign.get_campaign(
         db=db, hive_id=hive_id, campaign_id=campaign_id)
-    if campañas_activas is None:
+    if campañas_activas is None or campañas_activas is []:
         raise HTTPException(
             status_code=404, detail=f"Campaign with campaign_id== {campaign_id}  and hive_id=={hive_id} not found"
         )
     count = 0
     surface = crud.surface.get(db=db, id=campañas_activas.surfaces[0].id)
     mapObj = folium.Map(location=[surface.boundary.centre['Latitude'],
-                        surface.boundary.centre['Longitude']], zoom_start=17)
+                        surface.boundary.centre['Longitude']], zoom_start=16)
 
     cell_distance = campañas_activas.cells_distance
 
@@ -1052,6 +1052,113 @@ def show_a_campaign_2(
 
     #     # Add the legend to the map
     # mapObj.get_root().html.add_child(folium.Element(legend_html))
+    mapObj.save(direcion_html)
+
+    # img_data = mapObj._to_png(5)
+    # img = Image.open(io.BytesIO(img_data))
+    # img.save(direcion_png)
+    return None
+
+
+
+def show_hive(
+    *,
+    hive_id: int,
+    time: datetime,
+    db: Session = Depends(deps.get_db),
+) -> Any:
+    """
+    Show a campaign
+    """
+    campañas_activas= crud.campaign.get_all_active_campaign_for_a_hive(db=db, hive_id=hive_id,time=time)
+    
+    if campañas_activas is None or campañas_activas is [] or len(campañas_activas)==0:
+       return None
+    count = 0
+    surface=crud.surface.get_multi_surface_from_campaign_id(db=db, campaign_id=campañas_activas[0].id)[0]
+    mapObj = folium.Map(location=[surface.boundary.centre['Latitude'],
+                        surface.boundary.centre['Longitude']], zoom_start=16)
+    for cam in campañas_activas:
+        cell_distance = cam.cells_distance
+
+        hipotenusa = math.sqrt(2*((cell_distance/2)**2))
+        for i in cam.surfaces:
+
+            count = count+1
+            for j in i.cells:
+                slot = crud.slot.get_slot_time(db=db, cell_id=j.id, time=time)
+
+                Cardinal_actual = crud.measurement.get_all_Measurement_from_cell_in_the_current_slot(
+                    db=db, cell_id=j.id, time=time, slot_id=slot.id)
+                if Cardinal_actual >= cam.min_samples:
+                    numero = 4
+                else:
+                    numero = int((Cardinal_actual/cam.min_samples)//(1/4))
+                # color= (color_list[numero][2],color_list[numero][1],color_list[numero][0])
+                color = color_list_h[numero]
+                lon1 = j.centre['Longitude']
+                lat1 = j.centre['Latitude']
+
+                # Desired distance in kilometers
+                distance = hipotenusa
+                list_direction = [45, 135, 225, 315]
+                list_point = []
+                for dir in list_direction:
+                    lat2, lon2 = get_point_at_distance(
+                        lat1=lat1, lon1=lon1, d=distance, bearing=dir)
+
+                    list_point.append([lat2, lon2])
+
+                line_color = 'black'
+                fill_color = color
+                weight = 1
+                text = 'text'
+                folium.Polygon(locations=list_point, color=line_color, fill_color=color,
+                            weight=weight, popup=(folium.Popup(text)), opacity=0.5, fill_opacity=0.75).add_to(mapObj)
+
+                folium.Marker([lat1, lon1],
+                            icon=DivIcon(
+                    icon_size=(200, 36),
+                    icon_anchor=(0, 0),
+                    html=f'<div style="font-size: 20pt">{Cardinal_actual}</div>',
+                )
+                ).add_to(mapObj)
+
+    # res, im_png = cv2.imencode(".png", imagen)
+    direcion_html = f"/recommendersystem/src/Servicio/app/Pictures/Measurements_html/{time.strftime('%m-%d-%Y-%H-%M-%S')}Hi{hive_id}.html"
+    # print(direcion)
+    # cv2.imwrite(direcion, imagen)
+    direcion_png = f"/recommendersystem/src/Servicio/app/Pictures/Measurements/{time.strftime('%m-%d-%Y-%H-%M-%S')}Hi{hive_id}.png"
+    colors = ['#ffc3c3', '#ffdba7', '#f8f7bb', '#cbffbe', '#8ac683']
+    names = ['Initial', 'Almost Midway', 'Midway', 'Almost Finished', 'Finished']
+    # Define the names for the map-legend symbols
+    symbols = ['orange', 'blue', 'red']
+    names_simbols = ["User's Position", "Recommended Points",
+                     "Recommended and Selected Point"]
+
+    # Create the legend with a white background and opacity 0.5
+    legend_html = '''
+        <div style="position: fixed; 
+            bottom: 80px; left: 90px; width: 290px; height: 240px; 
+            border:2px solid grey; z-index:9999;
+            background-color: rgba(255, 255, 255, 0.75);
+            font-size:15px;">
+            <p style="margin:10px;"><b>Progress of measurements</b></p>
+            '''
+    # Add the colored boxes to the legend
+    for i in range(len(colors)):
+        legend_html += '''
+            <div style="background-color:{}; margin-left: 10px;
+                width: 28px; height: 16px; border: 2px solid #999;
+                display: inline-block;"></div>
+            <p style="display: inline-block; margin-left: 10px;">{}</p>
+            <br>
+            '''.format(colors[i], names[i])
+    legend_html += '''
+    <div ></div><p style=display: inline-block; margin-left: 5px;">time: {}</p>
+    '''.format(time.strftime('%m/%d/%Y, %H:%M:%S'))
+    legend_html += '</div>'
+    mapObj.get_root().html.add_child(folium.Element(legend_html))
     mapObj.save(direcion_html)
 
     # img_data = mapObj._to_png(5)
