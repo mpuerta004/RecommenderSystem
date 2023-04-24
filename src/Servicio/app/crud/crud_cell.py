@@ -63,7 +63,12 @@ class CRUDCell(CRUDBase[Cell, CellCreate, CellUpdate]):
                 except Exception as e:
                         raise HTTPException(status_code=500, detail=f"Error with mysql {e}" )
    
-        
+        def get_cell_campaign(self, db: Session, *, campaign_id:int,cell_id:int) -> Cell:
+                try:
+                        return db.query(Cell).join(Surface).filter(and_(Cell.cell_type=="Dynamic",Cell.id==cell_id,Cell.surface_id==Surface.id,Surface.campaign_id==campaign_id)).first()
+                except Exception as e:
+                        raise HTTPException(status_code=500, detail=f"Error with mysql {e}" )
+   
         def get_statics(self, db:Session, *,campaign_id:int) ->List[Cell]:
                 try:
                         return db.query(Cell).join(Surface).filter(and_(Cell.cell_type!="Dynamic",Cell.surface_id==Surface.id,Surface.campaign_id==campaign_id)).all()

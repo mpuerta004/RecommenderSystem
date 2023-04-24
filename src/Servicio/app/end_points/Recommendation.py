@@ -13,12 +13,12 @@ from datetime import datetime, timezone, timedelta
 import math
 from end_points.funtionalities import prioriry_calculation
 
-api_router_recommendation = APIRouter(prefix="/members/{member_id}/recommendations")
+api_router_recommendation = APIRouter(prefix="/members/{member_id}")
 
 ################################ GET  ALL Recommendation ########################################
 
 
-@api_router_recommendation.get("/", status_code=200, response_model=RecommendationSearchResults)
+@api_router_recommendation.get("/recommendations", status_code=200, response_model=RecommendationSearchResults)
 def search_all_recommendations_of_member(
     *,
     member_id: int,
@@ -39,7 +39,7 @@ def search_all_recommendations_of_member(
 
 
 ################################ GET  Recommendation ########################################
-@api_router_recommendation.get("/{recommendation_id}", status_code=200, response_model=RecommendationSearchResults)
+@api_router_recommendation.get("/recommendations/{recommendation_id}", status_code=200, response_model=RecommendationSearchResults)
 def get_recommendation(
     *,
     member_id: int,
@@ -67,7 +67,7 @@ def get_recommendation(
 
 
 ####################################### POST ########################################
-@api_router_recommendation.post("/", status_code=201, response_model=RecommendationCellSearchResults)
+@api_router_recommendation.post("/recommendations", status_code=201, response_model=Union[RecommendationCellSearchResults,str])
 def create_recomendation(
     *,
     member_id: int,
@@ -79,7 +79,6 @@ def create_recomendation(
     """
     time = datetime.utcnow()
 
-    
     # Get the member and verify if it exists
     user = crud.member.get_by_id(db=db, id=member_id)
     if user is None:
@@ -98,7 +97,7 @@ def create_recomendation(
         if (i.role == "QueenBee" or i.role == "WorkerBee"):
             campaign = crud.campaign.get(db=db, id=i.campaign_id)
             # Verify if the campaign is active
-            if campaign.start_datetime.replace(tzinfo=timezone.utc) <= time.replace(tzinfo=timezone.utc) and time.replace(tzinfo=timezone.utc) <= campaign.end_datetime.replace(tzinfo=timezone.utc):
+            if campaign.start_datetime.replace(tzinfo=timezone.utc) <= time.replace(tzinfo=timezone.utc) and time.replace(tzinfo=timezone.utc) < campaign.end_datetime.replace(tzinfo=timezone.utc):
                 list_cells = crud.cell.get_cells_campaign(
                     db=db, campaign_id=i.campaign_id)
                 # verify is the list of cell is not empty
@@ -166,7 +165,123 @@ def create_recomendation(
     return {"results": result}
 
 
-@api_router_recommendation.patch("/{recommendation_id}", status_code=200, response_model=Recommendation)
+
+
+
+
+
+
+####################################### POST ########################################
+@api_router_recommendation.post("/campaigns/{campaign_id}/recommendations", status_code=201, response_model=Union[RecommendationCellSearchResults,dict])
+def create_recomendation_per_campaign(
+    *,
+    member_id: int,
+    campaign_id:int,
+    recipe_in: RecommendationCreate,
+    db: Session = Depends(deps.get_db)
+) -> dict:
+    """
+    Create recomendation
+    """
+    time = datetime.utcnow()
+    
+
+    # Get the member and verify if it exists
+    user = crud.member.get_by_id(db=db, id=member_id)
+    if user is None:
+        raise HTTPException(
+            status_code=404, detail=f"Member with id=={member_id} not found"
+        )
+    # Get time and campaign of the member
+    campaign_member = crud.campaign_member.get_Campaigns_of_member(
+        db=db, member_id=user.id)
+
+   
+    role_correct=False
+    List_cells_cercanas = []
+    cells = []
+    for i in campaign_member:
+        if (i.role == "QueenBee" or i.role == "WorkerBee"):
+            role_correct=True
+            campaign = crud.campaign.get(db=db, id=i.campaign_id)
+            # Verify if the campaign is active
+            if campaign.start_datetime.replace(tzinfo=timezone.utc) <= time.replace(tzinfo=timezone.utc) and time.replace(tzinfo=timezone.utc) < campaign.end_datetime.replace(tzinfo=timezone.utc):
+                list_cells = crud.cell.get_cells_campaign(
+                    db=db, campaign_id=i.campaign_id)
+                # verify is the list of cell is not empty
+                if len(list_cells) != 0:
+                    for cell in list_cells:
+                        point=recipe_in.member_current_location
+                        centre= cell.centre
+                        distancia = vincenty((centre['Latitude'], centre['Longitude']), (point['Latitude'], (point['Longitude'])))
+                        if distancia <= (campaign.cells_distance)*3:
+                            cells.append([cell, campaign])
+    if role_correct==False:
+        return {"details": "Incorrect_user_role"}
+    if len(cells) ==0:
+        return {"detail": "far_away"}
+    # We will order the cells by the distance (ascending order), temporal priority (Descending order), cardinality promise (accepted measurement)( descending order)
+    
+    
+    cells_and_priority = []
+    for (cell, cam) in cells:
+        slot = crud.slot.get_slot_time(db=db, cell_id=cell.id, time=time)
+        priority = crud.priority.get_last(db=db, slot_id=slot.id, time=time)
+        # ESTO solo va a ocurrir cuando el slot acaba de empezar y todavia no se ha ejecutado el evento, Dado que acabamos de empezar el slot de tiempo, la cardinalidad sera 0 y ademas el % de mediciones en el tiempo tambien sera 0
+        if priority is None:
+            priority_temporal = 0.0
+        else:
+            priority_temporal = priority.temporal_priority
+        centre=cell.centre
+        point = recipe_in.member_current_location
+        distancia = vincenty(
+            (centre['Latitude'], centre['Longitude']), (point['Latitude'], (point['Longitude'])))
+        Cardinal_actual = crud.measurement.get_all_Measurement_from_cell_in_the_current_slot(
+            db=db, cell_id=cell.id, time=time, slot_id=slot.id)
+        recommendation_accepted = crud.recommendation.get_aceptance_state_of_cell(
+            db=db, cell_id=cell.id)
+        expected_measurements  = Cardinal_actual + len(recommendation_accepted)
+        #We only consider the cell if the expected measurements are greater than the minimum samples of the campaign or if we dont have minnimun number of measuement per slot
+        if expected_measurements < cam.min_samples or cam.min_samples == 0:
+            cells_and_priority.append((
+                cell,
+                priority_temporal,
+                distancia,
+                expected_measurements,
+                Cardinal_actual,
+                slot,
+                cam))
+   
+    
+    
+    if len(cells_and_priority)==0:
+        return {"detail": "no_measurements_needed"}
+    cells_and_priority.sort(
+        key=lambda order_features: (-order_features[3], order_features[1], -order_features[2]), reverse=True)
+    
+    a=[]
+    for i in cells_and_priority:
+        if i[6].id==campaign_id:
+            a.append(i)
+    if len(a)==0:
+        return {"detail": "no_measurements_needed"}
+    
+    
+    result = []
+    if len(a) != 0:
+        for i in range(0, min(len(a), 3)):
+            slot = cells_and_priority[i][5]
+            recomendation = crud.recommendation.create_recommendation_detras(
+                db=db, obj_in=recipe_in, member_id=member_id, slot_id=slot.id, state="NOTIFIED", update_datetime=time, sent_datetime=time)
+            cell = crud.cell.get(db=db, id=slot.cell_id)
+            result.append(RecommendationCell(
+                recommendation=recomendation, cell=cell))
+    return {"results": result}
+
+
+
+
+@api_router_recommendation.patch("/recommendations/{recommendation_id}", status_code=200, response_model=Recommendation)
 def partially_update_recommendation(
     *,
     recommendation_id: int,
@@ -194,7 +309,7 @@ def partially_update_recommendation(
     return updated_recipe
 
 
-@api_router_recommendation.delete("/{recommendation_id}", status_code=204)
+@api_router_recommendation.delete("/recommendations/{recommendation_id}", status_code=204)
 def delete_recommendation(*,
                           recommendation_id: int,
                           member_id: int,

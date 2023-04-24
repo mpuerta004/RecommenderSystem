@@ -13,7 +13,7 @@ class Member(Base):
     surname=Column(String,nullable=True)
     birthday=Column(DateTime)
     city=Column(String,nullable=True)
-    gender=Column(Enum("NOBINARY","MALE","FEMALE",'NOANSER'),nullable=False)
+    gender=Column(Enum("NOBINARY","MALE","FEMALE",'NOANSWER'),nullable=False)
     real_user=Column(Boolean,default=True)
     
     

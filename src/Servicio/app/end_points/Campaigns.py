@@ -255,7 +255,7 @@ def show_a_campaign(
         )
 
     # verify that campaign is active
-    if campaign.start_datetime.replace(tzinfo=timezone.utc) <= time.replace(tzinfo=timezone.utc) and time.replace(tzinfo=timezone.utc) <= campaign.end_datetime.replace(tzinfo=timezone.utc):
+    if campaign.start_datetime.replace(tzinfo=timezone.utc) <= time.replace(tzinfo=timezone.utc) and time.replace(tzinfo=timezone.utc) < campaign.end_datetime.replace(tzinfo=timezone.utc):
 
         cell_distance = campaign.cells_distance
         hipotenusa = math.sqrt(2*((cell_distance/2)**2))

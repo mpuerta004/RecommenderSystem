@@ -134,9 +134,9 @@ def asignacion_recursos_hive(
     DEMO!
     """
     initial = datetime.utcnow()
-    start = datetime(year=2024, month=4, day=1, hour=10, minute=00,
+    start = datetime(year=2026, month=12, day=1, hour=10, minute=00,
                      second=00).replace(tzinfo=timezone.utc)
-    end = datetime(year=2024, month=5, day=1, hour=00, minute=00,
+    end = datetime(year=2026, month=12, day=1, hour=14, minute=00,
                    second=1).replace(tzinfo=timezone.utc)
 
     mediciones = []
@@ -163,13 +163,15 @@ def asignacion_recursos_hive(
                 active_campaign=[]
                 for i in list_campaign:
                     cam=crud.campaign.get_campaign(db=db,campaign_id=i.campaign_id,hive_id=hive_id)
-                    if cam.start_datetime.replace(tzinfo=timezone.utc) <= time.replace(tzinfo=timezone.utc) and time.replace(tzinfo=timezone.utc) <= cam.end_datetime.replace(tzinfo=timezone.utc):
+                    if cam.start_datetime.replace(tzinfo=timezone.utc) <= time.replace(tzinfo=timezone.utc) and time.replace(tzinfo=timezone.utc) < cam.end_datetime.replace(tzinfo=timezone.utc):
                         active_campaign.append([i.campaign_id,cam])
                 if len(active_campaign)!=0:
                     # Select the position of the user. 
                     n_campaign = random.randint(0, len(active_campaign)-1)
+                    selected_user_campaign = random.randint(0, len(active_campaign)-1)
+                    id_campaign_user = active_campaign[selected_user_campaign][0]
                     cam = active_campaign[n_campaign][1]
-
+                    
                     n_surfaces = len(cam.surfaces)
                     surface_indice = random.randint(0, n_surfaces-1)
                     boundary = cam.surfaces[surface_indice].boundary
@@ -187,9 +189,10 @@ def asignacion_recursos_hive(
                     a = RecommendationCreate(member_current_location={
                                             'Longitude': lon2, 'Latitude': lat2}, recommendation_datetime=time)
                     # recomendaciones=create_recomendation_2(db=db,member_id=user.id,recipe_in=a,cam=cam,time=time)
-                    recomendaciones = create_recomendation_3(
-                        db=db, member_id=user.id, recipe_in=a, time=time)
-                    if len(recomendaciones['results']) > 0:
+                    
+                    recomendaciones = create_recomendation(
+                        db=db, member_id=user.id, recipe_in=a, time=time, campaign_id=id_campaign_user)
+                    if recomendaciones is not None and "results" in recomendaciones and  len(recomendaciones['results']) > 0:
                         recomendacion_polinizar = user_selecction(recomendaciones['results'])
                         if recomendacion_polinizar is not None:
                             recomendation_coguida = crud.recommendation.get_recommendation(
@@ -216,20 +219,23 @@ def asignacion_recursos_hive(
                         db=db, member_id=mediciones[i][0].id)
                     creation = MeasurementCreate(db=db, location=cell.centre, datetime=time_polinizado,
                                                  device_id=Member_Device_user.device_id, recommendation_id=mediciones[i][1].id)
-                    slot = crud.slot.get_slot_time(db=db, cell_id=cell.id, time=time)
+                    slot = crud.slot.get_slot_time(db=db, cell_id=cell.id, time=time_polinizado)
                     # Ver si se registran bien mas recomendaciones con el id de la medicion correcta.
                     device_member = crud.member_device.get_by_member_id(
                         db=db, member_id=mediciones[i][0].id)
-                    measurement = crud.measurement.create_Measurement(
-                        db=db, device_id=device_member.device_id, obj_in=creation, member_id=mediciones[i][0].id, slot_id=slot.id, recommendation_id=mediciones[i][1].id)
-                    recomendation_coguida = crud.recommendation.get_recommendation(
-                        db=db, member_id=mediciones[i][1].member_id, recommendation_id=mediciones[i][1].id)
+                    
+                    if slot is not None:
+                        #If slot is None, this mean that the user want to realizwe the measurement after the end of the campaign
+                        measurement = crud.measurement.create_Measurement(
+                            db=db, device_id=device_member.device_id, obj_in=creation, member_id=mediciones[i][0].id, slot_id=slot.id, recommendation_id=mediciones[i][1].id)
+                        recomendation_coguida = crud.recommendation.get_recommendation(
+                            db=db, member_id=mediciones[i][1].member_id, recommendation_id=mediciones[i][1].id)
 
-                    crud.recommendation.update(db=db, db_obj=recomendation_coguida, obj_in={
-                                               "state": "REALIZED", "update_datetime": time_polinizado})
-                    db.commit()
+                        crud.recommendation.update(db=db, db_obj=recomendation_coguida, obj_in={
+                                                "state": "REALIZED", "update_datetime": time_polinizado})
+                        db.commit()
 
-                    db.commit()
+                        db.commit()
                 else:
                     time_polinizado = time
                     recomendation_coguida = crud.recommendation.get_recommendation(
@@ -614,7 +620,7 @@ def create_recomendation_3(
         if (i.role == "QueenBee" or i.role == "WorkerBee"):
             campaign = crud.campaign.get(db=db, id=i.campaign_id)
             # Verify if the campaign is active
-            if campaign.start_datetime.replace(tzinfo=timezone.utc) <= time.replace(tzinfo=timezone.utc) and time.replace(tzinfo=timezone.utc) <= campaign.end_datetime.replace(tzinfo=timezone.utc):
+            if campaign.start_datetime.replace(tzinfo=timezone.utc) <= time.replace(tzinfo=timezone.utc) and time.replace(tzinfo=timezone.utc) < campaign.end_datetime.replace(tzinfo=timezone.utc):
                 list_cells = crud.cell.get_cells_campaign(
                     db=db, campaign_id=i.campaign_id)
                 # verify is the list of cell is not empty
@@ -680,6 +686,112 @@ def create_recomendation_3(
 
     return {"results": result}
 
+
+
+####################################### POST ########################################
+def create_recomendation(
+    *,
+    member_id: int,
+    campaign_id:int,
+    time:datetime,
+    recipe_in: RecommendationCreate,
+    db: Session = Depends(deps.get_db)
+) -> dict:
+    """
+    Create recomendation
+    """
+
+    # Get the member and verify if it exists
+    user = crud.member.get_by_id(db=db, id=member_id)
+    if user is None:
+        raise HTTPException(
+            status_code=404, detail=f"Member with id=={member_id} not found"
+        )
+    # Get time and campaign of the member
+    campaign_member = crud.campaign_member.get_Campaigns_of_member(
+        db=db, member_id=user.id)
+
+   
+    role_correct=False
+    List_cells_cercanas = []
+    cells = []
+    for i in campaign_member:
+        if (i.role == "QueenBee" or i.role == "WorkerBee"):
+            role_correct=True
+            campaign = crud.campaign.get(db=db, id=i.campaign_id)
+            # Verify if the campaign is active
+            if campaign.start_datetime.replace(tzinfo=timezone.utc) <= time.replace(tzinfo=timezone.utc) and time.replace(tzinfo=timezone.utc) < campaign.end_datetime.replace(tzinfo=timezone.utc):
+                list_cells = crud.cell.get_cells_campaign(
+                    db=db, campaign_id=i.campaign_id)
+                # verify is the list of cell is not empty
+                if len(list_cells) != 0:
+                    for cell in list_cells:
+                        point=recipe_in.member_current_location
+                        centre= cell.centre
+
+                        distancia = vincenty((centre['Latitude'], centre['Longitude']), (point['Latitude'], (point['Longitude'])))
+                        if distancia <= (campaign.cells_distance)*3:
+                            cells.append([cell, campaign])
+    if role_correct==False:
+        return {"details": "Incorrect_user_role"}
+    if len(cells) ==0:
+        return {"detail": "far_away"}
+    # We will order the cells by the distance (ascending order), temporal priority (Descending order), cardinality promise (accepted measurement)( descending order)
+    
+    
+    cells_and_priority = []
+    for (cell, cam) in cells:
+        slot = crud.slot.get_slot_time(db=db, cell_id=cell.id, time=time)
+        priority = crud.priority.get_last(db=db, slot_id=slot.id, time=time)
+        # ESTO solo va a ocurrir cuando el slot acaba de empezar y todavia no se ha ejecutado el evento, Dado que acabamos de empezar el slot de tiempo, la cardinalidad sera 0 y ademas el % de mediciones en el tiempo tambien sera 0
+        if priority is None:
+            priority_temporal = 0.0
+        else:
+            priority_temporal = priority.temporal_priority
+        centre=cell.centre
+        point = recipe_in.member_current_location
+        distancia = vincenty(
+            (centre['Latitude'], centre['Longitude']), (point['Latitude'], (point['Longitude'])))
+        Cardinal_actual = crud.measurement.get_all_Measurement_from_cell_in_the_current_slot(
+            db=db, cell_id=cell.id, time=time, slot_id=slot.id)
+        recommendation_accepted = crud.recommendation.get_aceptance_state_of_cell(
+            db=db, cell_id=cell.id)
+        expected_measurements  = Cardinal_actual + len(recommendation_accepted)
+        #We only consider the cell if the expected measurements are greater than the minimum samples of the campaign or if we dont have minnimun number of measuement per slot
+        if expected_measurements < cam.min_samples or cam.min_samples == 0:
+            cells_and_priority.append((
+                cell,
+                priority_temporal,
+                distancia,
+                expected_measurements,
+                Cardinal_actual,
+                slot,
+                cam))
+   
+    
+    
+    if len(cells_and_priority)==0:
+        return {"detail": "no_measurements_needed"}
+    cells_and_priority.sort(
+        key=lambda order_features: (-order_features[3], order_features[1], -order_features[2]), reverse=True)
+    
+    a=[]
+    for i in cells_and_priority:
+        if i[6].id==campaign_id:
+            a.append(i)
+    if len(a)==0:
+        return {"detail": "no_measurements_needed"}
+    
+    
+    result = []
+    if len(a) != 0:
+        for i in range(0, min(len(a), 3)):
+            slot = cells_and_priority[i][5]
+            recomendation = crud.recommendation.create_recommendation_detras(
+                db=db, obj_in=recipe_in, member_id=member_id, slot_id=slot.id, state="NOTIFIED", update_datetime=time, sent_datetime=time)
+            cell = crud.cell.get(db=db, id=slot.cell_id)
+            result.append(recomendation)
+    return {"results": result}
 
 # A recomendation for a campaign.
 def create_recomendation_2(
@@ -806,10 +918,20 @@ def show_recomendation(*, cam: Campaign, user: Member, result: list(), time: dat
     user_position = result[0].member_current_location
     cell_distance = cam.cells_distance
     hipotenusa = math.sqrt(2*((cell_distance/2)**2))
+    
+    
+    
     surface = crud.surface.get(db=db, id=cam.surfaces[0].id)
     mapObj = folium.Map(location=[surface.boundary.centre['Latitude'],
-                        surface.boundary.centre['Longitude']], zoom_start=16)
+                        surface.boundary.centre['Longitude']], zoom_start=17)
     List_campaign=crud.campaign.get_all_active_campaign_for_a_hive(db=db, hive_id=cam.hive_id,time=time)
+    
+    
+    
+    
+    
+    
+    
     for cam in List_campaign:
         for i in cam.surfaces:
             count = count+1
@@ -846,7 +968,7 @@ def show_recomendation(*, cam: Campaign, user: Member, result: list(), time: dat
                 folium.Polygon(locations=list_point, color=line_color, fill_color=color,
                             weight=weight, popup=(folium.Popup(text)), opacity=0.5, fill_opacity=0.75).add_to(mapObj)
 
-                folium.Marker([lat1, lon1],
+                folium.Marker(list_point[3],
                             icon=DivIcon(
                     icon_size=(200, 36),
                     icon_anchor=(0, 0),
@@ -1075,9 +1197,23 @@ def show_hive(
     if campañas_activas is None or campañas_activas is [] or len(campañas_activas)==0:
        return None
     count = 0
-    surface=crud.surface.get_multi_surface_from_campaign_id(db=db, campaign_id=campañas_activas[0].id)[0]
-    mapObj = folium.Map(location=[surface.boundary.centre['Latitude'],
-                        surface.boundary.centre['Longitude']], zoom_start=16)
+    
+    
+    lat_center=0
+    lon_center=0
+    n=0
+    for i in campañas_activas:
+        surfaces=crud.surface.get_multi_surface_from_campaign_id(db=db, campaign_id=i.id)
+        for surface in surfaces:
+            n=n+1
+            lat_center=lat_center + surface.boundary.centre['Latitude']
+            lon_center=lon_center + surface.boundary.centre['Longitude']
+    
+    
+    print(lat_center/n, lon_center/n)
+    
+    mapObj = folium.Map(location=[lat_center/n,
+                        lon_center/n], zoom_start=16)
     for cam in campañas_activas:
         cell_distance = cam.cells_distance
 
@@ -1116,7 +1252,7 @@ def show_hive(
                 folium.Polygon(locations=list_point, color=line_color, fill_color=color,
                             weight=weight, popup=(folium.Popup(text)), opacity=0.5, fill_opacity=0.75).add_to(mapObj)
 
-                folium.Marker([lat1, lon1],
+                folium.Marker(list_point[3],
                             icon=DivIcon(
                     icon_size=(200, 36),
                     icon_anchor=(0, 0),

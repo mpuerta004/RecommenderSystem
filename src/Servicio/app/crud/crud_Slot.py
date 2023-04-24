@@ -42,7 +42,7 @@ class CRUDSlot(CRUDBase[Slot, SlotCreate, SlotUpdate]):
    
     def get_slot_time(self, db: Session, *, cell_id:int, time:datetime ) -> Slot:
         try:
-            return db.query(Slot).filter( and_(Slot.cell_id== cell_id, Slot.start_datetime<=time, time<=Slot.end_datetime)).first()
+            return db.query(Slot).filter( and_(Slot.cell_id== cell_id, Slot.start_datetime<=time, time<Slot.end_datetime)).first()
         except Exception as e:
                         raise HTTPException(status_code=500, detail=f"Error with mysql {e}" )
    
