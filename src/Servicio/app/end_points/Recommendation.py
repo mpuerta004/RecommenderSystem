@@ -226,34 +226,35 @@ def create_recomendation_per_campaign(
     cells_and_priority = []
     for (cell, cam) in cells:
         slot = crud.slot.get_slot_time(db=db, cell_id=cell.id, time=time)
-        priority = crud.priority.get_last(db=db, slot_id=slot.id, time=time)
-        # ESTO solo va a ocurrir cuando el slot acaba de empezar y todavia no se ha ejecutado el evento, Dado que acabamos de empezar el slot de tiempo, la cardinalidad sera 0 y ademas el % de mediciones en el tiempo tambien sera 0
-        if priority is None:
-            priority_temporal = 0.0
-        else:
-            priority_temporal = priority.temporal_priority
-        centre=cell.centre
-        point = recipe_in.member_current_location
-        distancia = vincenty(
-            (centre['Latitude'], centre['Longitude']), (point['Latitude'], (point['Longitude'])))
-        Cardinal_actual = crud.measurement.get_all_Measurement_from_cell_in_the_current_slot(
-            db=db, cell_id=cell.id, time=time, slot_id=slot.id)
-        recommendation_accepted = crud.recommendation.get_aceptance_state_of_cell(
-            db=db, cell_id=cell.id)
-        expected_measurements  = Cardinal_actual + len(recommendation_accepted)
-        #We only consider the cell if the expected measurements are greater than the minimum samples of the campaign or if we dont have minnimun number of measuement per slot
-        if expected_measurements < cam.min_samples or cam.min_samples == 0:
-            cells_and_priority.append((
-                cell,
-                priority_temporal,
-                distancia,
-                expected_measurements,
-                Cardinal_actual,
-                slot,
-                cam))
-   
+        if slot is not None:
+            priority = crud.priority.get_last(db=db, slot_id=slot.id, time=time)
+            # ESTO solo va a ocurrir cuando el slot acaba de empezar y todavia no se ha ejecutado el evento, Dado que acabamos de empezar el slot de tiempo, la cardinalidad sera 0 y ademas el % de mediciones en el tiempo tambien sera 0
+            if priority is None:
+                priority_temporal = 0.0
+            else:
+                priority_temporal = priority.temporal_priority
+            centre=cell.centre
+            point = recipe_in.member_current_location
+            distancia = vincenty(
+                (centre['Latitude'], centre['Longitude']), (point['Latitude'], (point['Longitude'])))
+            Cardinal_actual = crud.measurement.get_all_Measurement_from_cell_in_the_current_slot(
+                db=db, cell_id=cell.id, time=time, slot_id=slot.id)
+            recommendation_accepted = crud.recommendation.get_aceptance_state_of_cell(
+                db=db, cell_id=cell.id)
+            expected_measurements  = Cardinal_actual + len(recommendation_accepted)
+            #We only consider the cell if the expected measurements are greater than the minimum samples of the campaign or if we dont have minnimun number of measuement per slot
+            if expected_measurements < cam.min_samples or cam.min_samples == 0:
+                cells_and_priority.append((
+                    cell,
+                    priority_temporal,
+                    distancia,
+                    expected_measurements,
+                    Cardinal_actual,
+                    slot,
+                    cam))
     
-    
+        
+        
     if len(cells_and_priority)==0:
         return {"detail": "no_measurements_needed"}
     cells_and_priority.sort(
