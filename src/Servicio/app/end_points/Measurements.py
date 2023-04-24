@@ -159,6 +159,10 @@ def create_measurement(
     
     """ Obtain the slot where the measurement is, the recommendation and the device of the member. """
     slot = crud.slot.get_slot_time(db=db, cell_id=cell_id, time=recipe_in.datetime)
+    if slot is None:
+        raise HTTPException(
+            status_code=404, detail=f"The measurement is not posible at the finish of the campaign."
+        )
     campaign = campaign_finaly
     recomendation = crud.recommendation.get_recommendation_to_measurement(
         db=db, member_id=member_id, cell_id=cell_id)
@@ -171,11 +175,11 @@ def create_measurement(
         recommendation_id = None
     else:
         recommendation_id = recomendation.id
-    
     #Create the measurement
     cellMeasurement = crud.measurement.create_Measurement(
-        db=db, obj_in=recipe_in, member_id=member_id, slot_id=slot.id, recommendation_id=recommendation_id, device_id=member_device.device_id)
+            db=db, obj_in=recipe_in, member_id=member_id, slot_id=slot.id, recommendation_id=recommendation_id, device_id=member_device.device_id)
     return cellMeasurement
+        
 
 
 
