@@ -134,9 +134,9 @@ def asignacion_recursos_hive(
     DEMO!
     """
     initial = datetime.utcnow()
-    start = datetime(year=2026, month=12, day=1, hour=10, minute=00,
+    start = datetime(year=2024, month=12, day=1, hour=10, minute=00,
                      second=00).replace(tzinfo=timezone.utc)
-    end = datetime(year=2026, month=12, day=1, hour=14, minute=00,
+    end = datetime(year=2024, month=12, day=1, hour=14, minute=00,
                    second=1).replace(tzinfo=timezone.utc)
 
     mediciones = []
@@ -711,7 +711,8 @@ def create_recomendation(
     campaign_member = crud.campaign_member.get_Campaigns_of_member(
         db=db, member_id=user.id)
 
-   
+    campaign_want=False
+
     role_correct=False
     List_cells_cercanas = []
     cells = []
@@ -728,48 +729,52 @@ def create_recomendation(
                     for cell in list_cells:
                         point=recipe_in.member_current_location
                         centre= cell.centre
-
                         distancia = vincenty((centre['Latitude'], centre['Longitude']), (point['Latitude'], (point['Longitude'])))
                         if distancia <= (campaign.cells_distance)*3:
                             cells.append([cell, campaign])
+                            if campaign.id ==campaign_id:
+                                    campaign_want=True
     if role_correct==False:
         return {"details": "Incorrect_user_role"}
+   
+    if campaign_want==False:
+        return {"detail": "far_away"}
     if len(cells) ==0:
         return {"detail": "far_away"}
+        
     # We will order the cells by the distance (ascending order), temporal priority (Descending order), cardinality promise (accepted measurement)( descending order)
     
     
     cells_and_priority = []
     for (cell, cam) in cells:
         slot = crud.slot.get_slot_time(db=db, cell_id=cell.id, time=time)
-        priority = crud.priority.get_last(db=db, slot_id=slot.id, time=time)
-        # ESTO solo va a ocurrir cuando el slot acaba de empezar y todavia no se ha ejecutado el evento, Dado que acabamos de empezar el slot de tiempo, la cardinalidad sera 0 y ademas el % de mediciones en el tiempo tambien sera 0
-        if priority is None:
-            priority_temporal = 0.0
-        else:
-            priority_temporal = priority.temporal_priority
-        centre=cell.centre
-        point = recipe_in.member_current_location
-        distancia = vincenty(
-            (centre['Latitude'], centre['Longitude']), (point['Latitude'], (point['Longitude'])))
-        Cardinal_actual = crud.measurement.get_all_Measurement_from_cell_in_the_current_slot(
-            db=db, cell_id=cell.id, time=time, slot_id=slot.id)
-        recommendation_accepted = crud.recommendation.get_aceptance_state_of_cell(
-            db=db, cell_id=cell.id)
-        expected_measurements  = Cardinal_actual + len(recommendation_accepted)
-        #We only consider the cell if the expected measurements are greater than the minimum samples of the campaign or if we dont have minnimun number of measuement per slot
-        if expected_measurements < cam.min_samples or cam.min_samples == 0:
-            cells_and_priority.append((
-                cell,
-                priority_temporal,
-                distancia,
-                expected_measurements,
-                Cardinal_actual,
-                slot,
-                cam))
-   
-    
-    
+        if slot is not None:
+            priority = crud.priority.get_last(db=db, slot_id=slot.id, time=time)
+            # ESTO solo va a ocurrir cuando el slot acaba de empezar y todavia no se ha ejecutado el evento, Dado que acabamos de empezar el slot de tiempo, la cardinalidad sera 0 y ademas el % de mediciones en el tiempo tambien sera 0
+            if priority is None:
+                priority_temporal = 0.0
+            else:
+                priority_temporal = priority.temporal_priority
+            centre=cell.centre
+            point = recipe_in.member_current_location
+            distancia = vincenty(
+                (centre['Latitude'], centre['Longitude']), (point['Latitude'], (point['Longitude'])))
+            Cardinal_actual = crud.measurement.get_all_Measurement_from_cell_in_the_current_slot(
+                db=db, cell_id=cell.id, time=time, slot_id=slot.id)
+            recommendation_accepted = crud.recommendation.get_aceptance_state_of_cell(
+                db=db, cell_id=cell.id)
+            expected_measurements  = Cardinal_actual + len(recommendation_accepted)
+            #We only consider the cell if the expected measurements are greater than the minimum samples of the campaign or if we dont have minnimun number of measuement per slot
+            if expected_measurements < cam.min_samples or cam.min_samples == 0:
+                cells_and_priority.append((
+                    cell,
+                    priority_temporal,
+                    distancia,
+                    expected_measurements,
+                    Cardinal_actual,
+                    slot,
+                    cam))    
+        
     if len(cells_and_priority)==0:
         return {"detail": "no_measurements_needed"}
     cells_and_priority.sort(
@@ -786,12 +791,13 @@ def create_recomendation(
     result = []
     if len(a) != 0:
         for i in range(0, min(len(a), 3)):
-            slot = cells_and_priority[i][5]
+            slot = a[i][5]
             recomendation = crud.recommendation.create_recommendation_detras(
                 db=db, obj_in=recipe_in, member_id=member_id, slot_id=slot.id, state="NOTIFIED", update_datetime=time, sent_datetime=time)
             cell = crud.cell.get(db=db, id=slot.cell_id)
             result.append(recomendation)
     return {"results": result}
+
 
 # A recomendation for a campaign.
 def create_recomendation_2(
@@ -923,14 +929,8 @@ def show_recomendation(*, cam: Campaign, user: Member, result: list(), time: dat
     
     surface = crud.surface.get(db=db, id=cam.surfaces[0].id)
     mapObj = folium.Map(location=[surface.boundary.centre['Latitude'],
-                        surface.boundary.centre['Longitude']], zoom_start=17)
+                        surface.boundary.centre['Longitude']], zoom_start=18)
     List_campaign=crud.campaign.get_all_active_campaign_for_a_hive(db=db, hive_id=cam.hive_id,time=time)
-    
-    
-    
-    
-    
-    
     
     for cam in List_campaign:
         for i in cam.surfaces:
@@ -1213,7 +1213,7 @@ def show_hive(
     print(lat_center/n, lon_center/n)
     
     mapObj = folium.Map(location=[lat_center/n,
-                        lon_center/n], zoom_start=16)
+                        lon_center/n], zoom_start=18)
     for cam in campañas_activas:
         cell_distance = cam.cells_distance
 

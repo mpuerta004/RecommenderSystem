@@ -196,7 +196,8 @@ def create_recomendation_per_campaign(
     campaign_member = crud.campaign_member.get_Campaigns_of_member(
         db=db, member_id=user.id)
 
-   
+    campaign_want=False
+
     role_correct=False
     List_cells_cercanas = []
     cells = []
@@ -216,10 +217,16 @@ def create_recomendation_per_campaign(
                         distancia = vincenty((centre['Latitude'], centre['Longitude']), (point['Latitude'], (point['Longitude'])))
                         if distancia <= (campaign.cells_distance)*3:
                             cells.append([cell, campaign])
+                            if campaign.id ==campaign_id:
+                                    campaign_want=True
     if role_correct==False:
         return {"details": "Incorrect_user_role"}
+   
+    if campaign_want==False:
+        return {"detail": "far_away"}
     if len(cells) ==0:
         return {"detail": "far_away"}
+        
     # We will order the cells by the distance (ascending order), temporal priority (Descending order), cardinality promise (accepted measurement)( descending order)
     
     
@@ -251,9 +258,7 @@ def create_recomendation_per_campaign(
                     expected_measurements,
                     Cardinal_actual,
                     slot,
-                    cam))
-    
-        
+                    cam))    
         
     if len(cells_and_priority)==0:
         return {"detail": "no_measurements_needed"}
@@ -271,7 +276,7 @@ def create_recomendation_per_campaign(
     result = []
     if len(a) != 0:
         for i in range(0, min(len(a), 3)):
-            slot = cells_and_priority[i][5]
+            slot = a[i][5]
             recomendation = crud.recommendation.create_recommendation_detras(
                 db=db, obj_in=recipe_in, member_id=member_id, slot_id=slot.id, state="NOTIFIED", update_datetime=time, sent_datetime=time)
             cell = crud.cell.get(db=db, id=slot.cell_id)
