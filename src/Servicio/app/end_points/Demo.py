@@ -27,42 +27,13 @@ import folium
 from math import sin, cos, atan2, sqrt, radians, degrees, asin
 from fastapi.responses import HTMLResponse
 from folium.plugins import HeatMap
-
-from fastapi_utils.session import FastAPISessionMaker
+import Demo.variables as variables
+from Demo.map_funtions import legend_generation_measurements_representation, legend_generation_recommendation_representation
 
 # from end_points.Recommendation import create_recomendation
 import random
 api_router_demo = APIRouter(prefix="/demos/hives/{hive_id}")
-SQLALCHEMY_DATABASE_URL = "mysql+mysqlconnector://root:mypasswd@mysql:3306/SocioBeeMVE"
-sessionmaker = FastAPISessionMaker(SQLALCHEMY_DATABASE_URL)
 
-
-color_list = [
-    (255, 195, 195),
-    (255, 219, 167),
-    (248, 247, 187),
-    (203, 255, 190),
-    (138, 198, 131)
-]
-
-color_list_h = ['#ffc3c3', '#ffdba7', '#f8f7bb', '#cbffbe', '#8ac683'
-                ]
-
-variables_comportamiento = {"user_aceptance": 0.2, "user_realize": 0.3, "user_availability":0.65,
-                            "popularidad_cell": 0.85, "number_of_unpopular_cells": 5}
-
-
-def reciboUser_1(cam: Campaign, db: Session = Depends(deps.get_db)):
-    usuarios_peticion = []
-    users = crud.campaign_member.get_Campaign_Member_in_campaign_workers(
-        db=db, campaign_id=cam.id)
-    # users=crud.member.get_multi_worker_members_from_hive_id(db=db,campaign_id=cam.id)
-    for i in users:
-        aletorio = random.random()
-        if aletorio > variables_comportamiento["user_availability"]:
-            us = crud.member.get_by_id(db=db, id=i.member_id)
-            usuarios_peticion.append(us)
-    return usuarios_peticion
 
 
 def reciboUser_hive(hive_id:int,db: Session = Depends(deps.get_db)):
@@ -76,7 +47,7 @@ def reciboUser_hive(hive_id:int,db: Session = Depends(deps.get_db)):
         if i.role=="WorkerBee" or i.role=="QueenBee":
             user= crud.member.get_by_id(id=i.member_id, db=db)
             aletorio = random.random()
-            if aletorio > variables_comportamiento["user_availability"]:
+            if aletorio > variables.variables_comportamiento["user_availability"]:
                 usuarios_peticion.append(user)
     return usuarios_peticion
 
@@ -92,14 +63,14 @@ def reciboUser(db: Session = Depends(deps.get_db)):
         hive_member=crud.hive_member.get_by_member_id(db=db, member_id=i.id)
         if hive_member.role=="WorkerBee" or hive_member.role=="QueenBee":
             aletorio = random.random()
-            if aletorio > variables_comportamiento["user_availability"]:
+            if aletorio > variables.variables_comportamiento["user_availability"]:
                 usuarios_peticion.append(i)
     return usuarios_peticion
 
 
 def user_selecction(a: list()):
     aletorio = random.random()
-    if aletorio > variables_comportamiento["user_availability"]:
+    if aletorio > variables.variables_comportamiento["user_availability"]:
         return random.choice(a)
     else:
         return None
@@ -107,7 +78,7 @@ def user_selecction(a: list()):
 
 def user_selecction_con_popularidad(a: List[Recommendation], dic_of_popularity, db: Session = Depends(deps.get_db)):
     aletorio = random.random()
-    if aletorio > variables_comportamiento["user_availability"]:
+    if aletorio > variables.variables_comportamiento["user_availability"]:
        
         list_result = []
         for i in a:
@@ -134,9 +105,9 @@ def asignacion_recursos_hive(
     DEMO!
     """
     initial = datetime.utcnow()
-    start = datetime(year=2024, month=12, day=1, hour=10, minute=00,
+    start = datetime(year=2024, month=12, day=10, hour=10, minute=00,
                      second=00).replace(tzinfo=timezone.utc)
-    end = datetime(year=2024, month=12, day=1, hour=14, minute=00,
+    end = datetime(year=2024, month=12, day=10, hour=14, minute=00,
                    second=1).replace(tzinfo=timezone.utc)
 
     mediciones = []
@@ -211,7 +182,7 @@ def asignacion_recursos_hive(
             mediciones[i][2] = int(mediciones[i][2]) - 60
             if mediciones[i][2] <= 0:
                 aletorio = random.random()
-                if aletorio > variables_comportamiento["user_realize"]:
+                if aletorio > variables.variables_comportamiento["user_realize"]:
                     time_polinizado = time
                     slot = crud.slot.get(db=db, id=mediciones[i][1].slot_id)
                     cell = crud.cell.get_Cell(db=db, cell_id=slot.cell_id)
@@ -328,7 +299,7 @@ def asignacion_recursos_all(
             mediciones[i][2] = int(mediciones[i][2]) - 60
             if mediciones[i][2] <= 0:
                 aletorio = random.random()
-                if aletorio > variables_comportamiento["user_realize"]:
+                if aletorio > variables.variables_comportamiento["user_realize"]:
                     time_polinizado = time
                     slot = crud.slot.get(db=db, id=mediciones[i][1].slot_id)
                     cell = crud.cell.get_Cell(db=db, cell_id=slot.cell_id)
@@ -365,108 +336,8 @@ def asignacion_recursos_all(
     print((final-initial))
     return None
 
-# # 1 campaign active in a hive!
-# @api_router_demo.post("/{campaign_id}", status_code=201, response_model=None)
-# def asignacion_recursos(
-#     hive_id: int,
-#         campaign_id: int,
-#         db: Session = Depends(deps.get_db)):
-#     """
-#     DEMO!
-#     """
-#     initial = datetime.utcnow()
 
-#     mediciones = []
-#     cam = crud.campaign.get_campaign(db=db, hive_id=hive_id, campaign_id=campaign_id)
-
-#     dur = (cam.end_datetime - cam.start_datetime).total_seconds()
-#     for segundo in range(60, int(dur), 60):
-#         random.seed()
-#         print("----------------------------------------------------------------------", segundo)
-#         time = cam.start_datetime + timedelta(seconds=segundo)
-
-#         prioriry_calculation(time=time, db=db, cam=cam)
-
-#         show_a_campaign_2(hive_id=cam.hive_id, campaign_id=cam.id, time=time, db=db)
-
-#         list_users = reciboUser_1(db=db, cam=cam)
-#         if list_users != []:
-#             for user in list_users:
-#                 # generate the user position, select randomly a surface and generate a point closer in a random direction of this surface.
-#                 n_surfaces = len(cam.surfaces)
-#                 surface_indice = random.randint(0, n_surfaces-1)
-#                 boundary = cam.surfaces[surface_indice].boundary
-#                 distance = random.randint(
-#                     0, round(1000*(boundary.radius + cam.cells_distance)))
-
-#                 distance = distance/1000
-#                 direction = random.randint(0, 360)
-
-#                 lon1 = boundary.centre['Longitude']
-#                 lat1 = boundary.centre['Latitude']
-#                 lat2, lon2 = get_point_at_distance(
-#                     lat1=lat1, lon1=lon1, d=distance, bearing=direction)
-
-#                 a = RecommendationCreate(member_current_location={
-#                                          'Longitude': lon2, 'Latitude': lat2}, recommendation_datetime=time)
-#                 recomendaciones = create_recomendation_2(
-#                     db=db, member_id=user.id, recipe_in=a, cam=cam, time=time)
-
-#                 if len(recomendaciones['results']) > 0:
-#                     recomendacion_polinizar = user_selecction(recomendaciones['results'])
-#                     recomendation_coguida = crud.recommendation.get_recommendation(
-#                         db=db, member_id=user.id, recommendation_id=recomendacion_polinizar.id)
-#                     recomendacion_polinizar = crud.recommendation.update(
-#                         db=db, db_obj=recomendation_coguida, obj_in={"state": "ACCEPTED", "update_datetime": time})
-
-#                     mediciones.append(
-#                         [user, recomendacion_polinizar, random.randint(1, 600)])
-#                     # if user.id%2==0 and user.id<30:
-#                     #     show_recomendation(db=db, cam=cam, user=user, result=recomendaciones['results'],time=time,recomendation=recomendacion_polinizar)
-
-#         new = []
-#         for i in range(0, len(mediciones)):
-#             # Anterior approach cuando declaramos el tiempo que el uusario iba a tardar en realizarlo
-#             mediciones[i][2] = int(mediciones[i][2]) - 60
-#             if mediciones[i][2] <= 0:
-#                 aletorio = random.random()
-#                 if aletorio > variables_comportamiento["user_realize"]:
-#                     time_polinizado = time
-#                     slot = crud.slot.get(db=db, id=mediciones[i][1].slot_id)
-#                     cell = crud.cell.get_Cell(db=db, cell_id=slot.cell_id)
-#                     Member_Device_user = crud.member_device.get_by_member_id(
-#                         db=db, member_id=mediciones[i][0].id)
-#                     creation = MeasurementCreate(db=db, location=cell.centre, datetime=time_polinizado,
-#                                                  device_id=Member_Device_user.device_id, recommendation_id=mediciones[i][1].id)
-#                     slot = crud.slot.get_slot_time(db=db, cell_id=cell.id, time=time)
-#                     # Ver si se registran bien mas recomendaciones con el id de la medicion correcta.
-#                     device_member = crud.member_device.get_by_member_id(
-#                         db=db, member_id=mediciones[i][0].id)
-#                     measurement = crud.measurement.create_Measurement(
-#                         db=db, device_id=device_member.device_id, obj_in=creation, member_id=mediciones[i][0].id, slot_id=slot.id, recommendation_id=mediciones[i][1].id)
-#                     recomendation_coguida = crud.recommendation.get_recommendation(
-#                         db=db, member_id=mediciones[i][1].member_id, recommendation_id=mediciones[i][1].id)
-
-#                     crud.recommendation.update(db=db, db_obj=recomendation_coguida, obj_in={
-#                                                "state": "REALIZED", "update_datetime": time_polinizado})
-#                     db.commit()
-#                 else:
-#                     time_polinizado = time
-#                     recomendation_coguida = crud.recommendation.get_recommendation(
-#                         db=db, member_id=mediciones[i][1].member_id, recommendation_id=mediciones[i][1].id)
-
-#                     crud.recommendation.update(db=db, db_obj=recomendation_coguida, obj_in={
-#                                                "state": "NON_REALIZED", "update_datetime": time_polinizado})
-#                     db.commit()
-#             else:
-#                 new.append(mediciones[i])
-#         mediciones = new
-#     final = datetime.utcnow()
-#     print((final-initial))
-#     return None
-
-
-@api_router_demo.post("/demo2/{campaign_id}", status_code=201, response_model=None)
+@api_router_demo.post("/Priority_cells_demo/{campaign_id}", status_code=201, response_model=None)
 def asignacion_recursos_con_popularidad_mucha(
     hive_id: int,
         campaign_id: int,
@@ -485,12 +356,12 @@ def asignacion_recursos_con_popularidad_mucha(
     
     # print(cells_id)
     numero_minimo = min(
-        variables_comportamiento["number_of_unpopular_cells"], len(cells_id))
+        variables.variables_comportamiento["number_of_unpopular_cells"], len(cells_id))
     for i in range(0, numero_minimo):
         random.seed()
         kay = random.choice(cells_id)
         cells_id.pop(kay)
-        dics_of_popularity[str(kay)] = variables_comportamiento["popularidad_cell"]
+        dics_of_popularity[str(kay)] = variables.variables_comportamiento["popularidad_cell"]
     # print(dics_of_popularity)
 
     dur = (cam.end_datetime - cam.start_datetime).total_seconds()
@@ -556,7 +427,7 @@ def asignacion_recursos_con_popularidad_mucha(
             mediciones[i][2] = int(mediciones[i][2]) - 60
             if mediciones[i][2] <= 0:
                 aletorio = random.random()
-                if aletorio > variables_comportamiento["user_realize"]:
+                if aletorio > variables.variables_comportamiento["user_realize"]:
                     time_polinizado = time
                     slot = crud.slot.get(db=db, id=mediciones[i][1].slot_id)
                     cell = crud.cell.get_Cell(db=db, cell_id=slot.cell_id)
@@ -589,7 +460,6 @@ def asignacion_recursos_con_popularidad_mucha(
             else:
                 new.append(mediciones[i])
         mediciones = new
-
     return None
 
 
@@ -941,10 +811,10 @@ def show_recomendation(*, cam: Campaign, user: Member, result: list(), time: dat
                 Cardinal_actual = crud.measurement.get_all_Measurement_from_cell_in_the_current_slot(
                     db=db, cell_id=j.id, time=time, slot_id=slot.id)
                 if Cardinal_actual >= cam.min_samples:
-                    color = color_list_h[4]
+                    color = variables.color_list_hex[4]
                 else:
                     numero = int((Cardinal_actual/cam.min_samples)//(1/4))
-                    color = color_list_h[numero]
+                    color = variables.color_list_hex[numero]
                 lon1 = j.centre['Longitude']
                 lat1 = j.centre['Latitude']
 
@@ -959,14 +829,8 @@ def show_recomendation(*, cam: Campaign, user: Member, result: list(), time: dat
 
                     list_point.append([lat2, lon2])
 
-                line_color = 'black'
-                fill_color = color
-                # print(color)
-                weight = 1
-                text = 'text'
-                # print(list_point)
-                folium.Polygon(locations=list_point, color=line_color, fill_color=color,
-                            weight=weight, popup=(folium.Popup(text)), opacity=0.5, fill_opacity=0.75).add_to(mapObj)
+                folium.Polygon(locations=list_point, color='black', fill_color=color,
+                            weight=1, popup=(folium.Popup(str(j.id))), opacity=0.5, fill_opacity=0.75).add_to(mapObj)
 
                 folium.Marker(list_point[3],
                             icon=DivIcon(
@@ -991,63 +855,18 @@ def show_recomendation(*, cam: Campaign, user: Member, result: list(), time: dat
 
     direcion_html = f"/recommendersystem/src/Servicio/app/Pictures/Recomendaciones_html/{time.strftime('%m-%d-%Y-%H-%M-%S')}User_id{user.id}Cam{cam.id}HI{cam.hive_id}.html"
 
-    direcion_png = f"/recommendersystem/src/Servicio/app/Pictures/Recomendaciones/{time.strftime('%m-%d-%Y-%H-%M-%S')}User_id{user.id}.Cam{cam.id}Hi{cam.hive_id}.png"
-
-    colors = ['#ffc3c3', '#ffdba7', '#f8f7bb', '#cbffbe', '#8ac683']
-    names = ['Initial', 'Almost Midway', 'Midway', 'Almost Finished', 'Finished']
-    # Define the names for the map-legend symbols
-    symbols = ['orange', 'blue', 'red']
-    names_simbols = ["User's Position", "Recommended Points",
-                     "Recommended and Selected Point"]
-
-    # Create the legend with a white background and opacity 0.5
-    legend_html = '''
-        <div style="position: fixed; 
-            bottom: 80px; left: 90px; width: 290px; height: 240px; 
-            border:2px solid grey; z-index:9999;
-            background-color: rgba(255, 255, 255, 0.75);
-            font-size:15px;">
-            <p style="margin:10px;"><b>Progress of measurements</b></p>
-            '''
-    # Add the colored boxes to the legend
-    for i in range(len(colors)):
-        legend_html += '''
-            <div style="background-color:{}; margin-left: 10px;
-                width: 28px; height: 16px; border: 2px solid #999;
-                display: inline-block;"></div>
-            <p style="display: inline-block; margin-left: 5px;">{}</p>
-            <br> 
-            '''.format(colors[i], names[i])
-    legend_html += '''
- <div ></div><p style=display: inline-block; margin-left: 10px;">time: {}</p>    '''.format(time.strftime('%m/%d/%Y, %H:%M:%S'))
-    legend_html += '</div>'
+    # direcion_png = f"/recommendersystem/src/Servicio/app/Pictures/Recomendaciones/{time.strftime('%m-%d-%Y-%H-%M-%S')}User_id{user.id}.Cam{cam.id}Hi{cam.hive_id}.png"
+    
+    legend_html, legend_html_2 = legend_generation_recommendation_representation(time.strftime('%m/%d/%Y, %H:%M:%S'))
     mapObj.get_root().html.add_child(folium.Element(legend_html))
-    legend_html = '''
-        <div style="position: fixed; 
-            bottom: 350px; left: 90px; width: 290px; height: 170px; 
-            border:2px solid grey; z-index:9999;
-            background-color: rgba(255, 255, 255, 0.75);
-            font-size:15px;">
-            <p style="margin:10px;"><b>Marker Legend</b></p>
-            '''
-    # Add the map-legend symbols to the legend
-    for i in range(len(symbols)):
-        legend_html += '''
-            <i class="fa fa-map-marker fa-2x"
-                    style="color:{};icon:user;margin-left: 10px;"></i>
-            <p style="display: inline-block; margin-left: 5px;">{}</p>
-            <br>
-            '''.format(symbols[i], names_simbols[i])
 
-    legend_html += '</div>'
-
-    # Add the legend to the map
-    mapObj.get_root().html.add_child(folium.Element(legend_html))
+    mapObj.get_root().html.add_child(folium.Element(legend_html_2))
     mapObj.save(direcion_html)
     # img_data = mapObj._to_png(5)
     # img = Image.open(io.BytesIO(img_data))
     # img.save(direcion_png)
     return None
+
 
 
 def show_a_campaign_2(
@@ -1089,7 +908,7 @@ def show_a_campaign_2(
             else:
                 numero = int((Cardinal_actual/campañas_activas.min_samples)//(1/4))
             # color= (color_list[numero][2],color_list[numero][1],color_list[numero][0])
-            color = color_list_h[numero]
+            color = variables.color_list_hex[numero]
             lon1 = j.centre['Longitude']
             lat1 = j.centre['Latitude']
 
@@ -1153,27 +972,8 @@ def show_a_campaign_2(
     '''.format(time.strftime('%m/%d/%Y, %H:%M:%S'))
     legend_html += '</div>'
     mapObj.get_root().html.add_child(folium.Element(legend_html))
-    # legend_html = '''
-    #     <div style="position: fixed;
-    #         bottom: 300px; left: 90px; width: 290px; height: 170px;
-    #         border:2px solid grey; z-index:9999;
-    #         background-color: rgba(255, 255, 255, 0.75);
-    #         font-size:15px;">
-    #         <p style="margin:10px;"><b>Marker Legend</b></p>
-    #         '''
-    #     # Add the map-legend symbols to the legend
-    # for i in range(len(symbols)):
-    #         legend_html += '''
-    #         <i class="fa fa-map-marker fa-2x"
-    #                 style="color:{};icon:user;margin-left: 10px;"></i>
-    #         <p style="display: inline-block; margin-left: 5px;">{}</p>
-    #         <br>
-    #         '''.format(symbols[i],names_simbols[i])
-
-    # legend_html += '</div>'
-
-    #     # Add the legend to the map
-    # mapObj.get_root().html.add_child(folium.Element(legend_html))
+   
+  
     mapObj.save(direcion_html)
 
     # img_data = mapObj._to_png(5)
@@ -1231,7 +1031,7 @@ def show_hive(
                 else:
                     numero = int((Cardinal_actual/cam.min_samples)//(1/4))
                 # color= (color_list[numero][2],color_list[numero][1],color_list[numero][0])
-                color = color_list_h[numero]
+                color = variables.color_list_hex[numero]
                 lon1 = j.centre['Longitude']
                 lat1 = j.centre['Latitude']
 
@@ -1245,12 +1045,9 @@ def show_hive(
 
                     list_point.append([lat2, lon2])
 
-                line_color = 'black'
-                fill_color = color
-                weight = 1
-                text = 'text'
-                folium.Polygon(locations=list_point, color=line_color, fill_color=color,
-                            weight=weight, popup=(folium.Popup(text)), opacity=0.5, fill_opacity=0.75).add_to(mapObj)
+               
+                folium.Polygon(locations=list_point, color='black', fill_color=color,
+                            weight=1, popup=(folium.Popup(str(j.id))), opacity=0.5, fill_opacity=0.75).add_to(mapObj)
 
                 folium.Marker(list_point[3],
                             icon=DivIcon(
@@ -1260,40 +1057,10 @@ def show_hive(
                 )
                 ).add_to(mapObj)
 
-    # res, im_png = cv2.imencode(".png", imagen)
     direcion_html = f"/recommendersystem/src/Servicio/app/Pictures/Measurements_html/{time.strftime('%m-%d-%Y-%H-%M-%S')}Hi{hive_id}.html"
-    # print(direcion)
-    # cv2.imwrite(direcion, imagen)
-    direcion_png = f"/recommendersystem/src/Servicio/app/Pictures/Measurements/{time.strftime('%m-%d-%Y-%H-%M-%S')}Hi{hive_id}.png"
-    colors = ['#ffc3c3', '#ffdba7', '#f8f7bb', '#cbffbe', '#8ac683']
-    names = ['Initial', 'Almost Midway', 'Midway', 'Almost Finished', 'Finished']
-    # Define the names for the map-legend symbols
-    symbols = ['orange', 'blue', 'red']
-    names_simbols = ["User's Position", "Recommended Points",
-                     "Recommended and Selected Point"]
-
-    # Create the legend with a white background and opacity 0.5
-    legend_html = '''
-        <div style="position: fixed; 
-            bottom: 80px; left: 90px; width: 290px; height: 240px; 
-            border:2px solid grey; z-index:9999;
-            background-color: rgba(255, 255, 255, 0.75);
-            font-size:15px;">
-            <p style="margin:10px;"><b>Progress of measurements</b></p>
-            '''
-    # Add the colored boxes to the legend
-    for i in range(len(colors)):
-        legend_html += '''
-            <div style="background-color:{}; margin-left: 10px;
-                width: 28px; height: 16px; border: 2px solid #999;
-                display: inline-block;"></div>
-            <p style="display: inline-block; margin-left: 10px;">{}</p>
-            <br>
-            '''.format(colors[i], names[i])
-    legend_html += '''
-    <div ></div><p style=display: inline-block; margin-left: 5px;">time: {}</p>
-    '''.format(time.strftime('%m/%d/%Y, %H:%M:%S'))
-    legend_html += '</div>'
+    # direcion_png = f"/recommendersystem/src/Servicio/app/Pictures/Measurements/{time.strftime('%m-%d-%Y-%H-%M-%S')}Hi{hive_id}.png"
+    
+    legend_html = legend_generation_measurements_representation(time.strftime('%m/%d/%Y, %H:%M:%S'))
     mapObj.get_root().html.add_child(folium.Element(legend_html))
     mapObj.save(direcion_html)
 
