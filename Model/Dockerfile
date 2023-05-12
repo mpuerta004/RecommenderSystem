@@ -1,13 +1,14 @@
-FROM mysql:8.0.31
+FROM mysql:8.0.32
 
 
 # Copy the database file to the init directory
 # COPY init.sql /docker-entrypoint-initdb.d/
 
 # Set environment variables
-ENV MYSQL_ROOT_PASSWORD=mypasswd
+# ENV MYSQL_ROOT_PASSWORD=mypasswd
 # ENV MYSQL_DATABASE=SocioBeeMVE
 COPY setup.sh /mysql/setup.sh
-COPY init.sql /mysql/init.sql
-RUN /mysql/setup.sh
+COPY init.sql /mysql/init.sql   
+
+#RUN /mysql/setup.sh
 # ENTRYPOINT ["tail", "-f", "/dev/null"]

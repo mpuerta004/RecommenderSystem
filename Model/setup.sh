@@ -1,5 +1,4 @@
 #!/bin/bash
 set -e
-sudo service mysql start
-sudo mysql < /mysql/init.sql
-sudo service mysql stop
+mysql -u root -p mysql < /mysql/init.sql
+# service mysql stop

@@ -1,23 +1,32 @@
 version: '3'
+
+# networks:
+#   academe-platform_sociobee_network:
+#     external: true
+
+volumes:
+  data-volume:
+
 services:
-  # proxy:
-  #     build: ./proxy
-  #     networks:
-  #       - frontend
+
   mysql:
     image: mysql
+    build: ./Model
     volumes:
-    - ./Model/init.sql:/docker-entrypoint-initdb.d/dump.sql
+    #- ./Model/init.sql:/docker-entrypoint-initdb.d/dump.sql
+    - data-volume:/var/lib/mysql
     container_name: mysql
-    # networks:
-    #   - db
     command: --default-authentication-plugin=mysql_native_password
     restart: always
     environment:
+      MYSQL_DATABASE: SocioBeeMVE
       MYSQL_ROOT_PASSWORD: mypasswd
     ports:
       - "3306:3306"
     
+    # networks:
+    #   - academe-platform_sociobee_network
+
   api:
     depends_on:
       - mysql
@@ -25,15 +34,11 @@ services:
     platform: linux/x86_64
     build: .
     links:
-    - mysql
-    # networks:
-    #   - db
-    #   - api
+      - mysql
     restart: always
     tty: true
-    #volumes:
-    #- /c/Users/mpuer/Desktop/recommendersystem:/recommendersystem
-    #   - ".:/home/ubuntu/carpeta_compartida_docker/RecommenderSystem"
+    volumes:
+    - ./:/recommendersystem
     ports:
       - 8001:8001
     environment:
@@ -42,13 +47,5 @@ services:
       - DATABASE_PASSWORD=mvepasswd123
       - DATABASE=SocioBeeMVE
       - DATABASE_HOST=mysql
-# networks:
-#   db:
-#     # Use a custom driver
-#     driver: custom-driver-1
-#   api:
-#     # Use a custom driver which takes special options
-#     driver: custom-driver-2
-#     driver_opts:
-#       foo: "1"
-#       bar: "2"
+    # networks:
+    #   - academe-platform_sociobee_network

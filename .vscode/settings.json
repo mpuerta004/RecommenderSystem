@@ -10,8 +10,8 @@
             "driver": "MySQL",
             "database": "SocioBeeMVE",
             "name": "Try",
-            "username": "mve",
-            "password": "mvepasswd123"
+            "username": "root",
+            "password": "mypasswd"
         }
     ]
 }
