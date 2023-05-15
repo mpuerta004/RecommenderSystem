@@ -1,24 +1,25 @@
-import cv2 
 import os 
+import os
+import moviepy.video.io.ImageSequenceClip
+from selenium import webdriver  
+import time
 
-img_array = []
+driver = webdriver.Chrome()
 
-path = r"/home/ubuntu/carpeta_compartida_docker/RecommenderSystem/src/Servicio/app/Pictures/Recomendaciones"
+path = r"C:/Users/mpuer/Desktop/RecommenderSystem/src/Servicio/app/Pictures/Measurements"
+
 archivos = sorted(os.listdir(path))
 for i in archivos: 
     dirArchivo = path + "/" + i
     print(i)
-    img = cv2.imread(dirArchivo)
-    height, width  = img.shape[:2]
+    driver.get(dirArchivo)
+    time.sleep(2)
+    driver.save_screenshot(path + "/" + i[:-5]+".png")
+driver.quit()
+fps=7
+image_files = [os.path.join(path,img)
+               for img in os.listdir(path)
+               if img.endswith(".png")]
 
-    # cv2.putText(img, f"Recomendaciones con no popularidad en 3 o menos celdas", (80,180), cv2.FONT_HERSHEY_SIMPLEX , 1.5, (0,0,0))
-    img_array.append(img)
-    
-
-video = cv2.VideoWriter('db0.wmv',cv2.VideoWriter_fourcc(*'mp4v'), 3, (width, height))
-
-
-for i in range(0, len(archivos)):
-	video.write(img_array[i])
-
-video.release()
+clip = moviepy.video.io.ImageSequenceClip.ImageSequenceClip(image_files, fps=fps)
+clip.write_videofile('C:/Users/mpuer/Desktop/RecommenderSystem/src/Servicio/app/Pictures/my_video.mp4')
