@@ -10,5 +10,9 @@ FROM mysql:8.0.32
 COPY setup.sh /mysql/setup.sh
 COPY init.sql /mysql/init.sql   
 
+ADD init.sql /docker-entrypoint-initdb.d
+
+EXPOSE 3306
+
 #RUN /mysql/setup.sh
 # ENTRYPOINT ["tail", "-f", "/dev/null"]
