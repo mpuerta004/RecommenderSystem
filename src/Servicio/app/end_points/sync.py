@@ -185,7 +185,7 @@ def update_members(
 
                 
             
-@api_router_sync.post("/hives/{hive_id}/campaigns/{campaign_id}/devices",  status_code=201, response_model=Device)   
+@api_router_sync.put("/hives/{hive_id}/campaigns/{campaign_id}/devices",  status_code=201, response_model=Device)   
 def post_members_devices(
     hive_id:int,
     campaign_id:int,
@@ -195,18 +195,19 @@ def post_members_devices(
     """
     synchronization the member devices. 
     """ 
-    member_device=crud.member_device.get_by_member_id(db=db, member_id=memberDevice.member_id)
-    if member_device is None:
+    member_device_=crud.member_device.get_by_member_id(db=db, member_id=memberDevice.member_id)
+    if member_device_ is None:
         #Creamos el member_device
         crud.member_device.create(db=db, obj_in=memberDevice)
         return crud.device.get(db=db, id=memberDevice.device_id)
     else:
         #Si la entidad memeber_device esta bien pues correcto
-        if member_device.member_id==memberDevice.member_id:
+        if member_device_.device_id==memberDevice.device_id:
             return crud.device.get(db=db, id=memberDevice.device_id)
         else:
             #Si no lo actualizamos. 
-            crud.member_device.update(db=db, db_obj=member_device, obj_in=memberDevice)
+            crud.member_device.update(db=db, db_obj=member_device_, obj_in=memberDevice)
+            db.commit()
             return crud.device.get(db=db, id=memberDevice.device_id)
 
 
