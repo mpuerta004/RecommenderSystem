@@ -34,6 +34,14 @@ class CRUDMember_Device(CRUDBase[Member_Device, Member_DeviceCreate, Member_Devi
                   return db.query(Member_Device).filter(Member_Device.device_id == device_id).first()
             except Exception as e:
                         raise HTTPException(status_code=500, detail=f"Error with mysql {e}" )
+       def remove(self, db: Session, *, Member_device:Member_Device) -> Member_Device:
+        try:    
+            obj = Member_device
+            db.delete(obj)
+            db.commit()
+            return obj
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"Error with mysql {e}" )
    
     
 member_device = CRUDMember_Device(Member_Device)

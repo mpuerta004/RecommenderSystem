@@ -196,19 +196,38 @@ def post_members_devices(
     synchronization the member devices. 
     """ 
     member_device_=crud.member_device.get_by_member_id(db=db, member_id=memberDevice.member_id)
+    #member_id no existe en la tabla
     if member_device_ is None:
-        #Creamos el member_device
-        crud.member_device.create(db=db, obj_in=memberDevice)
-        return crud.device.get(db=db, id=memberDevice.device_id)
-    else:
-        #Si la entidad memeber_device esta bien pues correcto
-        if member_device_.device_id==memberDevice.device_id:
+        MEmber_of_device= crud.member_device.get_by_device_id(db=db, device_id=memberDevice.device_id)
+        if MEmber_of_device is None:
+            #member_id and device_id not in the table
+            crud.member_device.create(db=db, obj_in=memberDevice)
             return crud.device.get(db=db, id=memberDevice.device_id)
         else:
-            #Si no lo actualizamos. 
-            crud.member_device.update(db=db, db_obj=member_device_, obj_in=memberDevice)
+            #member_id not in the table and device_id yes
+            crud.member_device.remove(db=db,Member_device=MEmber_of_device)
             db.commit()
+            crud.member_device.create(db=db, obj_in=memberDevice)
             return crud.device.get(db=db, id=memberDevice.device_id)
+
+    else:
+            #member_id in the table. 
+            MEmber_of_device= crud.member_device.get_by_device_id(db=db, device_id=memberDevice.device_id)
+            if MEmber_of_device is None:
+                    crud.member_device.update(db=db, db_obj=member_device_, obj_in=memberDevice)
+                    return crud.device.get(db=db, id=memberDevice.device_id)
+                
+            else:
+                if member_device_.device_id==memberDevice.device_id:
+                    return crud.device.get(db=db, id=memberDevice.device_id)
+                else: 
+                    crud.member_device.remove(db=db,Member_device=MEmber_of_device)
+                    crud.member_device.update(db=db, db_obj=member_device_, obj_in=memberDevice)
+                    return crud.device.get(db=db, id=memberDevice.device_id)
+
+
+                
+                
 
 
 
