@@ -7,10 +7,10 @@ from pydantic import BaseModel, ValidationError
 
 
 class DeviceBase(BaseModel):
-    description:str
-    brand :str
-    model :str
-    year :str
+    description:str = None
+    brand :str = None
+    model :str = None
+    year :str=None
    
 
 class DeviceCreate(DeviceBase):

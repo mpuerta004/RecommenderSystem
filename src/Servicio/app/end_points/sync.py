@@ -202,12 +202,14 @@ def post_members_devices(
         if MEmber_of_device is None:
             #member_id and device_id not in the table
             crud.member_device.create(db=db, obj_in=memberDevice)
+            db.commit()
             return crud.device.get(db=db, id=memberDevice.device_id)
         else:
             #member_id not in the table and device_id yes
             crud.member_device.remove(db=db,Member_device=MEmber_of_device)
             db.commit()
             crud.member_device.create(db=db, obj_in=memberDevice)
+            db.commit()
             return crud.device.get(db=db, id=memberDevice.device_id)
 
     else:
@@ -215,6 +217,7 @@ def post_members_devices(
             MEmber_of_device= crud.member_device.get_by_device_id(db=db, device_id=memberDevice.device_id)
             if MEmber_of_device is None:
                     crud.member_device.update(db=db, db_obj=member_device_, obj_in=memberDevice)
+                    db.commit()
                     return crud.device.get(db=db, id=memberDevice.device_id)
                 
             else:
@@ -222,8 +225,13 @@ def post_members_devices(
                     return crud.device.get(db=db, id=memberDevice.device_id)
                 else: 
                     crud.member_device.remove(db=db,Member_device=MEmber_of_device)
-                    crud.member_device.update(db=db, db_obj=member_device_, obj_in=memberDevice)
-                    return crud.device.get(db=db, id=memberDevice.device_id)
+                    db.commit()
+                    crud.member_device.remove(db=db,Member_device=member_device_)
+                    crud.member_device.create(db=db, obj_in=memberDevice)
+                    db.commit()
+                    member_device_finally = crud.member_device.get_by_member_id(db=db, member_id=memberDevice.member_id)
+                    print(member_device_finally.device_id)
+                    return crud.device.get(db=db, id=member_device_finally.device_id)
 
 
                 
