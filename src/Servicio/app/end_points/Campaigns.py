@@ -167,6 +167,7 @@ async def create_campaign(
     if campaign_metadata.sampling_period == 0:
         duration = campaign_metadata.end_datetime - campaign_metadata.start_datetime        
         campaign_metadata.sampling_period = duration.total_seconds()
+        campaign_metadata.min_samples = 0
     
     """
     Verify all case related with the start and end datetime of the campaign
