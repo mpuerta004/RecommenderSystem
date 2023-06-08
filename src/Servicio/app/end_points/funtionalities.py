@@ -262,7 +262,7 @@ def create_slots_per_surface(sur: Surface, cam: Campaign, db: Session = Depends(
 def create_slots_per_cell(cam: Campaign, cell: Cell, db: Session = Depends(deps.get_db)):
     #Calculate the number of slot we have based on cam.sampling_period and the duration of the campaign
     duration = cam.end_datetime - cam.start_datetime
-    n_slot = int(duration.total_seconds()//cam.sampling_period)
+    n_slot = int(int(duration.total_seconds())//cam.sampling_period)
     if duration.total_seconds() % cam.sampling_period != 0:
         n_slot = n_slot+1
 
@@ -282,9 +282,6 @@ def create_slots_per_cell(cam: Campaign, cell: Cell, db: Session = Depends(deps.
         #We calculate the inicial priority at the first second of the campaign
         if start == cam.start_datetime:
             result = 0.0
-            # b = max(2, cam.min_samples - int(Cardinal_pasado))
-            # a = max(2, cam.min_samples - int(Cardinal_actual))
-            # result = math.log(a) * math.log(b, int(Cardinal_actual) + 2)
             trendy = 0.0
             Cell_priority = PriorityCreate(
                 slot_id=slot.id, datetime=start, temporal_priority=result, trend_priority=trendy)

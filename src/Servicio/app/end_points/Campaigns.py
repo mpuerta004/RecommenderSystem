@@ -153,46 +153,21 @@ async def create_campaign(
         exit()
     timezone_m = pytz.timezone(timezone_str)
 
-    # Reverse geocode the coordinates to get the location details
-    # a=Point(latitude=boundary_campaign.centre['Latitude'],longitude= boundary_campaign.centre['Longitude'])
-    # location = geolocator.reverse(a)
-
-    # if location is None:
-    #     print("Unable to determine the location.")
-    #     exit()
-
-    # Retrieve the timezone of the location
-    # timezone_m = pytz.timezone(location.                            
-    #                            raw['timezone'])
-
-    # Print the timezone
-    print(f"The timezone of the location is {timezone_m}")
     
-    print(timezone_m)
+    # print(f"The timezone of the location is {timezone_m}")
+    
+    # print(timezone_m)
     # timezone_m = pytz.timezone('Europe/Madrid')  # Get the time zone object for the location
     date = datetime(year=campaign_metadata.start_datetime.year, month=campaign_metadata.start_datetime.month,day=campaign_metadata.start_datetime.day,hour=campaign_metadata.start_datetime.hour,minute=campaign_metadata.start_datetime.minute, second=campaign_metadata.start_datetime.second)
     localized_dt = timezone_m.localize(date, is_dst=None)
     utc_dt = localized_dt.astimezone(pytz.UTC)
     campaign_metadata.start_datetime = utc_dt
-    print(utc_dt)
+    # print(utc_dt)
     date = datetime(year=campaign_metadata.end_datetime.year, month=campaign_metadata.end_datetime.month,day=campaign_metadata.end_datetime.day,hour=campaign_metadata.end_datetime.hour,minute=campaign_metadata.end_datetime.minute, second=campaign_metadata.end_datetime.second)
     localized_dt = timezone_m.localize(date, is_dst=None)
     utc_dt = localized_dt.astimezone(pytz.UTC)
     campaign_metadata.end_datetime = utc_dt
-    print(utc_dt)
-    
-    # Convert the scheduled activity start and end times to the local time zone
-    # localized_start_time = campaign_metadata.start_datetime
-    # print(localized_start_time)
-    # ahora=datetime.now()
-    # print(ahora)
-    # # Convert the localized datetime to UTC
-    # utc_dt = date.astimezone(pytz.UTC)
     # print(utc_dt)
-    # date_utc=date.replace(
-    #     tzinfo=timezone_m)
-    # print(date_utc)
-   
     
     
     #Change the timezone of the start and end date
@@ -405,25 +380,53 @@ def update_campaign(
     If campaign is active then we can not modify it.
     """
     if recipe_in.start_datetime != campaign.start_datetime or recipe_in.end_datetime != campaign.end_datetime or recipe_in.cells_distance != campaign.cells_distance or recipe_in.sampling_period != campaign.sampling_period or recipe_in.min_samples != campaign.min_samples:
-        #Verify if the campaign is active (time)
-        if datetime.utcnow() > (campaign.start_datetime).replace(tzinfo=timezone.utc):
-            raise HTTPException(
-                status_code=401, detail=f"Yan active campaign cannot be modified."
-            )
-        else:
-            #Change the timezone of the start and end date
-            recipe_in.start_datetime = recipe_in.start_datetime.replace(
-                tzinfo=timezone.utc)
-            #Change the timezone of the start and end date
-            recipe_in.end_datetime = recipe_in.end_datetime.replace(
-                tzinfo=timezone.utc)
-            #Update the campaign
-            campaign = crud.campaign.update(
-                db=db, db_obj=campaign, obj_in=recipe_in)
+            
             #Remove the cells, slot, boundary and surface
             list_of_surfaces=campaign.surfaces
             for i in list_of_surfaces:
                 centre = i.boundary.centre
+                if i is list_of_surfaces[0]:
+                    tf = TimezoneFinder()
+
+                    # geolocator = Nominatim(user_agent='timezone_app')
+                    latitude=centre['Latitude']
+                    longitude= centre['Longitude']
+                    timezone_str = tf.timezone_at(lng=longitude, lat=latitude)
+
+                    if timezone_str is None:
+                        print("Unable to determine the timezone.")
+                        exit()
+                    timezone_m = pytz.timezone(timezone_str)
+
+                    # print(timezone_m)
+                    # timezone_m = pytz.timezone('Europe/Madrid')  # Get the time zone object for the location
+                    date = datetime(year=recipe_in.start_datetime.year, month=recipe_in.start_datetime.month,day=recipe_in.start_datetime.day,hour=recipe_in.start_datetime.hour,minute=recipe_in.start_datetime.minute, second=recipe_in.start_datetime.second)
+                    localized_dt = timezone_m.localize(date, is_dst=None)
+                    utc_dt = localized_dt.astimezone(pytz.UTC)
+                    recipe_in.start_datetime  = utc_dt
+                    date = datetime(year=recipe_in.end_datetime.year, month=recipe_in.end_datetime.month,day=recipe_in.end_datetime.day,hour=recipe_in.end_datetime.hour,minute=recipe_in.end_datetime.minute, second=recipe_in.end_datetime.second)
+                    localized_dt = timezone_m.localize(date, is_dst=None)
+                    utc_dt = localized_dt.astimezone(pytz.UTC)
+                    recipe_in.end_datetime  = utc_dt
+                    if datetime.now().replace(tzinfo=timezone.utc) > recipe_in.start_datetime.replace(tzinfo=timezone.utc):
+                        raise HTTPException(
+                            status_code=401, detail=f"The start campaign can not be in the past.")
+                    #Update the campaign
+                    if recipe_in.sampling_period == 0:
+                        duration = recipe_in.end_datetime - recipe_in.start_datetime        
+                        recipe_in.sampling_period = duration.total_seconds()
+                        recipe_in.min_samples = 0
+                    if recipe_in.end_datetime <= recipe_in.start_datetime:
+                        raise HTTPException(
+                            status_code=400, detail=f"the end time cannot be earlier or same than the initial time."
+                        )
+                    if recipe_in.start_datetime + timedelta(seconds=recipe_in.sampling_period) > recipe_in.end_datetime:
+                        raise HTTPException(
+                            status_code=400, detail=f"Error with the sampling period"
+                        )
+    
+                campaign = crud.campaign.update(
+                db=db, db_obj=campaign, obj_in=recipe_in)
                 radius = i.boundary.radius
                 #Remove the surface -> implicity this remove the boundary and the cells and slots.
                 crud.surface.remove(db=db, surface=i)

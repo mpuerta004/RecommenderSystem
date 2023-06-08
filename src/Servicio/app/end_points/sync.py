@@ -237,6 +237,8 @@ def post_members_devices(
                 
                 
 
+from timezonefinder import TimezoneFinder
+import pytz
 
 
 ######  PUT Endpoint ######
@@ -268,10 +270,50 @@ def update_campaign(
     if (campaign is None):  
             campaign_metadata= recipe_in.campaignMetadata     
                 #Change the timezone of the start and end date
-            campaign_metadata.start_datetime = campaign_metadata.start_datetime.replace(
-                tzinfo=timezone.utc)
-            campaign_metadata.end_datetime = campaign_metadata.end_datetime.replace(
-                tzinfo=timezone.utc)
+            
+            tf = TimezoneFinder()
+
+            # geolocator = Nominatim(user_agent='timezone_app')
+            latitude=boundary_campaign.centre['Latitude']
+            longitude= boundary_campaign.centre['Longitude']
+            timezone_str = tf.timezone_at(lng=longitude, lat=latitude)
+
+            if timezone_str is None:
+                print("Unable to determine the timezone.")
+                exit()
+            timezone_m = pytz.timezone(timezone_str)
+
+            
+            # print(f"The timezone of the location is {timezone_m}")
+            
+            # print(timezone_m)
+            # timezone_m = pytz.timezone('Europe/Madrid')  # Get the time zone object for the location
+            date = datetime(year=campaign_metadata.start_datetime.year, month=campaign_metadata.start_datetime.month,day=campaign_metadata.start_datetime.day,hour=campaign_metadata.start_datetime.hour,minute=campaign_metadata.start_datetime.minute, second=campaign_metadata.start_datetime.second)
+            localized_dt = timezone_m.localize(date, is_dst=None)
+            utc_dt = localized_dt.astimezone(pytz.UTC)
+            campaign_metadata.start_datetime = utc_dt
+            # print(utc_dt)
+            date = datetime(year=campaign_metadata.end_datetime.year, month=campaign_metadata.end_datetime.month,day=campaign_metadata.end_datetime.day,hour=campaign_metadata.end_datetime.hour,minute=campaign_metadata.end_datetime.minute, second=campaign_metadata.end_datetime.second)
+            localized_dt = timezone_m.localize(date, is_dst=None)
+            utc_dt = localized_dt.astimezone(pytz.UTC)
+            campaign_metadata.end_datetime = utc_dt
+            if campaign_metadata.sampling_period == 0:
+                        duration = campaign_metadata.end_datetime - campaign_metadata.start_datetime        
+                        campaign_metadata.sampling_period = duration.total_seconds()
+                        campaign_metadata.min_samples = 0
+            if campaign_metadata.end_datetime <= campaign_metadata.start_datetime:
+                        raise HTTPException(
+                            status_code=400, detail=f"the end time cannot be earlier or same than the initial time."
+                        )
+            if campaign_metadata.start_datetime + timedelta(seconds=campaign_metadata.sampling_period) > campaign_metadata.end_datetime:
+                        raise HTTPException(
+                            status_code=400, detail=f"Error with the sampling period"
+                        )
+    
+            # campaign_metadata.start_datetime = campaign_metadata.start_datetime.replace(
+            #     tzinfo=timezone.utc)
+            # campaign_metadata.end_datetime = campaign_metadata.end_datetime.replace(
+            #     tzinfo=timezone.utc)
             
             #Obtein the hive of the campaign and verify if the hive exists
             hive = crud.hive.get(db=db, id=hive_id)
@@ -297,7 +339,8 @@ def update_campaign(
             if campaign_metadata.sampling_period == 0:
                 duration = campaign_metadata.end_datetime - campaign_metadata.start_datetime        
                 campaign_metadata.sampling_period = duration.total_seconds()
-            
+                campaign_metadata.min_samples = 0
+
             """
             Verify all case related with the start and end datetime of the campaign
                 - The end time cannot be earlier or same than the initial time. (corect: start < end)
@@ -368,12 +411,47 @@ def update_campaign(
                 status_code=401, detail=f"An active campaign cannot be modified."
             )
         else:
-            #Change the timezone of the start and end date
-            campaign_metadata.start_datetime = campaign_metadata.start_datetime.replace(
-                tzinfo=timezone.utc)
-            #Change the timezone of the start and end date
-            campaign_metadata.end_datetime = campaign_metadata.end_datetime.replace(
-                tzinfo=timezone.utc)
+            surface = crud.surface.get(db=db, id=campaign.surfaces[0].id)
+            
+            tf = TimezoneFinder()
+
+            # geolocator = Nominatim(user_agent='timezone_app')
+            latitude=surface.boundary.centre['Latitude']
+            longitude= surface.boundary.centre['Longitude']
+            timezone_str = tf.timezone_at(lng=longitude, lat=latitude)
+
+            if timezone_str is None:
+                print("Unable to determine the timezone.")
+                exit()
+            timezone_m = pytz.timezone(timezone_str)
+
+            
+            # print(f"The timezone of the location is {timezone_m}")
+            
+            # print(timezone_m)
+            # timezone_m = pytz.timezone('Europe/Madrid')  # Get the time zone object for the location
+            date = datetime(year=campaign_metadata.start_datetime.year, month=campaign_metadata.start_datetime.month,day=campaign_metadata.start_datetime.day,hour=campaign_metadata.start_datetime.hour,minute=campaign_metadata.start_datetime.minute, second=campaign_metadata.start_datetime.second)
+            localized_dt = timezone_m.localize(date, is_dst=None)
+            utc_dt = localized_dt.astimezone(pytz.UTC)
+            campaign_metadata.start_datetime = utc_dt
+            # print(utc_dt)
+            date = datetime(year=campaign_metadata.end_datetime.year, month=campaign_metadata.end_datetime.month,day=campaign_metadata.end_datetime.day,hour=campaign_metadata.end_datetime.hour,minute=campaign_metadata.end_datetime.minute, second=campaign_metadata.end_datetime.second)
+            localized_dt = timezone_m.localize(date, is_dst=None)
+            utc_dt = localized_dt.astimezone(pytz.UTC)
+            campaign_metadata.end_datetime = utc_dt
+            
+            if campaign_metadata.sampling_period == 0:
+                        duration = campaign_metadata.end_datetime - campaign_metadata.start_datetime        
+                        campaign_metadata.sampling_period = duration.total_seconds()
+                        campaign_metadata.min_samples = 0
+            if campaign_metadata.end_datetime <= campaign_metadata.start_datetime:
+                raise HTTPException(
+                    status_code=400, detail=f"the end time cannot be earlier or same than the initial time."
+                )
+            if campaign_metadata.start_datetime + timedelta(seconds=campaign_metadata.sampling_period) > campaign_metadata.end_datetime:
+                raise HTTPException(
+                    status_code=400, detail=f"Error with the sampling period"
+                )
             #Update the campaign
             campaign = crud.campaign.update(
                 db=db, db_obj=campaign, obj_in=campaign_metadata)
