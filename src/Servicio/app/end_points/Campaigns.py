@@ -124,7 +124,11 @@ def delete_campaign(*,
     
     return {"ok": True}
 
-
+import pytz
+from geopy.geocoders import Nominatim
+from geopy.point import Point
+from tzwhere import tzwhere
+from timezonefinder import TimezoneFinder
 
 ###### POST ENDPOINT - CREATE CAMPAIGN #####
 @api_router_campaign.post("/", status_code=201, response_model=Campaign)
@@ -137,11 +141,61 @@ async def create_campaign(
     """
      Create a new campaing in the database.
     """
+    tf = TimezoneFinder()
+
+    # geolocator = Nominatim(user_agent='timezone_app')
+    latitude=boundary_campaign.centre['Latitude']
+    longitude= boundary_campaign.centre['Longitude']
+    timezone_str = tf.timezone_at(lng=longitude, lat=latitude)
+
+    if timezone_str is None:
+        print("Unable to determine the timezone.")
+        exit()
+    timezone_m = pytz.timezone(timezone_str)
+
+    # Reverse geocode the coordinates to get the location details
+    # a=Point(latitude=boundary_campaign.centre['Latitude'],longitude= boundary_campaign.centre['Longitude'])
+    # location = geolocator.reverse(a)
+
+    # if location is None:
+    #     print("Unable to determine the location.")
+    #     exit()
+
+    # Retrieve the timezone of the location
+    # timezone_m = pytz.timezone(location.                            
+    #                            raw['timezone'])
+
+    # Print the timezone
+    print(f"The timezone of the location is {timezone_m}")
+    
+    print(timezone_m)
+    # timezone_m = pytz.timezone('Europe/Madrid')  # Get the time zone object for the location
+    date = datetime(year=campaign_metadata.start_datetime.year, month=campaign_metadata.start_datetime.month,day=campaign_metadata.start_datetime.day,hour=campaign_metadata.start_datetime.hour,minute=campaign_metadata.start_datetime.minute, second=campaign_metadata.start_datetime.second)
+    localized_dt = timezone_m.localize(date, is_dst=None)
+    utc_dt = localized_dt.astimezone(pytz.UTC)
+    campaign_metadata.start_datetime = utc_dt
+    print(utc_dt)
+    date = datetime(year=campaign_metadata.end_datetime.year, month=campaign_metadata.end_datetime.month,day=campaign_metadata.end_datetime.day,hour=campaign_metadata.end_datetime.hour,minute=campaign_metadata.end_datetime.minute, second=campaign_metadata.end_datetime.second)
+    localized_dt = timezone_m.localize(date, is_dst=None)
+    utc_dt = localized_dt.astimezone(pytz.UTC)
+    campaign_metadata.end_datetime = utc_dt
+    print(utc_dt)
+    
+    # Convert the scheduled activity start and end times to the local time zone
+    # localized_start_time = campaign_metadata.start_datetime
+    # print(localized_start_time)
+    # ahora=datetime.now()
+    # print(ahora)
+    # # Convert the localized datetime to UTC
+    # utc_dt = date.astimezone(pytz.UTC)
+    # print(utc_dt)
+    # date_utc=date.replace(
+    #     tzinfo=timezone_m)
+    # print(date_utc)
+   
+    
+    
     #Change the timezone of the start and end date
-    campaign_metadata.start_datetime = campaign_metadata.start_datetime.replace(
-        tzinfo=timezone.utc)
-    campaign_metadata.end_datetime = campaign_metadata.end_datetime.replace(
-        tzinfo=timezone.utc)
     
     #Obtein the hive of the campaign and verify if the hive exists
     hive = crud.hive.get(db=db, id=hive_id)

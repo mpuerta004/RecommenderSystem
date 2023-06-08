@@ -183,7 +183,8 @@ def create_recomendation_per_campaign(
     """
     Create recomendation
     """
-    time = datetime.utcnow()
+    
+    time = datetime.now()
     
 
     # Get the member and verify if it exists
