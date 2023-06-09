@@ -276,11 +276,19 @@ def update_campaign(
             # geolocator = Nominatim(user_agent='timezone_app')
             latitude=boundary_campaign.centre['Latitude']
             longitude= boundary_campaign.centre['Longitude']
-            timezone_str = tf.timezone_at(lng=longitude, lat=latitude)
+            try:
+                timezone_str = tf.timezone_at(lng=longitude, lat=latitude)
+            except Exception as e:
+                            raise HTTPException(
+                                status_code=500, detail=f"Error with the coordinates {e}"
+                            )
+                    
 
             if timezone_str is None:
-                print("Unable to determine the timezone.")
-                exit()
+                        print("Unable to determine the timezone.")
+                        raise HTTPException(
+                                status_code=500, detail="Unable to determine the timezone."
+                            )
             timezone_m = pytz.timezone(timezone_str)
 
             
@@ -418,11 +426,19 @@ def update_campaign(
             # geolocator = Nominatim(user_agent='timezone_app')
             latitude=surface.boundary.centre['Latitude']
             longitude= surface.boundary.centre['Longitude']
-            timezone_str = tf.timezone_at(lng=longitude, lat=latitude)
+            try:
+                        timezone_str = tf.timezone_at(lng=longitude, lat=latitude)
+            except Exception as e:
+                            raise HTTPException(
+                                status_code=500, detail=f"Error with the coordinates {e}"
+                            )
+                    
 
             if timezone_str is None:
-                print("Unable to determine the timezone.")
-                exit()
+                        print("Unable to determine the timezone.")
+                        raise HTTPException(
+                                status_code=500, detail="Unable to determine the timezone."
+                            )
             timezone_m = pytz.timezone(timezone_str)
 
             
