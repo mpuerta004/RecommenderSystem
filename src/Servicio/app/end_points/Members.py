@@ -72,9 +72,9 @@ def create_member(
     if id is None:
         id=1
     else:
-        maximo = id+1
+        id = id+1
     # create the new member
-    member_new = crud.member.create_member(db=db, obj_in=recipe_in, id=maximo)
+    member_new = crud.member.create_member(db=db, obj_in=recipe_in, id=id)
 
     return member_new
 

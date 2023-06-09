@@ -44,7 +44,7 @@ async def prioriry_calculation_main() -> None:
     """
     # await  asyncio.sleep(1)
     with sessionmaker.context_session() as db:
-        time= datetime.utcnow()
+        time= datetime.now()
         List_campaigns = crud.campaign.get_all_active_campaign(db=db,time=time)
         for cam in List_campaigns:
             prioriry_calculation(time=time,cam=cam, db=db)
@@ -56,7 +56,7 @@ async def prioriry_calculation_main() -> None:
 async def state_calculation()->None:
     with sessionmaker.context_session() as db:
         list_of_recommendations= crud.recommendation.get_aceptance_and_notified_state(db=db)
-        a = datetime.utcnow()
+        a = datetime.now()
         Current_time = datetime(year=a.year, month=a.month, day=a.day,
                         hour=a.hour, minute=a.minute, second=a.second)
             
