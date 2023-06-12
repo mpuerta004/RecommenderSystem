@@ -134,9 +134,9 @@ def asignacion_recursos_hive(
     DEMO!
     """
     initial = datetime.utcnow()
-    start = datetime(year=2024, month=12, day=1, hour=10, minute=00,
+    start = datetime(year=2024, month=2, day=17, hour=10, minute=00,
                      second=00).replace(tzinfo=timezone.utc)
-    end = datetime(year=2024, month=12, day=1, hour=14, minute=00,
+    end = datetime(year=2024, month=2, day=17, hour=14, minute=00,
                    second=1).replace(tzinfo=timezone.utc)
 
     mediciones = []
@@ -176,7 +176,7 @@ def asignacion_recursos_hive(
                     surface_indice = random.randint(0, n_surfaces-1)
                     boundary = cam.surfaces[surface_indice].boundary
                     distance = random.randint(
-                        0, round(1000*(boundary.radius + cam.cells_distance)))
+                        50, round(1000*(boundary.radius + 4*cam.cells_distance )))
 
                     distance = distance/1000
                     direction = random.randint(0, 360)
@@ -259,7 +259,7 @@ def asignacion_recursos_all(
     """
     DEMO!
     """
-    initial = datetime.utcnow()
+    initial = datetime.now()
     start = datetime(year=2024, month=4, day=1, hour=11, minute=00,
                      second=0).replace(tzinfo=timezone.utc)
     end = datetime(year=2024, month=5, day=1, hour=00, minute=00,
@@ -294,7 +294,7 @@ def asignacion_recursos_all(
                 surface_indice = random.randint(0, n_surfaces-1)
                 boundary = cam.surfaces[surface_indice].boundary
                 distance = random.randint(
-                    0, round(1000*(boundary.radius + cam.cells_distance)))
+                    0, round(1000*(boundary.radius + cam.cells_distance + random.randint(0,700))))
 
                 distance = distance/1000
                 direction = random.randint(0, 360)
@@ -660,9 +660,9 @@ def create_recomendation_3(
             priority_temporal = priority.temporal_priority
 
         Cardinal_actual = crud.measurement.get_all_Measurement_from_cell_in_the_current_slot(
-            db=db, cell_id=cell.id, time=time, slot_id=slot.id)
+            db=db, time=time, slot_id=slot.id)
         recommendation_accepted = crud.recommendation.get_aceptance_state_of_cell(
-            db=db, cell_id=cell.id)
+            db=db, slot_id=slot.id)
         expected_measurements  = Cardinal_actual + len(recommendation_accepted)
         #We only consider the cell if the expected measurements are greater than the minimum samples of the campaign or if we dont have minnimun number of measuement per slot
         if expected_measurements < cam.min_samples or cam.min_samples == 0:
@@ -760,9 +760,9 @@ def create_recomendation(
             distancia = vincenty(
                 (centre['Latitude'], centre['Longitude']), (point['Latitude'], (point['Longitude'])))
             Cardinal_actual = crud.measurement.get_all_Measurement_from_cell_in_the_current_slot(
-                db=db, cell_id=cell.id, time=time, slot_id=slot.id)
+                db=db,  time=time, slot_id=slot.id)
             recommendation_accepted = crud.recommendation.get_aceptance_state_of_cell(
-                db=db, cell_id=cell.id)
+                db=db, slot_id=slot.id)
             expected_measurements  = Cardinal_actual + len(recommendation_accepted)
             #We only consider the cell if the expected measurements are greater than the minimum samples of the campaign or if we dont have minnimun number of measuement per slot
             if expected_measurements < cam.min_samples or cam.min_samples == 0:
@@ -792,7 +792,7 @@ def create_recomendation(
     if len(a) != 0:
         for i in range(0, min(len(a), 3)):
             slot = a[i][5]
-            recomendation = crud.recommendation.create_recommendation_detras(
+            recomendation = crud.recommendation.create_recommendation(
                 db=db, obj_in=recipe_in, member_id=member_id, slot_id=slot.id, state="NOTIFIED", update_datetime=time, sent_datetime=time)
             cell = crud.cell.get(db=db, id=slot.cell_id)
             result.append(recomendation)
@@ -864,10 +864,10 @@ def create_recomendation_2(
         else:
             priority_temporal = priority.temporal_priority
         Cardinal_actual = crud.measurement.get_all_Measurement_from_cell_in_the_current_slot(
-            db=db, cell_id=i[0].id, time=time, slot_id=slot.id)
+            db=db,  time=time, slot_id=slot.id)
         Cardinal_esperadiuso = Cardinal_actual
         recommendation_accepted = crud.recommendation.get_aceptance_state_of_cell(
-            db=db, cell_id=i[0].id)
+            db=db, slot_id=slot.id)
         Cardinal_esperadiuso = Cardinal_esperadiuso + len(recommendation_accepted)
         # for l in mediciones:
         #     if l[1].cell_id== i.id:
@@ -929,7 +929,7 @@ def show_recomendation(*, cam: Campaign, user: Member, result: list(), time: dat
     
     surface = crud.surface.get(db=db, id=cam.surfaces[0].id)
     mapObj = folium.Map(location=[surface.boundary.centre['Latitude'],
-                        surface.boundary.centre['Longitude']], zoom_start=18)
+                        surface.boundary.centre['Longitude']], zoom_start=16)
     List_campaign=crud.campaign.get_all_active_campaign_for_a_hive(db=db, hive_id=cam.hive_id,time=time)
     
     for cam in List_campaign:
@@ -939,7 +939,7 @@ def show_recomendation(*, cam: Campaign, user: Member, result: list(), time: dat
                 slot = crud.slot.get_slot_time(db=db, cell_id=j.id, time=time)
                 # Ponermos el color en funcion de la cantidad de datos no de la prioridad.
                 Cardinal_actual = crud.measurement.get_all_Measurement_from_cell_in_the_current_slot(
-                    db=db, cell_id=j.id, time=time, slot_id=slot.id)
+                    db=db,  time=time, slot_id=slot.id)
                 if Cardinal_actual >= cam.min_samples:
                     color = color_list_h[4]
                 else:
@@ -1066,7 +1066,7 @@ def show_a_campaign_2(
         db=db, hive_id=hive_id, campaign_id=campaign_id)
     if campañas_activas is None or campañas_activas is []:
         raise HTTPException(
-            status_code=404, detail=f"Campaign with campaign_id== {campaign_id}  and hive_id=={hive_id} not found"
+            status_code=404, detail=f"Campaign with campaign_id=={campaign_id}  and hive_id=={hive_id} not found"
         )
     count = 0
     surface = crud.surface.get(db=db, id=campañas_activas.surfaces[0].id)
@@ -1083,7 +1083,7 @@ def show_a_campaign_2(
             slot = crud.slot.get_slot_time(db=db, cell_id=j.id, time=time)
 
             Cardinal_actual = crud.measurement.get_all_Measurement_from_cell_in_the_current_slot(
-                db=db, cell_id=j.id, time=time, slot_id=slot.id)
+                db=db, time=time, slot_id=slot.id)
             if Cardinal_actual >= campañas_activas.min_samples:
                 numero = 4
             else:
@@ -1213,7 +1213,7 @@ def show_hive(
     print(lat_center/n, lon_center/n)
     
     mapObj = folium.Map(location=[lat_center/n,
-                        lon_center/n], zoom_start=18)
+                        lon_center/n], zoom_start=16)
     for cam in campañas_activas:
         cell_distance = cam.cells_distance
 
@@ -1225,7 +1225,7 @@ def show_hive(
                 slot = crud.slot.get_slot_time(db=db, cell_id=j.id, time=time)
 
                 Cardinal_actual = crud.measurement.get_all_Measurement_from_cell_in_the_current_slot(
-                    db=db, cell_id=j.id, time=time, slot_id=slot.id)
+                    db=db, time=time, slot_id=slot.id)
                 if Cardinal_actual >= cam.min_samples:
                     numero = 4
                 else:

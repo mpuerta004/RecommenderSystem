@@ -17,6 +17,11 @@ from folium.features import DivIcon
 from numpy import arccos, cos, pi, round, sin
 from vincenty import vincenty
 
+import pytz
+from geopy.geocoders import Nominatim
+from geopy.point import Point
+from tzwhere import tzwhere
+from timezonefinder import TimezoneFinder
 from schemas.Boundary import BoundaryCreate
 from schemas.Campaign import (Campaign, CampaignCreate, CampaignSearchResults,
                               CampaignUpdate)
@@ -124,11 +129,6 @@ def delete_campaign(*,
     
     return {"ok": True}
 
-import pytz
-from geopy.geocoders import Nominatim
-from geopy.point import Point
-from tzwhere import tzwhere
-from timezonefinder import TimezoneFinder
 
 ###### POST ENDPOINT - CREATE CAMPAIGN #####
 @api_router_campaign.post("/", status_code=201, response_model=Campaign)
@@ -163,11 +163,6 @@ async def create_campaign(
             )
     timezone_m = pytz.timezone(timezone_str)
 
-    
-    # print(f"The timezone of the location is {timezone_m}")
-    
-    # print(timezone_m)
-    # timezone_m = pytz.timezone('Europe/Madrid')  # Get the time zone object for the location
     date = datetime(year=campaign_metadata.start_datetime.year, month=campaign_metadata.start_datetime.month,day=campaign_metadata.start_datetime.day,hour=campaign_metadata.start_datetime.hour,minute=campaign_metadata.start_datetime.minute, second=campaign_metadata.start_datetime.second)
     localized_dt = timezone_m.localize(date, is_dst=None)
     utc_dt = localized_dt.astimezone(pytz.UTC)
@@ -284,8 +279,11 @@ def show_a_campaign(
     db: Session = Depends(deps.get_db),
 ) -> HTMLResponse:
     """
-    Show a campaign
+    Show a campaign. The time has to be UTC. 
     """
+    
+    
+    
     # Get campaign
     campaign = crud.campaign.get_campaign(
         db=db, hive_id=hive_id, campaign_id=campaign_id)
@@ -294,6 +292,7 @@ def show_a_campaign(
         raise HTTPException(
             status_code=404, detail=f"Campaign with id== {campaign_id}  not found"
         )
+    
 
     # verify that campaign is active
     if campaign.start_datetime.replace(tzinfo=timezone.utc) <= time.replace(tzinfo=timezone.utc) and time.replace(tzinfo=timezone.utc) < campaign.end_datetime.replace(tzinfo=timezone.utc):
@@ -312,7 +311,7 @@ def show_a_campaign(
                 # Calculate the number of samples in the current slot of the cell
                 slot = crud.slot.get_slot_time(db=db, cell_id=cell.id, time=time)
                 Cardinal_actual = crud.measurement.get_all_Measurement_from_cell_in_the_current_slot(
-                    db=db, cell_id=cell.id, time=time, slot_id=slot.id)
+                    db=db,time=time, slot_id=slot.id)
 
                 """
                 Calculate the color of the cell based on the number of samples. 
@@ -371,6 +370,7 @@ def update_campaign(
     """
     Update Campaign 
     """
+    
     #Get the hive
     hive = crud.hive.get(db=db, id=hive_id)
     #Verify if the hive exist

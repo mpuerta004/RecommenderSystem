@@ -48,6 +48,9 @@ from schemas.Surface import SurfaceSearchResults, Surface, SurfaceCreate
 from schemas.Member_Device import Member_DeviceCreate
 import deps
 import crud
+
+from timezonefinder import TimezoneFinder
+import pytz
 from datetime import datetime, timedelta
 import math 
 from vincenty import vincenty
@@ -237,8 +240,6 @@ def post_members_devices(
                 
                 
 
-from timezonefinder import TimezoneFinder
-import pytz
 
 
 ######  PUT Endpoint ######

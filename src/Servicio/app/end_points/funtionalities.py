@@ -145,7 +145,7 @@ def prioriry_calculation(time: datetime, cam: Campaign, db: Session = Depends(de
                     print(time)
                     print(f"Tengo id -> cell_id {cell.id} y slot {slot} ")
                 Cardinal_actual = crud.measurement.get_all_Measurement_from_cell_in_the_current_slot(
-                    db=db, cell_id=cell.id, time=time, slot_id=slot.id)
+                    db=db, time=time, slot_id=slot.id)
                 # b = max(2, cam.min_samples - int(Cardinal_pasado))
                 # a = max(2, cam.min_samples - int(Cardinal_actual))
                 # result = math.log(a) * math.log(b, int(Cardinal_actual) + 2)

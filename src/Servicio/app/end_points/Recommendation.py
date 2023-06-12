@@ -77,7 +77,7 @@ def create_recomendation(
     """
     Create recomendation
     """
-    time = datetime.utcnow()
+    time = datetime.now()
 
     # Get the member and verify if it exists
     user = crud.member.get_by_id(db=db, id=member_id)
@@ -136,9 +136,9 @@ def create_recomendation(
         distancia = vincenty(
             (centre['Latitude'], centre['Longitude']), (point['Latitude'], (point['Longitude'])))
         Cardinal_actual = crud.measurement.get_all_Measurement_from_cell_in_the_current_slot(
-            db=db, cell_id=cell.id, time=time, slot_id=slot.id)
+            db=db,  time=time, slot_id=slot.id)
         recommendation_accepted = crud.recommendation.get_aceptance_state_of_cell(
-            db=db, cell_id=cell.id)
+            db=db, slot_id=slot.id)
         expected_measurements  = Cardinal_actual + len(recommendation_accepted)
         #We only consider the cell if the expected measurements are greater than the minimum samples of the campaign or if we dont have minnimun number of measuement per slot
         if expected_measurements < cam.min_samples or cam.min_samples == 0:
@@ -183,33 +183,47 @@ def create_recomendation_per_campaign(
     """
     Create recomendation
     """
-    
+    print("---- RECOMENDATION ----------------------------")
+    print("Campaign_user_want_id",campaign_id)
     time = datetime.now()
     
-
+    print("Actual_time:", time)
     # Get the member and verify if it exists
     user = crud.member.get_by_id(db=db, id=member_id)
+    
     if user is None:
         raise HTTPException(
             status_code=404, detail=f"Member with id=={member_id} not found"
         )
+    print("user_id:",user.id)
+    print("user_name", user.name)
+    print(f"user_location: (Lat: {recipe_in.member_current_location['Latitude']},Long:{recipe_in.member_current_location['Longitude']})")
+    print()
+
     # Get time and campaign of the member
     campaign_member = crud.campaign_member.get_Campaigns_of_member(
         db=db, member_id=user.id)
 
+    
     campaign_want=False
 
     role_correct=False
     List_cells_cercanas = []
     cells = []
+    print("--- campaign information ---")
+
     for i in campaign_member:
         if (i.role == "QueenBee" or i.role == "WorkerBee"):
             role_correct=True
             campaign = crud.campaign.get(db=db, id=i.campaign_id)
             # Verify if the campaign is active
             if campaign.start_datetime.replace(tzinfo=timezone.utc) <= time.replace(tzinfo=timezone.utc) and time.replace(tzinfo=timezone.utc) < campaign.end_datetime.replace(tzinfo=timezone.utc):
+                print("campaign_id ------------------------------------------",i.campaign_id)
+                print("Campaign_ACTIVE", True)
+                print("user_has_correct_role",True)
                 list_cells = crud.cell.get_cells_campaign(
                     db=db, campaign_id=i.campaign_id)
+                print("number of cell in the campaign", len(list_cells))
                 # verify is the list of cell is not empty
                 if len(list_cells) != 0:
                     for cell in list_cells:
@@ -218,21 +232,26 @@ def create_recomendation_per_campaign(
                         distancia = vincenty((centre['Latitude'], centre['Longitude']), (point['Latitude'], (point['Longitude'])))
                         if distancia <= (campaign.cells_distance)*3:
                             cells.append([cell, campaign])
-                            if campaign.id ==campaign_id:
+                            if campaign.id == campaign_id:
                                     campaign_want=True
+                print("number_possible_cells_1: +++++++++++++++++++++++++++++++++++", len(cells))
     if role_correct==False:
+        print("ERROR: Incorrect_user_role")
         return {"details": "Incorrect_user_role"}
    
     if campaign_want==False:
+        print("ERROR: far_away_1")
         return {"detail": "far_away"}
     if len(cells) ==0:
+        print("ERROR: far_away_2")
         return {"detail": "far_away"}
         
     # We will order the cells by the distance (ascending order), temporal priority (Descending order), cardinality promise (accepted measurement)( descending order)
-    
-    
     cells_and_priority = []
+    print("------ Information of Cells----")
+    
     for (cell, cam) in cells:
+        print("--- Candidate ---")
         slot = crud.slot.get_slot_time(db=db, cell_id=cell.id, time=time)
         if slot is not None:
             priority = crud.priority.get_last(db=db, slot_id=slot.id, time=time)
@@ -246,12 +265,20 @@ def create_recomendation_per_campaign(
             distancia = vincenty(
                 (centre['Latitude'], centre['Longitude']), (point['Latitude'], (point['Longitude'])))
             Cardinal_actual = crud.measurement.get_all_Measurement_from_cell_in_the_current_slot(
-                db=db, cell_id=cell.id, time=time, slot_id=slot.id)
+                db=db, time=time, slot_id=slot.id)
             recommendation_accepted = crud.recommendation.get_aceptance_state_of_cell(
-                db=db, cell_id=cell.id)
+                db=db, slot_id=slot.id)
             expected_measurements  = Cardinal_actual + len(recommendation_accepted)
-            #We only consider the cell if the expected measurements are greater than the minimum samples of the campaign or if we dont have minnimun number of measuement per slot
+            
+            #We only consider the cell if the expected measurements are greater than the minimum samples of the campaign or if we dont have minnimun number of measuement per slot 
             if expected_measurements < cam.min_samples or cam.min_samples == 0:
+                print("campaign_id_of_cell:  ", cam.id)
+                print(f"Center (Lat: {cell.centre['Latitude']},Long: {cell.centre['Longitude']})")
+                print("cell_data: Cardinal_actual ", Cardinal_actual)
+                print("cell_data: expected_measurements ", expected_measurements)
+                print("cell_data: recommendation_accepted ", len(recommendation_accepted))
+                print("cell_data: distancia ", distancia)
+                print("cam_min_samples: ",cam.min_samples)
                 cells_and_priority.append((
                     cell,
                     priority_temporal,
@@ -260,8 +287,9 @@ def create_recomendation_per_campaign(
                     Cardinal_actual,
                     slot,
                     cam))    
-        
+    print(" Number_of_possible_cells_to_recommend ++++++++++++++++++++++++++++++ ", len(cells_and_priority))
     if len(cells_and_priority)==0:
+        print("ERROR: no_measurements_needed; cells_and_priority empty ")
         return {"detail": "no_measurements_needed"}
     cells_and_priority.sort(
         key=lambda order_features: (-order_features[3], order_features[1], -order_features[2]), reverse=True)
@@ -271,16 +299,21 @@ def create_recomendation_per_campaign(
         if i[6].id==campaign_id:
             a.append(i)
     if len(a)==0:
+        print("ERROR: no_measurements_needed; cells_and_priority empty for wanted campaign ")
         return {"detail": "no_measurements_needed"}
     
+    print("Number_of_cells_to_recomended_3:+++++++++++++++++++++++++++++++++++++++++++++++", len(a)) 
     
+    print("----FINAL DECISION -----------------------------------------------")
     result = []
     if len(a) != 0:
         for i in range(0, min(len(a), 3)):
+            print("Candidate---")
             slot = a[i][5]
-            recomendation = crud.recommendation.create_recommendation_detras(
+            recomendation = crud.recommendation.create_recommendation(
                 db=db, obj_in=recipe_in, member_id=member_id, slot_id=slot.id, state="NOTIFIED", update_datetime=time, sent_datetime=time)
             cell = crud.cell.get(db=db, id=slot.cell_id)
+            print("cell_id: ",cell.id)
             result.append(RecommendationCell(
                 recommendation=recomendation, cell=cell))
     return {"results": result}
@@ -308,7 +341,7 @@ def partially_update_recommendation(
         )
 
     recomendation_update = RecommendationUpdate(
-        state=recipe_in, update_datetime=datetime.utcnow())
+        state=recipe_in, update_datetime=datetime.now())
     # dict_update={"state":recipe_in, "update_datetime":datetime.utcnow()}
     updated_recipe = crud.recommendation.update(
         db=db, db_obj=recommendation, obj_in=recomendation_update)

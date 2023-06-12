@@ -58,16 +58,16 @@ class CRUDMeasurement(CRUDBase[Measurement, MeasurementCreate, MeasurementUpdate
    
         
         
-        def get_all_Measurement_from_cell(self, db:Session, *,  cell_id:int, time:DateTime)-> int:
+        def get_all_Measurement_from_cell(self, db:Session, *, cell_id:int, time:DateTime)-> int:
             try:
                 return db.query(Measurement).join(Slot).filter(and_(Measurement.slot_id==Slot.id, Slot.cell_id==cell_id,Measurement.datetime<=time)).count()        
             except Exception as e:
-                        raise HTTPException(status_code=500, detail=f"Error with mysql {e}" )
+                raise HTTPException(status_code=500, detail=f"Error with mysql {e}" )
    
         
-        def get_all_Measurement_from_cell_in_the_current_slot(self, db:Session, *,  cell_id:int, time:DateTime, slot_id:int)-> int:
+        def get_all_Measurement_from_cell_in_the_current_slot(self, db:Session, *,  time:DateTime, slot_id:int)-> int:
             try:
-                return db.query(Measurement, Slot).filter( and_(Measurement.slot_id==Slot.id, Slot.cell_id==cell_id, Measurement.datetime<=time, Measurement.slot_id==slot_id)).count()        
+                return db.query(Measurement).filter( and_( Measurement.datetime<=time, Measurement.slot_id==slot_id)).count()        
             except Exception as e:
                         raise HTTPException(status_code=500, detail=f"Error with mysql {e}" )
    

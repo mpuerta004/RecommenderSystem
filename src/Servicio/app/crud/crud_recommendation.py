@@ -75,9 +75,9 @@ class CRUDRecommendation(CRUDBase[Recommendation, RecommendationCreate, Recommen
         
        
 
-        def get_aceptance_state_of_cell(self,db: Session, *, cell_id:int, )-> List[Recommendation]:
+        def get_aceptance_state_of_cell(self,db: Session, *, slot_id:int, )-> List[Recommendation]:
                 try:
-                        return db.query(Recommendation).join(Slot).filter(and_(Recommendation.state=="ACCEPTED", Recommendation.slot_id==Slot.id, Slot.cell_id == cell_id)).all()
+                        return db.query(Recommendation).filter(and_(Recommendation.state=="ACCEPTED", Recommendation.slot_id==slot_id)).all()
                 except Exception as e:
                         raise HTTPException(status_code=500, detail=f"Error with mysql {e}" )
    

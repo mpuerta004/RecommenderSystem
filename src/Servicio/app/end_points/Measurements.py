@@ -14,7 +14,9 @@ from schemas.Measurement import (Measurement, MeasurementCreate,
                                  MeasurementSearchResults, MeasurementUpdate)
 from sqlalchemy.orm import Session
 from vincenty import vincenty
-
+from timezonefinder import TimezoneFinder
+from datetime import datetime, timezone, timedelta
+import pytz
 api_router_measurements = APIRouter(prefix="/members/{member_id}/measurements")
 
 ########### Get all measurements of a member ############
@@ -72,6 +74,7 @@ def delete_measurement(*,
     """
     Delete a measurement in the database.
     """
+    
     #Get the member and verify if it exists
     member = crud.member.get_by_id(db=db, id=member_id)
     if member is None:
@@ -113,8 +116,34 @@ def create_measurement(
             status_code=404, detail=f"This member is not in a hive"
         )
     #All datetime has to be in the same timezone
-    time = recipe_in.datetime.replace(tzinfo=timezone.utc)
-    
+    time=recipe_in.datetime
+    tf = TimezoneFinder()
+
+                    # geolocator = Nominatim(user_agent='timezone_app')
+    latitude=recipe_in.location['Latitude']
+    longitude= recipe_in.location['Longitude']
+    try:
+                        timezone_str = tf.timezone_at(lng=longitude, lat=latitude)
+    except Exception as e:
+                            raise HTTPException(
+                                status_code=500, detail=f"Error with the coordinates {e}"
+                            )
+                    
+
+    if timezone_str is None:
+                        print("Unable to determine the timezone.")
+                        raise HTTPException(
+                                status_code=500, detail="Unable to determine the timezone."
+                            )
+    timezone_m = pytz.timezone(timezone_str)
+
+                    # print(timezone_m)
+                    # timezone_m = pytz.timezone('Europe/Madrid')  # Get the time zone object for the location
+    date = datetime(year=time.year, month=time.month,day=time.day,hour=time.hour,minute=time.minute, second=time.second)
+    localized_dt = timezone_m.localize(date, is_dst=None)
+    time = localized_dt.astimezone(pytz.UTC)
+    recipe_in.datetime=time
+
     """"We have to calculate the campaign and the cell where the measurement is"""
     list_posible_cells_surface_campaign_distance = []
     cell_id = None
@@ -175,6 +204,9 @@ def create_measurement(
         recommendation_id = None
     else:
         recommendation_id = recomendation.id
+        crud.recommendation.update(
+                                db=db, db_obj=recomendation, obj_in={"state": "REALIZED", "update_datetime": time})
+        
     #Create the measurement
     cellMeasurement = crud.measurement.create_Measurement(
             db=db, obj_in=recipe_in, member_id=member_id, slot_id=slot.id, recommendation_id=recommendation_id, device_id=member_device.device_id)
@@ -195,6 +227,33 @@ def update_measurement(
     """
     Update measurement 
     """
+    time=recipe_in.datetime
+    tf = TimezoneFinder()
+
+                    # geolocator = Nominatim(user_agent='timezone_app')
+    latitude=recipe_in.location['Latitude']
+    longitude= recipe_in.location['Longitude']
+    try:
+                        timezone_str = tf.timezone_at(lng=longitude, lat=latitude)
+    except Exception as e:
+                            raise HTTPException(
+                                status_code=500, detail=f"Error with the coordinates {e}"
+                            )
+                    
+
+    if timezone_str is None:
+                        print("Unable to determine the timezone.")
+                        raise HTTPException(
+                                status_code=500, detail="Unable to determine the timezone."
+                            )
+    timezone_m = pytz.timezone(timezone_str)
+
+                    # print(timezone_m)
+                    # timezone_m = pytz.timezone('Europe/Madrid')  # Get the time zone object for the location
+    date = datetime(year=time.year, month=time.month,day=time.day,hour=time.hour,minute=time.minute, second=time.second)
+    localized_dt = timezone_m.localize(date, is_dst=None)
+    time = localized_dt.astimezone(pytz.UTC)
+    recipe_in.datetime=time
     #Obtain the member and verify if it exists
     member = crud.member.get_by_id(db=db, id=member_id)
     if member is None:
