@@ -216,7 +216,7 @@ def create_recomendation_per_campaign(
             role_correct=True
             campaign = crud.campaign.get(db=db, id=i.campaign_id)
             # Verify if the campaign is active
-            if campaign.start_datetime.replace(tzinfo=timezone.utc) <= time.replace(tzinfo=timezone.utc) and time.replace(tzinfo=timezone.utc) < campaign.end_datetime.replace(tzinfo=timezone.utc):
+            if campaign.start_datetime <= time and time < campaign.end_datetime:
                 print("campaign_id ------------------------------------------",i.campaign_id)
                 print("Campaign_ACTIVE", True)
                 print("user_has_correct_role",True)

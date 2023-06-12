@@ -155,7 +155,7 @@ def create_measurement(
     for i in campaign_member:
         #Verify if the campaign is active
         campaign = crud.campaign.get(db=db, id=i.campaign_id)
-        if campaign.start_datetime.replace(tzinfo=timezone.utc) <= time.replace(tzinfo=timezone.utc) and campaign.end_datetime.replace(tzinfo=timezone.utc) > time.replace(tzinfo=timezone.utc):
+        if campaign.start_datetime <= time and campaign.end_datetime > time:
             for surface in campaign.surfaces:
                 
                 boundary=crud.boundary.get_Boundary_by_id(db=db, id=surface.boundary_id)
