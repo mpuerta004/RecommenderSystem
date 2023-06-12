@@ -49,9 +49,9 @@ class CRUDRecommendation(CRUDBase[Recommendation, RecommendationCreate, Recommen
                         raise HTTPException(status_code=500, detail=f"Error with mysql {e}" )
    
         
-        def get_recommendation_to_measurement(self, db: Session, *, member_id:int, cell_id:int) -> Recommendation:
+        def get_recommendation_to_measurement(self, db: Session, *, member_id:int, slot_id:int) -> Recommendation:
                 try:
-                        return db.query(Recommendation).join(Slot).filter( and_(Recommendation.slot_id==Slot.id, Slot.cell_id==cell_id, Recommendation.member_id==member_id, Recommendation.state=="ACCEPTED")).first()
+                        return db.query(Recommendation).filter( and_(Recommendation.slot_id==slot_id, Recommendation.member_id==member_id, Recommendation.state=="ACCEPTED")).first()
                 except Exception as e:
                         raise HTTPException(status_code=500, detail=f"Error with mysql {e}" )
    

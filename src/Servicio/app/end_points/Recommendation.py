@@ -198,7 +198,6 @@ def create_recomendation_per_campaign(
     print("user_id:",user.id)
     print("user_name", user.name)
     print(f"user_location: (Lat: {recipe_in.member_current_location['Latitude']},Long:{recipe_in.member_current_location['Longitude']})")
-    print()
 
     # Get time and campaign of the member
     campaign_member = crud.campaign_member.get_Campaigns_of_member(
@@ -234,7 +233,7 @@ def create_recomendation_per_campaign(
                             cells.append([cell, campaign])
                             if campaign.id == campaign_id:
                                     campaign_want=True
-                print("number_possible_cells_1: +++++++++++++++++++++++++++++++++++", len(cells))
+    print("number_possible_cells_1: +++++++++++++++++++++++++++++++++++", len(cells))
     if role_correct==False:
         print("ERROR: Incorrect_user_role")
         return {"details": "Incorrect_user_role"}
