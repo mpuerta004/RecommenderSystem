@@ -143,37 +143,37 @@ async def create_campaign(
     """
    
 
-    # tf = TimezoneFinder()
+    tf = TimezoneFinder()
 
-    # # geolocator = Nominatim(user_agent='timezone_app')
-    # latitude=boundary_campaign.centre['Latitude']
-    # longitude= boundary_campaign.centre['Longitude']
-    # try:
-    #     timezone_str = tf.timezone_at(lng=longitude, lat=latitude)
-    # except Exception as e:
-    #          raise HTTPException(
-    #             status_code=500, detail=f"Error with the coordinates {e}"
-    #         )
+    # geolocator = Nominatim(user_agent='timezone_app')
+    latitude=boundary_campaign.centre['Latitude']
+    longitude= boundary_campaign.centre['Longitude']
+    try:
+        timezone_str = tf.timezone_at(lng=longitude, lat=latitude)
+    except Exception as e:
+             raise HTTPException(
+                status_code=500, detail=f"Error with the coordinates {e}"
+            )
        
 
-    # if timezone_str is None:
-    #     print("Unable to determine the timezone.")
-    #     raise HTTPException(
-    #             status_code=500, detail="Unable to determine the timezone."
-    #         )
-    # timezone_m = pytz.timezone(timezone_str)
-    # print("timezone", timezone_m)
-    # date = datetime(year=campaign_metadata.start_datetime.year, month=campaign_metadata.start_datetime.month,day=campaign_metadata.start_datetime.day,hour=campaign_metadata.start_datetime.hour,minute=campaign_metadata.start_datetime.minute, second=campaign_metadata.start_datetime.second)
-    # localized_dt = timezone_m.localize(date, is_dst=None)
-    # utc_dt = localized_dt.astimezone(pytz.UTC)
-    # campaign_metadata.start_datetime = utc_dt
-    # # print(campaign_metadata.start_datetime)
-    # # print(campaign_metadata.start_datetime.replace(tzinfo=timezone.utc))
-    # # # print(utc_dt)
-    # date = datetime(year=campaign_metadata.end_datetime.year, month=campaign_metadata.end_datetime.month,day=campaign_metadata.end_datetime.day,hour=campaign_metadata.end_datetime.hour,minute=campaign_metadata.end_datetime.minute, second=campaign_metadata.end_datetime.second)
-    # localized_dt = timezone_m.localize(date, is_dst=None)
-    # utc_dt = localized_dt.astimezone(pytz.UTC)
-    # campaign_metadata.end_datetime = utc_dt
+    if timezone_str is None:
+        print("Unable to determine the timezone.")
+        raise HTTPException(
+                status_code=500, detail="Unable to determine the timezone."
+            )
+    timezone_m = pytz.timezone(timezone_str)
+    print("timezone", timezone_m)
+    date = datetime(year=campaign_metadata.start_datetime.year, month=campaign_metadata.start_datetime.month,day=campaign_metadata.start_datetime.day,hour=campaign_metadata.start_datetime.hour,minute=campaign_metadata.start_datetime.minute, second=campaign_metadata.start_datetime.second)
+    localized_dt = timezone_m.localize(date, is_dst=None)
+    utc_dt = localized_dt.astimezone(pytz.UTC)
+    campaign_metadata.start_datetime = utc_dt
+    # print(campaign_metadata.start_datetime)
+    # print(campaign_metadata.start_datetime.replace(tzinfo=timezone.utc))
+    # # print(utc_dt)
+    date = datetime(year=campaign_metadata.end_datetime.year, month=campaign_metadata.end_datetime.month,day=campaign_metadata.end_datetime.day,hour=campaign_metadata.end_datetime.hour,minute=campaign_metadata.end_datetime.minute, second=campaign_metadata.end_datetime.second)
+    localized_dt = timezone_m.localize(date, is_dst=None)
+    utc_dt = localized_dt.astimezone(pytz.UTC)
+    campaign_metadata.end_datetime = utc_dt
     
     
     #Change the timezone of the start and end date
@@ -397,36 +397,36 @@ def update_campaign(
             for i in list_of_surfaces:
                 centre = i.boundary.centre
                 if i is list_of_surfaces[0]:
-                    # tf = TimezoneFinder()
+                    tf = TimezoneFinder()
 
-                    # # geolocator = Nominatim(user_agent='timezone_app')
-                    # latitude=centre['Latitude']
-                    # longitude= centre['Longitude']
-                    # try:
-                    #     timezone_str = tf.timezone_at(lng=longitude, lat=latitude)
-                    # except Exception as e:
-                    #         raise HTTPException(
-                    #             status_code=500, detail=f"Error with the coordinates {e}"
-                    #         )
+                    # geolocator = Nominatim(user_agent='timezone_app')
+                    latitude=centre['Latitude']
+                    longitude= centre['Longitude']
+                    try:
+                        timezone_str = tf.timezone_at(lng=longitude, lat=latitude)
+                    except Exception as e:
+                            raise HTTPException(
+                                status_code=500, detail=f"Error with the coordinates {e}"
+                            )
                     
 
-                    # if timezone_str is None:
-                    #     print("Unable to determine the timezone.")
-                    #     raise HTTPException(
-                    #             status_code=500, detail="Unable to determine the timezone."
-                    #         )
-                    # timezone_m = pytz.timezone(timezone_str)
+                    if timezone_str is None:
+                        print("Unable to determine the timezone.")
+                        raise HTTPException(
+                                status_code=500, detail="Unable to determine the timezone."
+                            )
+                    timezone_m = pytz.timezone(timezone_str)
 
-                    # # print(timezone_m)
-                    # # timezone_m = pytz.timezone('Europe/Madrid')  # Get the time zone object for the location
-                    # date = datetime(year=recipe_in.start_datetime.year, month=recipe_in.start_datetime.month,day=recipe_in.start_datetime.day,hour=recipe_in.start_datetime.hour,minute=recipe_in.start_datetime.minute, second=recipe_in.start_datetime.second)
-                    # localized_dt = timezone_m.localize(date, is_dst=None)
-                    # utc_dt = localized_dt.astimezone(pytz.UTC)
-                    # recipe_in.start_datetime  = utc_dt
-                    # date = datetime(year=recipe_in.end_datetime.year, month=recipe_in.end_datetime.month,day=recipe_in.end_datetime.day,hour=recipe_in.end_datetime.hour,minute=recipe_in.end_datetime.minute, second=recipe_in.end_datetime.second)
-                    # localized_dt = timezone_m.localize(date, is_dst=None)
-                    # utc_dt = localized_dt.astimezone(pytz.UTC)
-                    # recipe_in.end_datetime  = utc_dt
+                    # print(timezone_m)
+                    # timezone_m = pytz.timezone('Europe/Madrid')  # Get the time zone object for the location
+                    date = datetime(year=recipe_in.start_datetime.year, month=recipe_in.start_datetime.month,day=recipe_in.start_datetime.day,hour=recipe_in.start_datetime.hour,minute=recipe_in.start_datetime.minute, second=recipe_in.start_datetime.second)
+                    localized_dt = timezone_m.localize(date, is_dst=None)
+                    utc_dt = localized_dt.astimezone(pytz.UTC)
+                    recipe_in.start_datetime  = utc_dt
+                    date = datetime(year=recipe_in.end_datetime.year, month=recipe_in.end_datetime.month,day=recipe_in.end_datetime.day,hour=recipe_in.end_datetime.hour,minute=recipe_in.end_datetime.minute, second=recipe_in.end_datetime.second)
+                    localized_dt = timezone_m.localize(date, is_dst=None)
+                    utc_dt = localized_dt.astimezone(pytz.UTC)
+                    recipe_in.end_datetime  = utc_dt
                     if datetime.now().replace(tzinfo=timezone.utc) > recipe_in.start_datetime.replace(tzinfo=timezone.utc):
                         raise HTTPException(
                             status_code=401, detail=f"The start campaign can not be in the past.")
