@@ -155,7 +155,7 @@ def create_measurement(
     for i in campaign_member:
         #Verify if the campaign is active
         campaign = crud.campaign.get(db=db, id=i.campaign_id)
-        if campaign.start_datetime <= time and campaign.end_datetime > time:
+        if campaign.start_datetime.replace(tzinfo=timezone.utc) <= time and campaign.end_datetime.replace(tzinfo=timezone.utc) > time:
             for surface in campaign.surfaces:
                 
                 boundary=crud.boundary.get_Boundary_by_id(db=db, id=surface.boundary_id)
@@ -172,7 +172,7 @@ def create_measurement(
                         for cell in list_cells:
                             #distance of user to a cell.
                             distance2 = vincenty(( cell.centre['Latitude'],cell.centre['Longitude']), ( recipe_in.location['Latitude'],recipe_in.location['Longitude']))
-
+                            # 
                             if distance2 <= hipotenusa:
                                 list_posible_cells_surface_campaign_distance.append((cell, surface, campaign, distance2))
     if list_posible_cells_surface_campaign_distance == []:
@@ -213,7 +213,7 @@ def create_measurement(
     return cellMeasurement
         
 
-
+    
 
 ##################### PUT endpoint ############################
 @api_router_measurements.put("/{measurement_id}", status_code=201, response_model=Measurement)
