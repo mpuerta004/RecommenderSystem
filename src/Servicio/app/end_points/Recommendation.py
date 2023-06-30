@@ -267,7 +267,7 @@ def create_recomendation_per_campaign(
                 db=db, time=time, slot_id=slot.id)
             recommendation_accepted = crud.recommendation.get_aceptance_state_of_cell(
                 db=db, slot_id=slot.id)
-            expected_measurements  = Cardinal_actual + len(recommendation_accepted)
+            expected_measurements  = Cardinal_actual + len(recommendation_accepted)*13
             
             #We only consider the cell if the expected measurements are greater than the minimum samples of the campaign or if we dont have minnimun number of measuement per slot 
             if expected_measurements < (cam.min_samples*13) or cam.min_samples == 0:
