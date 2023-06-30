@@ -270,7 +270,7 @@ def create_recomendation_per_campaign(
             expected_measurements  = Cardinal_actual + len(recommendation_accepted)
             
             #We only consider the cell if the expected measurements are greater than the minimum samples of the campaign or if we dont have minnimun number of measuement per slot 
-            if expected_measurements < cam.min_samples or cam.min_samples == 0:
+            if expected_measurements < (cam.min_samples*13) or cam.min_samples == 0:
                 print("campaign_id_of_cell:  ", cam.id)
                 print(f"Center (Lat: {cell.centre['Latitude']},Long: {cell.centre['Longitude']})")
                 print("cell_data: Cardinal_actual ", Cardinal_actual)

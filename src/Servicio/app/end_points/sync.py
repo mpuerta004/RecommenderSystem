@@ -418,7 +418,7 @@ def update_campaign(
     #If the campaign exists, we update it! 
     if campaign_metadata.start_datetime != campaign.start_datetime or campaign_metadata.end_datetime != campaign.end_datetime or campaign_metadata.cells_distance != campaign.cells_distance or campaign_metadata.sampling_period != campaign.sampling_period or campaign_metadata.min_samples != campaign.min_samples:
         #Verify if the campaign is active (time)
-        if datetime.utcnow() > campaign.start_datetime.replace(tzinfo=timezone.utc):
+        if datetime.utcnow().replace(tzinfo=timezone.utc) > campaign.start_datetime.replace(tzinfo=timezone.utc):
             raise HTTPException(
                 status_code=401, detail=f"An active campaign cannot be modified."
             )
