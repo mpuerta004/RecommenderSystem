@@ -11,11 +11,12 @@ from sqlalchemy import Integer, String, Column, Boolean, ForeignKey, DateTime, A
 
 from db.base_class import Base
 
-
+from models.Hive_Member import Hive_Member
 from sqlalchemy.orm import Session
 
 from crud.base import CRUDBase
 from models.Surface import Surface
+from models.Campaign_Member import Campaign_Member
 from models.Cell import Cell
 from models.Slot import Slot
 from sqlalchemy import and_, extract
@@ -82,5 +83,18 @@ class CRUDMeasurement(CRUDBase[Measurement, MeasurementCreate, MeasurementUpdate
             except Exception as e:
                         raise HTTPException(status_code=500, detail=f"Error with mysql {e}" )
    
-        
+        def get_number_of_measurements_per_hive(self,*,db:Session, hive_id:int)->List[int] :
+            try:
+                
+               return db.execute(f"Select count(*) from (Measurement m, Hive_Member h_m) where ( m.member_id = h_m.member_id and h_m.hive_id={hive_id})").all()
+            except Exception as e:
+                        raise HTTPException(status_code=500, detail=f"Error with mysql {e}" )
+   
+   
+        def get_number_of_measurements_per_campaign(self,*,db:Session, campaign_id:int)-> List[int]:
+            try:
+                return db.execute(f"Select count(*) from (Measurement m, Campaign_Member c_m) where m.member_id = c_m.member_id and c_m.campaign_id={campaign_id}").all()  
+            except Exception as e:
+                        raise HTTPException(status_code=500, detail=f"Error with mysql {e}" )
+   
 measurement = CRUDMeasurement(Measurement)

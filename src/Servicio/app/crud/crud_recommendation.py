@@ -7,16 +7,17 @@ from fastapi import HTTPException
 
 from typing import Any, Dict, Optional, Union, List
 from typing import Any, Dict, Generic, List, Optional, Type, TypeVar, Union
-
+from models.Hive_Member import Hive_Member
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 from sqlalchemy import Integer, String, Column, Boolean, ForeignKey, DateTime, ARRAY, Float
 import datetime
-
+from models.Campaign_Member import Campaign_Member
 from db.base_class import Base
 from sqlalchemy import and_, extract,or_
 from models.Slot import Slot
 from sqlalchemy.orm import Session
+from sqlalchemy import func, select
 
 from crud.base import CRUDBase
 
@@ -87,7 +88,17 @@ class CRUDRecommendation(CRUDBase[Recommendation, RecommendationCreate, Recommen
                 except Exception as e:
                         raise HTTPException(status_code=500, detail=f"Error with mysql {e}" )
    
-    
-                        
+        def get_number_of_recommendacions_per_hive(self,db: Session, *, hive_id:int)-> List[int]:
+                try:
+                        return db.execute(f"Select  count(*)  from ( Recommendation r, Hive_Member h_m) where r.member_id = h_m.member_id and h_m.hive_id={hive_id} group by r.sent_datetime, r.member_id  ").all()  
+                except Exception as e:
+                        raise HTTPException(status_code=500, detail=f"Error with mysql {e}" )
+
+        def get_number_of_recommendacions_per_campaign(self,db: Session, *, campaign_id:int)-> List[int]:
+                try:
+                        return db.execute(f"Select  count(*)  from ( Recommendation r, Campaign_Member c_m) where r.member_id = c_m.member_id and c_m.campaign_id={campaign_id} group by r.sent_datetime, r.member_id  ").all()
+                except Exception as e:
+                        raise HTTPException(status_code=500, detail=f"Error with mysql {e}" )
+     
 
 recommendation = CRUDRecommendation(Recommendation)

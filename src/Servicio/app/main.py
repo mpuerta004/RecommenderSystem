@@ -5,7 +5,7 @@ import crud
 from apscheduler.schedulers.background import BackgroundScheduler
 from end_points import (BeeKeeper, Campaign_Member, Campaigns, Cells, Demo,
                         Devices, Hive, Measurements, Members, Recommendation,
-                        Surface, sync)
+                        Surface, sync,KPIS)
 from fastapi import (APIRouter, FastAPI)
 from fastapi.templating import Jinja2Templates
 from fastapi_utils.session import FastAPISessionMaker
@@ -34,6 +34,7 @@ app.include_router(Measurements.api_router_measurements, tags=["Measurements"])
 app.include_router(Recommendation.api_router_recommendation, tags=["Recommendations"])
 app.include_router(Demo.api_router_demo, tags=["Demo"])
 app.include_router(sync.api_router_sync, tags=["Sync"])
+app.include_router(KPIS.api_router_kpis, tags=["KPIS"])
 
 api_router = APIRouter()
 
