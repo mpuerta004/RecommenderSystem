@@ -42,8 +42,6 @@ def get_kpis_per_hive(    *,
     db: Session = Depends(deps.get_db),
 ) -> dict:
 
-
-
     #STEP 1
     list_number=crud.recommendation.get_number_of_recommendacions_per_hive(db=db,hive_id=hive_id)
  
@@ -54,7 +52,7 @@ def get_kpis_per_hive(    *,
     number_of_measurements= crud.measurement.get_number_of_measurements_per_hive(db=db,hive_id=hive_id)
     print("Numero de mediciones realizadas", number_of_measurements)
     number_of_measurements=number_of_measurements[0][0]/13
-    if number_of_measurements ==0:
+    if number_of_recommendations ==0:
         return 0
     else:
         return number_of_measurements/number_of_recommendations
@@ -78,7 +76,7 @@ def get_kpis_per_campaign(    *,
     number_of_measurements= crud.measurement.get_number_of_measurements_per_campaign(db=db,campaign_id=campaign_id)
     print("Numero de mediciones realizadas", number_of_measurements)
     number_of_measurements=number_of_measurements[0][0]/13
-    if number_of_measurements == 0:
+    if number_of_recommendations == 0:
         return 0
     else:
         return number_of_measurements/number_of_recommendations
