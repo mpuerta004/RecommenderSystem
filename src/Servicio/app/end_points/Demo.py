@@ -105,9 +105,9 @@ def asignacion_recursos_hive(
     DEMO!
     """
     initial = datetime.utcnow()
-    start = datetime(year=2024, month=2, day=17, hour=10, minute=00,
+    start = datetime(year=2024, month=6, day=27, hour=1, minute=00,
                      second=00).replace(tzinfo=timezone.utc)
-    end = datetime(year=2024, month=2, day=17, hour=14, minute=00,
+    end = datetime(year=2024, month=6, day=27, hour=14, minute=00,
                    second=1).replace(tzinfo=timezone.utc)
 
     mediciones = []
@@ -340,8 +340,8 @@ def asignacion_recursos_all(
 @api_router_demo.post("/Priority_cells_demo/{campaign_id}", status_code=201, response_model=None)
 def asignacion_recursos_con_popularidad_mucha(
     hive_id: int,
-        campaign_id: int,
-        db: Session = Depends(deps.get_db)):
+    campaign_id: int,
+    db: Session = Depends(deps.get_db)):
     """
     DEMO!
     """
