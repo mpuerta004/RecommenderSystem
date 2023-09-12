@@ -1,24 +1,34 @@
-import cv2 
 import os 
-
-img_array = []
-
-path = r"/home/ubuntu/carpeta_compartida_docker/RecommenderSystem/src/Servicio/app/Pictures/Recomendaciones"
+import os
+import moviepy.video.io.ImageSequenceClip
+from selenium import webdriver  
+import time
+#open the explorer website
+driver = webdriver.Chrome()
+#direction of the pictures
+path = r"C:/Users/mpuer/Desktop/RecommenderSystem/src/Servicio/app/Pictures/Measurements"
+#sort the pictures by name 
 archivos = sorted(os.listdir(path))
+# for each picture, take a screenshot and save it in the same folder with the same name
 for i in archivos: 
     dirArchivo = path + "/" + i
     print(i)
-    img = cv2.imread(dirArchivo)
-    height, width  = img.shape[:2]
+    driver.get(dirArchivo)
+    time.sleep(2)
+    driver.save_screenshot(path + "/" + i[:-5]+".png")
+#close the explorer website
+driver.quit()
 
-    # cv2.putText(img, f"Recomendaciones con no popularidad en 3 o menos celdas", (80,180), cv2.FONT_HERSHEY_SIMPLEX , 1.5, (0,0,0))
-    img_array.append(img)
-    
+############# CRªEATE VIDEO #################
+fps=1
+#more fps means faster video speed
+# if we want a video for a spoken presentation (In the background) -> 1 fps
+# if we want a video for a focus presentation on this -> 2 or 3 fps
 
-video = cv2.VideoWriter('db0.wmv',cv2.VideoWriter_fourcc(*'mp4v'), 3, (width, height))
-
-
-for i in range(0, len(archivos)):
-	video.write(img_array[i])
-
-video.release()
+#List of pictures of the folder.
+image_files = [os.path.join(path,img)
+               for img in os.listdir(path)
+               if img.endswith(".png")]
+#create the video. w
+clip = moviepy.video.io.ImageSequenceClip.ImageSequenceClip(image_files, fps=fps)
+clip.write_videofile('C:/Users/mpuer/Desktop/RecommenderSystem/src/Servicio/app/Pictures/my_video.mp4')
