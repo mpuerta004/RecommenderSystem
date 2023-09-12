@@ -3,7 +3,7 @@ FROM mysql:8.0.32
 
 # Copy the database file to the init directory
 # COPY init.sql /docker-entrypoint-initdb.d/
-FROM mysql:8.0.32
+# FROM mysql:8.0.32
 
 
 # Copy the database file to the init directory
