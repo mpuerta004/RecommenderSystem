@@ -1,0 +1,3 @@
+[submodule "src/Servicio/app/DRL_model_2"]
+	path = src/Servicio/app/DRL_model_2
+	url = git@github.com:mpuerta004/Recommender_system_via_deep_RL.git
