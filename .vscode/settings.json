@@ -2,13 +2,14 @@
     "sqltools.connections": [
         {
             "mysqlOptions": {
-                "authProtocol": "default"
+                "authProtocol": "default",
+                "enableSsl": "Disabled"
             },
             "previewLimit": 50,
             "server": "mysql",
             "port": 3306,
             "driver": "MySQL",
-            "database": "SocioBeeMVE",
+            "database": "SocioBeeMVE_2",
             "name": "Try",
             "username": "root",
             "password": "mypasswd"

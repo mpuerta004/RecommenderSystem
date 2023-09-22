@@ -11,4 +11,5 @@ ADD . /recommendersystem
 
 CMD  [ "poetry", "run", "python", "/recommendersystem/src/Servicio/app/main.py" ]
 
-# ENTRYPOINT ["tail", "-f", "/dev/null"]
+#Develop option 
+# ENTRYPOINT ["tail", "-f", "/dev/null"] 
