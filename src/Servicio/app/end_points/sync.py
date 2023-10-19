@@ -143,6 +143,8 @@ def update_devices(
 
 
                 
+    
+                
 @api_router_sync.put("/hives/{hive_id}/members/", status_code=201, response_model=List[NewMembers])
 def update_members(
     hive_id:int,
@@ -150,7 +152,7 @@ def update_members(
     db: Session = Depends(deps.get_db),
 ) -> dict:
     """
-    synchronization members 
+    synchronization members -> hive_member  and the campaign_memb
     """
     result=[]
     hive= crud.hive.get(db=db, id=hive_id)
@@ -177,10 +179,10 @@ def update_members(
             # Verify if there is any active campaign
             if list_campaigns is not []:
                 # Add the member to the active campaigns with the role that was recived
-                role = Campaign_MemberCreate(role=role.role)
+                campaign_create = Campaign_MemberCreate(role=role)
                 for i in list_campaigns:
                     crud.campaign_member.create_Campaign_Member(
-                        db=db, obj_in=role, campaign_id=i.id, member_id=member_db_new.id)
+                        db=db, obj_in=campaign_create, campaign_id=i.id, member_id=member_db_new.id)
 
             result.append(NewMembers(member=member_db_new,role=role))
             
@@ -201,10 +203,10 @@ def update_members(
                 # Verify if there is any active campaign
                 if list_campaigns is not []:
                     # Add the member to the active campaigns with the role that was recived
-                    role = Campaign_MemberCreate(role=role.role)
+                    campaign_create = Campaign_MemberCreate(role=role)
                     for i in list_campaigns:
                         crud.campaign_member.create_Campaign_Member(
-                            db=db, obj_in=role, campaign_id=i.id, member_id=member_db_new.id)
+                            db=db, obj_in=campaign_create, campaign_id=i.id, member_id=member_db_new.id)
                     result.append(NewMembers(member=member_db_new,role=role))
             else:
                 if(hive_member.role!=role):
@@ -212,8 +214,8 @@ def update_members(
                     a= crud.campaign.get_campaigns_from_hive_id_future(
                             db=db, time=datetime.utcnow(), hive_id=hive_id)
                     for i in a:
-                        campaign_member= crud.campaign_member.get_Campaign_Member_in_campaign(db=db, campaign_id=i.id, member_id=member_id)
-                        crud.campaign_member.update(db=db, obj_in={"role": role.role}, db_obj=campaign_member)
+                        campaign_member= crud.campaign_member.get_Campaign_Member_in_campaign(db=db, campaign_id=i.id, member_id=member_db_new.id)
+                        crud.campaign_member.update(db=db, obj_in={"role": role}, db_obj=campaign_member)
 
                 result.append(NewMembers(member=member_db_new,role=role))
     return result
