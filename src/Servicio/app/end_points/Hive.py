@@ -198,6 +198,10 @@ def create_a_new_member_for_a_hive_with_especific_role(
             list_campaigns = crud.campaign.get_campaigns_from_hive_id_active(
                 db=db, time=datetime.utcnow(), hive_id=hive_id)
             # Verify if there are active campaigns
+            a= crud.campaign.get_campaigns_from_hive_id_future(
+                    db=db, time=datetime.utcnow(), hive_id=hive_id)
+            list_campaigns= list_campaigns + a
+
             if list_campaigns is not []:
                 role = Campaign_MemberCreate(role=role.role)
                 for i in list_campaigns:
@@ -226,6 +230,10 @@ def create_a_new_member_for_a_hive_with_especific_role(
         # Create the Campaign_Member entity for active campaigns, add this member to the Campaign_Member table for a active campaigns of the hive.
         list_campaigns = crud.campaign.get_campaigns_from_hive_id_active(
             db=db, time=datetime.utcnow(), hive_id=hive_id)
+        a= crud.campaign.get_campaigns_from_hive_id_future(
+                    db=db, time=datetime.utcnow(), hive_id=hive_id)
+        list_campaigns= list_campaigns + a
+
         # Verify if there is any active campaign
         if list_campaigns is not []:
             # Add the member to the active campaigns with the role that was recived
@@ -280,6 +288,9 @@ def associate_existing_member_with_a_hive_with_specific_role(
                 # Create the Role in active campaigns
                 list_campaigns = crud.campaign.get_campaigns_from_hive_id_active(
                     db=db, time=datetime.utcnow(), hive_id=hive_id)
+                a= crud.campaign.get_campaigns_from_hive_id_future(
+                    db=db, time=datetime.utcnow(), hive_id=hive_id)
+                list_campaigns= list_campaigns + a
 
                 if list_campaigns is not []:
                     for i in list_campaigns:
@@ -301,6 +312,10 @@ def associate_existing_member_with_a_hive_with_specific_role(
             # Create the Role in active campaigns
             list_campaigns = crud.campaign.get_campaigns_from_hive_id_active(
                 db=db, time=datetime.utcnow(), hive_id=hive_id)
+            a= crud.campaign.get_campaigns_from_hive_id_future(
+                    db=db, time=datetime.utcnow(), hive_id=hive_id)
+            list_campaigns= list_campaigns + a
+
             # Create the Campaign_Member entity for active campaigns, add this member to the Campaign_Member table for a active campaigns of the hive.
             if list_campaigns is not []:
                 role = Campaign_MemberCreate(role=role.role)
@@ -351,6 +366,10 @@ def delete_hive_member_of_hive(
     # Verify if the user is in an active campaign, if yes, we can not remove him/her from the hive
     activeCampaigns = crud.campaign.get_campaigns_from_hive_id_active(
         db=db, time=datetime.utcnow(), hive_id=hive_id)
+    # a= crud.campaign.get_campaigns_from_hive_id_future(
+    #                 db=db, time=datetime.utcnow(), hive_id=hive_id)
+    # activeCampaigns= activeCampaigns + a
+
     if activeCampaigns is []:
         updated_recipe = crud.hive_member.remove(db=db, hiveMember=hiveMember)
     else:

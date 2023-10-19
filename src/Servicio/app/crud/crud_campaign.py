@@ -39,7 +39,14 @@ class CRUDCampaign(CRUDBase[Campaign, CampaignCreate, CampaignUpdate]):
         return db.query(Campaign).filter(and_(Campaign.hive_id == hive_id, Campaign.start_datetime<=time, time<Campaign.end_datetime)).all()
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error with mysql {e}" )  
+  def get_campaigns_from_hive_id_future(self,db: Session,*,time: datetime, hive_id: int ) -> List[Campaign]:
+    try:
+        return db.query(Campaign).filter(and_(Campaign.hive_id == hive_id, Campaign.start_datetime>time)).all()
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error with mysql {e}" )  
   
+  
+
   def get_campaign(self, db: Session,*, hive_id:int,campaign_id:int) ->Campaign:
     try:
       return db.query(Campaign).filter(and_(Campaign.hive_id== hive_id,Campaign.id==campaign_id)).first()

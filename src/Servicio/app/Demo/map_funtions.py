@@ -21,7 +21,7 @@ def legend_generation_measurements_representation(time:str):
                 display: inline-block;"></div>
             <p style="display: inline-block; margin-left: 10px;">{}</p>
             <br>
-            '''.format(variables.color_list_[i], variables.names_legend_color[i])
+            '''.format(variables.color_list_hex[i], variables.names_legend_color[i])
     legend_html += '''
     <div ></div><p style=display: inline-block; margin-left: 5px;">time: {}</p>
     '''.format(time)
