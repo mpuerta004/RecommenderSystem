@@ -370,6 +370,7 @@ def delete_hive_member_of_hive(
     if activeCampaigns is []:
         updated_recipe = crud.hive_member.remove(db=db, hiveMember=hiveMember)
     else:
+        
         for i in activeCampaigns:
             # To verify if the member is in an active campaign, we need to check if the member is in the Campaign_Member table of an active campaign
             role_in_campaign = crud.campaign_member.get_Campaign_Member_in_campaign(
@@ -379,6 +380,12 @@ def delete_hive_member_of_hive(
                     status_code=400, detail=f"Do not remove a member from the hive if he/she is participating in an active campaign."
                 )
     crud.hive_member.remove(db=db, hiveMember=hiveMember)
+    a= crud.campaign.get_campaigns_from_hive_id_future(
+                    db=db, time=datetime.utcnow(), hive_id=hive_id)
+    for i in a:
+        campaign_member= crud.campaign_member.get_Campaign_Member_in_campaign(db=db, campaign_id=i.id, member_id=member_id)
+        crud.campaign_member.remove(db=db, Campaign_Member=campaign_member)
+        
     return {"ok": True}
 
 
@@ -425,6 +432,11 @@ def update_the_role_of_a_member_in_hive(
 
             updated_recipe = crud.hive_member.update(
                 db=db, obj_in={"role": role.role}, db_obj=hiveMember)
+            a= crud.campaign.get_campaigns_from_hive_id_future(
+                    db=db, time=datetime.utcnow(), hive_id=hive_id)
+            for i in a:
+                campaign_member= crud.campaign_member.get_Campaign_Member_in_campaign(db=db, campaign_id=i.id, member_id=member_id)
+                crud.campaign_member.update(db=db, obj_in={"role": role.role}, db_obj=campaign_member)
             return updated_recipe
         else:
             raise HTTPException(
@@ -434,4 +446,9 @@ def update_the_role_of_a_member_in_hive(
         # IF the new role is not a QueenBee, we can update the role of the member in the hive
         updated_recipe = crud.hive_member.update(
             db=db, obj_in={"role": role.role}, db_obj=hiveMember)
+        a= crud.campaign.get_campaigns_from_hive_id_future(
+                    db=db, time=datetime.utcnow(), hive_id=hive_id)
+        for i in a:
+            campaign_member= crud.campaign_member.get_Campaign_Member_in_campaign(db=db, campaign_id=i.id, member_id=member_id)
+            crud.campaign_member.update(db=db, obj_in={"role": role.role}, db_obj=campaign_member)
         return updated_recipe
