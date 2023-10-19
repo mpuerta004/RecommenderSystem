@@ -9,7 +9,7 @@
             "server": "mysql",
             "port": 3306,
             "driver": "MySQL",
-            "database": "SocioBeeMVE_2",
+            "database": "SocioBeeMVE",
             "name": "Try",
             "username": "root",
             "password": "mypasswd"

@@ -6,7 +6,7 @@ import time
 #open the explorer website
 driver = webdriver.Chrome()
 #direction of the pictures
-path = r"C:/Users/mpuer/Desktop/RecommenderSystem/src/Servicio/app/Pictures/Measurements"
+path = r"C:/Users/mpuer/Desktop/recommendersystem/src/Servicio/app/Pictures/Measurements_html"
 #sort the pictures by name 
 archivos = sorted(os.listdir(path))
 # for each picture, take a screenshot and save it in the same folder with the same name
@@ -31,4 +31,4 @@ image_files = [os.path.join(path,img)
                if img.endswith(".png")]
 #create the video. w
 clip = moviepy.video.io.ImageSequenceClip.ImageSequenceClip(image_files, fps=fps)
-clip.write_videofile('C:/Users/mpuer/Desktop/RecommenderSystem/src/Servicio/app/Pictures/my_video.mp4')
+clip.write_videofile('C:/Users/mpuer/Desktop/RecommenderSystem/src/Servicio/app/Pictures/bio-inspired.mp4')

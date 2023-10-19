@@ -6,7 +6,6 @@ from typing import Any, Dict, Generic, List, Optional, Type, TypeVar, Union
 import crud
 import deps
 import folium
-from vincenty import vincenty
 from datetime import datetime, timedelta
 from sqlalchemy.orm import Session
 from fastapi import (APIRouter, Depends,
