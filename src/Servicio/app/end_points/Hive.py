@@ -363,9 +363,9 @@ def delete_hive_member_of_hive(
     # Verify if the user is in an active campaign, if yes, we can not remove him/her from the hive
     activeCampaigns = crud.campaign.get_campaigns_from_hive_id_active(
         db=db, time=datetime.utcnow(), hive_id=hive_id)
-    a= crud.campaign.get_campaigns_from_hive_id_future(
-                    db=db, time=datetime.utcnow(), hive_id=hive_id)
-    activeCampaigns= activeCampaigns +a
+    # a= crud.campaign.get_campaigns_from_hive_id_future(
+    #                 db=db, time=datetime.utcnow(), hive_id=hive_id)
+    # activeCampaigns= activeCampaigns +a
     
     if activeCampaigns is []:
         updated_recipe = crud.hive_member.remove(db=db, hiveMember=hiveMember)
