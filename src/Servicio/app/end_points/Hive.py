@@ -315,10 +315,10 @@ def associate_existing_member_with_a_hive_with_specific_role(
             
             # Create the Campaign_Member entity for active campaigns, add this member to the Campaign_Member table for a active campaigns of the hive.
             if list_campaigns is not []:
-                role = Campaign_MemberCreate(role=role.role)
+                campaign_create = Campaign_MemberCreate(role=role.role)
                 for i in list_campaigns:
                     crud.campaign_member.create_Campaign_Member(
-                        db=db, obj_in=role, campaign_id=i.id, member_id=member_id)
+                        db=db, obj_in=campaign_create, campaign_id=i.id, member_id=member_id)
 
             return hiveMember
     else:
