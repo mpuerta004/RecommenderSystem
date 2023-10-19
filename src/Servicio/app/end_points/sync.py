@@ -168,7 +168,22 @@ def update_members(
             
             hiveCreate=Hive_MemberCreate(hive_id=hive_id,member_id=member_db_new.id)
             hive_member=crud.hive_member.create_hiveMember(db=db,obj_in=hiveCreate,role=role)
+            list_campaigns = crud.campaign.get_campaigns_from_hive_id_active(
+                db=db, time=datetime.utcnow(), hive_id=hive_id)
+            a= crud.campaign.get_campaigns_from_hive_id_future(
+                    db=db, time=datetime.utcnow(), hive_id=hive_id)
+            list_campaigns= list_campaigns + a
+
+            # Verify if there is any active campaign
+            if list_campaigns is not []:
+                # Add the member to the active campaigns with the role that was recived
+                role = Campaign_MemberCreate(role=role.role)
+                for i in list_campaigns:
+                    crud.campaign_member.create_Campaign_Member(
+                        db=db, obj_in=role, campaign_id=i.id, member_id=member_db_new.id)
+
             result.append(NewMembers(member=member_db_new,role=role))
+            
         else:
             member_update=MemberUpdate(name=member.name, surname=member.surname,age=member.age, gender=member.gender,city=member.city,mail=member.mail, birthday=member.birthday,real_user=member.real_user)
             member_db_new=crud.member.update(db=db,db_obj=member_db,obj_in=member_update)
@@ -177,11 +192,29 @@ def update_members(
             if hive_member is None:
                 hiveCreate=Hive_MemberCreate(hive_id=hive_id,member_id=member_db_new.id)
                 hive_member=crud.hive_member.create_hiveMember(db=db,obj_in=hiveCreate,role=role)
-                result.append(NewMembers(member=member_db_new,role=role))
+                list_campaigns = crud.campaign.get_campaigns_from_hive_id_active(
+                db=db, time=datetime.utcnow(), hive_id=hive_id)
+                a= crud.campaign.get_campaigns_from_hive_id_future(
+                        db=db, time=datetime.utcnow(), hive_id=hive_id)
+                list_campaigns= list_campaigns + a
+
+                # Verify if there is any active campaign
+                if list_campaigns is not []:
+                    # Add the member to the active campaigns with the role that was recived
+                    role = Campaign_MemberCreate(role=role.role)
+                    for i in list_campaigns:
+                        crud.campaign_member.create_Campaign_Member(
+                            db=db, obj_in=role, campaign_id=i.id, member_id=member_db_new.id)
+                    result.append(NewMembers(member=member_db_new,role=role))
             else:
                 if(hive_member.role!=role):
                     crud.hive_member.update(db=db, db_obj=hive_member,obj_in={"role":role})
-                
+                    a= crud.campaign.get_campaigns_from_hive_id_future(
+                            db=db, time=datetime.utcnow(), hive_id=hive_id)
+                    for i in a:
+                        campaign_member= crud.campaign_member.get_Campaign_Member_in_campaign(db=db, campaign_id=i.id, member_id=member_id)
+                        crud.campaign_member.update(db=db, obj_in={"role": role.role}, db_obj=campaign_member)
+
                 result.append(NewMembers(member=member_db_new,role=role))
     return result
 
