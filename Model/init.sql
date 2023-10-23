@@ -95,7 +95,7 @@ Create Table Member_Device(
   primary key(member_id),
   FOREIGN KEY (member_id)
     REFERENCES Member (id)
-    ON DELETE CASCADe,
+    ON DELETE CASCADE,
     FOREIGN KEY (device_id)
     REFERENCES Device (id)
     ON DELETE CASCADE

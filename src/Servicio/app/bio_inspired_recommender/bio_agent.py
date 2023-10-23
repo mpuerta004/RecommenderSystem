@@ -22,9 +22,9 @@ class BIOAgent(object):
         self.campaign= crud.campaign.get_campaign(db=db, hive_id=hive_id, campaign_id=campaign_id)
         self.O_max= variables.O_max
         self.O_min= variables.O_min
-        self.w_forgetting=variables.w_forgetting
-        self.w_reinforcement_general=variables.w_reinforcement_general
-        self.w_reinforcement_neighbour=variables.w_reinforcement_neighbour
+        self.w_forgetting=variables.fi
+        self.w_reinforcement_general=variables.e_0
+        self.w_reinforcement_neighbour=variables.e_neighbour
         self.alpha = variables.alpha
         self.beta=variables.beta
         
@@ -48,7 +48,7 @@ class BIOAgent(object):
     def new_user(self,member_id:int, campaign_id:int, db: Session = Depends(deps.get_db)):
         self.list_members_of_a_campaign=crud.campaign_member.get_Campaign_Member_in_campaign_workers(db=db, campaign_id=campaign_id)
         cells_of_campaign = crud.cell.get_cells_campaign(db=db, campaign_id=campaign_id)        
-        self.users_thesthold.loc[member_id]=[self.O_min for i in range(len(cells_of_campaign))]
+        self.users_thesthold.loc[member_id]=[(self.O_max + self.O_min)//2 for i in range(len(cells_of_campaign))]
         
    
     
@@ -77,7 +77,6 @@ class BIOAgent(object):
             else:
                 priority_temporal = priority.temporal_priority
             
-
             self.df_priority.loc[cell.id, "priority"]=priority_temporal
     
     def create_recomendation(   self,
@@ -98,23 +97,35 @@ class BIOAgent(object):
         
         for cell in self.cells_of_campaign:
             # print(self.users_thesthold)
-            
-            NEW_VALUE=(
-            ((self.df_priority.loc[cell.id,"priority"])**2 ) / 
-                        ((self.df_priority.loc[cell.id,"priority"])**2  + 
-                        self.alpha * (self.users_thesthold.loc[member_id,cell.id])**2
-                         + self.beta * (df_user_distance.loc[cell.id,"distance_cell_user"])**2
-                                                            )
-            )
+            if self.df_priority.loc[cell.id, "priority"] < 0.0:
+                NEW_VALUE=0.0
+            else:
+                slot = crud.slot.get_slot_time(
+                    db=db, cell_id=cell.id, time=time)
+                Cardinal_actual = crud.measurement.get_all_Measurement_from_cell_in_the_current_slot(
+                    db=db, time=time, slot_id=slot.id)
+                recommendation_accepted = crud.recommendation.get_aceptance_state_of_cell(
+                        db=db, slot_id=slot.id)
+                expected= Cardinal_actual + len(recommendation_accepted)
+                if expected >= self.campaign.min_samples:
+                                    NEW_VALUE=0.0
+                else:
+                    NEW_VALUE=(
+                    ((self.df_priority.loc[cell.id,"priority"])**2 ) / 
+                                ((self.df_priority.loc[cell.id,"priority"])**2  + 
+                                self.alpha * (self.users_thesthold.loc[member_id,cell.id])**2
+                                + self.beta * (df_user_distance.loc[cell.id,"distance_cell_user"])**2
+                                                                    )
+                    )
             probability_user.loc[cell.id,"probability" ]= NEW_VALUE
         probability_user["probability"]= pd.to_numeric(probability_user["probability"])
 
         result = []
-        List_id_cell=[]
-        probability_user= probability_user.loc[probability_user["probability"]>=0.0]
-        list_order_cell=probability_user.sort_values(by="probability", ascending=False).index.tolist()
-
-        if len(self.list_cells_id)>3:
+        List_id_cell = []
+        probability_user = probability_user.loc[probability_user["probability"]>0.0]
+        list_order_cell = probability_user.sort_values(by="probability", ascending=False).index.tolist()
+    
+        if len(list_order_cell)>3:
             for i in range(3):
                 cell_id = list_order_cell[i]
                 slot=crud.slot.get_slot_time(db=db, cell_id=cell_id, time=time)
@@ -124,15 +135,14 @@ class BIOAgent(object):
                 result.append(recomendation)
                 
         else:
-            for i in range(len(self.list_cells_id)):
+            for i in range(len(list_order_cell)):
                 cell_id = list_order_cell[i]
                 slot=crud.slot.get_slot_time(db=db, cell_id=cell_id, time=time)
                 recomendation = crud.recommendation.create_recommendation(
                 db=db, obj_in=recipe_in, member_id=member_id, slot_id=slot.id, state="NOTIFIED", update_datetime=time, sent_datetime=time)
                 cell = crud.cell.get(db=db, id=slot.cell_id)
                 result.append(recomendation)
-        if member_id==15:
-            print("Usuario 5 ha recibido recomendación!")
+        
         return {"results": result}
         
     #Después de la recomendación los ajustes de paramrtros correspondientes cuando el usuario realiza la accin pedida
@@ -153,7 +163,6 @@ class BIOAgent(object):
             if self.users_thesthold.loc[member_id,cell_id]<self.O_min:
                 self.users_thesthold.loc[member_id,cell_id]=self.O_min
         
-        print(self.users_thesthold)
         slot = crud.slot.get_slot_time(
                     db=db, cell_id=cell_id_user, time=time)
         if slot is None:
