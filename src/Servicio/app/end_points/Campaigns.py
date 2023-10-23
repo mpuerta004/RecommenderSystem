@@ -30,7 +30,7 @@ from schemas.Priority import Priority, PriorityCreate, PrioritySearchResults
 from schemas.Slot import Slot, SlotCreate, SlotSearchResults
 from schemas.Surface import Surface, SurfaceCreate, SurfaceSearchResults
 
-from end_points.funtionalities import create_slots_campaign, create_cells_for_a_surface, get_point_at_distance
+from funtionalities import create_slots_campaign, create_cells_for_a_surface, get_point_at_distance
 
 
 api_router_campaign = APIRouter(prefix="/hives/{hive_id}/campaigns")

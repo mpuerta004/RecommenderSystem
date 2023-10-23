@@ -8,7 +8,7 @@ from schemas.Campaign import CampaignSearchResults, Campaign, CampaignCreate,Cam
 from schemas.Slot import Slot, SlotCreate,SlotSearchResults
 from schemas.Hive import Hive, HiveCreate, HiveSearchResults
 from schemas.Member import Member,MemberCreate,MemberSearchResults
-from end_points.funtionalities import create_cells_for_a_surface,  create_slots_campaign
+from funtionalities import create_cells_for_a_surface,  create_slots_campaign, create_List_of_points_for_a_boundary
 from schemas.Campaign_Member import Campaign_Member,Campaign_MemberCreate,Campaign_MemberSearchResults
 from schemas.newMember import NewMemberBase
 from datetime import datetime, timedelta
@@ -56,7 +56,6 @@ import math
 from vincenty import vincenty
 import numpy as np
 from numpy import sin, cos, arccos, pi, round
-from end_points.funtionalities import create_List_of_points_for_a_boundary
 
 from math import sin, cos, atan2, sqrt, radians, degrees, asin
 

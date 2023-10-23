@@ -11,7 +11,7 @@ import deps
 import crud
 from datetime import datetime, timezone, timedelta
 import math
-from end_points.funtionalities import prioriry_calculation
+from funtionalities import prioriry_calculation
 
 api_router_recommendation = APIRouter(prefix="/members/{member_id}")
 

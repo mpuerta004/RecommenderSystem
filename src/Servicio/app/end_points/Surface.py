@@ -11,7 +11,7 @@ from datetime import datetime, timedelta
 from schemas.Cell import Cell, CellCreate, CellSearchResults, Point
 from schemas.Surface import SurfaceSearchResults, Surface, SurfaceCreate, SurfaceUpdate
 import deps
-from end_points.funtionalities import create_cells_for_a_surface, create_slots_per_surface
+from funtionalities import create_cells_for_a_surface, create_slots_per_surface
 import crud
 from datetime import datetime                       
 import numpy as np

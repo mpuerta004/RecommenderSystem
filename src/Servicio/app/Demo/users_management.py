@@ -11,7 +11,7 @@ import deps
 from datetime import datetime, timezone
 from datetime import datetime, timezone, timedelta
 from vincenty import vincenty
-from end_points.funtionalities import get_point_at_distance, prioriry_calculation
+from funtionalities import get_point_at_distance, prioriry_calculation
 import crud
 from datetime import datetime, timedelta
 import math
@@ -31,6 +31,9 @@ from bio_inspired_recommender.bio_agent import BIOAgent
 import Demo.variables as variables
 from Demo.map_funtions import show_hive, show_recomendation, legend_generation_measurements_representation, legend_generation_recommendation_representation
 import random
+
+
+# user that acepts do something 
 
 def reciboUser_hive(hive_id:int,db: Session = Depends(deps.get_db)):
     usuarios_peticion = []
@@ -63,6 +66,8 @@ def reciboUser(db: Session = Depends(deps.get_db)):
                 usuarios_peticion.append(i)
     return usuarios_peticion
 
+
+#################### user choice simulation ####################
 
 def user_selecction(a: list()):
     aletorio = random.random()

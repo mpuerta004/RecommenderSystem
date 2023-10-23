@@ -10,7 +10,7 @@ from fastapi import (APIRouter, FastAPI)
 from fastapi.templating import Jinja2Templates
 from fastapi_utils.session import FastAPISessionMaker
 from datetime import datetime, timezone,timedelta
-from end_points.funtionalities import prioriry_calculation
+from funtionalities import prioriry_calculation
 SQLALCHEMY_DATABASE_URL = "mysql+mysqlconnector://root:mypasswd@mysql:3306/SocioBeeMVE"
 sessionmaker = FastAPISessionMaker(SQLALCHEMY_DATABASE_URL)
 
@@ -60,7 +60,7 @@ async def state_calculation()->None:
         a = datetime.now()
         Current_time = datetime(year=a.year, month=a.month, day=a.day,
                         hour=a.hour, minute=a.minute, second=a.second)
-            
+        
         for i in list_of_recommendations:
           
             if (Current_time > i.update_datetime): # It is necessary to run demo 
@@ -70,6 +70,9 @@ async def state_calculation()->None:
                     db.commit()  
         db.close()
     return None
+
+
+
 
 #Funtions that automaticaly calculate the priority.
 def final_funtion():

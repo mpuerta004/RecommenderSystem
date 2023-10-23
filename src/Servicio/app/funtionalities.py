@@ -146,6 +146,10 @@ def prioriry_calculation(time: datetime, cam: Campaign, db: Session = Depends(de
                     print(f"Tengo id -> cell_id {cell.id} y slot {slot} ")
                 Cardinal_actual = crud.measurement.get_all_Measurement_from_cell_in_the_current_slot(
                     db=db, time=time, slot_id=slot.id)
+                recommendation_accepted = crud.recommendation.get_aceptance_state_of_cell(
+                db=db, slot_id=slot.id)
+                print("Recomendation accepted", len(recommendation_accepted))
+                expected= Cardinal_actual + len(recommendation_accepted)
                 # b = max(2, cam.min_samples - int(Cardinal_pasado))
                 # a = max(2, cam.min_samples - int(Cardinal_actual))
                 # result = math.log(a) * math.log(b, int(Cardinal_actual) + 2)
@@ -154,12 +158,12 @@ def prioriry_calculation(time: datetime, cam: Campaign, db: Session = Depends(de
                 # a = init - timedelta(seconds=((init).total_seconds() //
                 #                      cam.sampling_period)*cam.sampling_period)
                 if cam.min_samples == 0:  # To dont have a infinite reward.
-                    result = init - (Cardinal_actual) / cam.sampling_period
+                    result = init - (expected) / cam.sampling_period
                 else:
-                    if Cardinal_actual == cam.min_samples:
+                    if expected == cam.min_samples:
                         result = -1.0
                     else:
-                        result = init - Cardinal_actual/cam.min_samples
+                        result = init - expected/cam.min_samples
                 total_measurements = crud.measurement.get_all_Measurement_campaign(
                     db=db, campaign_id=cam.id, time=time)
                 if total_measurements == 0.0:  # Important not divide by 0.0.
