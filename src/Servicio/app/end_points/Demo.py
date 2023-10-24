@@ -75,6 +75,7 @@ def asignacion_recursos_hive(
                     print("Modificiacion")
                     crud.recommendation.update(db=db,db_obj=i, obj_in={"state":"NON_REALIZED","update_datetime":Current_time})
                     db.commit()  
+                    db.commit()
         show_hive(hive_id=hive_id, time=time, db=db)
         
         #Get the list of all WorkerBee and QueenBee  
@@ -130,8 +131,9 @@ def asignacion_recursos_hive(
                             db.commit()
                             db.commit()
 
+                             
                             mediciones.append(
-                                [user, recomendacion_polinizar, random.randint(1, 600)])
+                                [user, recomendacion_polinizar, random.randint(1, 420)])
                             # if user.id%2==0 :
                             show_recomendation(db=db, cam=cam, user=user, result=recomendaciones['results'],time=time,recomendation=recomendacion_polinizar)
                 

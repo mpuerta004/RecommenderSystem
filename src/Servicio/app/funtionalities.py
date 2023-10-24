@@ -148,7 +148,7 @@ def prioriry_calculation(time: datetime, cam: Campaign, db: Session = Depends(de
                     db=db, time=time, slot_id=slot.id)
                 recommendation_accepted = crud.recommendation.get_aceptance_state_of_cell(
                 db=db, slot_id=slot.id)
-                print("Recomendation accepted", len(recommendation_accepted))
+                # print("Recomendation accepted", len(recommendation_accepted))
                 expected= Cardinal_actual + len(recommendation_accepted)
                 # b = max(2, cam.min_samples - int(Cardinal_pasado))
                 # a = max(2, cam.min_samples - int(Cardinal_actual))

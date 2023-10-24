@@ -94,7 +94,7 @@ class BIOAgent(object):
             self.new_user(member_id=member_id, campaign_id=self.campaign_id, db=db)
             
         
-        
+        NEW_VALUE=-1.0
         for cell in self.cells_of_campaign:
             # print(self.users_thesthold)
             if self.df_priority.loc[cell.id, "priority"] < 0.0:
@@ -106,10 +106,8 @@ class BIOAgent(object):
                     db=db, time=time, slot_id=slot.id)
                 recommendation_accepted = crud.recommendation.get_aceptance_state_of_cell(
                         db=db, slot_id=slot.id)
-                expected= Cardinal_actual + len(recommendation_accepted)
-                if expected >= self.campaign.min_samples:
-                                    NEW_VALUE=0.0
-                else:
+                expected = Cardinal_actual + len(recommendation_accepted)
+                if expected < self.campaign.min_samples:
                     NEW_VALUE=(
                     ((self.df_priority.loc[cell.id,"priority"])**2 ) / 
                                 ((self.df_priority.loc[cell.id,"priority"])**2  + 
@@ -117,16 +115,19 @@ class BIOAgent(object):
                                 + self.beta * (df_user_distance.loc[cell.id,"distance_cell_user"])**2
                                                                     )
                     )
+                else:
+                    NEW_VALUE=0.0
             probability_user.loc[cell.id,"probability" ]= NEW_VALUE
         probability_user["probability"]= pd.to_numeric(probability_user["probability"])
 
         result = []
         List_id_cell = []
-        probability_user = probability_user.loc[probability_user["probability"]>0.0]
-        list_order_cell = probability_user.sort_values(by="probability", ascending=False).index.tolist()
+        probability_user_list_positive = probability_user.loc[probability_user["probability"]>0.0]
+        list_order_cell = probability_user_list_positive.sort_values(by="probability", ascending=False).index.tolist()
     
         if len(list_order_cell)>3:
             for i in range(3):
+                
                 cell_id = list_order_cell[i]
                 slot=crud.slot.get_slot_time(db=db, cell_id=cell_id, time=time)
                 recomendation = crud.recommendation.create_recommendation(
