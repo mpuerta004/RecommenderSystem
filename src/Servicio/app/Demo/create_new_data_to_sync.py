@@ -7,10 +7,10 @@ number_users=10
 inicio=3
 with open('archivo.json', 'w') as file:
 
-    # for id in range(inicio, number_users):
-    #     #Insert the line that create the user and his/her role in the hive
-    #     element = f"insert into Member (name,surname,age,gender,city, mail,birthday,real_user,id) values (name,surname,0,'FEMALE',city, mail,   '2023-03-09 10:47:50',true,{id});"
-    #     result = result + element #+ element2 + element3
+    for id in range(inicio, number_users):
+        #Insert the line that create the user and his/her role in the hive
+        element = f"insert into Member (name,surname,age,gender,city, mail,birthday,real_user,id) values (name,surname,0,'FEMALE',city, mail,   '2023-03-09 10:47:50',true,{id});"
+        result = result + element #+ element2 + element3
 
     for id in range(inicio, number_users):
         #Insert the line that create the user and his/her role in the hive
@@ -18,20 +18,15 @@ with open('archivo.json', 'w') as file:
             role="QueenBee"
         else:
             role="WorkerBee"
-        element= f"insert into Hive_Member (hive_id, member_id, role)         values ({hive_id},{id},'{role}');"
-        result = result + element #+ element2 + element3
+        element= f"insert into Hive_Member (hive_id, member_id, role) values ({hive_id},{id},'{role}');"
+        result = result + element 
 
     #Create the .json file to save all this mysql commant to ejecute in the terminal. 
     for id in range(inicio, number_users):
         #Insert the line that create the user and his/her role in the hive
-      
         element= f"insert into Device (id) values ({id});"          
-        #Insert the live that create the Member_device entity to associete the member with the device
-        #element =  f"insert into Member_Device (device_id, member_id) values ({id},{id});"
-        result = result + element #+ element2 + element3
+        result = result + element
 
-    #Create the .json file to save all this mysql commant to ejecute in the terminal. 
-   
     for id in range(inicio, number_users):
         #Insert the line that create the user and his/her role in the hive
         element =  f"insert into Member_Device (device_id, member_id) values ({id},{id});"
