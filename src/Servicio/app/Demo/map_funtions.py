@@ -28,8 +28,13 @@ import deps
 from datetime import datetime, timezone
 from datetime import datetime, timezone, timedelta
 from vincenty import vincenty
+# import folium.colormap as cm
+import folium.plugins
 
-
+import branca
+import branca.colormap as cm
+from bio_inspired_recommender.bio_agent import BIOAgent
+import Demo.variables as variable
 
 #Leyend and map funtions
 def legend_generation_measurements_representation(time:str):
@@ -106,7 +111,7 @@ def show_recomendation(*, cam: Campaign, user: Member, result: list(), time: dat
     
     surface = crud.surface.get(db=db, id=cam.surfaces[0].id)
     mapObj = folium.Map(location=[surface.boundary.centre['Latitude'],
-                        surface.boundary.centre['Longitude']], zoom_start=16)
+                        surface.boundary.centre['Longitude']], zoom_start=variable.zoom_start)
     List_campaign=crud.campaign.get_all_active_campaign_for_a_hive(db=db, hive_id=cam.hive_id,time=time)
     
     for cam in List_campaign:
@@ -117,6 +122,9 @@ def show_recomendation(*, cam: Campaign, user: Member, result: list(), time: dat
                 # Ponermos el color en funcion de la cantidad de datos no de la prioridad.
                 Cardinal_actual = crud.measurement.get_all_Measurement_from_cell_in_the_current_slot(
                     db=db,  time=time, slot_id=slot.id)
+                expected_measurements= crud.recommendation.get_aceptance_state_of_cell(
+                db=db, slot_id=slot.id)
+                expected_measurements=len(expected_measurements)
                 if Cardinal_actual >= cam.min_samples:
                     color = variables.color_list_hex[4]
                 else:
@@ -135,15 +143,14 @@ def show_recomendation(*, cam: Campaign, user: Member, result: list(), time: dat
                     # Direction in degrees
 
                     list_point.append([lat2, lon2])
-
                 folium.Polygon(locations=list_point, color='black', fill_color=color,
                             weight=1, popup=(folium.Popup(str(j.id))), opacity=0.5, fill_opacity=0.75).add_to(mapObj)
 
-                folium.Marker(list_point[3],
+                folium.Marker(list_point[3],popup=f"Number of Expected measurements: {expected_measurements}",
                             icon=DivIcon(
                     icon_size=(200, 36),
                     icon_anchor=(0, 0),
-                    html=f'<div style="font-size: 20pt">{Cardinal_actual}</div>',
+                    html=f'<div style="font-size: 20pt">{Cardinal_actual}</div>'
                 )
                 ).add_to(mapObj)
 
@@ -166,6 +173,109 @@ def show_recomendation(*, cam: Campaign, user: Member, result: list(), time: dat
     
     legend_html, legend_html_2 = legend_generation_recommendation_representation(time.strftime('%m/%d/%Y, %H:%M:%S'))
     mapObj.get_root().html.add_child(folium.Element(legend_html))
+
+    mapObj.get_root().html.add_child(folium.Element(legend_html_2))
+    mapObj.save(direcion_html)
+    # img_data = mapObj._to_png(5)
+    # img = Image.open(io.BytesIO(img_data))
+    # img.save(direcion_png)
+    return None
+
+
+
+
+def show_recomendation_with_thesholes(*, bio:BIOAgent, cam: Campaign, user: Member, result: list(), time: datetime, recomendation: Recommendation, db: Session = Depends(deps.get_db)) -> Any:
+    
+    
+    if result is []:
+        return True
+    
+    count = 0
+    Cells_recomendadas = []
+    for i in result:
+        slot = crud.slot.get_slot(db=db, slot_id=i.slot_id)
+        Cells_recomendadas.append(slot.cell_id)
+    if recomendation is not None: 
+        slot = crud.slot.get_slot(db=db, slot_id=recomendation.slot_id)
+        Cells_recomendadas.append(slot.cell_id)
+    cell_elejida = slot.cell_id
+    
+    user_position = result[0].member_current_location
+    cell_distance = cam.cells_distance
+    hipotenusa = math.sqrt(2*((cell_distance/2)**2))
+    
+    # linear=cm.linear.YlGn_09.scale(vmin=bio.get_0_min(), vmax=bio.get_0_max())
+    # (vmin=bio.get_0_min(), vmax=bio.get_0_max())
+    linear=cm.LinearColormap(['green', 'yellow', 'red'], vmin=bio.get_0_min(), vmax=bio.get_0_max())
+
+
+    surface = crud.surface.get(db=db, id=cam.surfaces[0].id)
+    mapObj = folium.Map(location=[surface.boundary.centre['Latitude'],
+                        surface.boundary.centre['Longitude']], zoom_start=variables.zoom_start)
+    List_campaign=crud.campaign.get_all_active_campaign_for_a_hive(db=db, hive_id=cam.hive_id,time=time)
+    
+    for cam in List_campaign:
+        for i in cam.surfaces:
+            count = count+1
+            for j in i.cells:
+                theshole= bio.get_thesthold_of_user_in_cell(member_id=user.id, cell_id=j.id)
+                slot = crud.slot.get_slot_time(db=db, cell_id=j.id, time=time)
+                # Ponermos el color en funcion de la cantidad de datos no de la prioridad.
+                Cardinal_actual = crud.measurement.get_all_Measurement_from_cell_in_the_current_slot(
+                    db=db,  time=time, slot_id=slot.id)
+                expected_measurements= crud.recommendation.get_aceptance_state_of_cell(
+                db=db, slot_id=slot.id)
+                expected_measurements=len(expected_measurements)
+                if Cardinal_actual >= cam.min_samples:
+                    color = variables.color_list_hex[4]
+                else:
+                    numero = int((Cardinal_actual/cam.min_samples)//(1/4))
+                    color = variables.color_list_hex[numero]
+                lon1 = j.centre['Longitude']
+                lat1 = j.centre['Latitude']
+
+                # Desired distance in kilometers
+                distance = hipotenusa
+                list_direction = [45, 135, 225, 315]
+                list_point = []
+                for dir in list_direction:
+                    lat2, lon2 = get_point_at_distance(
+                        lat1=lat1, lon1=lon1, d=distance, bearing=dir)
+                    # Direction in degrees
+
+                    list_point.append([lat2, lon2])
+                folium.Polygon(locations=list_point, color='black', fill_color=linear(theshole),
+                            weight=1, popup=(folium.Popup(str(j.id))), opacity=0.5, fill_opacity=0.75).add_to(mapObj)
+
+                folium.Marker(list_point[3],popup=f"Theshole real: {theshole}, Oposite: {bio.get_0_max()-theshole}",
+                            icon=DivIcon(
+                    icon_size=(200, 36),
+                    icon_anchor=(0, 0),
+                    html=f'<div style="font-size: 20pt">{Cardinal_actual}</div>'
+                )
+                ).add_to(mapObj)
+
+                if j.id in Cells_recomendadas:
+                    if j.id == cell_elejida:
+                        folium.Marker(location=[j.centre['Latitude'], j.centre['Longitude']], icon=folium.Icon(color='red', icon='pushpin'),
+                                    popup=f"SELECTED. Number of measurment: {Cardinal_actual}").add_to(mapObj)
+
+                    else:
+                        folium.Marker(location=[j.centre['Latitude'], j.centre['Longitude']],
+                                    popup=f"Number of measurment: {Cardinal_actual}").add_to(mapObj)
+
+    # draw user position
+    folium.Marker(location=[float(user_position['Latitude']), float(user_position['Longitude'])],
+                  icon=folium.Icon(color='orange', icon='user')).add_to(mapObj)
+
+    direcion_html = f"/recommendersystem/src/Servicio/app/Pictures/Recomendaciones_html_others/{time.strftime('%m-%d-%Y-%H-%M-%S')}User_id{user.id}Cam{cam.id}HI{cam.hive_id}.html"
+
+    # direcion_png = f"/recommendersystem/src/Servicio/app/Pictures/Recomendaciones/{time.strftime('%m-%d-%Y-%H-%M-%S')}User_id{user.id}.Cam{cam.id}Hi{cam.hive_id}.png"
+    
+    legend_html, legend_html_2 = legend_generation_recommendation_representation(time.strftime('%m/%d/%Y, %H:%M:%S'))
+    mapObj.get_root().html.add_child(folium.Element(legend_html))
+    linear.caption = 'Nevel of specialization'
+    mapObj.add_child(linear)
 
     mapObj.get_root().html.add_child(folium.Element(legend_html_2))
     mapObj.save(direcion_html)
@@ -205,7 +315,7 @@ def show_hive(
     print(lat_center/n, lon_center/n)
     
     mapObj = folium.Map(location=[lat_center/n,
-                        lon_center/n], zoom_start=16)
+                        lon_center/n], zoom_start=variables.zoom_start)
     for cam in campañas_activas:
         cell_distance = cam.cells_distance
 
@@ -218,6 +328,8 @@ def show_hive(
 
                 Cardinal_actual = crud.measurement.get_all_Measurement_from_cell_in_the_current_slot(
                     db=db, time=time, slot_id=slot.id)
+                expected_measurements=len( crud.recommendation.get_aceptance_state_of_cell(
+                db=db, slot_id=slot.id))
                 if Cardinal_actual >= cam.min_samples:
                     numero = 4
                 else:
@@ -241,11 +353,11 @@ def show_hive(
                 folium.Polygon(locations=list_point, color='black', fill_color=color,
                             weight=1, popup=(folium.Popup(str(j.id))), opacity=0.5, fill_opacity=0.75).add_to(mapObj)
 
-                folium.Marker(list_point[3],
+                folium.Marker(list_point[3],popup=f"Number of Expected measurements: {expected_measurements}",
                             icon=DivIcon(
                     icon_size=(200, 36),
                     icon_anchor=(0, 0),
-                    html=f'<div style="font-size: 20pt">{Cardinal_actual}</div>',
+                    html=f'<div style="font-size: 20pt">{Cardinal_actual}</div>'
                 )
                 ).add_to(mapObj)
 
@@ -282,7 +394,7 @@ def show_a_campaign(
     count = 0
     surface = crud.surface.get(db=db, id=campañas_activas.surfaces[0].id)
     mapObj = folium.Map(location=[surface.boundary.centre['Latitude'],
-                        surface.boundary.centre['Longitude']], zoom_start=16)
+                        surface.boundary.centre['Longitude']], zoom_start=variables.zoom_start)
 
     cell_distance = campañas_activas.cells_distance
 

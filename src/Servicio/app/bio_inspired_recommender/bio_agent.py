@@ -1,3 +1,4 @@
+from typing import Any
 import crud
 from datetime import datetime, timedelta, timezone
 from bio_inspired_recommender import variables
@@ -13,11 +14,13 @@ from fastapi import APIRouter, Depends, FastAPI, HTTPException, Query, Request
 # primero como finciona en esto proque creo que el comprotaiento bio-inspirado tiene su sentido en el contexto de 
 # una campaña y no en el contexto de un usuario en general
 
-
+    
 class BIOAgent(object):
+    
     #Cuando se genere la campaña, inicio esto, y el usuario tiene un threshold por cada celda de la camapaña 
     def __init__(self, campaign_id:int, hive_id:int,
                  db: Session = Depends(deps.get_db)):
+        self.hive_id=hive_id
         self.campaign_id=campaign_id
         self.campaign= crud.campaign.get_campaign(db=db, hive_id=hive_id, campaign_id=campaign_id)
         self.O_max= variables.O_max
@@ -36,13 +39,36 @@ class BIOAgent(object):
         self.list_cells_id=[i.id for i in self.cells_of_campaign]
         self.list_members_id=[i.member_id for i in self.list_members_of_a_campaign]
         
-        matriz = [[self.O_min for i in range(len(self.cells_of_campaign))] for j in range(len(self.list_members_of_a_campaign))]
+        matriz = [[self.O_max for i in range(len(self.cells_of_campaign))] for j in range(len(self.list_members_of_a_campaign))]
         
         self.users_thesthold= pd.DataFrame(matriz, columns=self.list_cells_id,index=self.list_members_id)
         self.users_thesthold.index.name="user_id"
         self.df_priority=pd.DataFrame([0.0 for i in self.list_cells_id], index=self.list_cells_id, columns=["priority"])
         self.df_priority.index.name="cell_id"
     
+    def get_0_max(self):
+       return self.O_max
+    def get_0_min(self):
+         return self.O_min
+        
+    def update(self,db: Session = Depends(deps.get_db)):
+        self.campaign= crud.campaign.get_campaign(db=db, hive_id=self.hive_id, campaign_id=self.campaign_id)
+        self.cells_of_campaign = crud.cell.get_cells_campaign(db=db, campaign_id=self.campaign_id)
+        
+        self.list_members_of_a_campaign=crud.campaign_member.get_Campaign_Member_in_campaign_workers(db=db, campaign_id=campaign_id)
+        self.cells_of_campaign = crud.cell.get_cells_campaign(db=db, campaign_id=self.campaign_id)
+        
+        self.list_cells_id=[i.id for i in self.cells_of_campaign]
+        self.list_members_id=[i.member_id for i in self.list_members_of_a_campaign]
+        
+        matriz = [[self.O_max for i in range(len(self.cells_of_campaign))] for j in range(len(self.list_members_of_a_campaign))]
+        
+        self.users_thesthold= pd.DataFrame(matriz, columns=self.list_cells_id,index=self.list_members_id)
+        self.users_thesthold.index.name="user_id"
+        self.df_priority=pd.DataFrame([0.0 for i in self.list_cells_id], index=self.list_cells_id, columns=["priority"])
+        self.df_priority.index.name="cell_id"
+    
+   
         
     #coger la estancia si existe en el programa para ello ha de terminar... 
     def new_user(self,member_id:int, campaign_id:int, db: Session = Depends(deps.get_db)):
@@ -51,6 +77,8 @@ class BIOAgent(object):
         self.users_thesthold.loc[member_id]=[(self.O_max + self.O_min)//2 for i in range(len(cells_of_campaign))]
         
    
+    def get_thesthold_of_user_in_cell(self,member_id:int, cell_id:int):
+        return self.users_thesthold.loc[member_id,cell_id]
     
     def get_thesthold_of_user(self,member_id:int):
         return self.users_thesthold.loc[member_id]
@@ -79,11 +107,12 @@ class BIOAgent(object):
             
             self.df_priority.loc[cell.id, "priority"]=priority_temporal
     
-    def create_recomendation(   self,
+    def create_recomendation( self,
         member_id: int,
         recipe_in: RecommendationCreate,
         time:datetime,
         db: Session = Depends(deps.get_db)):
+        
         user_location=recipe_in.member_current_location
         df_user_distance=pd.DataFrame([0 for i in self.cells_of_campaign], index=self.list_cells_id,columns=["distance_cell_user"])
         for cell in self.cells_of_campaign:
@@ -119,7 +148,7 @@ class BIOAgent(object):
                     NEW_VALUE=0.0
             probability_user.loc[cell.id,"probability" ]= NEW_VALUE
         probability_user["probability"]= pd.to_numeric(probability_user["probability"])
-
+        print(probability_user)
         result = []
         List_id_cell = []
         probability_user_list_positive = probability_user.loc[probability_user["probability"]>0.0]
@@ -189,13 +218,16 @@ class BIOAgent(object):
                         result = init - Cardinal_actual/self.campaign.min_samples
         
         self.df_priority.loc[cell_id_user,"priority"]=result
-    #Aqui es donde no se si tengo que actualizar la prioridad o no .... 
+
+
+
+
     
     def get_cells_neighbour_id(self,cell_id_user:int, db: Session = Depends(deps.get_db)):
         list_cell_cercanas=[]
-        cell=crud.cell.get_Cell(db=db, cell_id=cell_id_user)
+        cell_origin=crud.cell.get_Cell(db=db, cell_id=cell_id_user)
         for cell in self.cells_of_campaign:
-            if vincenty((cell.centre['Latitude'], cell.centre['Longitude']), (cell.centre['Latitude'], cell.centre['Longitude'])) == self.campaign.cells_distance:
+            if vincenty((cell_origin.centre['Latitude'], cell_origin.centre['Longitude']), (cell.centre['Latitude'], cell.centre['Longitude']))<= 1.75*self.campaign.cells_distance:
                 list_cell_cercanas.append(cell.id)
         return list_cell_cercanas
             

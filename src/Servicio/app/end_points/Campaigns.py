@@ -31,7 +31,7 @@ from schemas.Slot import Slot, SlotCreate, SlotSearchResults
 from schemas.Surface import Surface, SurfaceCreate, SurfaceSearchResults
 
 from funtionalities import create_slots_campaign, create_cells_for_a_surface, get_point_at_distance
-
+from bio_inspired_recommender.bio_agent import BIOAgent
 
 api_router_campaign = APIRouter(prefix="/hives/{hive_id}/campaigns")
 
@@ -232,6 +232,9 @@ async def create_campaign(
     #Create the campaign
     Campaign = crud.campaign.create_cam(
         db=db, obj_in=campaign_metadata, hive_id=hive_id,id=maximo)
+    # bio_agent= BIOAgent(db=db, campaign_id=1,hive_id=1)
+
+    
     
     #Add the QueenBee to the campaign in the Campaign_Member table
     role = Campaign_MemberCreate(role="QueenBee")
@@ -445,6 +448,7 @@ def update_campaign(
     
                 campaign = crud.campaign.update(
                 db=db, db_obj=campaign, obj_in=recipe_in)
+                
                 radius = i.boundary.radius
                 #Remove the surface -> implicity this remove the boundary and the cells and slots.
                 crud.surface.remove(db=db, surface=i)
@@ -464,6 +468,7 @@ def update_campaign(
                     EXAMPLE: If we have 2 hour of campaign duration and a sampling period of 1 hour -> then per 1 cell we have 2 slots. 
                 """
                 create_slots_campaign(db=db, cam=campaign)
+                
             return campaign
     else:
         campaign = crud.campaign.update(db=db, db_obj=campaign, obj_in=recipe_in)

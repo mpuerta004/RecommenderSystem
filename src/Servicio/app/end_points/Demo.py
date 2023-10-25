@@ -29,7 +29,7 @@ from folium.plugins import HeatMap
 from bio_inspired_recommender.bio_agent import BIOAgent
 
 import Demo.variables as variables
-from Demo.map_funtions import show_hive, show_recomendation, legend_generation_measurements_representation, legend_generation_recommendation_representation
+from Demo.map_funtions import show_hive, show_recomendation,show_recomendation_with_thesholes, legend_generation_measurements_representation, legend_generation_recommendation_representation
 import random
 
 from Demo.users_management import reciboUser_hive,  user_selecction
@@ -76,7 +76,7 @@ def asignacion_recursos_hive(
                     crud.recommendation.update(db=db,db_obj=i, obj_in={"state":"NON_REALIZED","update_datetime":Current_time})
                     db.commit()  
                     db.commit()
-        show_hive(hive_id=hive_id, time=time, db=db)
+        # show_hive(hive_id=hive_id, time=time, db=db)
         
         #Get the list of all WorkerBee and QueenBee  
         list_users = reciboUser_hive(db=db, hive_id=hive_id)
@@ -131,12 +131,12 @@ def asignacion_recursos_hive(
                             db.commit()
                             db.commit()
 
-                             
+                            #FIXME
                             mediciones.append(
                                 [user, recomendacion_polinizar, random.randint(1, 420)])
                             # if user.id%2==0 :
-                            show_recomendation(db=db, cam=cam, user=user, result=recomendaciones['results'],time=time,recomendation=recomendacion_polinizar)
-                
+                            # show_recomendation(db=db, cam=cam, user=user, result=recomendaciones['results'],time=time,recomendation=recomendacion_polinizar)
+                            show_recomendation_with_thesholes(db=db, bio=bio_agent,cam=cam, user=user, result=recomendaciones['results'],time=time,recomendation=recomendacion_polinizar)
                             
         new = []
         for i in range(0, len(mediciones)):
@@ -148,6 +148,7 @@ def asignacion_recursos_hive(
                     time_polinizado = time
                     slot = crud.slot.get(db=db, id=mediciones[i][1].slot_id)
                     cell = crud.cell.get_Cell(db=db, cell_id=slot.cell_id)
+                    print("cell_polinizada", cell.id)
                     Member_Device_user = crud.member_device.get_by_member_id(
                         db=db, member_id=mediciones[i][0].id)
                     creation = MeasurementCreate(db=db, location=cell.centre, datetime=time_polinizado,
@@ -169,7 +170,7 @@ def asignacion_recursos_hive(
                         db.commit()
 
                         db.commit()
-                    bio_agent.update_thesthold_based_action(member_id=mediciones[i][0].id,cell_id_user=cell.id,time=time_polinizado,db=db)
+                        bio_agent.update_thesthold_based_action(member_id=mediciones[i][0].id,cell_id_user=cell.id,time=time_polinizado,db=db)
                 else:
                     time_polinizado = time
                     recomendation_coguida = crud.recommendation.get_recommendation(
