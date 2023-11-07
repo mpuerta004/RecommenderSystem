@@ -29,7 +29,7 @@ from folium.plugins import HeatMap
 from bio_inspired_recommender.bio_agent import BIOAgent
 
 import Demo.variables as variables
-from Demo.map_funtions import show_hive, show_recomendation,show_recomendation_with_thesholes, legend_generation_measurements_representation, legend_generation_recommendation_representation
+from Demo.map_funtions import show_hive,show_recomendation_with_thesholes
 import random
 
 from Demo.users_management import reciboUser_hive,  user_selecction
@@ -38,6 +38,10 @@ api_router_demo = APIRouter(prefix="/demos/hives/{hive_id}")
 
 
 #### for a hive... 
+#TODO -> ahora mismo el bio inspitado solo funciona para una colmena, hay que hacerlo para todas las colmenas
+#       -> las personas son solo tambien por colmena, hay que hacerlo para todas las colmenas
+ 
+
 @api_router_demo.post("/", status_code=201, response_model=None)
 def asignacion_recursos_hive(
     hive_id:int,
@@ -55,9 +59,52 @@ def asignacion_recursos_hive(
     dur = int((end - start).total_seconds())
     #TODO
     bio_agent= BIOAgent(db=db, campaign_id=1,hive_id=1)
+    #TODO 
+    # active_campaign = crud.campaign.get_all_active_campaign_for_a_hive(db=db, time=time,hive_id=hive_id)
+    # campaign_member =  crud.campaign_member.members_of_campaign(db=db, campaign_id=campaigns[0].id)
+    # list_id=[]
+    # for i in campaign_member:
+    #     list_id.append(i.member_id)
+        
+    # trayectoria_user_zona_cercania={}
+    # for i in list_id:
+    #     member=crud.member.get_by_id(db=db, id=i) 
+    #     n_campaign = random.randint(0, len(active_campaign)-1)
+    #     selected_user_campaign = random.randint(0, len(active_campaign)-1)
+    #     id_campaign_user = active_campaign[selected_user_campaign][0]
+    #     cam = active_campaign[n_campaign][1]
+                        
+    #     n_surfaces = len(cam.surfaces)
+    #     surface_indice = random.randint(0, n_surfaces-1)
+    #     boundary = cam.surfaces[surface_indice].boundary
+    #     distance = random.randint(
+    #                     50, round(1000*(boundary.radius + 0.5*cam.cells_distance )))
 
+    #     distance = distance/1000
+    #     direction = random.randint(0, 360)
+
+    #     lon1 = boundary.centre['Longitude']
+    #     lat1 = boundary.centre['Latitude']
+    #     point_inicial_lat, point_inicial_long = get_point_at_distance(
+    #                     lat1=lat1, lon1=lon1, d=distance, bearing=direction)
+
+    #     #############################################################
+    #     angulo= random.randint(0, 360)
+    #     # distancia = 2*boundary.radius 
+    #     # point_final_lat, point_final_long = get_point_at_distance(
+    #     #                 lat1=lat1, lon1=lon1, d=distancia, bearing=angulo)
+    #     # #############################################################
+    #     ancho_km=cam.cells_distance*2 
+        
+    #     trayectoria_user_zona_cercania[member]= [(point_inicial_lat, point_inicial_long), ancho_km, angulo]
+    
+        ############# Generar posicion ###################
+        
+        
+        
+        
+    
     for segundo in range(60, int(dur), 60):
-        random.seed()
         print("----------------------------------------------------------------------", segundo)
         time = start + timedelta(seconds=segundo)
         campaigns = crud.campaign.get_all_active_campaign_for_a_hive(db=db, time=time,hive_id=hive_id)
@@ -76,7 +123,7 @@ def asignacion_recursos_hive(
                     crud.recommendation.update(db=db,db_obj=i, obj_in={"state":"NON_REALIZED","update_datetime":Current_time})
                     db.commit()  
                     db.commit()
-        # show_hive(hive_id=hive_id, time=time, db=db)
+        show_hive(hive_id=hive_id, time=time, db=db)
         
         #Get the list of all WorkerBee and QueenBee  
         list_users = reciboUser_hive(db=db, hive_id=hive_id)
@@ -126,18 +173,18 @@ def asignacion_recursos_hive(
                         if recomendacion_polinizar is not None:
                             recomendation_coguida = crud.recommendation.get_recommendation(
                                 db=db, member_id=user.id, recommendation_id=recomendacion_polinizar.id)
+                            show_recomendation_with_thesholes(db=db, bio=bio_agent,cam=cam, user=user, result=recomendaciones['results'],time=time,recomendation=recomendacion_polinizar)
+
                             recomendacion_polinizar = crud.recommendation.update(
                                 db=db, db_obj=recomendation_coguida, obj_in={"state": "ACCEPTED", "update_datetime": time})
                             db.commit()
                             db.commit()
 
-                            #FIXME
                             mediciones.append(
                                 [user, recomendacion_polinizar, random.randint(1, 420)])
-                            # if user.id%2==0 :
-                            # show_recomendation(db=db, cam=cam, user=user, result=recomendaciones['results'],time=time,recomendation=recomendacion_polinizar)
-                            show_recomendation_with_thesholes(db=db, bio=bio_agent,cam=cam, user=user, result=recomendaciones['results'],time=time,recomendation=recomendacion_polinizar)
-                            
+                for cam in campaigns:
+                    prioriry_calculation(time=time, cam=cam, db=db)
+                    bio_agent.update_priority_of_campaign(time=time,db=db)    
         new = []
         for i in range(0, len(mediciones)):
             # Anterior approach cuando declaramos el tiempo que el uusario iba a tardar en realizarlo
@@ -148,7 +195,7 @@ def asignacion_recursos_hive(
                     time_polinizado = time
                     slot = crud.slot.get(db=db, id=mediciones[i][1].slot_id)
                     cell = crud.cell.get_Cell(db=db, cell_id=slot.cell_id)
-                    print("cell_polinizada", cell.id)
+                    # print("cell_polinizada", cell.id)
                     Member_Device_user = crud.member_device.get_by_member_id(
                         db=db, member_id=mediciones[i][0].id)
                     creation = MeasurementCreate(db=db, location=cell.centre, datetime=time_polinizado,
@@ -205,7 +252,6 @@ def asignacion_recursos_hive(
 #     dur = int((end - start).total_seconds())
 
 #     for segundo in range(60, int(dur), 60):
-#         random.seed()
 #         print("----------------------------------------------------------------------", segundo)
 #         time = start + timedelta(seconds=segundo)
 #         campaigns = crud.campaign.get_all_active_campaign(db=db, time=time)
@@ -322,7 +368,6 @@ def asignacion_recursos_hive(
 #     numero_minimo = min(
 #         variables.variables_comportamiento["number_of_unpopular_cells"], len(cells_id))
 #     for i in range(0, numero_minimo):
-#         random.seed()
 #         kay = random.choice(cells_id)
 #         cells_id.pop(kay)
 #         dics_of_popularity[str(kay)] = variables.variables_comportamiento["popularidad_cell"]
@@ -331,7 +376,6 @@ def asignacion_recursos_hive(
 #     dur = (cam.end_datetime - cam.start_datetime).total_seconds()
 
 #     for segundo in range(60, int(dur), 60):
-#         random.seed()
 #         print("----------------------------------------------------------------------", segundo)
 #         time = cam.start_datetime + timedelta(seconds=segundo)
 #         prioriry_calculation(time=time, db=db, cam=cam)

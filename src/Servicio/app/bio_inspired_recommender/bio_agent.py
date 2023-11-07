@@ -9,6 +9,8 @@ import deps
 import pandas as pd 
 from sqlalchemy.orm import Session
 from fastapi import APIRouter, Depends, FastAPI, HTTPException, Query, Request
+import random
+from random import shuffle
 
 # De momento esta implementado para una camapaña unciamente no cuento con que el usuario va a estar en varias veamos 
 # primero como finciona en esto proque creo que el comprotaiento bio-inspirado tiene su sentido en el contexto de 
@@ -83,7 +85,6 @@ class BIOAgent(object):
     def get_thesthold_of_user(self,member_id:int):
         return self.users_thesthold.loc[member_id]
     
-
     #Tengo mis dudas sobre si deberia calcular las probabilidades por solo un usuario con la distancia o en general para todos. 
     #Voy a hacer individual! OSea cuando un usuario pide recomendaciones 
     #TODO: gestionar lo de varias campaañas de momento supongo que solo tengo una quiere ver como va 
@@ -148,33 +149,56 @@ class BIOAgent(object):
                     NEW_VALUE=0.0
             probability_user.loc[cell.id,"probability" ]= NEW_VALUE
         probability_user["probability"]= pd.to_numeric(probability_user["probability"])
-        print(probability_user)
         result = []
-        List_id_cell = []
         probability_user_list_positive = probability_user.loc[probability_user["probability"]>0.0]
         list_order_cell = probability_user_list_positive.sort_values(by="probability", ascending=False).index.tolist()
-    
-        if len(list_order_cell)>3:
-            for i in range(3):
-                
-                cell_id = list_order_cell[i]
-                slot=crud.slot.get_slot_time(db=db, cell_id=cell_id, time=time)
-                recomendation = crud.recommendation.create_recommendation(
-                db=db, obj_in=recipe_in, member_id=member_id, slot_id=slot.id, state="NOTIFIED", update_datetime=time, sent_datetime=time)
-                cell = crud.cell.get(db=db, id=slot.cell_id)
-                result.append(recomendation)
-                
+        definitivos=[]
+        if len(list_order_cell)<3:
+            definitivos=list_order_cell
         else:
-            for i in range(len(list_order_cell)):
-                cell_id = list_order_cell[i]
-                slot=crud.slot.get_slot_time(db=db, cell_id=cell_id, time=time)
-                recomendation = crud.recommendation.create_recommendation(
-                db=db, obj_in=recipe_in, member_id=member_id, slot_id=slot.id, state="NOTIFIED", update_datetime=time, sent_datetime=time)
-                cell = crud.cell.get(db=db, id=slot.cell_id)
-                result.append(recomendation)
-        
-        return {"results": result}
-        
+            definitivos=[]
+            # print(len(list_order_cell))
+
+            while list_order_cell!=[] and len(definitivos)<3 :
+                list_indices_valor_mas_bajo=[]
+                primer_elemento=list_order_cell[0]
+                menor= probability_user.loc[primer_elemento,"probability"]
+
+                a=probability_user.loc[probability_user["probability"] == menor]
+                list_indices_valor_mas_bajo=a.index.tolist()
+                for i in range(0,random.randint(0,12)):
+                    shuffle(list_indices_valor_mas_bajo)
+
+                definitivos= definitivos + list_indices_valor_mas_bajo
+                for i in list_indices_valor_mas_bajo:
+                    list_order_cell.remove(i)
+            # print(len(definitivos))
+        if definitivos!=[]:
+            
+            if len(definitivos)>3:
+                for i in range(3):
+                    
+                    cell_id = definitivos[i]
+                    slot=crud.slot.get_slot_time(db=db, cell_id=cell_id, time=time)
+                    recomendation = crud.recommendation.create_recommendation(
+                    db=db, obj_in=recipe_in, member_id=member_id, slot_id=slot.id, state="NOTIFIED", update_datetime=time, sent_datetime=time)
+                    cell = crud.cell.get(db=db, id=slot.cell_id)
+                    result.append(recomendation)
+                    
+            else:
+                for i in range(len(definitivos)):
+                    cell_id = definitivos[i]
+                    slot=crud.slot.get_slot_time(db=db, cell_id=cell_id, time=time)
+                    recomendation = crud.recommendation.create_recommendation(
+                    db=db, obj_in=recipe_in, member_id=member_id, slot_id=slot.id, state="NOTIFIED", update_datetime=time, sent_datetime=time)
+                    cell = crud.cell.get(db=db, id=slot.cell_id)
+                    result.append(recomendation)
+            
+            return {"results": result}
+        else:
+            return {"results": result}
+
+            
     #Después de la recomendación los ajustes de paramrtros correspondientes cuando el usuario realiza la accin pedida
     def update_thesthold_based_action(self,member_id:int, cell_id_user:int, time:datetime, db: Session = Depends(deps.get_db)):
     #     self.users_thesthold.loc[member_id]=value
@@ -227,7 +251,7 @@ class BIOAgent(object):
         list_cell_cercanas=[]
         cell_origin=crud.cell.get_Cell(db=db, cell_id=cell_id_user)
         for cell in self.cells_of_campaign:
-            if vincenty((cell_origin.centre['Latitude'], cell_origin.centre['Longitude']), (cell.centre['Latitude'], cell.centre['Longitude']))<= 1.75*self.campaign.cells_distance:
+            if vincenty((cell_origin.centre['Latitude'], cell_origin.centre['Longitude']), (cell.centre['Latitude'], cell.centre['Longitude']))<= variables.neighbour_close*self.campaign.cells_distance:
                 list_cell_cercanas.append(cell.id)
         return list_cell_cercanas
             

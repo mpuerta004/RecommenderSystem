@@ -25,11 +25,9 @@ from folium.features import DivIcon
 import folium
 from math import sin, cos, atan2, sqrt, radians, degrees, asin
 from fastapi.responses import HTMLResponse
-from folium.plugins import HeatMap
 from bio_inspired_recommender.bio_agent import BIOAgent
-
 import Demo.variables as variables
-from Demo.map_funtions import show_hive, show_recomendation, legend_generation_measurements_representation, legend_generation_recommendation_representation
+from Demo.map_funtions import show_hive, show_recomendation
 import random
 
 
@@ -71,8 +69,10 @@ def reciboUser(db: Session = Depends(deps.get_db)):
 
 def user_selecction(a: list()):
     aletorio = random.random()
+    random.shuffle(a)   
     if aletorio > variables.variables_comportamiento["user_availability"]:
-        return random.choice(a)
+        indice=random.randint(0,len(a)-1)
+        return a[indice]
     else:
         return None
 

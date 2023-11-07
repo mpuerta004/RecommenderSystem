@@ -41,6 +41,27 @@ def get_point_at_distance(lat1, lon1, d, bearing, R=6371):
     return (degrees(lat2), degrees(lon2),)
 
 
+import numpy as np
+from numpy.linalg import norm
+
+def distancia_punto_recta(A, B, P):
+    #Comprobamos que el punto no corresponda a los extremos del segmento.
+    if all(A==P) or all(B==P):
+        return 0
+
+    #Calculamos el angulo entre AB y AP, si es mayor de 90 grados retornamos la distancia enre A y P
+    elif np.arccos(np.dot((P-A)/vincenty(P,A), (B-A)/vincenty(B-A))) > np.pi/2:
+        return vincenty(P,A)
+
+    #Calculamos el angulo entre AB y BP, si es mayor de 90 grados retornamos la distancia enre B y P.
+    elif np.arccos(np.dot((P-B)/vincenty(P-B), (A-B)/vincenty(A-B))) > np.pi/2:
+        return vincenty(P,B)
+
+    #Como ambos angulos son menores o iguales a 90º sabemos que podemos hacer una proyección ortogonal del punto.
+    return norm(np.cross(B-A, A-P))/norm(B-A)
+
+
+
 def create_cells_for_a_surface(surface: Surface, campaign: Campaign, centre, radius, db: Session = Depends(deps.get_db)):
     """
     This funtion create the cells of one surface of the campaign. 
@@ -116,6 +137,36 @@ def create_cells_for_a_surface(surface: Surface, campaign: Campaign, centre, rad
     return True
 
 
+def point_to_line_distance(point, line_start, bearing):
+    """
+    Calculate the distance between a point and a line defined by a starting point and direction using Vincenty formula.
+    
+    Args:
+        point (tuple): (latitude, longitude) of the point.
+        line_start (tuple): (latitude, longitude) of the starting point of the line.
+        line_direction (tuple): (latitude_delta, longitude_delta) representing the direction of the line.
+    
+    Returns:
+        float: Distance between the point and the line in meters.
+    """
+    # Project the point onto the line and calculate the distance
+    angle_radians = math.radians(bearing)
+    line_direction = (math.cos(angle_radians), math.sin(angle_radians)) # v
+    
+    point_vector = ((point['Latitude'] - line_start['Latitude']), (point['Longitude'] - line_start['Longitude'])) # u
+    
+    # Calculate dot product of the point vector and line direction
+    dot_product = (point_vector[0] * line_direction[0] + point_vector[1] * line_direction[1])/math.sqrt(line_direction[0]**2 + line_direction[1]**2) # u*v/|v|
+    
+    # Calculate projection of the point onto the line
+    projected_point = (line_start['Latitude'] + dot_product * line_direction[0],
+                  line_start['Longitude'] + dot_product * line_direction[1])
+    
+    distance_to_line = vincenty((point['Latitude'], point['Longitude']), projected_point)
+    
+    return distance_to_line
+
+
 def prioriry_calculation(time: datetime, cam: Campaign, db: Session = Depends(deps.get_db)) -> None:
     """
     Create the priorirty of a campaign (all its surfaces) based on the measurements
@@ -158,12 +209,17 @@ def prioriry_calculation(time: datetime, cam: Campaign, db: Session = Depends(de
                 # a = init - timedelta(seconds=((init).total_seconds() //
                 #                      cam.sampling_period)*cam.sampling_period)
                 if cam.min_samples == 0:  # To dont have a infinite reward.
+                    # print("prioridad sin ver mas alla", init - (Cardinal_actual) / cam.sampling_period)
+                    # print("prioridad viendo mas alla", init - (expected) / cam.sampling_period)
                     result = init - (expected) / cam.sampling_period
                 else:
                     if expected == cam.min_samples:
                         result = -1.0
                     else:
                         result = init - expected/cam.min_samples
+                        # print("prioridad sin ver mas alla", init - (Cardinal_actual) / cam.sampling_period)
+                        # print("prioridad viendo mas alla", init - (expected) / cam.sampling_period)
+                    result = init - (expected) / cam.sampling_period
                 total_measurements = crud.measurement.get_all_Measurement_campaign(
                     db=db, campaign_id=cam.id, time=time)
                 if total_measurements == 0.0:  # Important not divide by 0.0.

@@ -23,7 +23,12 @@ class CRUDCampaign_Member(CRUDBase[Campaign_Member, Campaign_MemberCreate, Campa
         except Exception as e:
             raise HTTPException(status_code=500, detail=f"Error with mysql {e}" )
    
-     
+    def members_of_campaign(self, db:Session, *, Campaign_id:int)->List[Campaign_Member]:
+        try:
+            return db.query(Campaign_Member).filter(Campaign_Member.campaign_id == Campaign_id).all()
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"Error with mysql {e}" )
+        
     def get_by_ids_Campaign_Member(self, db: Session, *, campaign_id:int,member_id:int,Campaign_Member_str:str) -> Campaign_Member:
         try:
             return db.query(Campaign_Member).filter(and_(Campaign_Member.campaign_id == campaign_id, Campaign_Member.member_id==member_id, Campaign_Member.role==Campaign_Member_str)).first()

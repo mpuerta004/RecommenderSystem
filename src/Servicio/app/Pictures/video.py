@@ -2,9 +2,9 @@ import os
 from html2image import Html2Image
 import moviepy.video.io.ImageSequenceClip
 
-input_folder =  'C:/Users/mpuer/Desktop/recommendersystem/src/Servicio/app/Pictures/Recomendaciones_html_others'
+input_folder =  'C:/Users/mpuer/Desktop/recommendersystem/src/Servicio/app/Pictures/Measurements_html'
 
-output_folder = 'C:/Users/mpuer/Desktop/RecommenderSystem/src/Servicio/app/Pictures/Recomendaciones_html_others_pictures'
+output_folder = 'C:/Users/mpuer/Desktop/RecommenderSystem/src/Servicio/app/Pictures/Measurements_html_pictures'
 
 hti = Html2Image(output_path=output_folder)
 

@@ -37,7 +37,7 @@ from bio_inspired_recommender.bio_agent import BIOAgent
 import Demo.variables as variable
 
 #Leyend and map funtions
-def legend_generation_measurements_representation(time:str):
+def legend_measurements_scale(time:str):
     
     # Create the legend with a white background and opacity 0.5
     legend_html = '''
@@ -64,8 +64,8 @@ def legend_generation_measurements_representation(time:str):
     return legend_html
 
 
-def legend_generation_recommendation_representation(time:str):
-    legend_html=legend_generation_measurements_representation(time)
+
+def legend_generation_recommendation(time:str):
     
     legend_html_2 = '''
         <div style="position: fixed; 
@@ -76,17 +76,17 @@ def legend_generation_recommendation_representation(time:str):
             <p style="margin:10px;"><b>Marker Legend</b></p>
             '''
     # Add the map-legend symbols to the legend
-    for i in range(len(variables.color_simbols_recomendations_feature_map)):
+    index= list(variables.dict_color_simbols_recommendation.keys())
+    for i in index:
         legend_html_2 += '''
-            <i class="fa fa-map-marker fa-2x"
-                    style="color:{};icon:user;margin-left: 10px;"></i>
+            <i class="{} fa-2x"
+                    style="color:{};margin-left: 10px;"></i>
             <p style="display: inline-block; margin-left: 5px;">{}</p>
             <br>
-            '''.format(variables.color_simbols_recomendations_feature_map[i], variables.names_simbols_recommendations[i])
+            '''.format(variables.dict_icon_simbols[i],variables.dict_color_simbols_recommendation[i],i)
 
     legend_html_2 += '</div>'
-    return  legend_html, legend_html_2
-
+    return  legend_html_2
 
 
 def show_recomendation(*, cam: Campaign, user: Member, result: list(), time: datetime, recomendation: Recommendation, db: Session = Depends(deps.get_db)) -> Any:
@@ -144,7 +144,7 @@ def show_recomendation(*, cam: Campaign, user: Member, result: list(), time: dat
 
                     list_point.append([lat2, lon2])
                 folium.Polygon(locations=list_point, color='black', fill_color=color,
-                            weight=1, popup=(folium.Popup(str(j.id))), opacity=0.5, fill_opacity=0.75).add_to(mapObj)
+                            weight=1, popup=(folium.Popup(str(j.id))), opacity=0.5, fill_opacity=0.85).add_to(mapObj)
 
                 folium.Marker(list_point[3],popup=f"Number of Expected measurements: {expected_measurements}",
                             icon=DivIcon(
@@ -153,25 +153,48 @@ def show_recomendation(*, cam: Campaign, user: Member, result: list(), time: dat
                     html=f'<div style="font-size: 20pt">{Cardinal_actual}</div>'
                 )
                 ).add_to(mapObj)
-
+                
                 if j.id in Cells_recomendadas:
-                    if j.id == cell_elejida:
-                        folium.Marker(location=[j.centre['Latitude'], j.centre['Longitude']], icon=folium.Icon(color='red', icon='pushpin'),
-                                    popup=f"SELECTED. Number of measurment: {Cardinal_actual}").add_to(mapObj)
+                        if j.id == cell_elejida:
+                            folium.Marker(location=[j.centre['Latitude'], j.centre['Longitude']], 
+                                        icon=
+                                        DivIcon( icon_anchor=(19, 19), html='''
+                                <i class="{} fa-4x"
+                                    style="color:{};"></i>
+                                <br>
+                                '''.format(variables.dict_icon_simbols["Selected Point"],variables.dict_color_simbols_recommendation["Selected Point"])
+                                    #   icon=folium.Icon(color=variables.dict_color_simbols_recommendation["Selected Point"], icon=variables.dict_icon_simbols["Selected Point"])
+                                    )).add_to(mapObj)
 
-                    else:
-                        folium.Marker(location=[j.centre['Latitude'], j.centre['Longitude']],
-                                    popup=f"Number of measurment: {Cardinal_actual}").add_to(mapObj)
+                        else:
+                            folium.Marker(location=[j.centre['Latitude'], j.centre['Longitude']],
+                                            icon= DivIcon(icon_anchor=(19,19), html='''
+                                <i class="{} fa-4x"
+                                    style="color:{};"></i>
+                                <br>
+                                '''.format(variables.dict_icon_simbols["Rejected Points"], variables.dict_color_simbols_recommendation["Rejected Points"])
+                                )
+                                # icon=folium.Icon(color=variables.dict_color_simbols_recommendation["Recommended Points"], icon=variables.dict_icon_simbols["Recommended Points"]),
+                                        ).add_to(mapObj)
 
-    # draw user position
-    folium.Marker(location=[float(user_position['Latitude']), float(user_position['Longitude'])],
-                  icon=folium.Icon(color='orange', icon='user')).add_to(mapObj)
+                            
 
+        # draw user position
+        folium.Marker(location=[float(user_position['Latitude']), float(user_position['Longitude'])],
+                    icon= DivIcon( icon_anchor=(19, 19),  html='''
+                                <i class="{} fa-4x"
+                                    style="color:{};"></i>
+                                <br>
+                                '''.format(variables.dict_icon_simbols["User's Position"],variables.dict_color_simbols_recommendation["User's Position"])
+                                )).add_to(mapObj)
     direcion_html = f"/recommendersystem/src/Servicio/app/Pictures/Recomendaciones_html/{time.strftime('%m-%d-%Y-%H-%M-%S')}User_id{user.id}Cam{cam.id}HI{cam.hive_id}.html"
 
     # direcion_png = f"/recommendersystem/src/Servicio/app/Pictures/Recomendaciones/{time.strftime('%m-%d-%Y-%H-%M-%S')}User_id{user.id}.Cam{cam.id}Hi{cam.hive_id}.png"
+    legend_html=legend_measurements_scale(time.strftime('%m/%d/%Y, %H:%M:%S'))
     
-    legend_html, legend_html_2 = legend_generation_recommendation_representation(time.strftime('%m/%d/%Y, %H:%M:%S'))
+   
+    # Add the map-legend symbols to the legend
+    legend_html_2 = legend_generation_recommendation(time.strftime('%m/%d/%Y, %H:%M:%S'))
     mapObj.get_root().html.add_child(folium.Element(legend_html))
 
     mapObj.get_root().html.add_child(folium.Element(legend_html_2))
@@ -204,16 +227,17 @@ def show_recomendation_with_thesholes(*, bio:BIOAgent, cam: Campaign, user: Memb
     cell_distance = cam.cells_distance
     hipotenusa = math.sqrt(2*((cell_distance/2)**2))
     
-    # linear=cm.linear.YlGn_09.scale(vmin=bio.get_0_min(), vmax=bio.get_0_max())
+    linear=cm.linear.YlGnBu_03.scale(vmin=bio.get_0_min(), vmax=bio.get_0_max())
     # (vmin=bio.get_0_min(), vmax=bio.get_0_max())
-    linear=cm.LinearColormap(['green', 'yellow', 'red'], vmin=bio.get_0_min(), vmax=bio.get_0_max())
-
+    # linear=cm.LinearColormap(variables. vmin=bio.get_0_min(), vmax=bio.get_0_max())
 
     surface = crud.surface.get(db=db, id=cam.surfaces[0].id)
+    # linear = cm.StepColormap(variable.color_list_hex, vmin=bio.get_0_min(), vmax=bio.get_0_max())
+
     mapObj = folium.Map(location=[surface.boundary.centre['Latitude'],
                         surface.boundary.centre['Longitude']], zoom_start=variables.zoom_start)
     List_campaign=crud.campaign.get_all_active_campaign_for_a_hive(db=db, hive_id=cam.hive_id,time=time)
-    
+  
     for cam in List_campaign:
         for i in cam.surfaces:
             count = count+1
@@ -226,11 +250,8 @@ def show_recomendation_with_thesholes(*, bio:BIOAgent, cam: Campaign, user: Memb
                 expected_measurements= crud.recommendation.get_aceptance_state_of_cell(
                 db=db, slot_id=slot.id)
                 expected_measurements=len(expected_measurements)
-                if Cardinal_actual >= cam.min_samples:
-                    color = variables.color_list_hex[4]
-                else:
-                    numero = int((Cardinal_actual/cam.min_samples)//(1/4))
-                    color = variables.color_list_hex[numero]
+                priority=crud.priority.get_by_slot_and_time(db=db, slot_id=slot.id, time= time)
+
                 lon1 = j.centre['Longitude']
                 lat1 = j.centre['Latitude']
 
@@ -245,43 +266,60 @@ def show_recomendation_with_thesholes(*, bio:BIOAgent, cam: Campaign, user: Memb
 
                     list_point.append([lat2, lon2])
                 folium.Polygon(locations=list_point, color='black', fill_color=linear(theshole),
-                            weight=1, popup=(folium.Popup(str(j.id))), opacity=0.5, fill_opacity=0.75).add_to(mapObj)
+                            weight=1, popup=(folium.Popup(str(j.id))), opacity=0.5, fill_opacity=0.9).add_to(mapObj)
 
-                folium.Marker(list_point[3],popup=f"Theshole real: {theshole}, Oposite: {bio.get_0_max()-theshole}",
+                priority=crud.priority.get_by_slot_and_time(db=db, slot_id=slot.id, time= time)
+                folium.Marker(list_point[3],popup=f"Theshole real: {theshole}, priority:{priority.temporal_priority}",
                             icon=DivIcon(
                     icon_size=(200, 36),
                     icon_anchor=(0, 0),
-                    html=f'<div style="font-size: 20pt">{Cardinal_actual}</div>'
+                    html=f'<div style="font-size: 20pt">{Cardinal_actual}, {expected_measurements}</div>'
                 )
                 ).add_to(mapObj)
 
                 if j.id in Cells_recomendadas:
                     if j.id == cell_elejida:
-                        folium.Marker(location=[j.centre['Latitude'], j.centre['Longitude']], icon=folium.Icon(color='red', icon='pushpin'),
-                                    popup=f"SELECTED. Number of measurment: {Cardinal_actual}").add_to(mapObj)
+                        folium.Marker(location=[j.centre['Latitude'], j.centre['Longitude']], 
+                                       icon=
+                                       DivIcon( icon_anchor=(19, 19), html='''
+                             <i class="{} fa-4x"
+                                style="color:{};"></i>
+                            <br>
+                            '''.format(variables.dict_icon_simbols["Selected Point"],variables.dict_color_simbols_recommendation["Selected Point"])
+                                   #   icon=folium.Icon(color=variables.dict_color_simbols_recommendation["Selected Point"], icon=variables.dict_icon_simbols["Selected Point"])
+                                   )).add_to(mapObj)
 
                     else:
                         folium.Marker(location=[j.centre['Latitude'], j.centre['Longitude']],
-                                    popup=f"Number of measurment: {Cardinal_actual}").add_to(mapObj)
+                                        icon= DivIcon(icon_anchor=(19,19), html='''
+                             <i class="{} fa-4x"
+                                style="color:{};"></i>
+                            <br>
+                            '''.format(variables.dict_icon_simbols["Rejected Points"], variables.dict_color_simbols_recommendation["Rejected Points"])
+                            )
+                            # icon=folium.Icon(color=variables.dict_color_simbols_recommendation["Recommended Points"], icon=variables.dict_icon_simbols["Recommended Points"]),
+                                    ).add_to(mapObj)
+
+                        
 
     # draw user position
     folium.Marker(location=[float(user_position['Latitude']), float(user_position['Longitude'])],
-                  icon=folium.Icon(color='orange', icon='user')).add_to(mapObj)
-
-    direcion_html = f"/recommendersystem/src/Servicio/app/Pictures/Recomendaciones_html_others/{time.strftime('%m-%d-%Y-%H-%M-%S')}User_id{user.id}Cam{cam.id}HI{cam.hive_id}.html"
-
-    # direcion_png = f"/recommendersystem/src/Servicio/app/Pictures/Recomendaciones/{time.strftime('%m-%d-%Y-%H-%M-%S')}User_id{user.id}.Cam{cam.id}Hi{cam.hive_id}.png"
+                  icon= DivIcon( icon_anchor=(19, 19),  html='''
+                             <i class="{} fa-4x"
+                                style="color:{};"></i>
+                            <br>
+                            '''.format(variables.dict_icon_simbols["User's Position"],variables.dict_color_simbols_recommendation["User's Position"])
+                            )).add_to(mapObj)
+                
+                #  icon=folium.Icon( color=variables.dict_color_simbols_recommendation["User's Position"], icon=variables.dict_icon_simbols["User's Position"] )).add_to(mapObj)
     
-    legend_html, legend_html_2 = legend_generation_recommendation_representation(time.strftime('%m/%d/%Y, %H:%M:%S'))
-    mapObj.get_root().html.add_child(folium.Element(legend_html))
+    direcion_html = f"/recommendersystem/src/Servicio/app/Pictures/Recomendaciones_html_others/{time.strftime('%m-%d-%Y-%H-%M-%S')}User_id{user.id}Cam{cam.id}HI{cam.hive_id}.html"
+    
     linear.caption = 'Nevel of specialization'
     mapObj.add_child(linear)
-
-    mapObj.get_root().html.add_child(folium.Element(legend_html_2))
+    
+    mapObj.get_root().html.add_child(folium.Element(legend_generation_recommendation(time.strftime('%m/%d/%Y, %H:%M:%S'))))
     mapObj.save(direcion_html)
-    # img_data = mapObj._to_png(5)
-    # img = Image.open(io.BytesIO(img_data))
-    # img.save(direcion_png)
     return None
 
 
@@ -351,7 +389,7 @@ def show_hive(
 
                
                 folium.Polygon(locations=list_point, color='black', fill_color=color,
-                            weight=1, popup=(folium.Popup(str(j.id))), opacity=0.5, fill_opacity=0.75).add_to(mapObj)
+                            weight=1, popup=(folium.Popup(str(j.id))), opacity=0.5, fill_opacity=0.85).add_to(mapObj)
 
                 folium.Marker(list_point[3],popup=f"Number of Expected measurements: {expected_measurements}",
                             icon=DivIcon(
@@ -364,7 +402,7 @@ def show_hive(
     direcion_html = f"/recommendersystem/src/Servicio/app/Pictures/Measurements_html/{time.strftime('%m-%d-%Y-%H-%M-%S')}Hi{hive_id}.html"
     # direcion_png = f"/recommendersystem/src/Servicio/app/Pictures/Measurements/{time.strftime('%m-%d-%Y-%H-%M-%S')}Hi{hive_id}.png"
     
-    legend_html = legend_generation_measurements_representation(time.strftime('%m/%d/%Y, %H:%M:%S'))
+    legend_html = legend_measurements_scale(time.strftime('%m/%d/%Y, %H:%M:%S'))
     mapObj.get_root().html.add_child(folium.Element(legend_html))
     mapObj.save(direcion_html)
 
@@ -431,7 +469,7 @@ def show_a_campaign(
             weight = 1
             text = 'text'
             folium.Polygon(locations=list_point, color=line_color, fill_color=color,
-                           weight=weight, popup=(folium.Popup(text)), opacity=0.5, fill_opacity=0.75).add_to(mapObj)
+                           weight=weight, popup=(folium.Popup(text)), opacity=0.5, fill_opacity=0.85).add_to(mapObj)
 
             folium.Marker([lat1, lon1],
                           icon=DivIcon(
@@ -446,8 +484,8 @@ def show_a_campaign(
     # print(direcion)
     # cv2.imwrite(direcion, imagen)
     direcion_png = f"/recommendersystem/src/Servicio/app/Pictures/Measurements/{time.strftime('%m-%d-%Y-%H-%M-%S')}Cam{campañas_activas.id}Hi{campañas_activas.hive_id}.png"
-    legend_html, legend_html_2 = legend_generation_recommendation_representation(time.strftime('%m/%d/%Y, %H:%M:%S'))
-    mapObj.get_root().html.add_child(folium.Element(legend_html))
+    
+    mapObj.get_root().html.add_child(folium.Element(legend_measurements_scale(time.strftime('%m/%d/%Y, %H:%M:%S'))))
     mapObj.save(direcion_html)
 
     # img_data = mapObj._to_png(5)
