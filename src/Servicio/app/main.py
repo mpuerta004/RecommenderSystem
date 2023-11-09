@@ -3,13 +3,14 @@ from datetime import datetime, timedelta
 from pathlib import Path
 import crud
 from apscheduler.schedulers.background import BackgroundScheduler
-from end_points import (BeeKeeper, Campaign_Member, Campaigns, Cells, Demo,
-                        Devices, Hive, Measurements, Members, Recommendation,
+from end_points import (BeeKeeper, Campaign_Member, Campaigns, Cells, Devices, Hive, Measurements, Members,
                         Surface, sync,KPIS)
+from Demo import Demo
+from Heuristic_recommender import Recommendation
 from fastapi import (APIRouter, FastAPI)
 from fastapi.templating import Jinja2Templates
 from fastapi_utils.session import FastAPISessionMaker
-from datetime import datetime, timezone,timedelta
+from datetime import datetime,timedelta
 from funtionalities import prioriry_calculation
 SQLALCHEMY_DATABASE_URL = "mysql+mysqlconnector://root:mypasswd@mysql:3306/SocioBeeMVE"
 sessionmaker = FastAPISessionMaker(SQLALCHEMY_DATABASE_URL)

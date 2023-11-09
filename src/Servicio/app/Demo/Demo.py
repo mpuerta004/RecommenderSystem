@@ -27,9 +27,9 @@ from math import sin, cos, atan2, sqrt, radians, degrees, asin
 from fastapi.responses import HTMLResponse
 from folium.plugins import HeatMap
 from bio_inspired_recommender.bio_agent import BIOAgent
-
+from Heuristic_recommender import Recommendation
 import Demo.variables as variables
-from Demo.map_funtions import show_hive,show_recomendation_with_thesholes
+from Demo.map_funtions import show_hive,show_recomendation_with_thesholes,show_recomendation
 import random
 
 from Demo.users_management import reciboUser_hive,  user_selecction
@@ -162,26 +162,28 @@ def asignacion_recursos_hive(
 
                     a = RecommendationCreate(member_current_location={
                                             'Longitude': lon2, 'Latitude': lat2}, recommendation_datetime=time)
-                    # recomendaciones=create_recomendation_2(db=db,member_id=user.id,recipe_in=a,cam=cam,time=time)
+                    # recomendaciones=Recommendation.create_recomendation_2(db=db,member_id=user.id,recipe_in=a,cam=cam,time=time)
                     recomendaciones = bio_agent.create_recomendation(member_id=user.id,recipe_in=a,db=db,time=time)
-                    # recomendaciones = create_recomendation(
-                    #     db=db, member_id=user.id, recipe_in=a, time=time, campaign_id=id_campaign_user)
+                    # recomendaciones = Recommendation.create_recomendation_per_campaign(
+                    #    db=db, member_id=user.id, recipe_in=a, time=time, campaign_id=id_campaign_user)
                     
                     
                     if recomendaciones is not None and "results" in recomendaciones and  len(recomendaciones['results']) > 0:
-                        recomendacion_polinizar = user_selecction(recomendaciones['results'])
+                        recc= [i.recommendation for i in recomendaciones['results']] 
+                        recomendacion_polinizar = user_selecction(recc)
                         if recomendacion_polinizar is not None:
                             recomendation_coguida = crud.recommendation.get_recommendation(
                                 db=db, member_id=user.id, recommendation_id=recomendacion_polinizar.id)
-                            show_recomendation_with_thesholes(db=db, bio=bio_agent,cam=cam, user=user, result=recomendaciones['results'],time=time,recomendation=recomendacion_polinizar)
-
+                            if user.id==1:
+                                show_recomendation_with_thesholes(db=db, bio=bio_agent,cam=cam, user=user, result=recc,time=time,recomendation=recomendacion_polinizar)
+                                show_recomendation(db=db, cam=cam, user=user, time=time, result=recc,recomendation=recomendacion_polinizar)
                             recomendacion_polinizar = crud.recommendation.update(
                                 db=db, db_obj=recomendation_coguida, obj_in={"state": "ACCEPTED", "update_datetime": time})
                             db.commit()
                             db.commit()
 
                             mediciones.append(
-                                [user, recomendacion_polinizar, random.randint(1, 420)])
+                                [user, recomendacion_polinizar, random.randint(1, 419)])
                 for cam in campaigns:
                     prioriry_calculation(time=time, cam=cam, db=db)
                     bio_agent.update_priority_of_campaign(time=time,db=db)    
@@ -471,98 +473,99 @@ def asignacion_recursos_hive(
 #     return None
 
 
-#recomen for all
-def create_recomendation_3(
-    *,
-    member_id: int,
-    recipe_in: RecommendationCreate,
-    time: datetime,
-    db: Session = Depends(deps.get_db)
-) -> dict:
-    """
-    Create recomendation
-    """
+# #recomen for all
+# def create_recomendation_3(
+#     *,
+#     member_id: int,
+#     recipe_in: RecommendationCreate,
+#     time: datetime,
+#     db: Session = Depends(deps.get_db)
+# ) -> dict:
+#     """
+#     Create recomendation
+#     """
     
-    user = crud.member.get_by_id(db=db, id=member_id)
-    if user is None:
-        raise HTTPException(
-            status_code=404, detail=f"Member with id=={member_id} not found"
-        )
-    campaign_member = crud.campaign_member.get_Campaigns_of_member(
-        db=db, member_id=user.id)
+#     user = crud.member.get_by_id(db=db, id=member_id)
+#     if user is None:
+#         raise HTTPException(
+#             status_code=404, detail=f"Member with id=={member_id} not found"
+#         )
+#     campaign_member = crud.campaign_member.get_Campaigns_of_member(
+#         db=db, member_id=user.id)
 
     
-    List_cells_cercanas = []
-    cells = []
-    for i in campaign_member:
-        if (i.role == "QueenBee" or i.role == "WorkerBee"):
-            campaign = crud.campaign.get(db=db, id=i.campaign_id)
-            # Verify if the campaign is active
-            if campaign.start_datetime.replace(tzinfo=timezone.utc) <= time.replace(tzinfo=timezone.utc) and time.replace(tzinfo=timezone.utc) < campaign.end_datetime.replace(tzinfo=timezone.utc):
-                list_cells = crud.cell.get_cells_campaign(
-                    db=db, campaign_id=i.campaign_id)
-                # verify is the list of cell is not empty
-                if len(list_cells) != 0:
-                    for cell in list_cells:
-                            cells.append([cell, campaign])
-    if len(cells) ==0:
-        return {"results": []}
-    # We will order the cells by the distance (ascending order), temporal priority (Descending order), cardinality promise (accepted measurement)( descending order)
-    cells_and_priority = []
-    for (cell, cam) in cells:
-        centre=cell.centre
-        point = recipe_in.member_current_location
-        distancia = vincenty(
-            (centre['Latitude'], centre['Longitude']), (point['Latitude'], (point['Longitude'])))
-        #Calculate slot, priority and current cardinality and promose of measurement of the cell 
+#     List_cells_cercanas = []
+#     cells = []
+#     for i in campaign_member:
+#         if (i.role == "QueenBee" or i.role == "WorkerBee"):
+#             campaign = crud.campaign.get(db=db, id=i.campaign_id)
+#             # Verify if the campaign is active
+#             if campaign.start_datetime.replace(tzinfo=timezone.utc) <= time.replace(tzinfo=timezone.utc) and time.replace(tzinfo=timezone.utc) < campaign.end_datetime.replace(tzinfo=timezone.utc):
+#                 list_cells = crud.cell.get_cells_campaign(
+#                     db=db, campaign_id=i.campaign_id)
+#                 # verify is the list of cell is not empty
+#                 if len(list_cells) != 0:
+#                     for cell in list_cells:
+#                             cells.append([cell, campaign])
+#     if len(cells) ==0:
+#         return {"results": []}
+#     # We will order the cells by the distance (ascending order), temporal priority (Descending order), cardinality promise (accepted measurement)( descending order)
+#     cells_and_priority = []
+#     for (cell, cam) in cells:
+#         centre=cell.centre
+#         point = recipe_in.member_current_location
+#         distancia = vincenty(
+#             (centre['Latitude'], centre['Longitude']), (point['Latitude'], (point['Longitude'])))
+#         #Calculate slot, priority and current cardinality and promose of measurement of the cell 
         
-        if distancia <= (cam.cells_distance)*3:
-            List_cells_cercanas.append([cell, cam])
-    lista_celdas_ordenas = []
-    if List_cells_cercanas != []:
-            lista_celdas_ordenas = List_cells_cercanas
-    else:
-            lista_celdas_ordenas = cells
-    cells_and_priority = []
-    for (cell, cam) in lista_celdas_ordenas:
-        centre=cell.centre
-        point = recipe_in.member_current_location
-        distancia = vincenty(
-            (centre['Latitude'], centre['Longitude']), (point['Latitude'], (point['Longitude'])))
-        slot = crud.slot.get_slot_time(db=db, cell_id=cell.id, time=time)
-        priority = crud.priority.get_last(db=db, slot_id=slot.id, time=time)
-        # ESTO solo va a ocurrir cuando el slot acaba de empezar y todavia no se ha ejecutado el evento, Dado que acabamos de empezar el slot de tiempo, la cardinalidad sera 0 y ademas el % de mediciones en el tiempo tambien sera 0
-        if priority is None:
-            priority_temporal = 0.0
-        else:
-            priority_temporal = priority.temporal_priority
+#         if distancia <= (cam.cells_distance)*3:
+#             List_cells_cercanas.append([cell, cam])
+#     lista_celdas_ordenas = []
+#     if List_cells_cercanas != []:
+#             lista_celdas_ordenas = List_cells_cercanas
+#     else:
+#             lista_celdas_ordenas = cells
+#     cells_and_priority = []
+#     for (cell, cam) in lista_celdas_ordenas:
+#         centre=cell.centre
+#         point = recipe_in.member_current_location
+#         distancia = vincenty(
+#             (centre['Latitude'], centre['Longitude']), (point['Latitude'], (point['Longitude'])))
+#         slot = crud.slot.get_slot_time(db=db, cell_id=cell.id, time=time)
+#         priority = crud.priority.get_last(db=db, slot_id=slot.id, time=time)
+#         # ESTO solo va a ocurrir cuando el slot acaba de empezar y todavia no se ha ejecutado el evento, Dado que acabamos de empezar el slot de tiempo, la cardinalidad sera 0 y ademas el % de mediciones en el tiempo tambien sera 0
+#         if priority is None:
+#             priority_temporal = 0.0
+#         else:
+#             priority_temporal = priority.temporal_priority
 
-        Cardinal_actual = crud.measurement.get_all_Measurement_from_cell_in_the_current_slot(
-            db=db, time=time, slot_id=slot.id)
-        recommendation_accepted = crud.recommendation.get_aceptance_state_of_cell(
-            db=db, slot_id=slot.id)
-        expected_measurements  = Cardinal_actual + len(recommendation_accepted)
-        #We only consider the cell if the expected measurements are greater than the minimum samples of the campaign or if we dont have minnimun number of measuement per slot
-        if expected_measurements < cam.min_samples or cam.min_samples == 0:
-            cells_and_priority.append((
-                cell,
-                priority_temporal,
-                distancia,
-                expected_measurements,
-                Cardinal_actual,
-                slot))
-    cells_and_priority.sort(
-        key=lambda order_features: (-order_features[3], order_features[1], -order_features[2]), reverse=True)
+#         Cardinal_actual = crud.measurement.get_all_Measurement_from_cell_in_the_current_slot(
+#             db=db, time=time, slot_id=slot.id)
+#         recommendation_accepted = crud.recommendation.get_aceptance_state_of_cell(
+#             db=db, slot_id=slot.id)
+#         expected_measurements  = Cardinal_actual + len(recommendation_accepted)
+#         #We only consider the cell if the expected measurements are greater than the minimum samples of the campaign or if we dont have minnimun number of measuement per slot
+#         if expected_measurements < cam.min_samples or cam.min_samples == 0:
+#             cells_and_priority.append((
+#                 cell,
+#                 priority_temporal,
+#                 distancia,
+#                 expected_measurements,
+#                 Cardinal_actual,
+#                 slot))
+#     cells_and_priority.sort(
+#         key=lambda order_features: (-order_features[3], order_features[1], -order_features[2]), reverse=True)
     
     
-    result = []
-    if len(cells_and_priority) >= 0:
-        for i in range(0,min(len(cells_and_priority),5)):
-            recomendation = crud.recommendation.create_recommendation_detras(
-                db=db, obj_in=recipe_in, member_id=member_id, slot_id=cells_and_priority[i][5].id, state="NOTIFIED", update_datetime=time, sent_datetime=time)
-            result.append(recomendation)
-
-    return {"results": result}
+#     result = []
+#     if len(cells_and_priority) >= 0:
+#         for i in range(0,min(len(cells_and_priority),5)):
+#             recomendation = crud.recommendation.create_recommendation_detras(
+#                 db=db, obj_in=recipe_in, member_id=member_id, slot_id=cells_and_priority[i][5].id, state="NOTIFIED", update_datetime=time, sent_datetime=time)
+#             cell=cells_and_priority[i][0]
+#             result.append(RecommendationCell(
+#                              recommendation=recomendation, cell=cell))
+#     return {"results": result}
 
 
 
@@ -673,7 +676,9 @@ def create_recomendation_3(
 #             recomendation = crud.recommendation.create_recommendation(
 #                 db=db, obj_in=recipe_in, member_id=member_id, slot_id=slot.id, state="NOTIFIED", update_datetime=time, sent_datetime=time)
 #             cell = crud.cell.get(db=db, id=slot.cell_id)
-#             result.append(recomendation)
+#             result.append(RecommendationCell(
+#                              recommendation=recomendation, cell=cell))
+#             # result.append(recomendation)
 #     return {"results": result}
 
 
@@ -778,7 +783,8 @@ def create_recomendation_3(
 #                 db=db, obj_in=recipe_in, member_id=member_id, slot_id=cells_and_priority[i][5].id, state="NOTIFIED", update_datetime=time, sent_datetime=time)
 #             db.commit()
 #             db.commit()
-#             result.append(recomendation)
+#             result.append(RecommendationCell(
+#                              recommendation=recomendation, cell=cells_and_priority[i][0]))
 
 #     if len(cells_and_priority) == 0:
 #         return {"results": []}

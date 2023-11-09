@@ -208,8 +208,7 @@ def show_recomendation(*, cam: Campaign, user: Member, result: list(), time: dat
 
 
 def show_recomendation_with_thesholes(*, bio:BIOAgent, cam: Campaign, user: Member, result: list(), time: datetime, recomendation: Recommendation, db: Session = Depends(deps.get_db)) -> Any:
-    
-    
+
     if result is []:
         return True
     
@@ -273,7 +272,7 @@ def show_recomendation_with_thesholes(*, bio:BIOAgent, cam: Campaign, user: Memb
                             icon=DivIcon(
                     icon_size=(200, 36),
                     icon_anchor=(0, 0),
-                    html=f'<div style="font-size: 20pt">{Cardinal_actual}, {expected_measurements}</div>'
+                    html=f'<div style="font-size: 20pt">{Cardinal_actual}</div>'
                 )
                 ).add_to(mapObj)
 
@@ -315,7 +314,23 @@ def show_recomendation_with_thesholes(*, bio:BIOAgent, cam: Campaign, user: Memb
     
     direcion_html = f"/recommendersystem/src/Servicio/app/Pictures/Recomendaciones_html_others/{time.strftime('%m-%d-%Y-%H-%M-%S')}User_id{user.id}Cam{cam.id}HI{cam.hive_id}.html"
     
-    linear.caption = 'Nevel of specialization'
+    linear.caption = f'Theshole of the user with id= {user.id}'
+    # cmap_HTML = linear._repr_html_()
+    # #  <div style="position: fixed; 
+    # #         bottom: 350px; left: 90px; width: 290px; height: 170px; 
+    # #         border:2px solid grey; z-index:9999;
+    # #         background-color: rgba(255, 255, 255, 0.75);
+    # #         font-size:15px;">
+    # #         <p style="margin:10px;"><b>Marker Legend</b></p>
+    # #         '''
+    # cmap_HTML = cmap_HTML.replace('<svg height="50" width="50">','<svg id="cmap" height="50" width="50">',1)
+    # cmap_style = '<style>#cmap {background-color:  rgba(255, 255, 255, 0.75);style="margin:10opx;}</style>'
+
+    # mapObj.get_root().header.add_child(folium.Element(cmap_style))
+    # folium.map.LayerControl().add_to(mapObj)
+    # mapObj.get_root().html.add_child(folium.Element(cmap_HTML))
+
+   
     mapObj.add_child(linear)
     
     mapObj.get_root().html.add_child(folium.Element(legend_generation_recommendation(time.strftime('%m/%d/%Y, %H:%M:%S'))))
@@ -370,8 +385,10 @@ def show_hive(
                 db=db, slot_id=slot.id))
                 if Cardinal_actual >= cam.min_samples:
                     numero = 4
+                    color_number='#FFFFFF'
                 else:
                     numero = int((Cardinal_actual/cam.min_samples)//(1/4))
+                    color_number='#000000'
                 # color= (color_list[numero][2],color_list[numero][1],color_list[numero][0])
                 color = variables.color_list_hex[numero]
                 lon1 = j.centre['Longitude']
@@ -395,7 +412,8 @@ def show_hive(
                             icon=DivIcon(
                     icon_size=(200, 36),
                     icon_anchor=(0, 0),
-                    html=f'<div style="font-size: 20pt">{Cardinal_actual}</div>'
+                    
+                    html=f'<div style="font-size: 20pt;color:{color_number};">{Cardinal_actual}</div>'
                 )
                 ).add_to(mapObj)
 

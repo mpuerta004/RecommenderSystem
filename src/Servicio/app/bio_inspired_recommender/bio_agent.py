@@ -183,7 +183,9 @@ class BIOAgent(object):
                     recomendation = crud.recommendation.create_recommendation(
                     db=db, obj_in=recipe_in, member_id=member_id, slot_id=slot.id, state="NOTIFIED", update_datetime=time, sent_datetime=time)
                     cell = crud.cell.get(db=db, id=slot.cell_id)
-                    result.append(recomendation)
+                    result.append(RecommendationCell(
+                             recommendation=recomendation, cell=cell))
+            
                     
             else:
                 for i in range(len(definitivos)):
@@ -192,7 +194,9 @@ class BIOAgent(object):
                     recomendation = crud.recommendation.create_recommendation(
                     db=db, obj_in=recipe_in, member_id=member_id, slot_id=slot.id, state="NOTIFIED", update_datetime=time, sent_datetime=time)
                     cell = crud.cell.get(db=db, id=slot.cell_id)
-                    result.append(recomendation)
+                           
+                    result.append(RecommendationCell(
+                             recommendation=recomendation, cell=cell))
             
             return {"results": result}
         else:
