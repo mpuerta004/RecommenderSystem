@@ -3,8 +3,8 @@ import json
 hive_id= 1 #Change this variable as in the simulation need. 
 # Code to create the terminal lines to ejecute in the termineal and populate the database for the experiments. 
 result = ''
-number_users=20
-inicio=2
+number_users=40
+inicio=20
 with open('archivo.json', 'w') as file:
 
     for id in range(inicio, number_users):

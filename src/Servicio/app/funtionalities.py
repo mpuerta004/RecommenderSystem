@@ -44,22 +44,6 @@ def get_point_at_distance(lat1, lon1, d, bearing, R=6371):
 import numpy as np
 from numpy.linalg import norm
 
-def distancia_punto_recta(A, B, P):
-    #Comprobamos que el punto no corresponda a los extremos del segmento.
-    if all(A==P) or all(B==P):
-        return 0
-
-    #Calculamos el angulo entre AB y AP, si es mayor de 90 grados retornamos la distancia enre A y P
-    elif np.arccos(np.dot((P-A)/vincenty(P,A), (B-A)/vincenty(B-A))) > np.pi/2:
-        return vincenty(P,A)
-
-    #Calculamos el angulo entre AB y BP, si es mayor de 90 grados retornamos la distancia enre B y P.
-    elif np.arccos(np.dot((P-B)/vincenty(P-B), (A-B)/vincenty(A-B))) > np.pi/2:
-        return vincenty(P,B)
-
-    #Como ambos angulos son menores o iguales a 90º sabemos que podemos hacer una proyección ortogonal del punto.
-    return norm(np.cross(B-A, A-P))/norm(B-A)
-
 
 
 def create_cells_for_a_surface(surface: Surface, campaign: Campaign, centre, radius, db: Session = Depends(deps.get_db)):
@@ -153,16 +137,15 @@ def point_to_line_distance(point, line_start, bearing):
     angle_radians = math.radians(bearing)
     line_direction = (math.cos(angle_radians), math.sin(angle_radians)) # v
     
-    point_vector = ((point['Latitude'] - line_start['Latitude']), (point['Longitude'] - line_start['Longitude'])) # u
-    
+    point_vector = ((point[0] - line_start[0]), (point[1] - line_start[1])) # u
     # Calculate dot product of the point vector and line direction
     dot_product = (point_vector[0] * line_direction[0] + point_vector[1] * line_direction[1])/math.sqrt(line_direction[0]**2 + line_direction[1]**2) # u*v/|v|
     
     # Calculate projection of the point onto the line
-    projected_point = (line_start['Latitude'] + dot_product * line_direction[0],
-                  line_start['Longitude'] + dot_product * line_direction[1])
+    projected_point = (line_start[0] + dot_product * line_direction[0],
+                  line_start[1] + dot_product * line_direction[1])
     
-    distance_to_line = vincenty((point['Latitude'], point['Longitude']), projected_point)
+    distance_to_line = vincenty((point[0], point[1]), projected_point)
     
     return distance_to_line
 

@@ -20,8 +20,10 @@ names_legend_color = ['Initial', 'Almost Midway',
                       'Midway', 'Almost Finished', 'Finished']
 
 # Color recommendation subsection
-dict_color_simbols_recommendation={"User's Position":'#ff8315',"Rejected Points": '#f12009', "Selected Point":'#a3ff7e' }
-dict_icon_simbols={"User's Position":'fa-solid fa-user',"Rejected Points": 'fa-sharp fa-solid fa-circle-xmark', "Selected Point":'fa-solid fa-location-dot' }
+dict_color_simbols_recommendation={"User's Position":'#000000',"Rejected Points": '#000000', "Selected Point":'#00FF00' }
+dict_icon_simbols={"User's Position":'fa-solid fa-user', "Rejected Points": 'fa-sharp fa-regular fa-circle-xmark', "Selected Point":'fa-solid fa-location-dot' }
+                   #'fa-solid fa-user',
+                   #
 # color_simbols_recomendations_feature_map = ['#ff8315', 'blue', 'red']
 # names_simbols_recommendations = ["User's Position", "Recommended Points",
 #                                  "Selected Point"]

@@ -137,7 +137,7 @@ class BIOAgent(object):
                 recommendation_accepted = crud.recommendation.get_aceptance_state_of_cell(
                         db=db, slot_id=slot.id)
                 expected = Cardinal_actual + len(recommendation_accepted)
-                if expected < self.campaign.min_samples:
+                if expected < self.campaign.min_samples and df_user_distance.loc[cell.id,"distance_cell_user"]<3*self.campaign.cells_distance: 
                     NEW_VALUE=(
                     ((self.df_priority.loc[cell.id,"priority"])**2 ) / 
                                 ((self.df_priority.loc[cell.id,"priority"])**2  + 

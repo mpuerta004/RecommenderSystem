@@ -62,6 +62,12 @@ class CRUDRecommendation(CRUDBase[Recommendation, RecommendationCreate, Recommen
                 except Exception as e:
                         raise HTTPException(status_code=500, detail=f"Error with mysql {e}" )
    
+        def get_All_accepted_Recommendation(self, db: Session, *, member_id:int) -> List[Recommendation]:
+                try:
+                        return db.query(Recommendation).filter(Recommendation.member_id==member_id, Recommendation.state=="ACCEPTED").all()
+                except Exception as e:
+                        raise HTTPException(status_code=500, detail=f"Error with mysql {e}" )
+   
 
         def create_recommendation_detras(self, db: Session, *, obj_in: RecommendationCreate, member_id:int,slot_id:int,state=str,update_datetime:datetime,sent_datetime:datetime) -> Recommendation:
                 try:
@@ -74,7 +80,13 @@ class CRUDRecommendation(CRUDBase[Recommendation, RecommendationCreate, Recommen
                         raise HTTPException(status_code=500, detail=f"Error with mysql {e}" )
    
         
-       
+        def get_last_recomendation_of_user(self,*, db: Session,  member_id:int) -> Recommendation or Any:
+            try:
+                return db.query(Recommendation).filter(and_(Recommendation.member_id==member_id)).order_by(Recommendation.update_datetime.desc()).first()
+            except Exception as e:
+                        raise HTTPException(status_code=500, detail=f"Error with mysql {e}" )
+                    
+                    
 
         def get_aceptance_state_of_cell(self,db: Session, *, slot_id:int, )-> List[Recommendation]:
                 try:

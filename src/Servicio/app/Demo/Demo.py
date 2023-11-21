@@ -17,6 +17,7 @@ from datetime import datetime, timedelta
 import math
 import numpy as np
 import io
+from Heuristic_recommender.Recommendation import create_recomendation_per_campaign
 from PIL import Image
 import folium
 import numpy as np
@@ -32,7 +33,7 @@ import Demo.variables as variables
 from Demo.map_funtions import show_hive,show_recomendation_with_thesholes,show_recomendation
 import random
 
-from Demo.users_management import reciboUser_hive,  user_selecction
+from Demo.users_management import generate_trayectories,reciboUser_hive,  user_selecction, generar_user_position_random
 api_router_demo = APIRouter(prefix="/demos/hives/{hive_id}")
 
 
@@ -42,14 +43,13 @@ api_router_demo = APIRouter(prefix="/demos/hives/{hive_id}")
 #       -> las personas son solo tambien por colmena, hay que hacerlo para todas las colmenas
  
 
-@api_router_demo.post("/", status_code=201, response_model=None)
+@api_router_demo.post("/bio_inspired/campaign", status_code=201, response_model=None)
 def asignacion_recursos_hive(
     hive_id:int,
         db: Session = Depends(deps.get_db)):
     """
     DEMO!
     """
-    initial = datetime.utcnow()
     start = datetime(year=2024, month=6, day=27, hour=8, minute=00,
                      second=00).replace(tzinfo=timezone.utc)
     end = datetime(year=2024, month=6, day=27, hour=14, minute=00,
@@ -60,7 +60,7 @@ def asignacion_recursos_hive(
     #TODO
     bio_agent= BIOAgent(db=db, campaign_id=1,hive_id=1)
     #TODO 
-    # active_campaign = crud.campaign.get_all_active_campaign_for_a_hive(db=db, time=time,hive_id=hive_id)
+#    active_campaign = crud.campaign.get_all_active_campaign_for_a_hive(db=db, time=time,hive_id=hive_id)
     # campaign_member =  crud.campaign_member.members_of_campaign(db=db, campaign_id=campaigns[0].id)
     # list_id=[]
     # for i in campaign_member:
@@ -103,7 +103,7 @@ def asignacion_recursos_hive(
         
         
         
-    
+    directions={}
     for segundo in range(60, int(dur), 60):
         print("----------------------------------------------------------------------", segundo)
         time = start + timedelta(seconds=segundo)
@@ -119,7 +119,7 @@ def asignacion_recursos_hive(
             
             if (Current_time > i.update_datetime): # It is necessary to run demo 
                 if (Current_time - i.update_datetime) > timedelta(minutes=7):
-                    print("Modificiacion")
+                    # print("Modificiacion")
                     crud.recommendation.update(db=db,db_obj=i, obj_in={"state":"NON_REALIZED","update_datetime":Current_time})
                     db.commit()  
                     db.commit()
@@ -129,54 +129,36 @@ def asignacion_recursos_hive(
         list_users = reciboUser_hive(db=db, hive_id=hive_id)
         if list_users != []:
             for user in list_users:
-                
-                # generate the user position, select randomly a surface and generate a point closer in a random direction of this surface.
-                #List of the entity campaign_member of the user
-                list_campaign = crud.campaign_member.get_Campaigns_of_member_of_hive(
-                    db=db, member_id=user.id,hive_id=hive_id)
-                active_campaign=[]
-                for i in list_campaign:
-                    cam=crud.campaign.get_campaign(db=db,campaign_id=i.campaign_id,hive_id=hive_id)
-                    if cam.start_datetime.replace(tzinfo=timezone.utc) <= time.replace(tzinfo=timezone.utc) and time.replace(tzinfo=timezone.utc) < cam.end_datetime.replace(tzinfo=timezone.utc):
-                        active_campaign.append([i.campaign_id,cam])
-                if len(active_campaign)!=0:
-                    # Select the position of the user. 
-                    n_campaign = random.randint(0, len(active_campaign)-1)
-                    selected_user_campaign = random.randint(0, len(active_campaign)-1)
-                    id_campaign_user = active_campaign[selected_user_campaign][0]
-                    cam = active_campaign[n_campaign][1]
-                    
-                    n_surfaces = len(cam.surfaces)
-                    surface_indice = random.randint(0, n_surfaces-1)
-                    boundary = cam.surfaces[surface_indice].boundary
-                    distance = random.randint(
-                        50, round(1000*(boundary.radius + 4*cam.cells_distance )))
-
-                    distance = distance/1000
-                    direction = random.randint(0, 360)
-
-                    lon1 = boundary.centre['Longitude']
-                    lat1 = boundary.centre['Latitude']
-                    lat2, lon2 = get_point_at_distance(
-                        lat1=lat1, lon1=lon1, d=distance, bearing=direction)
+                (lon2, lat2), directions = generate_trayectories(user=user,direction=directions, db=db, time=time, hive_id=hive_id)
+                #Todo! ver cuando cambiar la direcion porque la trayectoria se ha terminado 
+                # como el bio inspirado noe sta mirando o restringuiendo limite de distancia voy a ver si funciona primero 
+               
+                if lon2 is not None and lat2 is not None:
+                    if user.id==1:
+                        print(time)
+                        print(( lat2, lon2), directions[user.id])
 
                     a = RecommendationCreate(member_current_location={
                                             'Longitude': lon2, 'Latitude': lat2}, recommendation_datetime=time)
                     # recomendaciones=Recommendation.create_recomendation_2(db=db,member_id=user.id,recipe_in=a,cam=cam,time=time)
                     recomendaciones = bio_agent.create_recomendation(member_id=user.id,recipe_in=a,db=db,time=time)
+                    if recomendaciones is None or len(recomendaciones['results'])== 0:
+                        directions.pop(user.id)
+                        if user.id==1:
+                            print("No hay recomendationes -> usuario muy lejano!")
                     # recomendaciones = Recommendation.create_recomendation_per_campaign(
                     #    db=db, member_id=user.id, recipe_in=a, time=time, campaign_id=id_campaign_user)
                     
-                    
+                    # hayq ue arreglar que el bio inspirado siempre va a dar una recomendaicon anque el usuario este a tomar por culo. 
                     if recomendaciones is not None and "results" in recomendaciones and  len(recomendaciones['results']) > 0:
                         recc= [i.recommendation for i in recomendaciones['results']] 
-                        recomendacion_polinizar = user_selecction(recc)
+                        recomendacion_polinizar = user_selecction(db=db, list_recommendations=recc,user_position=(lat2, lon2), bearing=directions[user.id])
                         if recomendacion_polinizar is not None:
                             recomendation_coguida = crud.recommendation.get_recommendation(
                                 db=db, member_id=user.id, recommendation_id=recomendacion_polinizar.id)
-                            if user.id==1:
-                                show_recomendation_with_thesholes(db=db, bio=bio_agent,cam=cam, user=user, result=recc,time=time,recomendation=recomendacion_polinizar)
-                                show_recomendation(db=db, cam=cam, user=user, time=time, result=recc,recomendation=recomendacion_polinizar)
+                            #if user.id==1:
+                            show_recomendation_with_thesholes(db=db, bearing=directions[user.id], bio=bio_agent,cam=cam, user=user, result=recc,time=time,recomendation=recomendacion_polinizar)
+                            show_recomendation(db=db, cam=cam, user=user, time=time, result=recc,recomendation=recomendacion_polinizar)
                             recomendacion_polinizar = crud.recommendation.update(
                                 db=db, db_obj=recomendation_coguida, obj_in={"state": "ACCEPTED", "update_datetime": time})
                             db.commit()
@@ -184,6 +166,9 @@ def asignacion_recursos_hive(
 
                             mediciones.append(
                                 [user, recomendacion_polinizar, random.randint(1, 419)])
+                        else:
+                            if user.id==1:
+                                print("Ninguna buena-- user selection NONE")
                 for cam in campaigns:
                     prioriry_calculation(time=time, cam=cam, db=db)
                     bio_agent.update_priority_of_campaign(time=time,db=db)    
@@ -232,7 +217,125 @@ def asignacion_recursos_hive(
                 new.append(mediciones[i])
         mediciones = new
     final = datetime.utcnow()
-    print((final-initial))
+    return None
+
+
+@api_router_demo.post("/heuristic/campaign", status_code=201, response_model=None)
+def asignacion_recursos_hive_heuristic(
+    hive_id:int,
+    db: Session = Depends(deps.get_db)):
+    """
+    DEMO!
+    """
+    start = datetime(year=2024, month=6, day=27, hour=8, minute=00,
+                     second=00).replace(tzinfo=timezone.utc)
+    end = datetime(year=2024, month=6, day=27, hour=14, minute=00,
+                   second=1).replace(tzinfo=timezone.utc)
+    mediciones = []
+
+    dur = int((end - start).total_seconds())
+
+    directions={}
+    for segundo in range(60, int(dur), 60):
+        print("----------------------------------------------------------------------", segundo)
+        time = start + timedelta(seconds=segundo)
+        campaigns = crud.campaign.get_all_active_campaign_for_a_hive(db=db, time=time,hive_id=hive_id)
+        for cam in campaigns:
+            prioriry_calculation(time=time, cam=cam, db=db)
+        list_of_recommendations= crud.recommendation.get_aceptance_and_notified_state(db=db)
+        Current_time = datetime(year=time.year, month=time.month, day=time.day,
+                            hour=time.hour, minute=time.minute, second=time.second)
+            
+        for i in list_of_recommendations:
+            
+            if (Current_time > i.update_datetime): # It is necessary to run demo 
+                if (Current_time - i.update_datetime) > timedelta(minutes=7):
+                    # print("Modificiacion")
+                    crud.recommendation.update(db=db,db_obj=i, obj_in={"state":"NON_REALIZED","update_datetime":Current_time})
+                    db.commit()  
+                    db.commit()
+        show_hive(hive_id=hive_id, time=time, db=db)
+        
+        #Get the list of all WorkerBee and QueenBee  
+        list_users = reciboUser_hive(db=db, hive_id=hive_id)
+        if list_users != []:
+            for user in list_users:
+                (lon2, lat2), directions = generate_trayectories(user=user,direction=directions, db=db, time=time, hive_id=hive_id)
+                if lon2 is not None and lat2 is not None:
+                    # if user.id==1:
+                    #     print(time)
+                    #     print(( lat2, lon2), directions[user.id])
+
+                    a = RecommendationCreate(member_current_location={
+                                            'Longitude': lon2, 'Latitude': lat2}, recommendation_datetime=time)
+                    #TODO!!! 
+                    recomendaciones=create_recomendation_per_campaign(db=db,member_id=user.id,recipe_in=a,campaign_id= 1
+                                                                      ,time=time)
+                    if recomendaciones is None or len(recomendaciones['results'])== 0:
+                        directions.pop(user.id)
+                    
+                    if recomendaciones is not None and "results" in recomendaciones and  len(recomendaciones['results']) > 0:
+                        recc= [i.recommendation for i in recomendaciones['results']] 
+                        recomendacion_polinizar = user_selecction(db=db, list_recommendations=recc,user_position=(lat2, lon2), bearing=directions[user.id])
+                        if recomendacion_polinizar is not None:
+                            recomendation_coguida = crud.recommendation.get_recommendation(
+                                db=db, member_id=user.id, recommendation_id=recomendacion_polinizar.id)
+                            #if user.id==1:
+                            show_recomendation(db=db, cam=cam, user=user, time=time, result=recc,recomendation=recomendacion_polinizar)
+                            recomendacion_polinizar = crud.recommendation.update(
+                                db=db, db_obj=recomendation_coguida, obj_in={"state": "ACCEPTED", "update_datetime": time})
+                            db.commit()
+                            db.commit()
+
+                            mediciones.append(
+                                [user, recomendacion_polinizar, random.randint(1, 419)])
+                        else:
+                            if user.id==1:
+                                print("Ninguna buena-- user selection NONE")
+                for cam in campaigns:
+                    prioriry_calculation(time=time, cam=cam, db=db)
+        new = []
+        for i in range(0, len(mediciones)):
+            # Anterior approach cuando declaramos el tiempo que el uusario iba a tardar en realizarlo
+            mediciones[i][2] = int(mediciones[i][2]) - 60
+            if mediciones[i][2] <= 0:
+                aletorio = random.random()
+                if aletorio > variables.variables_comportamiento["user_realize"]:
+                    time_polinizado = time
+                    slot = crud.slot.get(db=db, id=mediciones[i][1].slot_id)
+                    cell = crud.cell.get_Cell(db=db, cell_id=slot.cell_id)
+                    # print("cell_polinizada", cell.id)
+                    Member_Device_user = crud.member_device.get_by_member_id(
+                        db=db, member_id=mediciones[i][0].id)
+                    creation = MeasurementCreate(db=db, location=cell.centre, datetime=time_polinizado,
+                                                 device_id=Member_Device_user.device_id, recommendation_id=mediciones[i][1].id)
+                    slot = crud.slot.get_slot_time(db=db, cell_id=cell.id, time=time_polinizado)
+                    # Ver si se registran bien mas recomendaciones con el id de la medicion correcta.
+                    device_member = crud.member_device.get_by_member_id(
+                        db=db, member_id=mediciones[i][0].id)
+                    
+                    if slot is not None:
+                        #If slot is None, this mean that the user want to realizwe the measurement after the end of the campaign
+                        measurement = crud.measurement.create_Measurement(
+                            db=db, device_id=device_member.device_id, obj_in=creation, member_id=mediciones[i][0].id, slot_id=slot.id, recommendation_id=mediciones[i][1].id)
+                        recomendation_coguida = crud.recommendation.get_recommendation(
+                            db=db, member_id=mediciones[i][1].member_id, recommendation_id=mediciones[i][1].id)
+
+                        crud.recommendation.update(db=db, db_obj=recomendation_coguida, obj_in={
+                                                "state": "REALIZED", "update_datetime": time_polinizado})
+                        db.commit()
+                        db.commit()
+                else:
+                    time_polinizado = time
+                    recomendation_coguida = crud.recommendation.get_recommendation(
+                        db=db, member_id=mediciones[i][1].member_id, recommendation_id=mediciones[i][1].id)
+
+                    crud.recommendation.update(db=db, db_obj=recomendation_coguida, obj_in={
+                                               "state": "NON_REALIZED", "update_datetime": time_polinizado})
+                    db.commit()
+            else:
+                new.append(mediciones[i])
+        mediciones = new
     return None
 
 

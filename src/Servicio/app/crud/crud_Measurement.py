@@ -50,7 +50,13 @@ class CRUDMeasurement(CRUDBase[Measurement, MeasurementCreate, MeasurementUpdate
             except Exception as e:
                         raise HTTPException(status_code=500, detail=f"Error with mysql {e}" )
    
-        
+        def get_last_measurement_of_user(self,*, db: Session,  member_id:int) -> Measurement or Any:
+            try:
+                return db.query(Measurement).filter(and_(Measurement.member_id==member_id)).order_by(Measurement.datetime.desc()).first()
+            except Exception as e:
+                        raise HTTPException(status_code=500, detail=f"Error with mysql {e}" )
+                    
+                    
         def get_all_Measurement_campaign(self, db:Session, *, campaign_id:int, time:DateTime)-> int:
             try:
                 return db.query(Measurement, Cell, Surface, Slot).filter(and_(Measurement.datetime<=time,Measurement.slot_id==Slot.id, Slot.cell_id==Cell.id,Cell.surface_id==Surface.id, Surface.campaign_id==campaign_id)).count()
@@ -82,7 +88,7 @@ class CRUDMeasurement(CRUDBase[Measurement, MeasurementCreate, MeasurementUpdate
                 return obj
             except Exception as e:
                         raise HTTPException(status_code=500, detail=f"Error with mysql {e}" )
-   
+
         def get_number_of_measurements_per_hive(self,*,db:Session, hive_id:int)->List[int] :
             try:
                 
@@ -90,7 +96,7 @@ class CRUDMeasurement(CRUDBase[Measurement, MeasurementCreate, MeasurementUpdate
             except Exception as e:
                         raise HTTPException(status_code=500, detail=f"Error with mysql {e}" )
    
-   
+
         def get_number_of_measurements_per_campaign(self,*,db:Session, campaign_id:int)-> List[int]:
             try:
                 return db.execute(f"Select count(*) from (Measurement m, Campaign_Member c_m) where m.member_id = c_m.member_id and c_m.campaign_id={campaign_id}").all()  

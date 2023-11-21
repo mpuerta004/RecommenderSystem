@@ -207,7 +207,7 @@ def show_recomendation(*, cam: Campaign, user: Member, result: list(), time: dat
 
 
 
-def show_recomendation_with_thesholes(*, bio:BIOAgent, cam: Campaign, user: Member, result: list(), time: datetime, recomendation: Recommendation, db: Session = Depends(deps.get_db)) -> Any:
+def show_recomendation_with_thesholes(*, bio:BIOAgent, cam: Campaign, user: Member, result: list(), time: datetime, recomendation: Recommendation, bearing:int, db: Session = Depends(deps.get_db)) -> Any:
 
     if result is []:
         return True
@@ -272,7 +272,7 @@ def show_recomendation_with_thesholes(*, bio:BIOAgent, cam: Campaign, user: Memb
                             icon=DivIcon(
                     icon_size=(200, 36),
                     icon_anchor=(0, 0),
-                    html=f'<div style="font-size: 20pt">{Cardinal_actual}</div>'
+                    html=f'<div style="font-size: 20pt">{Cardinal_actual, expected_measurements}</div>'
                 )
                 ).add_to(mapObj)
 
@@ -280,7 +280,7 @@ def show_recomendation_with_thesholes(*, bio:BIOAgent, cam: Campaign, user: Memb
                     if j.id == cell_elejida:
                         folium.Marker(location=[j.centre['Latitude'], j.centre['Longitude']], 
                                        icon=
-                                       DivIcon( icon_anchor=(19, 19), html='''
+                                       DivIcon( icon_anchor=(18, 30), html='''
                              <i class="{} fa-4x"
                                 style="color:{};"></i>
                             <br>
@@ -305,12 +305,21 @@ def show_recomendation_with_thesholes(*, bio:BIOAgent, cam: Campaign, user: Memb
     folium.Marker(location=[float(user_position['Latitude']), float(user_position['Longitude'])],
                   icon= DivIcon( icon_anchor=(19, 19),  html='''
                              <i class="{} fa-4x"
-                                style="color:{};"></i>
+                                style="color:{}"></i>
                             <br>
-                            '''.format(variables.dict_icon_simbols["User's Position"],variables.dict_color_simbols_recommendation["User's Position"])
-                            )).add_to(mapObj)
+                            '''.format( variables.dict_icon_simbols["User's Position"],variables.dict_color_simbols_recommendation["User's Position"])
+                            ),popup=(folium.Popup(str(bearing)))).add_to(mapObj)
                 
                 #  icon=folium.Icon( color=variables.dict_color_simbols_recommendation["User's Position"], icon=variables.dict_icon_simbols["User's Position"] )).add_to(mapObj)
+    (lat2, lon2)=get_point_at_distance(lat1=user_position['Latitude'], lon1=user_position['Longitude'], d=0.05, bearing=bearing)
+    folium.Marker(location=[float(lat2), float(lon2)],
+                  icon= DivIcon( icon_anchor=(19, 19),  html='''
+                             <i class="{} fa-4x"
+                                style="color:blue"></i>
+                            <br>
+                            '''.format( variables.dict_icon_simbols["User's Position"])
+                            ),popup=(folium.Popup(str(bearing)))).add_to(mapObj)
+    
     
     direcion_html = f"/recommendersystem/src/Servicio/app/Pictures/Recomendaciones_html_others/{time.strftime('%m-%d-%Y-%H-%M-%S')}User_id{user.id}Cam{cam.id}HI{cam.hive_id}.html"
     
@@ -365,7 +374,7 @@ def show_hive(
             lon_center=lon_center + surface.boundary.centre['Longitude']
     
     
-    print(lat_center/n, lon_center/n)
+    # print(lat_center/n, lon_center/n)
     
     mapObj = folium.Map(location=[lat_center/n,
                         lon_center/n], zoom_start=variables.zoom_start)
