@@ -28,7 +28,6 @@ from folium.features import DivIcon
 import folium
 from math import sin, cos, atan2, sqrt, radians, degrees, asin
 from fastapi.responses import HTMLResponse
-from bio_inspired_recommender.bio_agent import BIOAgent
 import Demo.variables as variables
 from Demo.map_funtions import show_hive, show_recomendation
 import random

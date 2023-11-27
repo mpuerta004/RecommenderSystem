@@ -67,6 +67,7 @@ def get_recommendation(
 
 
 ####################################### POST ########################################
+#TODO! Not work i think! 
 @api_router_recommendation.post("/recommendations", status_code=201, response_model=Union[RecommendationCellSearchResults,str])
 def create_recomendation(
     *,
@@ -75,7 +76,7 @@ def create_recomendation(
     db: Session = Depends(deps.get_db)
 ) -> dict:
     """
-    Create recomendation
+    Create recomendation NOT WORK!
     """
     time = datetime.now()
 
@@ -179,7 +180,7 @@ def create_recomendation_per_campaign(
     campaign_id:int,
     recipe_in: RecommendationCreate,
     db: Session = Depends(deps.get_db),
-    time = datetime.now()
+    time = datetime.utcnow()
     ) -> dict:
     """
     Create recomendation

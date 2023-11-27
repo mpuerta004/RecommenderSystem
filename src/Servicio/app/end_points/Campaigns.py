@@ -31,7 +31,6 @@ from schemas.Slot import Slot, SlotCreate, SlotSearchResults
 from schemas.Surface import Surface, SurfaceCreate, SurfaceSearchResults
 
 from funtionalities import create_slots_campaign, create_cells_for_a_surface, get_point_at_distance
-from bio_inspired_recommender.bio_agent import BIOAgent
 
 api_router_campaign = APIRouter(prefix="/hives/{hive_id}/campaigns")
 

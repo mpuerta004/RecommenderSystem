@@ -3,6 +3,7 @@ import math
 from datetime import datetime, timedelta, timezone
 from math import asin, atan2, cos, degrees, radians, sin, sqrt
 from typing import Any, Dict, Generic, List, Optional, Type, TypeVar, Union
+from bio_inspired_recommender import variables_bio_inspired
 
 import crud
 import deps
@@ -15,6 +16,7 @@ from schemas.Campaign_Member import Campaign_MemberCreate
 from schemas.Cell import Cell, CellCreate, CellSearchResults, Point
 from schemas.Priority import Priority, PriorityCreate, PrioritySearchResults
 from schemas.Slot import Slot, SlotCreate, SlotSearchResults
+from schemas.Bio_inspired import Bio_inspired, Bio_inspiredCreate, Bio_inspiredSearchResults, Bio_inspiredUpdate
 from schemas.Surface import Surface, SurfaceCreate, SurfaceSearchResults
 from sqlalchemy.orm import Session
 from vincenty import vincenty
@@ -94,7 +96,11 @@ def create_cells_for_a_surface(surface: Surface, campaign: Campaign, centre, rad
                     cell = crud.cell.create_cell(
                         db=db, obj_in=cell_create, surface_id=surface.id)
                     db.commit()
-
+                    hive_members = crud.hive_member.get_by_hive_id(db=db, hive_id=Campaign.hive_id)
+                    for i in hive_members:
+                        bio= Bio_inspiredCreate(cell_id=cell.id, member_id=i.member_id,threshold=variables_bio_inspired.O_max)
+                        bio_inspired= crud.bio_inspired.create(db=db,obj_in=bio)
+                        db.commit()
             # Step 3 of the picture
             list_point = []
 
@@ -332,3 +338,62 @@ def create_slots_per_cell(cam: Campaign, cell: Cell, db: Session = Depends(deps.
                 db=db, obj_in=Cell_priority)
             db.commit()
     return True
+
+
+
+##################### BIO-inpired update ##########################################
+
+
+
+def get_cells_neighbour_id(cell_id:int, db: Session = Depends(deps.get_db)):
+        list_cell_cercanas=[]
+        cell_origin=crud.cell.get_Cell(db=db, cell_id=cell_id)
+        surface_id=cell_origin.surface_id
+        surface=crud.surface.get(db=db, id=surface_id)
+        campaign_id=surface.campaign_id
+        campaign=crud.campaign.get(db=db, id=campaign_id)
+        list_cell_campaign=crud.cell.get_cells_campaign(db=db, campaign_id=campaign_id)
+        for cell in list_cell_campaign:
+            if vincenty((cell_origin.centre['Latitude'], cell_origin.centre['Longitude']), (cell.centre['Latitude'], cell.centre['Longitude']))<= variables_bio_inspired.neighbour_close*self.campaign.cells_distance:
+                list_cell_cercanas.append(cell.id)
+        return list_cell_cercanas
+    
+    
+    
+    
+    
+    
+    #Después de la recomendación los ajustes de paramrtros correspondientes cuando el usuario realiza la accin pedida
+def update_thesthold_based_action(
+    member_id:int, 
+    cell_id:int, 
+    campaign_id:int,
+    db: Session = Depends(deps.get_db)):
+    #     self.users_thesthold.loc[member_id]=value
+        list_cell_cercanas=get_cells_neighbour_id(db=db, cell_id_user=cell_id)
+        list_cell_id_close=[cell.id for cell in list_cell_cercanas]
+        
+        list_cell_campaign = crud.cell.get_cells_campaign(db=db, campaign_id=campaign_id)
+        list_cell_id_campaign=[cell.id for cell in list_cell_campaign] 
+        for id in list_cell_id_campaign:
+            bio_inspired=crud.bio_inspired.get_threshole(db=db, cell_id=id, member_id=member_id)
+            theshold = bio_inspired.threshold
+            if id==cell_id:
+                new_theshold= theshold - variables_bio_inspired.w_reinforcement_general
+            else:
+                if id in list_cell_id_close:
+                    new_theshold=theshold - variables_bio_inspired.w_reinforcement_neighbour
+                else:
+                    new_theshold=theshold + variables_bio_inspired.w_forgetting
+            if new_theshold>variables_bio_inspired.O_max:
+                new_theshold=variables_bio_inspired.O_max
+            if new_theshold <variables_bio_inspired.O_min:
+                new_theshold=variables_bio_inspired.O_min
+        
+            new_bio_inpirared= Bio_inspiredUpdate(cell_id=id, member_id=member_id, threshold=new_theshold)
+            crud.bio_inspired.update(db=db, db_obj=bio_inspired, obj_in=new_bio_inpirared)
+            db.commit()
+        
+        return None
+
+    

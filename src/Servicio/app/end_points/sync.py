@@ -41,11 +41,14 @@ from schemas.Hive_Member import Hive_MemberSearchResults, Hive_MemberBase, Hive_
 from schemas.Recommendation import Recommendation, RecommendationCreate
 from schemas.Member import Member, NewMembers, MemberUpdate
 from schemas.Hive import HiveUpdate
+from bio_inspired_recommender import variables_bio_inspired
+
 from schemas.Priority import Priority, PriorityCreate, PrioritySearchResults
 from schemas.Cell import Cell, CellCreate, CellSearchResults, Point
 from schemas.Surface import SurfaceSearchResults, Surface, SurfaceCreate
 from schemas.Member_Device import Member_DeviceCreate
 import deps
+from schemas.Bio_inspired import Bio_inspired, Bio_inspiredCreate, Bio_inspiredSearchResults
 import crud
 
 from timezonefinder import TimezoneFinder
@@ -180,7 +183,11 @@ def update_members(
                 for i in list_campaigns:
                     crud.campaign_member.create_Campaign_Member(
                         db=db, obj_in=campaign_create, campaign_id=i.id, member_id=member_db_new.id)
-
+                    list_cell=crud.cell.get_cells_campaign(db=db, campaign_id=i.id)
+                    for cell in list_cell:
+                        bio= Bio_inspiredCreate(cell_id=cell.id, member_id=member_db_new.id,threshold=variables_bio_inspired.O_max)
+                        bio_inspired= crud.bio_inspired.create(db=db,obj_in=bio)
+                        db.commit()
             result.append(NewMembers(member=member_db_new,role=role))
             
         else:
@@ -204,6 +211,11 @@ def update_members(
                     for i in list_campaigns:
                         crud.campaign_member.create_Campaign_Member(
                             db=db, obj_in=campaign_create, campaign_id=i.id, member_id=member_db_new.id)
+                    list_cell=crud.cell.get_cells_campaign(db=db, campaign_id=i.id)
+                    for cell in list_cell:
+                        bio= Bio_inspiredCreate(cell_id=cell.id, member_id=member_db_new.id,threshold=variables_bio_inspired.O_max)
+                        bio_inspired= crud.bio_inspired.create(db=db,obj_in=bio)
+                        db.commit()  
                     result.append(NewMembers(member=member_db_new,role=role))
             else:
                 if(hive_member.role!=role):

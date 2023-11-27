@@ -17,6 +17,7 @@ from fastapi.responses import HTMLResponse
 from folium.plugins import HeatMap
 from fastapi import FastAPI, APIRouter, Query, HTTPException, Request, Depends
 from typing import Optional, Any, List
+from bio_inspired_recommender import variables_bio_inspired
 from sqlalchemy.orm import Session
 from schemas.Measurement import Measurement, MeasurementCreate, MeasurementSearchResults
 from schemas.Campaign import CampaignSearchResults, Campaign, CampaignCreate, CampaignUpdate
@@ -33,7 +34,6 @@ import folium.plugins
 
 import branca
 import branca.colormap as cm
-from bio_inspired_recommender.bio_agent import BIOAgent
 import Demo.variables as variable
 
 #Leyend and map funtions
@@ -207,7 +207,7 @@ def show_recomendation(*, cam: Campaign, user: Member, result: list(), time: dat
 
 
 
-def show_recomendation_with_thesholes(*, bio:BIOAgent, cam: Campaign, user: Member, result: list(), time: datetime, recomendation: Recommendation, bearing:int, db: Session = Depends(deps.get_db)) -> Any:
+def show_recomendation_with_thesholes(*, cam: Campaign, user: Member, result: list(), time: datetime, recomendation: Recommendation, bearing:int, db: Session = Depends(deps.get_db)) -> Any:
 
     if result is []:
         return True
@@ -226,7 +226,7 @@ def show_recomendation_with_thesholes(*, bio:BIOAgent, cam: Campaign, user: Memb
     cell_distance = cam.cells_distance
     hipotenusa = math.sqrt(2*((cell_distance/2)**2))
     
-    linear=cm.linear.YlGnBu_03.scale(vmin=bio.get_0_min(), vmax=bio.get_0_max())
+    linear=cm.linear.YlGnBu_03.scale(vmin=variables_bio_inspired.O_min, vmax=variables_bio_inspired.O_max)
     # (vmin=bio.get_0_min(), vmax=bio.get_0_max())
     # linear=cm.LinearColormap(variables. vmin=bio.get_0_min(), vmax=bio.get_0_max())
 
@@ -241,7 +241,8 @@ def show_recomendation_with_thesholes(*, bio:BIOAgent, cam: Campaign, user: Memb
         for i in cam.surfaces:
             count = count+1
             for j in i.cells:
-                theshole= bio.get_thesthold_of_user_in_cell(member_id=user.id, cell_id=j.id)
+                bio_inpired= crud.bio_inspired.get_threshole(db=db, cell_id=j.id, member_id=user.id)
+                theshole=bio_inpired.threshold
                 slot = crud.slot.get_slot_time(db=db, cell_id=j.id, time=time)
                 # Ponermos el color en funcion de la cantidad de datos no de la prioridad.
                 Cardinal_actual = crud.measurement.get_all_Measurement_from_cell_in_the_current_slot(

@@ -186,6 +186,23 @@ CREATE TABLE Cell (
     );
 
 
+
+-- -----------------------------------------------------
+-- Table Cell
+-- -----------------------------------------------------
+CREATE TABLE BIO_INSPIRED (
+  cell_id INT NOT NULL,
+  member_id INT NOT NULL,
+  threshold float, 
+  PRIMARY KEY (cell_id,member_id),
+    FOREIGN KEY (cell_id)
+    REFERENCES Cell (id)
+    ON DELETE CASCADE,
+    FOREIGN KEY (member_id)
+    REFERENCES Member (id)
+    ON DELETE CASCADE
+    );
+
 -- -----------------------------------------------------
 -- Table Slot
 -- -----------------------------------------------------

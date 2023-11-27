@@ -3,6 +3,9 @@ from typing import Any, Dict, Generic, List, Optional, Type, TypeVar, Union
 
 import crud
 import deps
+from schemas.Bio_inspired import Bio_inspired, Bio_inspiredCreate, Bio_inspiredSearchResults
+from bio_inspired_recommender import variables_bio_inspired
+
 from fastapi import APIRouter, Depends, FastAPI, HTTPException, Query, Request
 from schemas.Campaign_Member import Campaign_Member, Campaign_MemberCreate
 from schemas.Hive import Hive, HiveCreate, HiveSearchResults, HiveUpdate
@@ -206,7 +209,11 @@ def create_a_new_member_for_a_hive_with_especific_role(
                 for i in list_campaigns:
                     crud.campaign_member.create_Campaign_Member(
                         db=db, obj_in=role, campaign_id=i.id, member_id=member_new.id)
-
+                list_cell=crud.cell.get_cells_campaign(db=db, campaign_id=i.id)
+                for cell in list_cell:
+                        bio= Bio_inspiredCreate(cell_id=cell.id, member_id=member_new.id,threshold=variables_bio_inspired.O_max)
+                        bio_inspired= crud.bio_inspired.create(db=db,obj_in=bio)
+                        db.commit()
             return hiveMember
         else:
             raise HTTPException(
@@ -239,7 +246,11 @@ def create_a_new_member_for_a_hive_with_especific_role(
             for i in list_campaigns:
                 crud.campaign_member.create_Campaign_Member(
                     db=db, obj_in=role, campaign_id=i.id, member_id=member_new.id)
-
+                list_cell=crud.cell.get_cells_campaign(db=db, campaign_id=i.id)
+                for cell in list_cell:
+                        bio= Bio_inspiredCreate(cell_id=cell.id, member_id=member_new.id,threshold=variables_bio_inspired.O_max)
+                        bio_inspired= crud.bio_inspired.create(db=db,obj_in=bio)
+                        db.commit()
         return hiveMember
 
 
@@ -294,7 +305,11 @@ def associate_existing_member_with_a_hive_with_specific_role(
                         role = Campaign_MemberCreate(role=role.role)
                         crud.campaign_member.create_Campaign_Member(
                             db=db, obj_in=role, campaign_id=i.id, member_id=member_id)
-
+                        list_cell=crud.cell.get_cells_campaign(db=db, campaign_id=i.id)
+                        for cell in list_cell:
+                            bio= Bio_inspiredCreate(cell_id=cell.id, member_id=member_id,threshold=variables_bio_inspired.O_max)
+                            bio_inspired= crud.bio_inspired.create(db=db,obj_in=bio)
+                            db.commit()
                 return hiveMember
             else:
                 raise HTTPException(
@@ -319,7 +334,11 @@ def associate_existing_member_with_a_hive_with_specific_role(
                 for i in list_campaigns:
                     crud.campaign_member.create_Campaign_Member(
                         db=db, obj_in=campaign_create, campaign_id=i.id, member_id=member_id)
-
+                    list_cell=crud.cell.get_cells_campaign(db=db, campaign_id=i.id)
+                    for cell in list_cell:
+                        bio= Bio_inspiredCreate(cell_id=cell.id, member_id=member_id,threshold=variables_bio_inspired.O_max)
+                        bio_inspired= crud.bio_inspired.create(db=db,obj_in=bio)
+                        db.commit()
             return hiveMember
     else:
         raise HTTPException(

@@ -7,6 +7,7 @@ from end_points import (BeeKeeper, Campaign_Member, Campaigns, Cells, Devices, H
                         Surface, sync,KPIS)
 from Demo import Demo
 from Heuristic_recommender import Recommendation
+from bio_inspired_recommender import bio_inspired_recomender
 from fastapi import (APIRouter, FastAPI)
 from fastapi.templating import Jinja2Templates
 from fastapi_utils.session import FastAPISessionMaker
@@ -33,6 +34,8 @@ app.include_router(Surface.api_router_surface, tags=["Surfaces"])
 app.include_router(Cells.api_router_cell, tags=["Cells"])
 app.include_router(Measurements.api_router_measurements, tags=["Measurements"])
 app.include_router(Recommendation.api_router_recommendation, tags=["Recommendations"])
+app.include_router(bio_inspired_recomender.api_router_recommendation, tags=["Recommendations_bio_inpired"])
+
 app.include_router(Demo.api_router_demo, tags=["Demo"])
 app.include_router(sync.api_router_sync, tags=["Sync"])
 app.include_router(KPIS.api_router_kpis, tags=["KPIS"])
