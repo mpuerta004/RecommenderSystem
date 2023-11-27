@@ -1,6 +1,10 @@
 {
     "recommendations": [
         "mtxr.sqltools-driver-mysql",
-        "github.copilot"
+        "github.copilot",
+        "kevinrose.vsc-python-indent",
+        "ms-python.python",
+        "ms-python.autopep8",
+        "ms-python.black-formatter"
     ]
 }

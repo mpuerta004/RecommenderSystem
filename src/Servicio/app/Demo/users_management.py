@@ -35,18 +35,21 @@ import random
 from schemas.Member import Member
 
 
-
+# def generar_direccion_user_hacia_campaña(user:Member, id_campaign_user:int, lon:float, lat:float, direction:dict,time:datetime, hive_id:int, db:Session= Depends(deps.get_db) ):
+    
 
 def generate_trayectories(user:Member, direction:dict,time:datetime, hive_id:int, db:Session= Depends(deps.get_db) ):
     if len(list(direction.keys())) == 0 or user.id not in list(direction.keys()):
-        lon, lat = generar_user_position_random(user=user, hive_id=hive_id, time=time, db=db)
+        lon, lat, id_campaign_user = generar_user_position_random(user=user, hive_id=hive_id, time=time, db=db)
         if lon is None or lat is None:
             return (None, None), direction
         else:
+            # generar_direccion_user_hacia_campaña()
             direction[user.id] = random.randint(0, 359)
             return (lon, lat), direction
     else:
-        #el usuario tiene direction por lo tanto no es la primera recomendation. 
+            
+        #el usuario tiene direction por lo tanto no es la primera vez que se define la trayectoria en concreto que el usuario ha tomado. 
         # aqui hay dos opciones hay una recomendacion al usuario anterior o no. 
         # si hay una recomendacion al usuario anterior, para haber entrado aqui no tiene que tener recomendaciones en aceptado por lo tanto el usuario ha realizado o no una medicion por tanto se puede mirar en la tabla de mediciones. creo 
          
@@ -54,7 +57,6 @@ def generate_trayectories(user:Member, direction:dict,time:datetime, hive_id:int
         # la posicion de la medicion -> cell 
         # la posicion de la recomendacion -> user_position 
             
-        
         last_measurement = crud.measurement.get_last_measurement_of_user(db=db, member_id=user.id)
         last_recommendation= crud.recommendation.get_last_recomendation_of_user(db=db,  member_id=user.id)
         if last_measurement is not None and last_recommendation is not None:
@@ -151,9 +153,9 @@ def generar_user_position_random(user: Member, hive_id: int, time: datetime, db:
         lat1 = boundary.centre['Latitude']
         lat2, lon2 = get_point_at_distance(
             lat1=lat1, lon1=lon1, d=distance, bearing=direction)
-        return lon2, lat2
+        return lon2, lat2, id_campaign_user
     else:
-        return None, None
+        return None, None, None
 
 def reciboUser_hive(hive_id: int, db: Session = Depends(deps.get_db)):
     usuarios_peticion = []
@@ -195,8 +197,8 @@ def reciboUser(db: Session = Depends(deps.get_db)):
 
 def user_selecction( list_recommendations:list(),user_position:tuple(), bearing:int, db: Session = Depends(deps.get_db)):
     if len(list_recommendations)!=0:
-        aletorio = random.random()   
-        if aletorio > variables.variables_comportamiento["user_availability"]:
+        #aletorio = random.random()   
+        #if aletorio > variables.variables_comportamiento["user_availability"]:
             user_position=list_recommendations[0].member_current_location 
             lat_final, lon_final= get_point_at_distance(lat1=user_position["Latitude"], lon1=user_position["Longitude"], d=1, bearing=bearing)
             direction_long_user_way=user_position["Longitude"] - lon_final
@@ -216,8 +218,6 @@ def user_selecction( list_recommendations:list(),user_position:tuple(), bearing:
                 return list_distance[0][0]
             else:
                 return None
-        else:
-            return None
     else:
         return None
 

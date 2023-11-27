@@ -229,13 +229,14 @@ def asignacion_recursos_hive_heuristic(
     """
     start = datetime(year=2024, month=6, day=27, hour=8, minute=00,
                      second=00).replace(tzinfo=timezone.utc)
-    end = datetime(year=2024, month=6, day=27, hour=14, minute=00,
+    end = datetime(year=2024, month=6, day=27, hour=23, minute=00,
                    second=1).replace(tzinfo=timezone.utc)
     mediciones = []
 
-    dur = int((end - start).total_seconds())
+    dur = int((end - (start+1)).total_seconds())
 
     directions={}
+    
     for segundo in range(60, int(dur), 60):
         print("----------------------------------------------------------------------", segundo)
         time = start + timedelta(seconds=segundo)
@@ -272,7 +273,7 @@ def asignacion_recursos_hive_heuristic(
                     recomendaciones=create_recomendation_per_campaign(db=db,member_id=user.id,recipe_in=a,campaign_id= 1
                                                                       ,time=time)
                     if recomendaciones is None or len(recomendaciones['results'])== 0:
-                        directions.pop(user.id)
+                        directions[user.id]
                     
                     if recomendaciones is not None and "results" in recomendaciones and  len(recomendaciones['results']) > 0:
                         recc= [i.recommendation for i in recomendaciones['results']] 
