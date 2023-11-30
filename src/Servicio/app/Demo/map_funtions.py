@@ -29,6 +29,7 @@ import deps
 from datetime import datetime, timezone
 from datetime import datetime, timezone, timedelta
 from vincenty import vincenty
+from Demo.user_behaviour import User
 # import folium.colormap as cm
 import folium.plugins
 
@@ -207,7 +208,7 @@ def show_recomendation(*, cam: Campaign, user: Member, result: list(), time: dat
 
 
 
-def show_recomendation_with_thesholes(*, cam: Campaign, user: Member, result: list(), time: datetime, recomendation: Recommendation, bearing:int, db: Session = Depends(deps.get_db)) -> Any:
+def show_recomendation_with_thesholes(*, cam: Campaign, result: list(), time: datetime, recomendation: Recommendation, user:User, db: Session = Depends(deps.get_db)) -> Any:
 
     if result is []:
         return True
@@ -241,7 +242,7 @@ def show_recomendation_with_thesholes(*, cam: Campaign, user: Member, result: li
         for i in cam.surfaces:
             count = count+1
             for j in i.cells:
-                bio_inpired= crud.bio_inspired.get_threshole(db=db, cell_id=j.id, member_id=user.id)
+                bio_inpired= crud.bio_inspired.get_threshole(db=db, cell_id=j.id, member_id=user.member.id)
                 theshole=bio_inpired.threshold
                 slot = crud.slot.get_slot_time(db=db, cell_id=j.id, time=time)
                 # Ponermos el color en funcion de la cantidad de datos no de la prioridad.
@@ -309,22 +310,22 @@ def show_recomendation_with_thesholes(*, cam: Campaign, user: Member, result: li
                                 style="color:{}"></i>
                             <br>
                             '''.format( variables.dict_icon_simbols["User's Position"],variables.dict_color_simbols_recommendation["User's Position"])
-                            ),popup=(folium.Popup(str(bearing)))).add_to(mapObj)
+                            ),popup=(folium.Popup(str(user.trajectory.direction)))).add_to(mapObj)
                 
                 #  icon=folium.Icon( color=variables.dict_color_simbols_recommendation["User's Position"], icon=variables.dict_icon_simbols["User's Position"] )).add_to(mapObj)
-    (lat2, lon2)=get_point_at_distance(lat1=user_position['Latitude'], lon1=user_position['Longitude'], d=0.05, bearing=bearing)
+    (lat2, lon2)=user.trajectory.end_position
     folium.Marker(location=[float(lat2), float(lon2)],
                   icon= DivIcon( icon_anchor=(19, 19),  html='''
                              <i class="{} fa-4x"
                                 style="color:blue"></i>
                             <br>
                             '''.format( variables.dict_icon_simbols["User's Position"])
-                            ),popup=(folium.Popup(str(bearing)))).add_to(mapObj)
+                            ),popup=(folium.Popup(str(user.trajectory.direction)))).add_to(mapObj)
     
     
-    direcion_html = f"/recommendersystem/src/Servicio/app/Pictures/Recomendaciones_html_others/{time.strftime('%m-%d-%Y-%H-%M-%S')}User_id{user.id}Cam{cam.id}HI{cam.hive_id}.html"
+    direcion_html = f"/recommendersystem/src/Servicio/app/Pictures/Recomendaciones_html_others/{time.strftime('%m-%d-%Y-%H-%M-%S')}User_id{user.member.id}Cam{cam.id}HI{cam.hive_id}.html"
     
-    linear.caption = f'Theshole of the user with id= {user.id}'
+    linear.caption = f'Theshole of the user with id= {user.member.id}'
     # cmap_HTML = linear._repr_html_()
     # #  <div style="position: fixed; 
     # #         bottom: 350px; left: 90px; width: 290px; height: 170px; 

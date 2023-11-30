@@ -67,6 +67,11 @@ def create_cells_for_a_surface(surface: Surface, campaign: Campaign, centre, rad
                 'Longitude': centre['Longitude'], 'Latitude': centre['Latitude']}, radius=radius_cell)
             cell = crud.cell.create_cell(
                 db=db, obj_in=cell_create, surface_id=surface.id)
+            hive_members = crud.hive_member.get_by_hive_id(db=db, hive_id=campaign.hive_id)
+            for i in hive_members:
+                        bio= Bio_inspiredCreate(cell_id=cell.id, member_id=i.member_id,threshold=variables_bio_inspired.O_max)
+                        bio_inspired= crud.bio_inspired.create(db=db,obj_in=bio)
+                        db.commit()
         else:
             
             lon1 = centre['Longitude']
@@ -96,7 +101,7 @@ def create_cells_for_a_surface(surface: Surface, campaign: Campaign, centre, rad
                     cell = crud.cell.create_cell(
                         db=db, obj_in=cell_create, surface_id=surface.id)
                     db.commit()
-                    hive_members = crud.hive_member.get_by_hive_id(db=db, hive_id=Campaign.hive_id)
+                    hive_members = crud.hive_member.get_by_hive_id(db=db, hive_id=campaign.hive_id)
                     for i in hive_members:
                         bio= Bio_inspiredCreate(cell_id=cell.id, member_id=i.member_id,threshold=variables_bio_inspired.O_max)
                         bio_inspired= crud.bio_inspired.create(db=db,obj_in=bio)
@@ -124,6 +129,11 @@ def create_cells_for_a_surface(surface: Surface, campaign: Campaign, centre, rad
                     cell = crud.cell.create_cell(
                         db=db, obj_in=cell_create, surface_id=surface.id)
                     db.commit()
+                    hive_members = crud.hive_member.get_by_hive_id(db=db, hive_id=campaign.hive_id)
+                    for i in hive_members:
+                        bio= Bio_inspiredCreate(cell_id=cell.id, member_id=i.member_id,threshold=variables_bio_inspired.O_max)
+                        bio_inspired= crud.bio_inspired.create(db=db,obj_in=bio)
+                        db.commit()
     return True
 
 
@@ -161,7 +171,7 @@ def prioriry_calculation(time: datetime, cam: Campaign, db: Session = Depends(de
     Create the priorirty of a campaign (all its surfaces) based on the measurements
     """
 
-    db.refresh(cam)
+    # db.refresh(cam)
     #Verify if The campaign is active 
     if cam.start_datetime.replace(tzinfo=timezone.utc) <= time.replace(tzinfo=timezone.utc) and time.replace(tzinfo=timezone.utc) < cam.end_datetime.replace(tzinfo=timezone.utc):
         #Get the list of surface
@@ -354,8 +364,8 @@ def get_cells_neighbour_id(cell_id:int, db: Session = Depends(deps.get_db)):
         campaign=crud.campaign.get(db=db, id=campaign_id)
         list_cell_campaign=crud.cell.get_cells_campaign(db=db, campaign_id=campaign_id)
         for cell in list_cell_campaign:
-            if vincenty((cell_origin.centre['Latitude'], cell_origin.centre['Longitude']), (cell.centre['Latitude'], cell.centre['Longitude']))<= variables_bio_inspired.neighbour_close*self.campaign.cells_distance:
-                list_cell_cercanas.append(cell.id)
+            if vincenty((cell_origin.centre['Latitude'], cell_origin.centre['Longitude']), (cell.centre['Latitude'], cell.centre['Longitude']))<= variables_bio_inspired.neighbour_close*campaign.cells_distance:
+                list_cell_cercanas.append(cell)
         return list_cell_cercanas
     
     
@@ -370,7 +380,7 @@ def update_thesthold_based_action(
     campaign_id:int,
     db: Session = Depends(deps.get_db)):
     #     self.users_thesthold.loc[member_id]=value
-        list_cell_cercanas=get_cells_neighbour_id(db=db, cell_id_user=cell_id)
+        list_cell_cercanas=get_cells_neighbour_id(db=db, cell_id=cell_id)
         list_cell_id_close=[cell.id for cell in list_cell_cercanas]
         
         list_cell_campaign = crud.cell.get_cells_campaign(db=db, campaign_id=campaign_id)
@@ -379,12 +389,12 @@ def update_thesthold_based_action(
             bio_inspired=crud.bio_inspired.get_threshole(db=db, cell_id=id, member_id=member_id)
             theshold = bio_inspired.threshold
             if id==cell_id:
-                new_theshold= theshold - variables_bio_inspired.w_reinforcement_general
+                new_theshold= theshold - variables_bio_inspired.e_0
             else:
                 if id in list_cell_id_close:
-                    new_theshold=theshold - variables_bio_inspired.w_reinforcement_neighbour
+                    new_theshold=theshold - variables_bio_inspired.e_neighbour
                 else:
-                    new_theshold=theshold + variables_bio_inspired.w_forgetting
+                    new_theshold=theshold + variables_bio_inspired.fi
             if new_theshold>variables_bio_inspired.O_max:
                 new_theshold=variables_bio_inspired.O_max
             if new_theshold <variables_bio_inspired.O_min:

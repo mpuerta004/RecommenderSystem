@@ -10,7 +10,7 @@ from sqlalchemy.types import Float
 
 
 class Bio_inspired(Base):
-    __tablename__ = 'BIO_INSPIRED_DATA'
+    __tablename__ = 'Bio_inspired'
     cell_id=Column(Integer, ForeignKey(Cell.id, ondelete="CASCADE"), primary_key=True,default=True)
     member_id=Column(Integer,ForeignKey(Member.id,ondelete="CASCADE"),primary_key=True)
     threshold=Column(Float)

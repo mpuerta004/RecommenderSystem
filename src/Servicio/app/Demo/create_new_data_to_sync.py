@@ -4,7 +4,12 @@ hive_id= 1 #Change this variable as in the simulation need.
 # Code to create the terminal lines to ejecute in the termineal and populate the database for the experiments. 
 result = ''
 number_users=40
-inicio=20
+inicio=1
+result = result+ f"insert into BeeKeeper (name,surname,age,gender,city, mail,birthday,real_user,id) values (name,surname,0,'FEMALE',city, mail,   '2023-03-09 10:47:50',true,1);"
+result = result + f"insert into Hive (id,beekeeper_id,city, name) values ({hive_id},1,city,name);"
+
+
+
 with open('archivo.json', 'w') as file:
 
     for id in range(inicio, number_users):

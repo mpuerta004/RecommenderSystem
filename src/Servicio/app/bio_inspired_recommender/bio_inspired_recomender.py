@@ -57,7 +57,7 @@ def create_recomendation(
             slot = crud.slot.get_slot_time(
                     db=db, cell_id=cell.id, time=time)
             priority_cell=crud.priority.get_by_slot_and_time(db=db, slot_id=slot.id, time=time)
-            if priority_cell < 0.0:
+            if priority_cell.temporal_priority < 0.0:
                 NEW_VALUE=0.0
             else:
                 Cardinal_actual = crud.measurement.get_all_Measurement_from_cell_in_the_current_slot(
@@ -69,6 +69,7 @@ def create_recomendation(
                     bio_inspired=crud.bio_inspired.get_threshole(db=db, cell_id=cell.id, member_id=member_id)
                     theshold= bio_inspired.threshold
                     priority= crud.priority.get_by_slot_and_time(db=db, slot_id=slot.id, time=time)
+                    priority= priority.temporal_priority
                     NEW_VALUE=(
                     ((priority)**2 ) / 
                                 ((priority)**2  + 

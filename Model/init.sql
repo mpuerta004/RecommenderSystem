@@ -190,7 +190,7 @@ CREATE TABLE Cell (
 -- -----------------------------------------------------
 -- Table Cell
 -- -----------------------------------------------------
-CREATE TABLE BIO_INSPIRED (
+CREATE TABLE Bio_inspired (
   cell_id INT NOT NULL,
   member_id INT NOT NULL,
   threshold float, 
