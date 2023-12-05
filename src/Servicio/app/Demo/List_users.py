@@ -31,7 +31,7 @@ class ListUsers(object):
     
     def buscar_user(self,user_id:int):
         for i in self.lista:
-            if i.id==user_id:
+            if i.member.id==user_id:
                 return i
         return None
     

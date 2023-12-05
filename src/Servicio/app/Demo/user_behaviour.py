@@ -87,17 +87,19 @@ class User(object):
                 cam, surface = self.seleccion_campaign_over_hive(hive_id=hive_id, time=time, db=db)
                 self.trajectory.generar_new_trajectory(campaign_id=cam.id,surface_id=surface.id, hive_id=hive_id,time=time, db=db)
                 self.trajectory.end_trajectory=False
-            aleatorio = random.random()
-            if aleatorio> self.probability_of_trajectory_recursivity:
-                self.trajectory.repeticion_trajectoria_inicial()
-                self.trajectory.end_trajectory=False
             else:
-                hive_members=crud.hive_member.get_by_member_id(db=db, member_id=self.member.id)
-                hive_member= random.randint(0, len(hive_members)-1)
-                hive_id = hive_members[hive_member].hive_id
-                cam, surface = self.seleccion_campaign_over_hive(hive_id=hive_id, time=time, db=db)
-                self.trajectory.generar_new_trajectory(campaign_id=cam.id,surface_id=surface.id, hive_id=hive_id,time=time, db=db)
-                self.trajectory.end_trajectory=False
+                #En el caso de que no sea la primera trajectoria puedes ver si se va a repetir o no la trayectoria. 
+                aleatorio = random.random()
+                if aleatorio> self.probability_of_trajectory_recursivity:
+                    self.trajectory.repeticion_trajectoria_inicial()
+                    self.trajectory.end_trajectory=False
+                else:
+                    hive_members=crud.hive_member.get_by_member_id(db=db, member_id=self.member.id)
+                    hive_member= random.randint(0, len(hive_members)-1)
+                    hive_id = hive_members[hive_member].hive_id
+                    cam, surface = self.seleccion_campaign_over_hive(hive_id=hive_id, time=time, db=db)
+                    self.trajectory.generar_new_trajectory(campaign_id=cam.id,surface_id=surface.id, hive_id=hive_id,time=time, db=db)
+                    self.trajectory.end_trajectory=False
         else:
             #Esto significa que ya esta en una trajectoria iniciada. 
             self.trajectory.actualizar_poscion_trayectoria_iniciada()
@@ -105,7 +107,7 @@ class User(object):
     
     
     def user_selecction( self, list_recommendations:list(),user_position:tuple(), db: Session = Depends(deps.get_db)):
-        print(self.trajectory.direction)
+        # print(self.trajectory.direction)
         self.trajectory.update_direction()
         if len(list_recommendations)!=0:
             #aletorio = random.random()   
@@ -128,10 +130,8 @@ class User(object):
                     list_distance.sort(key=lambda recomendation_distance : (recomendation_distance[1 ]))
                     return list_distance[0][0]
                 else:
-                    print("None")
                     return None
         else:
-            print("None")
             return None   
         
 # def reciboUser(db: Session = Depends(deps.get_db)):

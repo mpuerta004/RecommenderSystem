@@ -86,7 +86,23 @@ class CRUDRecommendation(CRUDBase[Recommendation, RecommendationCreate, Recommen
             except Exception as e:
                         raise HTTPException(status_code=500, detail=f"Error with mysql {e}" )
                     
-                    
+        
+        def get_aceptance_state_of_slot(self,db: Session, *, slot_id:int,time:datetime )-> List[Recommendation]:
+                try:
+                        return db.query(Recommendation).filter(and_(Recommendation.update_datetime==time,Recommendation.state=="ACCEPTED", Recommendation.slot_id==slot_id)).all()
+                except Exception as e:
+                        raise HTTPException(status_code=500, detail=f"Error with mysql {e}" )           
+        
+        def get_notified_state_of_slot(self,db: Session, *, slot_id:int,time:datetime )-> List[Recommendation]:
+                try:
+                        return db.query(Recommendation).filter(and_(Recommendation.update_datetime==time,Recommendation.state=="NOTIFIED", Recommendation.slot_id==slot_id)).all()
+                except Exception as e:
+                        raise HTTPException(status_code=500, detail=f"Error with mysql {e}" )      
+        def get_relize_state_of_slot(self,db: Session, *, slot_id:int,time:datetime )-> List[Recommendation]:
+                try:
+                        return db.query(Recommendation).filter(and_(Recommendation.update_datetime==time,Recommendation.state=="REALIZED", Recommendation.slot_id==slot_id)).all()
+                except Exception as e:
+                        raise HTTPException(status_code=500, detail=f"Error with mysql {e}" )           
 
         def get_aceptance_state_of_cell(self,db: Session, *, slot_id:int, )-> List[Recommendation]:
                 try:
@@ -99,6 +115,7 @@ class CRUDRecommendation(CRUDBase[Recommendation, RecommendationCreate, Recommen
                         return db.query(Recommendation).filter(or_(Recommendation.state=="ACCEPTED", Recommendation.state=="NOTIFIED")).all()
                 except Exception as e:
                         raise HTTPException(status_code=500, detail=f"Error with mysql {e}" )
+       
    
         def get_number_of_recommendacions_per_hive(self,db: Session, *, hive_id:int)-> List[int]:
                 try:

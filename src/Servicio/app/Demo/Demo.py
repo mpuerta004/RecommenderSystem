@@ -8,6 +8,8 @@ from schemas.Recommendation import state, Recommendation, RecommendationCreate, 
 from schemas.Member import Member
 from schemas.Priority import Priority, PriorityCreate, PrioritySearchResults
 import deps
+import matplotlib
+import matplotlib.pyplot as plt
 from datetime import datetime, timezone
 from datetime import datetime, timezone, timedelta
 from vincenty import vincenty
@@ -45,12 +47,15 @@ def asignacion_recursos_hive(
     """
     cam= crud.campaign.get(db=db, id=campaign_id)
     list_user=ListUsers()
-    
+
     start = cam.start_datetime
     end = cam.end_datetime
     mediciones = []
     dur = int((end - start).total_seconds())
-    
+    times=[]
+    data_accepted=[]
+    data_notified=[]
+    data_realized=[]
     for segundo in range(60, int(dur), 60):
         print("----------------------------------------------------------------------", segundo)
         time = start + timedelta(seconds=segundo)
@@ -77,45 +82,33 @@ def asignacion_recursos_hive(
         hive_members= crud.hive_member.get_by_hive_id(db=db,hive_id=hive_id )
         for i in hive_members:
             member=crud.member.get_by_id(db=db, id=i.member_id)
-            
-            
             User(member=member,listUSers=list_user )
             user=list_user.buscar_user(i.member_id)
             bool=user.user_available(db=db, hive_id=hive_id)
             if bool is True:
                 list_users_available.append(user)
-        #Get the list of all WorkerBee and QueenBee  
+        print(len(list_users_available))
         if list_users_available != []:
             for user_class in list_users_available:
                 user_class.user_new_position(time=time, db=db)
                 lat, lon = user_class.trajectory.posicion
-
                 if lat is not None and lon is not None:
-                
                     a = RecommendationCreate(member_current_location={
                                             'Longitude': lon, 'Latitude': lat}, recommendation_datetime=time)
                     # recomendaciones=Recommendation.create_recomendation_2(db=db,member_id=user.id,recipe_in=a,cam=cam,time=time)
-                    
                     recomendaciones = bio_inspired_recomender.create_recomendation(member_id=user_class.member.id,recipe_in=a,db=db,time=time,campaign_id=campaign_id)
-
                     if recomendaciones is not None and "results" in recomendaciones and  len(recomendaciones['results']) > 0:
                         recc= [i.recommendation for i in recomendaciones['results']] 
-                        recomendation_coguida=None
                         recomendation_coguida = user_class.user_selecction(db=db, list_recommendations=recc,user_position=(lat, lon))
                         
                         if recomendation_coguida is not None:
                             show_recomendation_with_thesholes(db=db, user=user_class, cam=cam, result=recc,time=time,recomendation=recomendation_coguida)
                             show_recomendation(db=db, cam=cam, user=user_class.member, time=time, result=recc,recomendation=recomendation_coguida)
-                            db.commit()
-                            db.commit()
-                          
                             recomendation_a_polinizar = crud.recommendation.get_recommendation(db=db, member_id=user_class.member.id, recommendation_id=recomendation_coguida.id)
-                            
                             recomendacion_polinizar = crud.recommendation.update(
                                 db=db, db_obj=recomendation_a_polinizar, obj_in={"state": "ACCEPTED", "update_datetime": time})
                             db.commit()
                             db.commit()
-
                             mediciones.append(
                                 [user_class, recomendation_coguida, random.randint(1, 419)])
                         
@@ -141,10 +134,149 @@ def asignacion_recursos_hive(
             else:
                 new.append(mediciones[i])
         mediciones = new
-    final = datetime.utcnow()
+        list_slots=crud.slot.get_list_slot_time(db=db, time=time)
+        accepted_Recomendation=0
+        notidied_recomendation=0
+        realize_recommendation=0
+        times.append(time)
+
+        if list_slots!=[]:
+            for slot in list_slots:
+                accepted_Recomendation=accepted_Recomendation+ len( crud.recommendation.get_aceptance_state_of_slot(db=db, time=time,slot_id=slot.id))
+                realize_recommendation=realize_recommendation + len(crud.recommendation.get_relize_state_of_slot(db=db, slot_id=slot.id,time=time))
+                
+                notidied_recomendation=notidied_recomendation + len(crud.recommendation.get_notified_state_of_slot(db=db, slot_id=slot.id,time=time))
+        data_accepted.append(accepted_Recomendation)
+        data_notified.append(notidied_recomendation)
+        data_realized.append(realize_recommendation)
+        
+    # Ancho de las barras
+    plt.figure(figsize=(25, 6))  # Ancho x Alto
+
+    
+    # Cr    ear tres gráficos de líneas para cada variable
+    plt.plot(times, data_notified, marker='o', linestyle='-', color='b', label='Notified Recommendation')
+    plt.plot(times, data_accepted, marker='o', linestyle='-', color='g', label='Accepted Recommendation')
+    plt.plot(times, data_realized, marker='o', linestyle='-', color='r', label='Realized Recommendation')
+
+    # Etiquetas, título y leyenda
+    plt.xlabel('Time')
+    plt.ylabel('Number')
+    plt.title('Numer of recommendation')
+    plt.legend()
+        
+    # Mostrar la gráfica combinada
+    plt.grid(True)
+    plt.tight_layout()
+    plt.xticks(rotation='vertical')  # Rotar etiquetas del eje x
+
+    # Mostrar la gráfica
+    plt.savefig("data.jpg")    
+    
+    plt.figure(figsize=(25, 6))  # Ancho x Alto
+
+    
+    # Cr    ear tres gráficos de líneas para cada variable
+    plt.plot(times, data_notified, marker='o', linestyle='-', color='b', label='Notified Recommendation')
+    # Calcular la media acumulada de la variable mientras avanzamos en el tiempo
+    # media_accum = np.zeros(len(times))
+    # for i in range(len(times)):
+    #     current_slice = data_notified[:i + 1]
+    #     media_accum[i] = np.mean(current_slice)
+
+    # # Trazar la media acumulada de la variable
+    # plt.plot(times, media_accum, linestyle='--', color='black', label='Media Acumulada')
+    #Calcular la media móvil con ventana de 10 puntos (ajustable según tus necesidades)
+    ventana = 25
+    media_movil = np.convolve(data_notified, np.ones(ventana) / ventana, mode='valid')
+
+    # Ajustar las unidades de tiempo para la media móvil
+    unidades_tiempo_media_movil = times[(ventana - 1) // 2 : -(ventana - 1) // 2]
+
+    # Trazar la media móvil
+    plt.plot(unidades_tiempo_media_movil, media_movil, linestyle='--', color='black', label='Media Móvil')
+
+    # Etiquetas, título y leyenda
+    plt.xlabel('Time')
+    plt.ylabel('Number')
+    plt.title('Numer of recommendation')
+    plt.legend()
+        
+    # Mostrar la gráfica combinada
+    plt.grid(True)
+    plt.tight_layout()
+    plt.xticks(rotation='vertical')  # Rotar etiquetas del eje x
+
+    # Mostrar la gráfica
+    plt.savefig("data_notified.jpg")    
+    
+    plt.figure(figsize=(25, 6))  # Ancho x Alto
+
+    plt.plot(times, data_accepted, marker='o', linestyle='-', color='g', label='Accepted Recommendation')
+    # media_accum = np.zeros(len(times))
+    # for i in range(len(times)):
+    #     current_slice = data_accepted[:i + 1]
+    #     media_accum[i] = np.mean(current_slice)
+
+    # # Trazar la media acumulada de la variable
+    # plt.plot(times, media_accum, linestyle='--', color='black', label='Media Acumulada')
+    # # Cr    ear tres gráficos de líneas para cada variable
+    ventana = 25
+    media_movil = np.convolve(data_accepted, np.ones(ventana) / ventana, mode='valid')
+
+    # Ajustar las unidades de tiempo para la media móvil
+    unidades_tiempo_media_movil = times[(ventana - 1) // 2 : -(ventana - 1) // 2]
+
+    # Trazar la media móvil
+    plt.plot(unidades_tiempo_media_movil, media_movil, linestyle='--', color='black', label='Media Móvil')
+
+    # Etiquetas, título y leyenda
+    plt.xlabel('Time')
+    plt.ylabel('Number')
+    plt.title('Numer of recommendation')
+    plt.legend()
+    plt.xticks(rotation='vertical')  # Rotar etiquetas del eje x
+
+    # Mostrar la gráfica combinada
+    plt.grid(True)
+    plt.tight_layout()
+    # Mostrar la gráfica
+    plt.savefig("data_accepted.jpg")  
+    plt.figure(figsize=(25, 6))  # Ancho x Alto
+    
+    plt.plot(times, data_realized, marker='o', linestyle='-', color='r', label='Realized Recommendation')
+    # Cr    ear tres gráficos de líneas para cada variable
+    # media_accum = np.zeros(len(times))
+    # for i in range(len(times)):
+    #     current_slice = data_realized[:i + 1]
+    #     media_accum[i] = np.mean(current_slice)
+
+    # # Trazar la media acumulada de la variable
+    # plt.plot(times, media_accum, linestyle='--', color='black', label='Media Acumulada')
+    ventana = 25
+    media_movil = np.convolve(data_realized, np.ones(ventana) / ventana, mode='valid')
+
+    # Ajustar las unidades de tiempo para la media móvil
+    unidades_tiempo_media_movil = times[(ventana - 1) // 2 : -(ventana - 1) // 2]
+
+    # Trazar la media móvil
+    plt.plot(unidades_tiempo_media_movil, media_movil, linestyle='--', color='black', label='Media Móvil')
+
+    # Cr    ear tres gráficos de líneas para cada variable
+    # Etiquetas, título y leyenda
+    plt.xlabel('Time')
+    plt.ylabel('Number')
+    plt.title('Numer of recommendation')
+    plt.legend()
+        
+    # Mostrar la gráfica combinada
+    plt.grid(True)
+    plt.tight_layout()
+    plt.xticks(rotation='vertical')  # Rotar etiquetas del eje x
+
+    # Mostrar la gráfica
+    plt.savefig("data_realized.jpg")  
     return None
-
-
 
 # @api_router_demo.post("/bio_inspired/campaign", status_code=201, response_model=None)
 # def asignacion_recursos_hive(
