@@ -25,7 +25,7 @@ class User(object):
         if user is None:
             self.member=member
             self.id=member.id
-            self.probability_of_trajectory_recursivity=random.random()
+            self.probability_of_trajectory_recursivity=0.8
             self.trajectory= trajectory(member_id=member.id)
             listUSers.añadir(self)
             self.user_available_probability= variables.variables_comportamiento["user_availability"]
@@ -49,6 +49,7 @@ class User(object):
             if len(list_of_recomendations) == 0:
                 aletorio = random.random()
                 if aletorio > self.user_available_probability:
+                    
                     return True
             else:
                 return False 
@@ -124,8 +125,10 @@ class User(object):
                     direction_lat_cell=user_position["Latitude"] - cell.centre['Latitude']
                     direction_long_cell=user_position["Longitude"] - cell.centre['Longitude']
                     distance= vincenty((user_position["Latitude"],user_position["Longitude"]), (cell.centre['Latitude'],cell.centre['Longitude']))
-                    if (np.sign(direction_long_user_way)==np.sign(direction_long_cell) and np.sign(direction_lat_user_way)==np.sign(direction_lat_cell)) or distance<=0.01:
-                        list_distance.append((i,distance))
+                    distance_final= vincenty((user_position["Latitude"],user_position["Longitude"]), (lat_final,lon_final))
+                    if distance<distance_final:
+                        if (np.sign(direction_long_user_way)==np.sign(direction_long_cell) and np.sign(direction_lat_user_way)==np.sign(direction_lat_cell)) or distance<=0.01:
+                            list_distance.append((i,distance))
                 if len(list_distance)!=0:
                     list_distance.sort(key=lambda recomendation_distance : (recomendation_distance[1 ]))
                     return list_distance[0][0]

@@ -28,7 +28,7 @@ from math import sin, cos, atan2, sqrt, radians, degrees, asin
 from fastapi.responses import HTMLResponse
 from folium.plugins import HeatMap
 from bio_inspired_recommender import bio_inspired_recomender
-from Heuristic_recommender import Recommendation
+from Heuristic_recommender.Recommendation import create_recomendation_per_campaign
 import Demo.variables as variables
 from Demo.map_funtions import show_hive,show_recomendation_with_thesholes,show_recomendation
 import random
@@ -67,7 +67,7 @@ def asignacion_recursos_hive(
         #Change the old recomendations in accepted and notified state to non realized state
         Current_time = datetime(year=time.year, month=time.month, day=time.day,
                             hour=time.hour, minute=time.minute, second=time.second)
-        
+        #Estas son todas no las de aqui. 
         list_of_recommendations= crud.recommendation.get_aceptance_and_notified_state(db=db)
         for i in list_of_recommendations:
             if (Current_time > i.update_datetime): # It is necessary to run demo 
@@ -77,41 +77,49 @@ def asignacion_recursos_hive(
                     db.commit()  
                     db.commit()
         
-        list_users_available=[]
-        #inicializar los usuarios. Se hace cada vez por si vienen usuarios nuevos tener esa posibilidad. 
-        hive_members= crud.hive_member.get_by_hive_id(db=db,hive_id=hive_id )
-        for i in hive_members:
-            member=crud.member.get_by_id(db=db, id=i.member_id)
-            User(member=member,listUSers=list_user )
-            user=list_user.buscar_user(i.member_id)
-            bool=user.user_available(db=db, hive_id=hive_id)
-            if bool is True:
-                list_users_available.append(user)
-        print(len(list_users_available))
-        if list_users_available != []:
-            for user_class in list_users_available:
-                user_class.user_new_position(time=time, db=db)
-                lat, lon = user_class.trajectory.posicion
-                if lat is not None and lon is not None:
-                    a = RecommendationCreate(member_current_location={
-                                            'Longitude': lon, 'Latitude': lat}, recommendation_datetime=time)
-                    # recomendaciones=Recommendation.create_recomendation_2(db=db,member_id=user.id,recipe_in=a,cam=cam,time=time)
-                    recomendaciones = bio_inspired_recomender.create_recomendation(member_id=user_class.member.id,recipe_in=a,db=db,time=time,campaign_id=campaign_id)
-                    if recomendaciones is not None and "results" in recomendaciones and  len(recomendaciones['results']) > 0:
-                        recc= [i.recommendation for i in recomendaciones['results']] 
-                        recomendation_coguida = user_class.user_selecction(db=db, list_recommendations=recc,user_position=(lat, lon))
-                        
-                        if recomendation_coguida is not None:
-                            show_recomendation_with_thesholes(db=db, user=user_class, cam=cam, result=recc,time=time,recomendation=recomendation_coguida)
-                            show_recomendation(db=db, cam=cam, user=user_class.member, time=time, result=recc,recomendation=recomendation_coguida)
-                            recomendation_a_polinizar = crud.recommendation.get_recommendation(db=db, member_id=user_class.member.id, recommendation_id=recomendation_coguida.id)
-                            recomendacion_polinizar = crud.recommendation.update(
-                                db=db, db_obj=recomendation_a_polinizar, obj_in={"state": "ACCEPTED", "update_datetime": time})
-                            db.commit()
-                            db.commit()
-                            mediciones.append(
-                                [user_class, recomendation_coguida, random.randint(1, 419)])
-                        
+        #TODO esto es en geenral no por campaña esto hay que modificarlo! 
+        bool=True
+        slost_active= crud.slot.get_list_slot_time(db=db, time=time)
+        for slot in slost_active:
+            mediciones_in_slot= crud.measurement.get_all_Measurement_from_cell_in_the_current_slot(db=db, slot_id=slot.id, time=time)
+            if mediciones_in_slot != cam.min_samples and bool==True:
+                bool=False
+        if bool is False:
+            list_users_available=[]
+            #inicializar los usuarios. Se hace cada vez por si vienen usuarios nuevos tener esa posibilidad. 
+            hive_members= crud.hive_member.get_by_hive_id(db=db,hive_id=hive_id )
+            for i in hive_members:
+                member=crud.member.get_by_id(db=db, id=i.member_id)
+                User(member=member,listUSers=list_user )
+                user=list_user.buscar_user(i.member_id)
+                bool=user.user_available(db=db, hive_id=hive_id)
+                if bool is True:
+                    list_users_available.append(user)
+            print(len(list_users_available))
+            if list_users_available != []:
+                for user_class in list_users_available:
+                    user_class.user_new_position(time=time, db=db)
+                    lat, lon = user_class.trajectory.posicion
+                    if lat is not None and lon is not None:
+                        a = RecommendationCreate(member_current_location={
+                                                'Longitude': lon, 'Latitude': lat}, recommendation_datetime=time)
+                        #recomendaciones=create_recomendation_per_campaign(db=db,member_id=user_class.id,recipe_in=a,campaign_id=campaign_id,time=time)
+                        recomendaciones = bio_inspired_recomender.create_recomendation(member_id=user_class.member.id,recipe_in=a,db=db,time=time,campaign_id=campaign_id)
+                        if recomendaciones is not None and "results" in recomendaciones and  len(recomendaciones['results']) > 0:
+                            recc= [i.recommendation for i in recomendaciones['results']] 
+                            recomendation_coguida = user_class.user_selecction(db=db, list_recommendations=recc,user_position=(lat, lon))
+                            
+                            if recomendation_coguida is not None:
+                                show_recomendation_with_thesholes(db=db, user=user_class, cam=cam, result=recc,time=time,recomendation=recomendation_coguida)
+                                show_recomendation(db=db, cam=cam, user=user_class.member, time=time, result=recc,recomendation=recomendation_coguida)
+                                recomendation_a_polinizar = crud.recommendation.get_recommendation(db=db, member_id=user_class.member.id, recommendation_id=recomendation_coguida.id)
+                                recomendacion_polinizar = crud.recommendation.update(
+                                    db=db, db_obj=recomendation_a_polinizar, obj_in={"state": "ACCEPTED", "update_datetime": time})
+                                db.commit()
+                                db.commit()
+                                mediciones.append(
+                                    [user_class, recomendation_coguida, random.randint(1, 419)])
+                            
         new = []
         for i in range(0, len(mediciones)):
             user_class= mediciones[i][0]
@@ -134,6 +142,7 @@ def asignacion_recursos_hive(
             else:
                 new.append(mediciones[i])
         mediciones = new
+        #TODO! la metrica no tiene en cuenta la camapaña! 
         list_slots=crud.slot.get_list_slot_time(db=db, time=time)
         accepted_Recomendation=0
         notidied_recomendation=0
@@ -276,7 +285,53 @@ def asignacion_recursos_hive(
 
     # Mostrar la gráfica
     plt.savefig("data_realized.jpg")  
+    print("rate_number: ", number_of_recomendation_rate(campaign_id=cam.id,times=times, db=db))
+    print("user_rate;", number_of_recomendation_rate_users(campaign_id=cam.id,times=times, db=db))
     return None
+
+#TODO! la metrica no tiene en cuenta la camapaña! 
+@api_router_demo.post("/metric/recomendation_rate", status_code=201, response_model=float)
+def number_of_recomendation_rate(campaign_id:int,times:List, db: Session = Depends(deps.get_db)):
+    """
+    Obtiene la media del rate de cada celda de cuantas notificiones se han enviado para que se realice las metricas.
+    """
+    number_of_recomendation_notified_and_not_realize ={}
+    number_or_recomendation_realize={}
+    for time in times:
+        list_slots=crud.slot.get_list_slot_time(db=db, time=time)
+        for slot in list_slots:
+            if slot.cell_id not in list(number_of_recomendation_notified_and_not_realize.keys()):
+                number_of_recomendation_notified_and_not_realize[slot.cell_id]=0
+            if slot.cell_id not in list(number_or_recomendation_realize.keys()):   
+                number_or_recomendation_realize[slot.cell_id]=0
+
+            number_of_recomendation_notified_and_not_realize[slot.cell_id]= number_of_recomendation_notified_and_not_realize[slot.cell_id] + len(crud.recommendation.get_notified_state_of_slot(db=db, slot_id=slot.id,time=time)) + len(crud.recommendation.get_non_realized_state_of_slot(db=db, slot_id=slot.id, time=time))
+            number_or_recomendation_realize[slot.cell_id] =number_or_recomendation_realize[slot.cell_id] + len(crud.recommendation.get_relize_state_of_slot(db=db, slot_id=slot.id,time=time))
+                
+    result=0
+    for cell_id in list(number_of_recomendation_notified_and_not_realize.keys()):
+        result = result + number_or_recomendation_realize[cell_id]/number_of_recomendation_notified_and_not_realize[cell_id]
+
+    cardinal=len(list(number_of_recomendation_notified_and_not_realize.keys()))
+    return result/cardinal
+
+
+def number_of_recomendation_rate_users(campaign_id:int,times:List, db: Session = Depends(deps.get_db)):
+    """
+    Obtiene la media del rate de cada celda de cuantas notificiones se han enviado para que se realice las metricas.
+    """
+    users=crud.member.get_all(db=db)
+    number_of_recomendation_notified_and_not_realize ={}
+    number_or_recomendation_realize={}
+    result=0
+    for user in users:
+            number_of_recomendation_notified_and_not_realize[user.id]=len(crud.recommendation.get_All_Recommendation(db=db, member_id=user.id))
+            number_or_recomendation_realize[user.id]=len(crud.recommendation.get_realize_state(member_id=user.id, db=db))
+    
+            result = result + number_or_recomendation_realize[user.id]/number_of_recomendation_notified_and_not_realize[user.id]
+
+    cardinal=len(list(number_of_recomendation_notified_and_not_realize.keys()))
+    return result/cardinal
 
 # @api_router_demo.post("/bio_inspired/campaign", status_code=201, response_model=None)
 # def asignacion_recursos_hive(

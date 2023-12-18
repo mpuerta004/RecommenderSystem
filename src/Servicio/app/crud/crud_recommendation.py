@@ -98,6 +98,11 @@ class CRUDRecommendation(CRUDBase[Recommendation, RecommendationCreate, Recommen
                         return db.query(Recommendation).filter(and_(Recommendation.update_datetime==time,Recommendation.state=="NOTIFIED", Recommendation.slot_id==slot_id)).all()
                 except Exception as e:
                         raise HTTPException(status_code=500, detail=f"Error with mysql {e}" )      
+        def get_non_realized_state_of_slot(self,db: Session, *, slot_id:int,time:datetime )-> List[Recommendation]:
+                try:
+                        return db.query(Recommendation).filter(and_(Recommendation.update_datetime==time,Recommendation.state=="NON_REALIZED", Recommendation.slot_id==slot_id)).all()
+                except Exception as e:
+                        raise HTTPException(status_code=500, detail=f"Error with mysql {e}" )      
         def get_relize_state_of_slot(self,db: Session, *, slot_id:int,time:datetime )-> List[Recommendation]:
                 try:
                         return db.query(Recommendation).filter(and_(Recommendation.update_datetime==time,Recommendation.state=="REALIZED", Recommendation.slot_id==slot_id)).all()
@@ -113,6 +118,11 @@ class CRUDRecommendation(CRUDBase[Recommendation, RecommendationCreate, Recommen
         def get_aceptance_and_notified_state(self,*,db: Session)-> List[Recommendation]:
                 try:
                         return db.query(Recommendation).filter(or_(Recommendation.state=="ACCEPTED", Recommendation.state=="NOTIFIED")).all()
+                except Exception as e:
+                        raise HTTPException(status_code=500, detail=f"Error with mysql {e}" )
+        def get_realize_state(self,*,db: Session,member_id:int)-> List[Recommendation]:
+                try:
+                        return db.query(Recommendation).filter(and_(Recommendation.member_id==member_id, Recommendation.state=="REALIZED")).all()
                 except Exception as e:
                         raise HTTPException(status_code=500, detail=f"Error with mysql {e}" )
        
