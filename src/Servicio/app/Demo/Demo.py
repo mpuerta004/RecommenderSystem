@@ -103,8 +103,8 @@ def asignacion_recursos_hive(
                     if lat is not None and lon is not None:
                         a = RecommendationCreate(member_current_location={
                                                 'Longitude': lon, 'Latitude': lat}, recommendation_datetime=time)
-                        #recomendaciones=create_recomendation_per_campaign(db=db,member_id=user_class.id,recipe_in=a,campaign_id=campaign_id,time=time)
-                        recomendaciones = bio_inspired_recomender.create_recomendation(member_id=user_class.member.id,recipe_in=a,db=db,time=time,campaign_id=campaign_id)
+                        recomendaciones=create_recomendation_per_campaign(db=db,member_id=user_class.id,recipe_in=a,campaign_id=campaign_id,time=time)
+                        #recomendaciones = bio_inspired_recomender.create_recomendation(member_id=user_class.member.id,recipe_in=a,db=db,time=time,campaign_id=campaign_id)
                         if recomendaciones is not None and "results" in recomendaciones and  len(recomendaciones['results']) > 0:
                             recc= [i.recommendation for i in recomendaciones['results']] 
                             recomendation_coguida = user_class.user_selecction(db=db, list_recommendations=recc,user_position=(lat, lon))
@@ -327,8 +327,10 @@ def number_of_recomendation_rate_users(campaign_id:int,times:List, db: Session =
     for user in users:
             number_of_recomendation_notified_and_not_realize[user.id]=len(crud.recommendation.get_All_Recommendation(db=db, member_id=user.id))
             number_or_recomendation_realize[user.id]=len(crud.recommendation.get_realize_state(member_id=user.id, db=db))
-    
-            result = result + number_or_recomendation_realize[user.id]/number_of_recomendation_notified_and_not_realize[user.id]
+            if number_of_recomendation_notified_and_not_realize[user.id]==0:
+                result=0
+            else:
+                result = result + number_or_recomendation_realize[user.id]/number_of_recomendation_notified_and_not_realize[user.id]
 
     cardinal=len(list(number_of_recomendation_notified_and_not_realize.keys()))
     return result/cardinal

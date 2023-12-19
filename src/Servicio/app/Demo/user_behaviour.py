@@ -25,7 +25,7 @@ class User(object):
         if user is None:
             self.member=member
             self.id=member.id
-            self.probability_of_trajectory_recursivity=0.8
+            self.probability_of_trajectory_recursivity=0.7
             self.trajectory= trajectory(member_id=member.id)
             listUSers.añadir(self)
             self.user_available_probability= variables.variables_comportamiento["user_availability"]
