@@ -5,7 +5,7 @@ from datetime import datetime, timedelta
 import math
 import numpy as np
 import io
-from PIL import Image
+# from PIL import Image
 import folium
 from funtionalities import get_point_at_distance, prioriry_calculation
 import numpy as np

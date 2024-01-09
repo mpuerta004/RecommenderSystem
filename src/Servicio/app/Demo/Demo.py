@@ -8,8 +8,8 @@ from schemas.Recommendation import state, Recommendation, RecommendationCreate, 
 from schemas.Member import Member
 from schemas.Priority import Priority, PriorityCreate, PrioritySearchResults
 import deps
-import matplotlib
-import matplotlib.pyplot as plt
+# import matplotlib
+# import matplotlib.pyplot as plt
 from datetime import datetime, timezone
 from datetime import datetime, timezone, timedelta
 from vincenty import vincenty
@@ -159,34 +159,34 @@ def asignacion_recursos_hive(
         data_notified.append(notidied_recomendation)
         data_realized.append(realize_recommendation)
         
-    # Ancho de las barras
-    plt.figure(figsize=(25, 6))  # Ancho x Alto
+    # # Ancho de las barras
+    # plt.figure(figsize=(25, 6))  # Ancho x Alto
 
     
-    # Cr    ear tres gráficos de líneas para cada variable
-    plt.plot(times, data_notified, marker='o', linestyle='-', color='b', label='Notified Recommendation')
-    plt.plot(times, data_accepted, marker='o', linestyle='-', color='g', label='Accepted Recommendation')
-    plt.plot(times, data_realized, marker='o', linestyle='-', color='r', label='Realized Recommendation')
+    # # Cr    ear tres gráficos de líneas para cada variable
+    # plt.plot(times, data_notified, marker='o', linestyle='-', color='b', label='Notified Recommendation')
+    # plt.plot(times, data_accepted, marker='o', linestyle='-', color='g', label='Accepted Recommendation')
+    # plt.plot(times, data_realized, marker='o', linestyle='-', color='r', label='Realized Recommendation')
 
-    # Etiquetas, título y leyenda
-    plt.xlabel('Time')
-    plt.ylabel('Number')
-    plt.title('Numer of recommendation')
-    plt.legend()
+    # # Etiquetas, título y leyenda
+    # plt.xlabel('Time')
+    # plt.ylabel('Number')
+    # plt.title('Numer of recommendation')
+    # plt.legend()
         
-    # Mostrar la gráfica combinada
-    plt.grid(True)
-    plt.tight_layout()
-    plt.xticks(rotation='vertical')  # Rotar etiquetas del eje x
+    # # Mostrar la gráfica combinada
+    # plt.grid(True)
+    # plt.tight_layout()
+    # plt.xticks(rotation='vertical')  # Rotar etiquetas del eje x
 
-    # Mostrar la gráfica
-    plt.savefig("data.jpg")    
+    # # Mostrar la gráfica
+    # plt.savefig("data.jpg")    
     
-    plt.figure(figsize=(25, 6))  # Ancho x Alto
+    # plt.figure(figsize=(25, 6))  # Ancho x Alto
 
     
-    # Cr    ear tres gráficos de líneas para cada variable
-    plt.plot(times, data_notified, marker='o', linestyle='-', color='b', label='Notified Recommendation')
+    # # Cr    ear tres gráficos de líneas para cada variable
+    # plt.plot(times, data_notified, marker='o', linestyle='-', color='b', label='Notified Recommendation')
     # Calcular la media acumulada de la variable mientras avanzamos en el tiempo
     # media_accum = np.zeros(len(times))
     # for i in range(len(times)):
@@ -195,98 +195,98 @@ def asignacion_recursos_hive(
 
     # # Trazar la media acumulada de la variable
     # plt.plot(times, media_accum, linestyle='--', color='black', label='Media Acumulada')
-    #Calcular la media móvil con ventana de 10 puntos (ajustable según tus necesidades)
-    ventana = 25
-    media_movil = np.convolve(data_notified, np.ones(ventana) / ventana, mode='valid')
+    # #Calcular la media móvil con ventana de 10 puntos (ajustable según tus necesidades)
+    # ventana = 25
+    # media_movil = np.convolve(data_notified, np.ones(ventana) / ventana, mode='valid')
 
-    # Ajustar las unidades de tiempo para la media móvil
-    unidades_tiempo_media_movil = times[(ventana - 1) // 2 : -(ventana - 1) // 2]
+    # # Ajustar las unidades de tiempo para la media móvil
+    # unidades_tiempo_media_movil = times[(ventana - 1) // 2 : -(ventana - 1) // 2]
 
-    # Trazar la media móvil
-    plt.plot(unidades_tiempo_media_movil, media_movil, linestyle='--', color='black', label='Media Móvil')
+    # # # Trazar la media móvil
+    # # plt.plot(unidades_tiempo_media_movil, media_movil, linestyle='--', color='black', label='Media Móvil')
 
-    # Etiquetas, título y leyenda
-    plt.xlabel('Time')
-    plt.ylabel('Number')
-    plt.title('Numer of recommendation')
-    plt.legend()
+    # # Etiquetas, título y leyenda
+    # plt.xlabel('Time')
+    # plt.ylabel('Number')
+    # plt.title('Numer of recommendation')
+    # plt.legend()
         
-    # Mostrar la gráfica combinada
-    plt.grid(True)
-    plt.tight_layout()
-    plt.xticks(rotation='vertical')  # Rotar etiquetas del eje x
+    # # Mostrar la gráfica combinada
+    # plt.grid(True)
+    # plt.tight_layout()
+    # plt.xticks(rotation='vertical')  # Rotar etiquetas del eje x
 
-    # Mostrar la gráfica
-    plt.savefig("data_notified.jpg")    
+    # # Mostrar la gráfica
+    # plt.savefig("data_notified.jpg")    
     
-    plt.figure(figsize=(25, 6))  # Ancho x Alto
+    # plt.figure(figsize=(25, 6))  # Ancho x Alto
 
-    plt.plot(times, data_accepted, marker='o', linestyle='-', color='g', label='Accepted Recommendation')
-    # media_accum = np.zeros(len(times))
-    # for i in range(len(times)):
-    #     current_slice = data_accepted[:i + 1]
-    #     media_accum[i] = np.mean(current_slice)
+    # plt.plot(times, data_accepted, marker='o', linestyle='-', color='g', label='Accepted Recommendation')
+    # # media_accum = np.zeros(len(times))
+    # # for i in range(len(times)):
+    # #     current_slice = data_accepted[:i + 1]
+    # #     media_accum[i] = np.mean(current_slice)
 
-    # # Trazar la media acumulada de la variable
-    # plt.plot(times, media_accum, linestyle='--', color='black', label='Media Acumulada')
+    # # # Trazar la media acumulada de la variable
+    # # plt.plot(times, media_accum, linestyle='--', color='black', label='Media Acumulada')
+    # # # Cr    ear tres gráficos de líneas para cada variable
+    # ventana = 25
+    # media_movil = np.convolve(data_accepted, np.ones(ventana) / ventana, mode='valid')
+
+    # # Ajustar las unidades de tiempo para la media móvil
+    # unidades_tiempo_media_movil = times[(ventana - 1) // 2 : -(ventana - 1) // 2]
+
+    # # Trazar la media móvil
+    # plt.plot(unidades_tiempo_media_movil, media_movil, linestyle='--', color='black', label='Media Móvil')
+
+    # # Etiquetas, título y leyenda
+    # plt.xlabel('Time')
+    # plt.ylabel('Number')
+    # plt.title('Numer of recommendation')
+    # plt.legend()
+    # plt.xticks(rotation='vertical')  # Rotar etiquetas del eje x
+
+    # # Mostrar la gráfica combinada
+    # plt.grid(True)
+    # plt.tight_layout()
+    # # Mostrar la gráfica
+    # plt.savefig("data_accepted.jpg")  
+    # plt.figure(figsize=(25, 6))  # Ancho x Alto
+    
+    # plt.plot(times, data_realized, marker='o', linestyle='-', color='r', label='Realized Recommendation')
     # # Cr    ear tres gráficos de líneas para cada variable
-    ventana = 25
-    media_movil = np.convolve(data_accepted, np.ones(ventana) / ventana, mode='valid')
+    # # media_accum = np.zeros(len(times))
+    # # for i in range(len(times)):
+    # #     current_slice = data_realized[:i + 1]
+    # #     media_accum[i] = np.mean(current_slice)
 
-    # Ajustar las unidades de tiempo para la media móvil
-    unidades_tiempo_media_movil = times[(ventana - 1) // 2 : -(ventana - 1) // 2]
+    # # # Trazar la media acumulada de la variable
+    # # plt.plot(times, media_accum, linestyle='--', color='black', label='Media Acumulada')
+    # ventana = 25
+    # media_movil = np.convolve(data_realized, np.ones(ventana) / ventana, mode='valid')
 
-    # Trazar la media móvil
-    plt.plot(unidades_tiempo_media_movil, media_movil, linestyle='--', color='black', label='Media Móvil')
+    # # Ajustar las unidades de tiempo para la media móvil
+    # unidades_tiempo_media_movil = times[(ventana - 1) // 2 : -(ventana - 1) // 2]
 
-    # Etiquetas, título y leyenda
-    plt.xlabel('Time')
-    plt.ylabel('Number')
-    plt.title('Numer of recommendation')
-    plt.legend()
-    plt.xticks(rotation='vertical')  # Rotar etiquetas del eje x
+    # # Trazar la media móvil
+    # plt.plot(unidades_tiempo_media_movil, media_movil, linestyle='--', color='black', label='Media Móvil')
 
-    # Mostrar la gráfica combinada
-    plt.grid(True)
-    plt.tight_layout()
-    # Mostrar la gráfica
-    plt.savefig("data_accepted.jpg")  
-    plt.figure(figsize=(25, 6))  # Ancho x Alto
-    
-    plt.plot(times, data_realized, marker='o', linestyle='-', color='r', label='Realized Recommendation')
-    # Cr    ear tres gráficos de líneas para cada variable
-    # media_accum = np.zeros(len(times))
-    # for i in range(len(times)):
-    #     current_slice = data_realized[:i + 1]
-    #     media_accum[i] = np.mean(current_slice)
-
-    # # Trazar la media acumulada de la variable
-    # plt.plot(times, media_accum, linestyle='--', color='black', label='Media Acumulada')
-    ventana = 25
-    media_movil = np.convolve(data_realized, np.ones(ventana) / ventana, mode='valid')
-
-    # Ajustar las unidades de tiempo para la media móvil
-    unidades_tiempo_media_movil = times[(ventana - 1) // 2 : -(ventana - 1) // 2]
-
-    # Trazar la media móvil
-    plt.plot(unidades_tiempo_media_movil, media_movil, linestyle='--', color='black', label='Media Móvil')
-
-    # Cr    ear tres gráficos de líneas para cada variable
-    # Etiquetas, título y leyenda
-    plt.xlabel('Time')
-    plt.ylabel('Number')
-    plt.title('Numer of recommendation')
-    plt.legend()
+    # # Cr    ear tres gráficos de líneas para cada variable
+    # # Etiquetas, título y leyenda
+    # plt.xlabel('Time')
+    # plt.ylabel('Number')
+    # plt.title('Numer of recommendation')
+    # plt.legend()
         
-    # Mostrar la gráfica combinada
-    plt.grid(True)
-    plt.tight_layout()
-    plt.xticks(rotation='vertical')  # Rotar etiquetas del eje x
+    # # Mostrar la gráfica combinada
+    # plt.grid(True)
+    # plt.tight_layout()
+    # plt.xticks(rotation='vertical')  # Rotar etiquetas del eje x
 
-    # Mostrar la gráfica
-    plt.savefig("data_realized.jpg")  
-    print("rate_number: ", number_of_recomendation_rate(campaign_id=cam.id,times=times, db=db))
-    print("user_rate;", number_of_recomendation_rate_users(campaign_id=cam.id,times=times, db=db))
+    # # Mostrar la gráfica
+    # plt.savefig("data_realized.jpg")  
+    # print("rate_number: ", number_of_recomendation_rate(campaign_id=cam.id,times=times, db=db))
+    # print("user_rate;", number_of_recomendation_rate_users(campaign_id=cam.id,times=times, db=db))
     return None
 
 #TODO! la metrica no tiene en cuenta la camapaña! 

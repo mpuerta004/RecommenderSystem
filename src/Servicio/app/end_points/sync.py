@@ -51,8 +51,8 @@ import deps
 from schemas.Bio_inspired import Bio_inspired, Bio_inspiredCreate, Bio_inspiredSearchResults
 import crud
 
-from timezonefinder import TimezoneFinder
-import pytz
+# from timezonefinder import TimezoneFinder
+# import pytz
 from datetime import datetime, timedelta
 import math 
 from vincenty import vincenty

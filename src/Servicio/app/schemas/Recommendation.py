@@ -20,7 +20,6 @@ class state(str, Enum):
     ACCEPTED="ACCEPTED"
     REALIZED="REALIZED"
     NON_REALIZED="NON_REALIZED"
-import pytz
 
 class RecommendationBase(BaseModel):
     member_current_location:Point

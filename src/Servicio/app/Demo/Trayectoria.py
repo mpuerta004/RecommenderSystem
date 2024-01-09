@@ -7,7 +7,6 @@ from vincenty import vincenty
 from funtionalities import get_point_at_distance, prioriry_calculation, point_to_line_distance
 from datetime import datetime, timedelta
 import deps
-import pandas as pd 
 import numpy as np 
 from sqlalchemy.orm import Session
 from fastapi import APIRouter, Depends, FastAPI, HTTPException, Query, Request

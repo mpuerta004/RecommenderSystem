@@ -20,8 +20,8 @@ from vincenty import vincenty
 import pytz
 from geopy.geocoders import Nominatim
 from geopy.point import Point
-from tzwhere import tzwhere
-from timezonefinder import TimezoneFinder
+# from tzwhere import tzwhere
+# from timezonefinder import TimezoneFinder
 from schemas.Boundary import BoundaryCreate
 from schemas.Campaign import (Campaign, CampaignCreate, CampaignSearchResults,
                               CampaignUpdate)

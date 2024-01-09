@@ -14,7 +14,7 @@ from schemas.Measurement import (Measurement, MeasurementCreate,
                                  MeasurementSearchResults, MeasurementUpdate)
 from sqlalchemy.orm import Session
 from vincenty import vincenty
-from timezonefinder import TimezoneFinder
+# from timezonefinder import TimezoneFinder
 from datetime import datetime, timezone, timedelta
 from funtionalities import update_thesthold_based_action, prioriry_calculation
 import pytz

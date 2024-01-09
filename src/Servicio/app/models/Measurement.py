@@ -1,8 +1,7 @@
 
 from sqlalchemy import Integer, String, Column, Boolean, ForeignKey, DateTime, ARRAY, Float
 from sqlalchemy.orm import relationship
-from geoalchemy2 import _DummyGeometry        
-from geoalchemy2 import Geometry, WKTElement, Geography
+
 import sys
 # sys.path.append("/home/ubuntu/carpeta_compartida_docker/RecommenderSystem/src")
 from models.Cell import Cell
