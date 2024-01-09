@@ -23,6 +23,7 @@ vincenty = "^0.1.4"
 tzlocal  =  "5.2"
 timezonefinder = "^6.2.0"
 python-multipart = "^0.0.6"
+matplotlib = "^3.8.2"
 
 [tool.poetry.group.dev.dependencies]
 folium = "^0.15.1"
