@@ -18,12 +18,13 @@ from sqlalchemy import Integer, Enum
 #     ACCEPTED="ACCEPTED"
 #     REALIZED="REALIZED"
 #     NON_REALIZED="NON_REALIZED"
+from sqlalchemy import Integer, Enum, BigInteger
 
 
 
 class Recommendation(Base):
     __tablename__='Recommendation'
-    member_id=Column(Integer, ForeignKey(Member.id, ondelete="CASCADE"),primary_key=True)
+    member_id=Column(BigInteger, ForeignKey(Member.id, ondelete="CASCADE"),primary_key=True)
     sent_datetime=Column(DateTime)
 
     id=Column(Integer,primary_key=True,  autoincrement=True, nullable=False )

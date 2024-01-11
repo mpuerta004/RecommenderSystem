@@ -12,11 +12,12 @@ from models.Member import Member
 from models.Slot import Slot
 from models.Device import Device
 from models.Recommendation import Recommendation
+from sqlalchemy import Integer, Enum, BigInteger
 
 class Measurement(Base):
     __tablename__='Measurement'
     id=Column(Integer, unique=True, primary_key=True, index=True, autoincrement=True) 
-    member_id=Column(Integer, ForeignKey(Member.id, ondelete="CASCADE"))
+    member_id=Column(BigInteger, ForeignKey(Member.id, ondelete="CASCADE"))
     datetime=Column(DateTime)
     slot_id=Column(Integer, ForeignKey(Slot.id, ondelete="CASCADE"))
     location=Column(Point)
