@@ -25,10 +25,10 @@ import deps
 import crud
 from datetime import datetime, timezone, timedelta
 import math
-api_router_recommendation = APIRouter(prefix="/members/{member_id}")
+api_router_recommendation = APIRouter(prefix="/members/{member_id}/bio_recommendation")
 
 
-@api_router_recommendation.post("/bio_recommendations", status_code=201, response_model=Union[RecommendationCellSearchResults,str])
+@api_router_recommendation.post("", status_code=201, response_model=Union[RecommendationCellSearchResults,str])
 def create_recomendation(
     *,
     member_id: int,
