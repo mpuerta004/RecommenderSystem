@@ -14,6 +14,16 @@ api_url= 'http://localhost:8001'
 last_recomendation_per_user={}
 localizacion_user_recomendacion_Aceptada={}
 
+message_change_personal_information= ("Te recuerdo que puedes modificar tus datos personales con los siguientes comandos:\n" +
+                            "/setname [TU NOMBRE] ->  para definir tu nombre, \n"
+                            "/setsurname  [TU APELLIDO] ->  para definir tu apellido, \n"+
+                            "/setage [TU EDAD] -> Define tu edad, \n"+
+                            "/setbirthday [YYYY-MM-DDT00:00:00] -> para definir tu cumpleaños, \n"+
+                            "/setcity [TU CIUDAD] -> para definir tu ciudad, \n"+
+                            "/setmail [TU EMAIL] -> para definir tu email, \n"+
+                            "/setgender [NOBINARY or MALE or FEMALE or NOANSWER] -> para definir tu género. \n"+
+                            "Esta información puede ser cambiada cuando quieras usando estos comandos.")
+
 recomendation_aceptada={} 
 headers = {
     'Accept': 'application/json',
@@ -21,61 +31,43 @@ headers = {
     }
 #TODO explicar a los usuarios que no se pueden coger varias recomendaciones a la vez. 
 
-
+"""PREGUNTAS
+    - Es mejor enviar una especie de JSON y que los usuarios lo modifiquen si quieren? 
+    - 
+"""
 
 #TODO poner la opcion de que el usario pueda poner todos sus datos personales de una vez 
 
 # Manejar el comando /start -> 
-# Bienvenida e insertar al usuario en la base de datos si es nuevo. 
 @bot.message_handler(commands=['start'])
 def send_locations(message):
     headers = {
     'Accept': 'application/json',
     'Content-Type': 'application/json'
     }
-    #Si el usuario ya esta registrado o no! 
+    #We want to look if the user is already in the database or not!
     peticion = api_url + f'/members/{message.chat.id}'
     try:
-        # Realizar una petición POST con datos en el cuerpo
         response = requests.get(peticion, headers=headers) 
-
-        # Verificar el código de respuesta
-        if response.status_code == 200:
-            # La solicitud fue exitosa
-            data = response.json()  # Si la respuesta es JSON
-            # print("Respuesta exitosa:", data) # data -> Member
-            # en caso de que si -> update y respuesta acorde 
-            print(data)
-            name=data['name']
-            surname = data['surname']
-            bot.send_message(message.chat.id, f"Bienvenid@ de nuevo {message.chat.first_name}: \n")
-            bot.send_message(message.chat.id, "Te recuerdo que puedes modificar tus datos personales con los siguientes comandos:\n "+
-                            "/setname seguido de tu nombre para definir tu nombre, \n"
-                            "/setsurnameseguido de tu apellido para definir tu apellido, \n"+
-                            "/setage seguido de tu edad para definir tu edad, \n"+
-                            "/setbirthday seguido de tu fecha de nacimiento para definir tu cumpleaños, \n"+
-                            "/setcity  seguido de tu cuidad para definir tu ciudad, \n"+
-                            "/setmail seguido de tu email para definir tu email, \n"+
-                            "/setgender seguido de 'NOBINARY','MALE','FEMALE','NOANSWER' para definir tu género. \n"+
-                            "Esta información puede ser cambiada cuando quieras.") 
-        else:
-            # en caso de que no -> Le preguntamos informacion y explicamos de que es el proyecto!
-            bot.send_message(message.chat.id, f"Hola! Encantado de conocerte {message.chat.first_name}!")
-            bot.send_message(message.chat.id, "Porfavor define tu información personal con los siguientes comandos: \n"+
-                            "/setname seguido de tu nombre para definir tu nombre, \n"
-                            "/setsurnameseguido de tu apellido para definir tu apellido, \n"+
-                            "/setage seguido de tu edad para definir tu edad, \n"+
-                            "/setbirthday seguido de tu fecha de nacimiento para definir tu cumpleaños, \n"+
-                            "/setcity  seguido de tu cuidad para definir tu ciudad, \n"+
-                            "/setmail seguido de tu email para definir tu email, \n"+
-                            "/setgender seguido de 'NOBINARY','MALE','FEMALE','NOANSWER' para definir tu género. \n"+
-                            "Esta información puede ser cambiada cuando quieras.") 
-            #Aqui no tenemos ningun dato es la primera vez que el usuario dice start
-            peticion = api_url + '/sync/hives/1/members/'
-            payload = [
+        #If the answer is 200 -> the user is already in the database!
+    except Exception as e:
+        print("Error durante la solicitud:", e)
+        return None
+    
+    #CASE (user exists in the database). 
+    if response.status_code == 200:
+        data = response.json()  # data -> user information -> Member
+        bot.send_message(message.chat.id, f"Hola {message.chat.first_name}! Bienvenido de nuevo!")  
+        bot.send_message(message.chat.id, message_change_personal_information) 
+    #CASE (user dont exists in the database). 
+    else:
+        #TODO igual aqui se le pueden hacer algunas preguntas para que diga sus datos personales! 
+        #We insert in the database. 
+        peticion = api_url + '/sync/hives/1/members/'
+        payload = [
                 {
                     "member": {
-                    "name": "",
+                    "name": message.chat.first_name,
                     "surname": "",
                     "age": 0,
                     "gender": "NOANSWER",
@@ -88,70 +80,143 @@ def send_locations(message):
                     "role": "WorkerBee"
                 }
                 ]
-        
-            
-                # Realizar una petición POST con datos en el cuerpo
+        try:
+            #Put endpoint to integrate the information of the user in the datases
             response = requests.put(peticion, headers=headers,
                                             json =payload) 
-
+        except Exception as e:
+            print("Error durante la conexion con la base de datos:", e)
+            return None
                 # Verificar el código de respuesta
-            if response.status_code == 201:
+        #We insert the user correctly in the database,
+        if response.status_code == 201:
             # La solicitud fue exitosa
-                data = response.json()  # Si la respuesta es JSON
-                print("Respuesta exitosa:", data) # data -> List[NewMembers]
-                # bot.send_message(message.chat.id, "Respuesta exitosa")
-                peticion = api_url + "/devices"
-                info_device={
+            data = response.json()  # Si la respuesta es JSON
+            #We have to insert a device in the dataset for the user and also relate the user with the device. 
+            peticion = api_url + "/devices"
+            info_device={
                     "description": "string",
                     "brand": "string",
                     "model": "string",
                     "year": "string"
                     }
+            try:
+                #Post a new device in the dataset.
                 response = requests.post(peticion, headers=headers,json=info_device) 
-                # Verificar el código de respuesta
-                if response.status_code == 201:
-                # La solicitud fue exitosa
-                    data = response.json()  # Si la respuesta es JSON
-                    print("Respuesta exitosa:", data) # data -> List[NewMembers]
-                    #TODO igual el 1 de campaign no funciona 
-                    info_device_member={
+            except Exception as e:
+                print("Error durante la conexion con la base de datos:", e)
+                return None
+            #IF the device is correctly inserted in the dataset.
+            if response.status_code == 201:
+                data = response.json()  # Si la respuesta es JSON
+                #We insert in the database the Member_Device entity. 
+                info_device_member={
                         "member_id": message.chat.id,
                         "device_id": data['id'],
                     }
-                    peticion = api_url + f"/sync/hives/1/campaigns/1/devices"
+                #TODO igual el 1 de campaign no funciona 
+                peticion = api_url + f"/sync/hives/1/campaigns/1/devices"
+                try:
                     response = requests.put(peticion, headers=headers,json=info_device_member)
-                    if response.status_code == 201:
+                except Exception as e:
+                    print("Error durante la conexion con la base de datos:", e)
+                    return None
+                #If we insert corretlly the user, the devide and the relation between them. 
+                if response.status_code == 201:
                     # La solicitud fue exitosa
-                        data = response.json()  # Si la respuesta es JSON
-                        print("Respuesta exitosa:", data) 
-                    else:
-                        print(f"Error en la solicitud. Código de respuesta: {response.status_code}")
+                    data = response.json()  # Si la respuesta es JSON
+                    bot.send_message(message.chat.id, f"Hola! Encantado de conocerte {message.chat.first_name}!")
+                    bot.send_message(message.chat.id, message_change_personal_information) 
                 else:
                         print(f"Error en la solicitud. Código de respuesta: {response.status_code}")
             else:
                         print(f"Error en la solicitud. Código de respuesta: {response.status_code}")
+        else:
+                        print(f"Error en la solicitud. Código de respuesta: {response.status_code}")
 
-    except Exception as e:
-        print("Error durante la solicitud:", e)
-    
 
-        
-
+# command /setname. 
 @bot.message_handler(commands=['setname'])
 def set_name(message):
+    
+    # Obtain the name of the user. 
+    name = message.text.replace('/setname', '').strip()
+    #Int he case no name we explain the user how to do it. 
+    if not name:
+        bot.reply_to(message, "Por favor, proporciona un nombre válido después del comando /setname. Por ejemplo, envia un mensaje similar a este: /setname Pepito")
+    # if we have name:
+    else:
+        #We look if the user is in the database. 
+        peticion = api_url + f'/members/{message.chat.id}'
+        try:
+            # Realizar una petición POST con datos en el cuerpo
+            response = requests.get(peticion, headers=headers) 
+        except Exception as e:
+            print("Error durante la conexion con la base de datos:", e)
+            return None
+        
+        # if the user is in the database we update the name.
+        if response.status_code == 200:
+            data = response.json()  # Si la respuesta es JSON   
+            surname=data['surname']
+            age=data['age']
+            birthday=data['birthday']
+            city=data['city']
+            gender=data['gender']
+            mail=data['mail']
+            #We update the name in the database!             
+            peticion = api_url + '/sync/hives/1/members/'
+            payload = [
+                {
+                    "member": {
+                    "name": name,
+                    "surname": surname,
+                    "age": age,
+                    "gender": gender,
+                    "city": city,
+                    "mail": mail,
+                    "birthday": birthday,
+                    "real_user": True,
+                    "id": message.chat.id
+                },
+                    "role": "WorkerBee"
+                }
+            ]
+        
+            try:
+                # Realizar una petición POST con datos en el cuerpo
+                response = requests.put(peticion, headers=headers,
+                                          json =payload) 
+            except Exception as e:
+                print("Error durante la conexion con la base de datos:", e)
+                return None
+            # Verificar el código de respuesta
+            if response.status_code == 201:
+                data = response.json()  # Si la respuesta es JSON
+                bot.reply_to(message, f"¡Hola, {name}! Tu nombre ha sido registrado correctamente.")
+                bot.send_message(message.chat.id,message_change_personal_information)
+            else:
+                    print(f"Error en la solicitud. Código de respuesta: {response.status_code}")
+        else:
+            print(f"Error en la solicitud. Código de respuesta: {response.status_code}")
+
+        
+            
+
+@bot.message_handler(commands=['setgender'])
+def set_gender(message):
     
     # Obtiene el nombre enviado por el usuario
     headers = {
     'Accept': 'application/json',
     'Content-Type': 'application/json'
     }
-    name = message.text.replace('/setname', '').strip()
-    if not name:
-        bot.reply_to(message, "Por favor, proporciona un nombre válido después del comando /setname.")
+    gender = message.text.replace('/setgender', '').strip()
+    if not gender:
+        bot.reply_to(message, "Por favor, proporciona un genero válido después del comando /setgender.")
     
     
     else:
-        bot.reply_to(message, f"¡Hola, {name}! Tu nombre ha sido registrado.")
         # en caso de que no -> Le preguntamos informacion y explicamos de que es el proyecto! 
         peticion = api_url + f'/members/{message.chat.id}'
         try:
@@ -162,26 +227,16 @@ def set_name(message):
             if response.status_code == 200:
                 # La solicitud fue exitosa
                 data = response.json()  # Si la respuesta es JSON
-                # print("Respuesta exitosa:", data) # data -> Member
                 # en caso de que si -> update y respuesta acorde 
-                print(data)
+                name=data['name']
                 surname=data['surname']
                 age=data['age']
                 birthday=data['birthday']
                 city=data['city']
-                gender=data['gender']
                 mail=data['mail']
                         
                 
-                bot.send_message(message.chat.id, "Te recuerdo que puedes modificar tus datos personales con los siguientes comandos:\n" +
-                            "/setname seguido de tu nombre para definir tu nombre, \n"
-                            "/setsurname seguido de tu apellido para definir tu apellido, \n"+
-                            "/setage seguido de tu edad para definir tu edad, \n"+
-                            "/setbirthday seguido de tu fecha de nacimiento para definir tu cumpleaños, \n"+
-                            "/setcity  seguido de tu cuidad para definir tu ciudad, \n"+
-                            "/setmail seguido de tu email para definir tu email, \n"+
-                            "/setgender seguido de 'NOBINARY','MALE','FEMALE','NOANSWER' para definir tu género. \n"+
-                            "Esta información puede ser cambiada cuando quieras.") 
+               
                 peticion = api_url + '/sync/hives/1/members/'
                 payload = [
                 {
@@ -209,87 +264,16 @@ def set_name(message):
                 if response.status_code == 201:
                         # La solicitud fue exitosa
                         data = response.json()  # Si la respuesta es JSON
-                        print("Respuesta exitosa:", data) # data -> List[NewMembers]
-                        # bot.send_message(message.chat.id, "Respuesta exitosa")
-                else:
-                        print(f"Error en la solicitud. Código de respuesta: {response.status_code}")
-
-        except Exception as e:
-                print("Error durante la solicitud:", e)
-            
-
-@bot.message_handler(commands=['setgender'])
-def set_gender(message):
-    
-    # Obtiene el nombre enviado por el usuario
-    headers = {
-    'Accept': 'application/json',
-    'Content-Type': 'application/json'
-    }
-    gender = message.text.replace('/setgender', '').strip()
-    if not gender:
-        bot.reply_to(message, "Por favor, proporciona un genero válido después del comando /setgender.")
-    
-    
-    else:
-        bot.reply_to(message, f"Tu genero ha sido registrado.")
-        # en caso de que no -> Le preguntamos informacion y explicamos de que es el proyecto! 
-        peticion = api_url + f'/members/{message.chat.id}'
-        try:
-            # Realizar una petición POST con datos en el cuerpo
-            response = requests.get(peticion, headers=headers) 
-
-            # Verificar el código de respuesta
-            if response.status_code == 200:
-                # La solicitud fue exitosa
-                data = response.json()  # Si la respuesta es JSON
-                # print("Respuesta exitosa:", data) # data -> Member
-                # en caso de que si -> update y respuesta acorde 
-                print(data)
-                surname=data['surname']
-                age=data['age']
-                birthday=data['birthday']
-                city=data['city']
-                mail=data['mail']
-                name=data['name']
-                        
-                
-                bot.send_message(message.chat.id, "Te recuerdo que puedes modificar tus datos personales con los siguientes comandos:\n" +
-                            "/setname seguido de tu nombre para definir tu nombre, \n"
-                            "/setsurname seguido de tu apellido para definir tu apellido, \n"+
-                            "/setage seguido de tu edad para definir tu edad, \n"+
-                            "/setbirthday seguido de tu fecha de nacimiento para definir tu cumpleaños, \n"+
-                            "/setcity  seguido de tu cuidad para definir tu ciudad, \n"+
-                            "/setmail seguido de tu email para definir tu email, \n"+
-                            "/setgender seguido de 'NOBINARY','MALE','FEMALE','NOANSWER' para definir tu género. \n"+
-                            "Esta información puede ser cambiada cuando quieras.") 
-                peticion = api_url + '/sync/hives/1/members/'
-                payload = [
-                {
-                    "member": {
-                    "name": name,
-                "surname": surname,
-                "age": age,
-                "gender": gender,
-                "city": city,
-                "mail": mail,
-                "birthday": birthday,
-                    "real_user": True,
-                    "id": message.chat.id
-                },
-                    "role": "WorkerBee"
-                }
-                ]
-        
-            
-                # Realizar una petición POST con datos en el cuerpo
-                response = requests.put(peticion, headers=headers,
-                                            json =payload) 
-
-                # Verificar el código de respuesta
-                if response.status_code == 201:
-                        # La solicitud fue exitosa
-                        data = response.json()  # Si la respuesta es JSON
+                        bot.reply_to(message, f"Tu género ha sido registrado correctamente. Gracias por tu colaboración!")
+                        bot.send_message(message.chat.id, "Te recuerdo que puedes modificar tus datos personales con los siguientes comandos:\n" +
+                            "/setname [TU NOMBRE] ->  para definir tu nombre, \n"
+                            "/setsurname  [TU APELLIDO] ->  para definir tu apellido, \n"+
+                            "/setage [TU EDAD] -> Define tu edad, \n"+
+                            "/setbirthday [YYYY-MM-DDT00:00:00] -> para definir tu cumpleaños, \n"+
+                            "/setcity [TU CIUDAD] -> para definir tu ciudad, \n"+
+                            "/setmail [TU EMAIL] -> para definir tu email, \n"+
+                            "/setgender [NOBINARY or MALE or FEMALE or NOANSWER] -> para definir tu género. \n"+
+                            "Esta información puede ser cambiada cuando quieras usando estos comandos.") 
                         print("Respuesta exitosa:", data) # data -> List[NewMembers]
                         # bot.send_message(message.chat.id, "Respuesta exitosa")
                 else:
@@ -311,7 +295,6 @@ def set_mail(message):
     if not mail:
         bot.reply_to(message, "Por favor, proporciona un email válido después del comando /setmail.")
     else:
-        bot.reply_to(message, f"Tu email ha sido registrado.")
         # en caso de que no -> Le preguntamos informacion y explicamos de que es el proyecto! 
         peticion = api_url + f'/members/{message.chat.id}'
         try:
@@ -332,15 +315,6 @@ def set_mail(message):
                 name=data['name']
                 gender=data['gender']
                         
-                bot.send_message(message.chat.id, "Te recuerdo que puedes modificar tus datos personales con los siguientes comandos:\n" +
-                            "/setname seguido de tu nombre para definir tu nombre, \n"
-                            "/setsurname seguido de tu apellido para definir tu apellido, \n"+
-                            "/setage seguido de tu edad para definir tu edad, \n"+
-                            "/setbirthday seguido de tu fecha de nacimiento para definir tu cumpleaños, \n"+
-                            "/setcity  seguido de tu cuidad para definir tu ciudad, \n"+
-                            "/setmail seguido de tu email para definir tu email, \n"+
-                            "/setgender seguido de 'NOBINARY','MALE','FEMALE','NOANSWER' para definir tu género. \n"+
-                            "Esta información puede ser cambiada cuando quieras.") 
                 
                 peticion = api_url + '/sync/hives/1/members/'
                 payload = [
@@ -370,6 +344,16 @@ def set_mail(message):
                         # La solicitud fue exitosa
                         data = response.json()  # Si la respuesta es JSON
                         print("Respuesta exitosa:", data) # data -> List[NewMembers]
+                        bot.reply_to(message, f"Tu email ha sido registrado.")
+                        bot.send_message(message.chat.id, "Te recuerdo que puedes modificar tus datos personales con los siguientes comandos:\n" +
+                            "/setname [TU NOMBRE] ->  para definir tu nombre, \n"
+                            "/setsurname  [TU APELLIDO] ->  para definir tu apellido, \n"+
+                            "/setage [TU EDAD] -> Define tu edad, \n"+
+                            "/setbirthday [YYYY-MM-DDT00:00:00] -> para definir tu cumpleaños, \n"+
+                            "/setcity [TU CIUDAD] -> para definir tu ciudad, \n"+
+                            "/setmail [TU EMAIL] -> para definir tu email, \n"+
+                            "/setgender [NOBINARY or MALE or FEMALE or NOANSWER] -> para definir tu género. \n"+
+                            "Esta información puede ser cambiada cuando quieras usando estos comandos.") 
                         # bot.send_message(message.chat.id, "Respuesta exitosa")
                 else:
                         print(f"Error en la solicitud. Código de respuesta: {response.status_code}")
@@ -412,16 +396,7 @@ def set_gender(message):
                 mail=data['mail']
                 gender=data['gender']
                         
-                bot.send_message(message.chat.id, "Te recuerdo que puedes modificar tus datos personales con los siguientes comandos:\n" +
-                            "/setname seguido de tu nombre para definir tu nombre, \n"
-                            "/setsurname seguido de tu apellido para definir tu apellido, \n"+
-                            "/setage seguido de tu edad para definir tu edad, \n"+
-                            "/setbirthday seguido de tu fecha de nacimiento para definir tu cumpleaños, \n"+
-                            "/setcity  seguido de tu cuidad para definir tu ciudad, \n"+
-                            "/setmail seguido de tu email para definir tu email, \n"+
-                            "/setgender seguido de 'NOBINARY','MALE','FEMALE','NOANSWER' para definir tu género. \n"+
-                            "Esta información puede ser cambiada cuando quieras.") 
-                
+               
                 peticion = api_url + '/sync/hives/1/members/'
                 payload = [
                 {
@@ -449,9 +424,19 @@ def set_gender(message):
                         # La solicitud fue exitosa
                         data = response.json()  # Si la respuesta es JSON
                         print("Respuesta exitosa:", data) # data -> List[NewMembers]
+                        bot.send_message(message.chat.id, "Te recuerdo que puedes modificar tus datos personales con los siguientes comandos:\n" +
+                            "/setname [TU NOMBRE] ->  para definir tu nombre, \n"
+                            "/setsurname  [TU APELLIDO] ->  para definir tu apellido, \n"+
+                            "/setage [TU EDAD] -> Define tu edad, \n"+
+                            "/setbirthday [YYYY-MM-DDT00:00:00] -> para definir tu cumpleaños, \n"+
+                            "/setcity [TU CIUDAD] -> para definir tu ciudad, \n"+
+                            "/setmail [TU EMAIL] -> para definir tu email, \n"+
+                            "/setgender [NOBINARY or MALE or FEMALE or NOANSWER] -> para definir tu género. \n"+
+                            "Esta información puede ser cambiada cuando quieras usando estos comandos.") 
                         # bot.send_message(message.chat.id, "Respuesta exitosa")
                 else:
-                        print(f"Error en la solicitud. Código de respuesta: {response.status_code}")
+                    print(f"Error en la solicitud. Código de respuesta: {response.status_code}")
+                    bot.send_message(message.chat.id, "Por favor, asegurate que la informacion esta bien. Debes introducir /setbirthday [YYYY-MM-DDT00:00:00], por ejemplo /setbirthday 2021-01-11T00:00:00 es un comando válido.")
 
         except Exception as e:
                 print("Error durante la solicitud:", e)
@@ -982,7 +967,7 @@ def handle_option(message):
                 data = response.json() 
                 
             else:
-                print(f"Error en la solicitud de updae de la recomendation. Código de respuesta: {response.status_code}")        
+                print(f"Error en la solicitud de update de la recomendation. Código de respuesta: {response.status_code}")        
 
         except Exception as e:
             print("Error durante la solicitud:", e)
