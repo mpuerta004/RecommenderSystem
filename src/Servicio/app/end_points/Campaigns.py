@@ -4,7 +4,11 @@ from datetime import datetime, timedelta, timezone
 from math import asin, atan2, cos, degrees, radians, sin, sqrt
 from typing import Any, Dict, Generic, List, Optional, Type, TypeVar, Union
 import crud
+from csv import writer
+import os
+
 import deps
+from flask  import render_template_string
 import folium
 from datetime import datetime, timedelta
 from sqlalchemy.orm import Session
@@ -15,7 +19,9 @@ from fastapi_utils.session import FastAPISessionMaker
 from folium.features import DivIcon
 from numpy import arccos, cos, pi, round, sin
 from vincenty import vincenty
-
+import branca
+import branca.colormap as cm
+from funtionalities import get_point_at_distance
 import pytz
 from geopy.geocoders import Nominatim
 from geopy.point import Point
@@ -24,11 +30,14 @@ from timezonefinder import TimezoneFinder
 from schemas.Boundary import BoundaryCreate
 from schemas.Campaign import (Campaign, CampaignCreate, CampaignSearchResults,
                               CampaignUpdate)
+import json
 from schemas.Campaign_Member import Campaign_MemberCreate
 from schemas.Cell import CellCreate, CellSearchResults, Point
 from schemas.Priority import Priority, PriorityCreate, PrioritySearchResults
 from schemas.Slot import Slot, SlotCreate, SlotSearchResults
 from schemas.Surface import Surface, SurfaceCreate, SurfaceSearchResults
+from Demo.map_funtions import legend_measurements_scale
+import Demo.variables as variables
 
 from funtionalities import create_slots_campaign, create_cells_for_a_surface, get_point_at_distance
 
@@ -39,6 +48,110 @@ api_router_campaign = APIRouter(prefix="/hives/{hive_id}/campaigns")
 # List of colors for the cells
 color_list_h = ['#ffc3c3', '#ffdba7', '#f8f7bb', '#cbffbe', '#8ac683'
                 ]
+########                         Show Endpoint                   #########
+@api_router_campaign.get("/show", status_code=200, response_class=HTMLResponse)
+def show_hive(
+    *,
+    hive_id: int,
+    # time: datetime= datetime.utcnow(),
+    db: Session = Depends(deps.get_db),
+) -> Any:
+    """
+    Show a campaign
+    """
+    time=datetime.utcnow()
+    campañas_activas= crud.campaign.get_all_active_campaign_for_a_hive(db=db, hive_id=hive_id,time=time)
+    try:
+        os.remove("src/Servicio/Telegram_bot/Pictures/DATAMAP.csv")
+    except OSError:
+        print("No se pudo borrar el archivo")
+    if campañas_activas is None or campañas_activas is [] or len(campañas_activas)==0:
+       return None
+    count = 0
+    
+    
+    lat_center=0
+    lon_center=0
+    n=0
+    for i in campañas_activas:
+        surfaces=crud.surface.get_multi_surface_from_campaign_id(db=db, campaign_id=i.id)
+        for surface in surfaces:
+            n=n+1
+            lat_center=lat_center + surface.boundary.centre['Latitude']
+            lon_center=lon_center + surface.boundary.centre['Longitude']
+    
+    
+    # print(lat_center/n, lon_center/n)
+    
+    mapObj = folium.Map(location=[lat_center/n,
+                        lon_center/n], zoom_start=variables.zoom_start)
+    for cam in campañas_activas:
+        cell_distance = cam.cells_distance
+
+        hipotenusa = math.sqrt(2*((cell_distance/2)**2))
+        for i in cam.surfaces:
+
+            count = count+1
+            for j in i.cells:
+                slot = crud.slot.get_slot_time(db=db, cell_id=j.id, time=time)
+
+                Cardinal_actual = crud.measurement.get_all_Measurement_from_cell_in_the_current_slot(
+                    db=db, time=time, slot_id=slot.id)
+                expected_measurements=len( crud.recommendation.get_aceptance_state_of_cell(
+                db=db, slot_id=slot.id))
+                if Cardinal_actual >= cam.min_samples:
+                    numero = 4
+                    color_number='#FFFFFF'
+                else:
+                    numero = int((Cardinal_actual/cam.min_samples)//(1/4))
+                    color_number='#000000'
+                # color= (color_list[numero][2],color_list[numero][1],color_list[numero][0])
+                color = variables.color_list_hex[numero]
+                lon1 = j.centre['Longitude']
+                lat1 = j.centre['Latitude']
+
+                # Desired distance in kilometers
+                distance = hipotenusa
+                list_direction = [45, 135, 225, 315]
+                list_point = []
+                for dir in list_direction:
+                    lat2, lon2 = get_point_at_distance(
+                        lat1=lat1, lon1=lon1, d=distance, bearing=dir)
+
+                    list_point.append([lat2, lon2])
+
+               
+                folium.Polygon(locations=list_point, color='black', fill=False,
+                            weight=1, popup=(folium.Popup(str(j.id))), opacity=0.5, fill_opacity=0.2).add_to(mapObj)
+                
+                
+                with open("src/Servicio/Telegram_bot/Pictures/DATAMAP.csv", "a", newline="") as f_object:
+                    # Pass the CSV  file object to the writer() function
+                    writer_object = writer(f_object)
+                    # Result - a writer object
+                    # Pass the data in the list as an argument into the writerow() function
+                    writer_object.writerow([list_point, j.id, Cardinal_actual, expected_measurements,str(color_number)])
+                    # Close the file object
+                    f_object.close()
+                    
+                folium.Marker(list_point[3],popup=f"Number of Expected measurements: {expected_measurements}",
+                            icon=DivIcon(
+                    icon_size=(200, 36),
+                    icon_anchor=(0, 0),
+                    
+                    html=f'<div style="font-size: 20pt;color:{color_number};">{Cardinal_actual}</div>'
+                )
+                ).add_to(mapObj)
+
+    direcion_html = f"/recommendersystem/src/Servicio/app/Pictures/Measurements_html/{time.strftime('%m-%d-%Y-%H-%M-%S')}Hi{hive_id}.html"
+    # direcion_png = f"/recommendersystem/src/Servicio/app/Pictures/Measurements/{time.strftime('%m-%d-%Y-%H-%M-%S')}Hi{hive_id}.png"
+    
+    legend_html = legend_measurements_scale(time.strftime('%m/%d/%Y, %H:%M:%S'))
+    mapObj.get_root().html.add_child(folium.Element(legend_html))
+    mapObj.save(direcion_html)
+    # Renderizar el mapa como HTML
+   
+    return mapObj._repr_html_()
 
 #### GET ENDPOINT #####
 @api_router_campaign.get("/", status_code=200, response_model=CampaignSearchResults)
@@ -200,7 +313,9 @@ async def create_campaign(
     if campaign_metadata.sampling_period == 0:
         duration = campaign_metadata.end_datetime - campaign_metadata.start_datetime        
         campaign_metadata.sampling_period = duration.total_seconds()
-        campaign_metadata.min_samples = 0
+    if campaign_metadata.min_samples == 0:
+        duration = campaign_metadata.end_datetime - campaign_metadata.start_datetime        
+        campaign_metadata.sampling_period = duration.total_seconds()
     
     """
     Verify all case related with the start and end datetime of the campaign
@@ -270,93 +385,93 @@ async def create_campaign(
     create_slots_campaign(db=db, cam=Campaign)
     return Campaign
 
-#########                         Show Endpoint                   #########
-@api_router_campaign.get("/{campaign_id}/show", status_code=200, response_class=HTMLResponse)
-def show_a_campaign(
-    *,
-    hive_id: int,
-    campaign_id: int,
-    time: datetime,
-    db: Session = Depends(deps.get_db),
-) -> HTMLResponse:
-    """
-    Show a campaign. The time has to be UTC. 
-    """
+#
+    # return  render_template_string(mapObj)
+# def show_a_campaign(
+#     *,
+#     hive_id: int,
+#     campaign_id: int,
+#     time: datetime,
+#     db: Session = Depends(deps.get_db),
+# ) -> HTMLResponse:
+#     """
+#     Show a campaign. The time has to be UTC. 
+#     """
     
     
     
-    # Get campaign
-    campaign = crud.campaign.get_campaign(
-        db=db, hive_id=hive_id, campaign_id=campaign_id)
-    # Verify if the campaign exist
-    if campaign is None:
-        raise HTTPException(
-            status_code=404, detail=f"Campaign with id== {campaign_id}  not found"
-        )
+#     # Get campaign
+#     campaign = crud.campaign.get_campaign(
+#         db=db, hive_id=hive_id, campaign_id=campaign_id)
+#     # Verify if the campaign exist
+#     if campaign is None:
+#         raise HTTPException(
+#             status_code=404, detail=f"Campaign with id== {campaign_id}  not found"
+#         )
     
 
-    # verify that campaign is active
-    if campaign.start_datetime.replace(tzinfo=timezone.utc) <= time.replace(tzinfo=timezone.utc) and time.replace(tzinfo=timezone.utc) < campaign.end_datetime.replace(tzinfo=timezone.utc):
+#     # verify that campaign is active
+#     if campaign.start_datetime.replace(tzinfo=timezone.utc) <= time.replace(tzinfo=timezone.utc) and time.replace(tzinfo=timezone.utc) < campaign.end_datetime.replace(tzinfo=timezone.utc):
 
-        cell_distance = campaign.cells_distance
-        hipotenusa = math.sqrt(2*((cell_distance/2)**2))
-        # Get the first surface to create the initial map.
-        surface = crud.surface.get(db=db, id=campaign.surfaces[0].id)
-        # Create the map
-        mapObj = folium.Map(location=[
-                            surface.boundary.centre['Latitude'],surface.boundary.centre['Longitude']], zoom_start=20)
-        # Add the information of each surface of the campaign in the map
-        for surface in campaign.surfaces:
-            # Draw each cell in the map with the color depending on the number of samples
-            for cell in surface.cells:
-                # Calculate the number of samples in the current slot of the cell
-                slot = crud.slot.get_slot_time(db=db, cell_id=cell.id, time=time)
-                Cardinal_actual = crud.measurement.get_all_Measurement_from_cell_in_the_current_slot(
-                    db=db,time=time, slot_id=slot.id)
+#         cell_distance = campaign.cells_distance
+#         hipotenusa = math.sqrt(2*((cell_distance/2)**2))
+#         # Get the first surface to create the initial map.
+#         surface = crud.surface.get(db=db, id=campaign.surfaces[0].id)
+#         # Create the map
+#         mapObj = folium.Map(location=[
+#                             surface.boundary.centre['Latitude'],surface.boundary.centre['Longitude']], zoom_start=20)
+#         # Add the information of each surface of the campaign in the map
+#         for surface in campaign.surfaces:
+#             # Draw each cell in the map with the color depending on the number of samples
+#             for cell in surface.cells:
+#                 # Calculate the number of samples in the current slot of the cell
+#                 slot = crud.slot.get_slot_time(db=db, cell_id=cell.id, time=time)
+#                 Cardinal_actual = crud.measurement.get_all_Measurement_from_cell_in_the_current_slot(
+#                     db=db,time=time, slot_id=slot.id)
 
-                """
-                Calculate the color of the cell based on the number of samples. 
-                """
-                if Cardinal_actual >= campaign.min_samples:
-                    numero = 4
-                else:
-                    numero = int(
-                        (Cardinal_actual/campaign.min_samples)//(1/4))
-                color = color_list_h[numero]
-                """We have to calculate the corners of each cell to draw it in the map."""
-                # Calculate the coordinates of the corners of the cell to draw it in the map with the calculated color
-                lat1 = cell.centre['Latitude']
-                lon1 = cell.centre['Longitude']
-                distance = hipotenusa  # Distance in Km of the center to the corner of each cell
-                # List of the directions of the corners of each cell from the center
-                list_direction = [45, 135, 225, 315]
-                list_courner_points_of_cell = []
-                for l in list_direction:
-                    # Direction in degrees
-                    lat2,lon2=get_point_at_distance(lat1=lat1,lon1=lon1,bearing=l,d=distance)
-                    # NOTE: first lat because i use the list as an input to the folium funtion. 
-                    list_courner_points_of_cell.append([lat2,lon2])
-                # Draw the cell
-                text = f'Numer of measurements: {Cardinal_actual}'
-                folium.Polygon(locations=list_courner_points_of_cell, color='black', fill_color=color,
-                               weight=1, popup=(folium.Popup(text)), opacity=0.5, fill_opacity=0.5).add_to(mapObj)
+#                 """
+#                 Calculate the color of the cell based on the number of samples. 
+#                 """
+#                 if Cardinal_actual >= campaign.min_samples:
+#                     numero = 4
+#                 else:
+#                     numero = int(
+#                         (Cardinal_actual/campaign.min_samples)//(1/4))
+#                 color = color_list_h[numero]
+#                 """We have to calculate the corners of each cell to draw it in the map."""
+#                 # Calculate the coordinates of the corners of the cell to draw it in the map with the calculated color
+#                 lat1 = cell.centre['Latitude']
+#                 lon1 = cell.centre['Longitude']
+#                 distance = hipotenusa  # Distance in Km of the center to the corner of each cell
+#                 # List of the directions of the corners of each cell from the center
+#                 list_direction = [45, 135, 225, 315]
+#                 list_courner_points_of_cell = []
+#                 for l in list_direction:
+#                     # Direction in degrees
+#                     lat2,lon2=get_point_at_distance(lat1=lat1,lon1=lon1,bearing=l,d=distance)
+#                     # NOTE: first lat because i use the list as an input to the folium funtion. 
+#                     list_courner_points_of_cell.append([lat2,lon2])
+#                 # Draw the cell
+#                 text = f'Numer of measurements: {Cardinal_actual}'
+#                 folium.Polygon(locations=list_courner_points_of_cell, color='black', fill_color=color,
+#                                weight=1, popup=(folium.Popup(text)), opacity=0.5, fill_opacity=0.5).add_to(mapObj)
 
-                # Draw the cardinal direction of the cell in the center of this cell. (for the .png picture)
-                folium.Marker([lat1, lon1],
-                              icon=DivIcon(
-                    icon_size=(200, 36),
-                    icon_anchor=(0, 0),
-                    html=f'<div style="font-size: 20pt">{Cardinal_actual}</div>',
-                )
-                ).add_to(mapObj)
-        # Save the map in a html file and return
-        mapObj.save("index.html")
-        htmlt_map = mapObj._repr_html_()
-        return f"<html><body>{htmlt_map}</body></html>"
-    else:
-        raise HTTPException(
-            status_code=404, detail=f"Campaign with campaign_id={campaign_id}  and hive_id={hive_id} is not active fot the time={time}."
-        )
+#                 # Draw the cardinal direction of the cell in the center of this cell. (for the .png picture)
+#                 folium.Marker([lat1, lon1],
+#                               icon=DivIcon(
+#                     icon_size=(200, 36),
+#                     icon_anchor=(0, 0),
+#                     html=f'<div style="font-size: 20pt">{Cardinal_actual}</div>',
+#                 )
+#                 ).add_to(mapObj)
+#         # Save the map in a html file and return
+#         mapObj.save("index.html")
+#         htmlt_map = mapObj._repr_html_()
+#         return f"<html><body>{htmlt_map}</body></html>"
+#     else:
+#         raise HTTPException(
+#             status_code=404, detail=f"Campaign with campaign_id={campaign_id}  and hive_id={hive_id} is not active fot the time={time}."
+#         )
 
 
 ######  PUT Endpoint ######

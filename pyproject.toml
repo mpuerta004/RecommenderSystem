@@ -24,6 +24,9 @@ tzlocal  =  "5.2"
 timezonefinder = "^6.2.0"
 python-multipart = "^0.0.6"
 matplotlib = "^3.8.2"
+telebot = "^0.0.5"
+ipython = "^8.20.0"
+flask = "^3.0.1"
 
 [tool.poetry.group.dev.dependencies]
 folium = "^0.15.1"

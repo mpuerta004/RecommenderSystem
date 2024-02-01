@@ -97,11 +97,11 @@ if __name__ == "__main__":
     ## Use this for debugging purposes only
     import uvicorn
 
-    # #Add this line to run the system. 
-    # scheduler = BackgroundScheduler()
-    # scheduler.add_job(final_funtion, 'interval', seconds=120)
-    # scheduler.add_job(State_change, 'interval', seconds=420)
+    #Add this line to run the system. 
+    scheduler = BackgroundScheduler()
+    scheduler.add_job(final_funtion, 'interval', seconds=30)
+    scheduler.add_job(State_change, 'interval', seconds=30)
 
-    # scheduler.start()
+    scheduler.start()
 
     uvicorn.run(app, host="0.0.0.0", port=8001, log_level="debug")

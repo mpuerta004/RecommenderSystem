@@ -434,11 +434,7 @@ def show_hive(
     legend_html = legend_measurements_scale(time.strftime('%m/%d/%Y, %H:%M:%S'))
     mapObj.get_root().html.add_child(folium.Element(legend_html))
     mapObj.save(direcion_html)
-
-    # img_data = mapObj._to_png(5)
-    # img = Image.open(io.BytesIO(img_data))
-    # img.save(direcion_png)
-    return None
+    return mapObj
 
 def show_a_campaign(
     *,

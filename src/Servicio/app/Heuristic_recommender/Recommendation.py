@@ -179,9 +179,10 @@ def create_recomendation_per_campaign(
     member_id: int,
     campaign_id:int,
     recipe_in: RecommendationCreate,
-    db: Session = Depends(deps.get_db),
-    time = datetime.utcnow()
+    db: Session = Depends(deps.get_db)
     ) -> dict:
+    time = datetime.utcnow()
+
     """
     Create recomendation
     """
@@ -297,7 +298,6 @@ def create_recomendation_per_campaign(
         return {"detail": "no_measurements_needed"}
     cells_and_priority.sort(
         key=lambda order_features: (-order_features[3], order_features[1], -order_features[2]), reverse=True)
-    
     a=[]
     for i in cells_and_priority:
         if i[6].id==campaign_id:

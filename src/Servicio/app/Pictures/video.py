@@ -14,7 +14,7 @@ for html_file in html_files:
     if html_file.endswith(".html"):
         hti.screenshot(url=input_folder+'/'+html_file, save_as=html_file+'.png')
 
-############# CRªEATE VIDEO #################
+############# CREATE VIDEO #################
 fps=1
 #more fps means faster video speed
 # if we want a video for a spoken presentation (In the background) -> 1 fps

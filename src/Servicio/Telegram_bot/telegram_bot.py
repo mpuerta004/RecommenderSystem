@@ -4,7 +4,14 @@ from telebot import types
 from enum import Enum
 import random 
 import datetime 
-
+from csv import writer
+import folium
+from folium import plugins
+from IPython.display import display
+import csv
+from folium.features import DivIcon
+import bot_auxiliar 
+import pandas as pd 
 
 TOKEN = "6738738196:AAFVC0OT3RAv4PJvHsV4Vj9zYIlulIlnPLw" # Ponemos nuestro Token generado con el @BotFather
 bot = telebot.TeleBot(TOKEN)  #Creamos nuestra instancia "bot" a partir de ese TOKEN
@@ -41,15 +48,18 @@ headers = {
 # Manejar el comando /start -> 
 @bot.message_handler(commands=['start'])
 def send_locations(message):
+    
     headers = {
     'Accept': 'application/json',
     'Content-Type': 'application/json'
     }
     #We want to look if the user is already in the database or not!
     peticion = api_url + f'/members/{message.chat.id}'
+    response=None
     try:
         response = requests.get(peticion, headers=headers) 
         #If the answer is 200 -> the user is already in the database!
+        
     except Exception as e:
         print("Error durante la solicitud:", e)
         return None
@@ -80,6 +90,7 @@ def send_locations(message):
                     "role": "WorkerBee"
                 }
                 ]
+        response=None
         try:
             #Put endpoint to integrate the information of the user in the datases
             response = requests.put(peticion, headers=headers,
@@ -100,6 +111,8 @@ def send_locations(message):
                     "model": "string",
                     "year": "string"
                     }
+            response=None
+
             try:
                 #Post a new device in the dataset.
                 response = requests.post(peticion, headers=headers,json=info_device) 
@@ -116,6 +129,7 @@ def send_locations(message):
                     }
                 #TODO igual el 1 de campaign no funciona 
                 peticion = api_url + f"/sync/hives/1/campaigns/1/devices"
+                response=None
                 try:
                     response = requests.put(peticion, headers=headers,json=info_device_member)
                 except Exception as e:
@@ -148,6 +162,8 @@ def set_name(message):
     else:
         #We look if the user is in the database. 
         peticion = api_url + f'/members/{message.chat.id}'
+        response=None
+
         try:
             # Realizar una petición POST con datos en el cuerpo
             response = requests.get(peticion, headers=headers) 
@@ -182,7 +198,8 @@ def set_name(message):
                     "role": "WorkerBee"
                 }
             ]
-        
+            response=None
+
             try:
                 # Realizar una petición POST con datos en el cuerpo
                 response = requests.put(peticion, headers=headers,
@@ -219,6 +236,7 @@ def set_gender(message):
     else:
         # en caso de que no -> Le preguntamos informacion y explicamos de que es el proyecto! 
         peticion = api_url + f'/members/{message.chat.id}'
+        response=None
         try:
             # Realizar una petición POST con datos en el cuerpo
             response = requests.get(peticion, headers=headers) 
@@ -334,7 +352,6 @@ def set_mail(message):
                 }
                 ]
         
-            
                 # Realizar una petición POST con datos en el cuerpo
                 response = requests.put(peticion, headers=headers,
                                             json =payload) 
@@ -345,15 +362,7 @@ def set_mail(message):
                         data = response.json()  # Si la respuesta es JSON
                         print("Respuesta exitosa:", data) # data -> List[NewMembers]
                         bot.reply_to(message, f"Tu email ha sido registrado.")
-                        bot.send_message(message.chat.id, "Te recuerdo que puedes modificar tus datos personales con los siguientes comandos:\n" +
-                            "/setname [TU NOMBRE] ->  para definir tu nombre, \n"
-                            "/setsurname  [TU APELLIDO] ->  para definir tu apellido, \n"+
-                            "/setage [TU EDAD] -> Define tu edad, \n"+
-                            "/setbirthday [YYYY-MM-DDT00:00:00] -> para definir tu cumpleaños, \n"+
-                            "/setcity [TU CIUDAD] -> para definir tu ciudad, \n"+
-                            "/setmail [TU EMAIL] -> para definir tu email, \n"+
-                            "/setgender [NOBINARY or MALE or FEMALE or NOANSWER] -> para definir tu género. \n"+
-                            "Esta información puede ser cambiada cuando quieras usando estos comandos.") 
+                        bot.send_message(message.chat.id, message_change_personal_information)
                         # bot.send_message(message.chat.id, "Respuesta exitosa")
                 else:
                         print(f"Error en la solicitud. Código de respuesta: {response.status_code}")
@@ -424,15 +433,7 @@ def set_gender(message):
                         # La solicitud fue exitosa
                         data = response.json()  # Si la respuesta es JSON
                         print("Respuesta exitosa:", data) # data -> List[NewMembers]
-                        bot.send_message(message.chat.id, "Te recuerdo que puedes modificar tus datos personales con los siguientes comandos:\n" +
-                            "/setname [TU NOMBRE] ->  para definir tu nombre, \n"
-                            "/setsurname  [TU APELLIDO] ->  para definir tu apellido, \n"+
-                            "/setage [TU EDAD] -> Define tu edad, \n"+
-                            "/setbirthday [YYYY-MM-DDT00:00:00] -> para definir tu cumpleaños, \n"+
-                            "/setcity [TU CIUDAD] -> para definir tu ciudad, \n"+
-                            "/setmail [TU EMAIL] -> para definir tu email, \n"+
-                            "/setgender [NOBINARY or MALE or FEMALE or NOANSWER] -> para definir tu género. \n"+
-                            "Esta información puede ser cambiada cuando quieras usando estos comandos.") 
+                        bot.send_message(message.chat.id, message_change_personal_information)
                         # bot.send_message(message.chat.id, "Respuesta exitosa")
                 else:
                     print(f"Error en la solicitud. Código de respuesta: {response.status_code}")
@@ -476,15 +477,7 @@ def set_age(message):
                 city=data['city']
                 gender=data['gender']
                 mail=data['mail']
-                bot.send_message(message.chat.id, "Te recuerdo que puedes modificar tus datos personales con los siguientes comandos:\n" +
-                            "/setname seguido de tu nombre para definir tu nombre, \n"
-                            "/setsurname seguido de tu apellido para definir tu apellido, \n"+
-                            "/setage seguido de tu edad para definir tu edad, \n"+
-                            "/setbirthday seguido de tu fecha de nacimiento para definir tu cumpleaños, \n"+
-                            "/setcity  seguido de tu cuidad para definir tu ciudad, \n"+
-                            "/setmail seguido de tu email para definir tu email, \n"+
-                            "/setgender seguido de 'NOBINARY','MALE','FEMALE','NOANSWER' para definir tu género. \n"+
-                            "Esta información puede ser cambiada cuando quieras.") 
+                bot.send_message(message.chat.id, message_change_personal_information)
                         
                 
                 peticion = api_url + '/sync/hives/1/members/'
@@ -556,15 +549,7 @@ def set_surname(message):
                 gender=data['gender']
                 mail=data['mail']
                         
-                bot.send_message(message.chat.id, "Te recuerdo que puedes modificar tus datos personales con los siguientes comandos:\n" +
-                            "/setname seguido de tu nombre para definir tu nombre, \n"
-                            "/setsurname seguido de tu apellido para definir tu apellido, \n"+
-                            "/setage seguido de tu edad para definir tu edad, \n"+
-                            "/setbirthday seguido de tu fecha de nacimiento para definir tu cumpleaños, \n"+
-                            "/setcity  seguido de tu cuidad para definir tu ciudad, \n"+
-                            "/setmail seguido de tu email para definir tu email, \n"+
-                            "/setgender seguido de 'NOBINARY','MALE','FEMALE','NOANSWER' para definir tu género. \n"+
-                            "Esta información puede ser cambiada cuando quieras.") 
+                bot.send_message(message.chat.id, message_change_personal_information)
                 
                 peticion = api_url + '/sync/hives/1/members/'
                 payload = [
@@ -636,15 +621,7 @@ def set_city(message):
                 gender=data['gender']
                 mail=data['mail']
                         
-                bot.send_message(message.chat.id, "Te recuerdo que puedes modificar tus datos personales con los siguientes comandos:\n" +
-                            "/setname seguido de tu nombre para definir tu nombre, \n"
-                            "/setsurname seguido de tu apellido para definir tu apellido, \n"+
-                            "/setage seguido de tu edad para definir tu edad, \n"+
-                            "/setbirthday seguido de tu fecha de nacimiento para definir tu cumpleaños, \n"+
-                            "/setcity  seguido de tu cuidad para definir tu ciudad, \n"+
-                            "/setmail seguido de tu email para definir tu email, \n"+
-                            "/setgender seguido de 'NOBINARY','MALE','FEMALE','NOANSWER' para definir tu género. \n"+
-                            "Esta información puede ser cambiada cuando quieras.") 
+                bot.send_message(message.chat.id, message_change_personal_information)
                 
                 peticion = api_url + '/sync/hives/1/members/'
                 payload = [
@@ -680,12 +657,18 @@ def set_city(message):
 
         except Exception as e:
                 print("Error durante la solicitud:", e)
-                   
+
+
+           
 #TODO aqui te tienes que fiar del usuario! 
 # Envia una ubicación para pedir la recomendación!
-@bot.message_handler(commands=['recomendacion'])
+@bot.message_handler(commands=['recomendacion','medicion'])
 def enviar_localizacion(message):
+    #TODO ver si tengo alguna recomendacion aceptada!
+        #En caso de que si tenga - le recuerdas la ubicación 
+    #En caso de que no tenga - le pedimos la ubicación y le damos las recomendaciones. 
     markup = types.ReplyKeyboardMarkup(row_width=1)
+    bot.send_message(message.chat.id, "Lo primero que necesitamos es que nos envies tu localización")
     location_btn = types.KeyboardButton("Compartir ubicación", request_location=True)
     markup.add(location_btn)
     bot.send_message(message.chat.id, "Pulsa el botón para compartir tu ubicación:", reply_markup=markup)
@@ -695,217 +678,91 @@ def enviar_localizacion(message):
 #Ofrecemos al usuario la posibilidad de compartir su ubicación.
 @bot.message_handler(content_types=['location'])
 def handle_location(message):
-    
-    #Si el usuario ya esta registrado o no! 
-    peticion = api_url + f'/members/{message.chat.id}'
-    try:
-        # Realizar una petición POST con datos en el cuerpo
-        response = requests.get(peticion, headers=headers) 
-    
-        # Verificar el código de respuesta
-        if response.status_code == 200:
-            # La solicitud fue exitosa -> el usuario esta en l abase de datos! 
-            user_info = response.json()  # Si la respuesta es JSON
-            # print("Respuesta exitosa:", data) # data -> Member
-            
-            info=           {
-            "member_current_location": {
-                "Longitude": message.location.longitude,
-                "Latitude": message.location.latitude
-            }
-            }
-            #Aqui hay que ver si recomendaciones aceptadas cerca de la posicion. 
-            peticion = api_url + f"/members/{message.chat.id}/recommendations"
-            response = requests.get(peticion, headers=headers)
-        
-            if response.status_code == 200:
-                data_recomendaciones = response.json()
-                print(data_recomendaciones)
-                if len(data_recomendaciones['results'])>0:
-                    for i in data_recomendaciones['results']:
-                        if i['state'] =="ACCEPTED":
-                        #hay una peticion aceptada! entonces tenemos que ver si el usuario esta cerca de aqui 
-                            localizacion_user_recomendacion_Aceptada[message.chat.id]= info
-                            bot.reply_to(message, "Esperamos la foto en el sitio! Gracias por tu colaboración!")
-                            return None
-                        else:
-                                # En caso de no tener ninguna recomendacion aceptada -> creamos una.
-                                peticion = api_url +"/hives/1/campaigns"
-                                response = requests.get(peticion, headers=headers)
-                                if response.status_code == 200:
-                                    # La solicitud fue exitosa
-                                    data = response.json() 
-                                    a=len(data['results'])
-                                    elemento=random.randint(0,a-1)
-                                    campaign_id=data['results'][elemento]['id']
-                                    peticion = api_url + f'/members/{message.chat.id}/campaigns/{campaign_id}/recommendations'
-                                    
-                                    response = requests.post(peticion, headers=headers,json=info) 
-                                    # Verificar el código de respuesta
-                                    if response.status_code == 201:
-                                        # La solicitud fue exitosa
-                                        # 
-                                        data = response.json() 
-                                        #Coger del data las posiciones de cada recomendacion! 
-                                        last_recomendation_per_user[message.chat.id]=data['results']
-                                        recomendation_aceptada[message.chat.id]=0
-                                        
-                                        #TODO! ExTEPCIONES
-                                        if len(data['results'])==0:
-                                            bot.send_message(message.chat.id, "No hay recomendaciones para ti en este momento. Lo sentimos.")
-                                        elif len(data['results'])==1:
-                                            markup = types.ReplyKeyboardMarkup(row_width=1)
-                                            option1 = types.KeyboardButton(f"Opción 1")# - lat {data['results'][0]['cell']['centre']['Latitude']} long{data['results'][0]['cell']['centre']['Longitude']}")
-                                            markup.add(option1)
-                                            bot.send_message(message.chat.id, "Dada tu ubicación aqui tenemos 1 recomendaciones para ti. Las tres opciones estan explicadas aquí! \n")
-                                            bot.send_message(message.chat.id, "Opción 1:")
-                                            bot.send_location(chat_id=message.chat.id, latitude= data['results'][0]['cell']['centre']['Latitude'], longitude=data['results'][0]['cell']['centre']['Longitude'])
-                                            #TODO indicaciones para proximas intrucciones en cuestion de medicion. 
-                                            bot.send_message(message.chat.id, "Porfavor elija en el menu la que quieras realizar.", reply_markup=markup)
-                                        
-                                        elif len(data['results'])==2:
-                                            markup = types.ReplyKeyboardMarkup(row_width=1)
-                                            option1 = types.KeyboardButton(f"Opción 1")# - lat {data['results'][0]['cell']['centre']['Latitude']} long{data['results'][0]['cell']['centre']['Longitude']}")
-                                            option2 = types.KeyboardButton(f"Opción 2")# - lat {data['results'][1]['cell']['centre']['Latitude']} long{data['results'][1]['cell']['centre']['Longitude']}")
-
-                                            markup.add(option1,option2)
-                                            print(markup.keyboard)
-                                            bot.send_message(message.chat.id, "Dada tu ubicación aqui tenemos 2 recomendaciones para ti. Las dos opciones estan explicadas aquí! \n")
-                                            bot.send_message(message.chat.id, "Opción 1:")
-                                            bot.send_location(chat_id=message.chat.id, latitude= data['results'][0]['cell']['centre']['Latitude'], longitude=data['results'][0]['cell']['centre']['Longitude'])
-                                            bot.send_message(message.chat.id, "Opción 2:")
-                                            bot.send_location(chat_id=message.chat.id, latitude= data['results'][1]['cell']['centre']['Latitude'], longitude=data['results'][1]['cell']['centre']['Longitude'])
-                                            
-                                            
-                                            bot.send_message(message.chat.id, "Porfavor elija en el menu la que quieras realizar.", reply_markup=markup)
-                                        
-                                        else:
-                                            markup = types.ReplyKeyboardMarkup(row_width=1)
-                                            option1 = types.KeyboardButton(f"Opción {1} ")#- lat {data['results'][0]['cell']['centre']['Latitude']} long{data['results'][0]['cell']['centre']['Longitude']}")
-                                            option2 = types.KeyboardButton(f"Opción {2}")# - lat {data['results'][1]['cell']['centre']['Latitude']} long{data['results'][1]['cell']['centre']['Longitude']}")
-                                            option3 = types.KeyboardButton(f"Opción {3}")# - lat {data['results'][2]['cell']['centre']['Latitude']} long{data['results'][2]['cell']['centre']['Longitude']}")
-                                            markup.add(option1,option2,option3)
-                                            print(markup.keyboard)
-                                            bot.send_message(message.chat.id, "Dada tu ubicación aqui tenemos 3 recomendaciones para ti. Las tres opciones estan explicadas aquí! \n")
-                                            bot.send_message(message.chat.id, "Opción 1:")
-                                            bot.send_location(chat_id=message.chat.id, latitude= data['results'][0]['cell']['centre']['Latitude'], longitude=data['results'][0]['cell']['centre']['Longitude'])
-                                            bot.send_message(message.chat.id, "Opción 2:")
-                                            bot.send_location(chat_id=message.chat.id, latitude= data['results'][1]['cell']['centre']['Latitude'], longitude=data['results'][1]['cell']['centre']['Longitude'])
-                                            bot.send_message(message.chat.id, "Opción 3:")
-                                            bot.send_location(chat_id=message.chat.id, latitude= data['results'][2]['cell']['centre']['Latitude'], longitude=data['results'][2]['cell']['centre']['Longitude'])
-                                            
-                                            
-                                            bot.send_message(message.chat.id, "Porfavor elija en el menu la que quieras realizar.", reply_markup=markup)
-                                        
-                                    else:
-                                        print(f"Error en la solicitud de campañas. Código de respuesta: {response.status_code}")        
-                                else:
-                                    print(f"Error en la solicitud de campañas. Código de respuesta: {response.status_code}")
-                        
-                else:
-                        # En caso de no tener ninguna recomendacion aceptada -> creamos una.
-                        peticion = api_url +"/hives/1/campaigns"
-                        response = requests.get(peticion, headers=headers)
-                        if response.status_code == 200:
-                            # La solicitud fue exitosa
-                            data = response.json() 
-                            a=len(data['results'])
-                            elemento=random.randint(0,a-1)
-                            campaign_id=data['results'][elemento]['id']
-                            peticion = api_url + f'/members/{message.chat.id}/campaigns/{campaign_id}/recommendations'
-                            
-                            response = requests.post(peticion, headers=headers,json=info) 
-                            # Verificar el código de respuesta
-                            if response.status_code == 201:
-                                # La solicitud fue exitosa
-                                # 
-                                data = response.json() 
-                                #Coger del data las posiciones de cada recomendacion! 
-                                last_recomendation_per_user[message.chat.id]=data['results']
-                                recomendation_aceptada[message.chat.id]=0
-                                
-                                #TODO! ExTEPCIONES
-                                if len(data['results'])==0:
-                                    bot.send_message(message.chat.id, "No hay recomendaciones para ti en este momento. Lo sentimos.")
-                                elif len(data['results'])==1:
-                                    markup = types.ReplyKeyboardMarkup(row_width=1)
-                                    option1 = types.KeyboardButton(f"Opción 1")# - lat {data['results'][0]['cell']['centre']['Latitude']} long{data['results'][0]['cell']['centre']['Longitude']}")
-                                    markup.add(option1)
-                                    bot.send_message(message.chat.id, "Dada tu ubicación aqui tenemos 1 recomendaciones para ti. Las tres opciones estan explicadas aquí! \n")
-                                    bot.send_message(message.chat.id, "Opción 1:")
-                                    bot.send_location(chat_id=message.chat.id, latitude= data['results'][0]['cell']['centre']['Latitude'], longitude=data['results'][0]['cell']['centre']['Longitude'])
-                                    #TODO indicaciones para proximas intrucciones en cuestion de medicion. 
-                                    bot.send_message(message.chat.id, "Porfavor elija en el menu la que quieras realizar.", reply_markup=markup)
-                                
-                                elif len(data['results'])==2:
-                                    markup = types.ReplyKeyboardMarkup(row_width=1)
-                                    option1 = types.KeyboardButton(f"Opción 1")# - lat {data['results'][0]['cell']['centre']['Latitude']} long{data['results'][0]['cell']['centre']['Longitude']}")
-                                    option2 = types.KeyboardButton(f"Opción 2")# - lat {data['results'][1]['cell']['centre']['Latitude']} long{data['results'][1]['cell']['centre']['Longitude']}")
-
-                                    markup.add(option1,option2)
-                                    print(markup.keyboard)
-                                    bot.send_message(message.chat.id, "Dada tu ubicación aqui tenemos 2 recomendaciones para ti. Las dos opciones estan explicadas aquí! \n")
-                                    bot.send_message(message.chat.id, "Opción 1:")
-                                    bot.send_location(chat_id=message.chat.id, latitude= data['results'][0]['cell']['centre']['Latitude'], longitude=data['results'][0]['cell']['centre']['Longitude'])
-                                    bot.send_message(message.chat.id, "Opción 2:")
-                                    bot.send_location(chat_id=message.chat.id, latitude= data['results'][1]['cell']['centre']['Latitude'], longitude=data['results'][1]['cell']['centre']['Longitude'])
-                                    
-                                    
-                                    bot.send_message(message.chat.id, "Porfavor elija en el menu la que quieras realizar.", reply_markup=markup)
-                                
-                                else:
-                                    markup = types.ReplyKeyboardMarkup(row_width=1)
-                                    option1 = types.KeyboardButton(f"Opción {1} ")#- lat {data['results'][0]['cell']['centre']['Latitude']} long{data['results'][0]['cell']['centre']['Longitude']}")
-                                    option2 = types.KeyboardButton(f"Opción {2}")# - lat {data['results'][1]['cell']['centre']['Latitude']} long{data['results'][1]['cell']['centre']['Longitude']}")
-                                    option3 = types.KeyboardButton(f"Opción {3}")# - lat {data['results'][2]['cell']['centre']['Latitude']} long{data['results'][2]['cell']['centre']['Longitude']}")
-                                    markup.add(option1,option2,option3)
-                                    print(markup.keyboard)
-                                    bot.send_message(message.chat.id, "Dada tu ubicación aqui tenemos 3 recomendaciones para ti. Las tres opciones estan explicadas aquí! \n")
-                                    bot.send_message(message.chat.id, "Opción 1:")
-                                    bot.send_location(chat_id=message.chat.id, latitude= data['results'][0]['cell']['centre']['Latitude'], longitude=data['results'][0]['cell']['centre']['Longitude'])
-                                    bot.send_message(message.chat.id, "Opción 2:")
-                                    bot.send_location(chat_id=message.chat.id, latitude= data['results'][1]['cell']['centre']['Latitude'], longitude=data['results'][1]['cell']['centre']['Longitude'])
-                                    bot.send_message(message.chat.id, "Opción 3:")
-                                    bot.send_location(chat_id=message.chat.id, latitude= data['results'][2]['cell']['centre']['Latitude'], longitude=data['results'][2]['cell']['centre']['Longitude'])
-                                    
-                                    
-                                    bot.send_message(message.chat.id, "Porfavor elija en el menu la que quieras realizar.", reply_markup=markup)
-                                
-                            else:
-                                print(f"Error en la solicitud de campañas. Código de respuesta: {response.status_code}")        
-                        else:
-                            print(f"Error en la solicitud de campañas. Código de respuesta: {response.status_code}")
-                        
-            else:
-                print(f"Error en la solicitud de campañas. Código de respuesta: {response.status_code}")        
-            
-           
+    user=bot_auxiliar.existe_user(message.chat.id)
+    info=           {
+                    "member_current_location": {
+                        "Longitude": message.location.longitude,
+                        "Latitude": message.location.latitude
+                    }  }
+    if user is not None:
+        # Aqui recomendation_aceptada[message.chat.id] deberia ser 0 
+        rec= bot_auxiliar.recomendaciones_aceptadas(message.chat.id)
+        #El usuario tiene recomendaciones aceptadas!
+        if rec is not None:
+            # Se supone que el usuario esta en la celda. 
+            localizacion_user_recomendacion_Aceptada[message.chat.id]= info
+            bot.reply_to(message, "Es momento de que envies la foto!")
+            # else:
+            #     # Si no esta dentro de la celda -> le recordamos donde debe hacer la foto!
+            #     bot.reply_to(message, "La medicion la tienes que sacar aqui:")
+            #     bot.send_location(chat_id=message.chat.id, latitude= rec['cell']['centre']['Latitude'], longitude=rec['cell']['centre']['Longitude'])
+            #     return None
         else:
-            print("El usuario no existe -> No deberia pasar")
-    except Exception as e:
-        print("Error durante la solicitud:", e)
-        
-    # recomendaciones=create_recomendation_per_campaign(db=db,member_id=user_class.id,recipe_in=a,campaign_id=campaign_id,time=time)
-    # Aquí puedes realizar acciones con la ubicación recibida, como guardarla o procesarla
-    # bot.reply_to(message, f"Recibí tu ubicación: Latitud {latitude}, Longitud {longitude}")
-   
+            # En caso de no tener ninguna recomendacion aceptada -> creamos una.
+            campaign=bot_auxiliar.get_campaign_hive_1(message.chat.id)
+            if campaign is not None:
+                campaign_id=campaign['id']
 
+                data=bot_auxiliar.recomendacion(id_user=message.chat.id, campaign_id=campaign_id, info=info )
+                if data is not None and data!={'detail': 'far_away'} :    
+                    #Eliminamos los datos anteriores guardados
+                    recomendation_aceptada[message.chat.id]=0
+                    last_recomendation_per_user[message.chat.id]=data['results']                    
+                    #TODO! ExTEPCIONES
+                    if len(data['results'])==0:
+                        bot.send_message(message.chat.id, "No hay recomendaciones para ti en este momento. Lo sentimos.")
+                    elif len(data['results'])==1:
+                        markup = types.ReplyKeyboardMarkup(row_width=1)
+                        option1 = types.KeyboardButton(f"Opción 1")# - lat {data['results'][0]['cell']['centre']['Latitude']} long{data['results'][0]['cell']['centre']['Longitude']}")
+                        markup.add(option1)
+                        bot.send_message(message.chat.id, "Dada tu ubicación aqui tenemos 1 recomendaciones para ti. Las tres opciones estan explicadas aquí! \n")
+                        bot.send_message(message.chat.id, "Opción 1:")
+                        bot.send_location(chat_id=message.chat.id, latitude= data['results'][0]['cell']['centre']['Latitude'], longitude=data['results'][0]['cell']['centre']['Longitude'])
+                                            #TODO indicaciones para proximas intrucciones en cuestion de medicion. 
+                        bot.send_message(message.chat.id, "Porfavor elija en el menu la que quieras realizar.", reply_markup=markup)
+                                        
+                    elif len(data['results'])==2:
+                            markup = types.ReplyKeyboardMarkup(row_width=1)
+                            option1 = types.KeyboardButton(f"Opción 1")# - lat {data['results'][0]['cell']['centre']['Latitude']} long{data['results'][0]['cell']['centre']['Longitude']}")
+                            option2 = types.KeyboardButton(f"Opción 2")# - lat {data['results'][1]['cell']['centre']['Latitude']} long{data['results'][1]['cell']['centre']['Longitude']}")
+
+                            markup.add(option1,option2)
+                            print(markup.keyboard)
+                            bot.send_message(message.chat.id, "Dada tu ubicación aqui tenemos 2 recomendaciones para ti. Las dos opciones estan explicadas aquí! \n")
+                            bot.send_message(message.chat.id, "Opción 1:")
+                            bot.send_location(chat_id=message.chat.id, latitude= data['results'][0]['cell']['centre']['Latitude'], longitude=data['results'][0]['cell']['centre']['Longitude'])
+                            bot.send_message(message.chat.id, "Opción 2:")
+                            bot.send_location(chat_id=message.chat.id, latitude= data['results'][1]['cell']['centre']['Latitude'], longitude=data['results'][1]['cell']['centre']['Longitude'])
+                            bot.send_message(message.chat.id, "Porfavor elija en el menu la que quieras realizar.", reply_markup=markup)              
+                    else:
+                            markup = types.ReplyKeyboardMarkup(row_width=1)
+                            option1 = types.KeyboardButton(f"Opción {1} ")#- lat {data['results'][0]['cell']['centre']['Latitude']} long{data['results'][0]['cell']['centre']['Longitude']}")
+                            option2 = types.KeyboardButton(f"Opción {2}")# - lat {data['results'][1]['cell']['centre']['Latitude']} long{data['results'][1]['cell']['centre']['Longitude']}")
+                            option3 = types.KeyboardButton(f"Opción {3}")# - lat {data['results'][2]['cell']['centre']['Latitude']} long{data['results'][2]['cell']['centre']['Longitude']}")
+                            markup.add(option1,option2,option3)
+                            print(markup.keyboard)
+                            bot.send_message(message.chat.id, "Dada tu ubicación aqui tenemos 3 recomendaciones para ti. Las tres opciones estan explicadas aquí! \n")
+                            bot.send_message(message.chat.id, "Opción 1:")
+                            bot.send_location(chat_id=message.chat.id, latitude= data['results'][0]['cell']['centre']['Latitude'], longitude=data['results'][0]['cell']['centre']['Longitude'])
+                            bot.send_message(message.chat.id, "Opción 2:")
+                            bot.send_location(chat_id=message.chat.id, latitude= data['results'][1]['cell']['centre']['Latitude'], longitude=data['results'][1]['cell']['centre']['Longitude'])
+                            bot.send_message(message.chat.id, "Opción 3:")
+                            bot.send_location(chat_id=message.chat.id, latitude= data['results'][2]['cell']['centre']['Latitude'], longitude=data['results'][2]['cell']['centre']['Longitude'])              
+                            bot.send_message(message.chat.id, "Porfavor elija en el menu la que quieras realizar.", reply_markup=markup)
+                                        
+                else:
+                    bot.reply_to(message, "No hay posibles recomendaicones para ti en este momento. Lo sentimos.")
+            else:
+                bot.reply_to(message, "No hay campañas activas cerca de ti. Lo sentimos.")
+    else:
+        print("El usuario no esta registrado.")
+        bot.reply_to(message, "Esta habiendo un problema, por favor envie el comando \start. Gracias!")        
 
 @bot.message_handler(content_types=['photo'])
 def handle_photo_and_location(message):
     # Verificar si el mensaje contiene una foto
     if message.photo:
         # Aquí puedes acceder a la información de la foto
-        photo = message.photo[-1]  # Obtén la última foto, que suele ser la de mayor resolución
-        file_id = photo.file_id
-
-        # Puedes utilizar file_id para descargar la foto o realizar otras acciones según tus necesidades
-        file_info = bot.get_file(file_id)
-        file_path = file_info.file_path
-
-        # Puedes imprimir información adicional si lo deseas
-        print(f"File ID: {file_id}")
-        print(f"File Path: {file_path}")
         peticion = api_url +f"/members/{message.chat.id}/measurements"
         posicion_user= localizacion_user_recomendacion_Aceptada[message.chat.id]
         date= datetime.datetime.utcnow()
@@ -924,20 +781,45 @@ def handle_photo_and_location(message):
                             "pm1": 0,
                             "benzene": 0}
         response = requests.post(peticion, headers=headers, json=measurement_creation)
-        
+ 
+
         if response.status_code == 201:
-            response.json()
+            data=response.json()
+            number= recomendation_aceptada[message.chat.id]
+            recomendacion_info=last_recomendation_per_user[message.chat.id][int(number)]
+            lat=recomendacion_info['cell']['centre']['Latitude']
+            long=recomendacion_info['cell']['centre']['Longitude']
+            file_id = message.photo[-1].file_id
+            recomendation_aceptada[message.chat.id]=0
+            del last_recomendation_per_user[message.chat.id]
+            # Obtiene información sobre el archivo de la foto
+            file_info = bot.get_file(file_id)
+
+            # Descarga la foto
+            downloaded_file = bot.download_file(file_info.file_path)
+
+            # Guarda la foto en el sistema de archivos
+            file_path = f'src/Servicio/Telegram_bot/Pictures/photo{data["id"]}.jpg'
+            with open(file_path, 'wb') as new_file:
+                new_file.write(downloaded_file)
+            
+            data_csv = [lat, long, file_path]
+            with open("src/Servicio/Telegram_bot/Pictures/CSVFILE.csv", "a", newline="") as f_object:
+                # Pass the CSV  file object to the writer() function
+                writer_object = writer(f_object)
+                # Result - a writer object
+                # Pass the data in the list as an argument into the writerow() function
+                writer_object.writerow(data_csv)
+                # Close the file object
+                f_object.close()
             bot.reply_to(message, "¡Gracias por enviar la foto!")
+            
         elif response.status_code == 404:
             bot.reply_to(message, "Esta recomendacion no es viable... ")
             print("Error en la medicion puede ser por que no halla ")
         else:
             print(f"Error en la solicitud de medicion. Código de respuesta: {response.status_code}")
  
-    
-    
-
-
 
 # Dada la eleccion del usuario almacenamos su eleccion en la base de datos. 
 @bot.message_handler(func=lambda message: message.text=="Opción 1" or message.text=="Opción 2" or message.text=="Opción 3")
@@ -950,7 +832,7 @@ def handle_option(message):
 
         print(number)
         #TODO verificar que esto existe! ademas que no se puede modificar una reocmendacion si ya hay alguna. 
-        recomendation_aceptada[message.chat.id]=number
+        recomendation_aceptada[message.chat.id]=int(number) -1
         number=int(number)-1
         recomendacion_info=last_recomendation_per_user[message.chat.id][number]
         recommendation_id=recomendacion_info['recommendation']['id']
@@ -978,11 +860,190 @@ def handle_option(message):
 
 
 
+from folium import plugins
+from folium.utilities import image_to_url
+
+@bot.message_handler(commands=['Map'])
+def crear_mapa(message):
+    #Tengo que pedir el centro de la camapaña- surface 
+    peticion = api_url +f"/hives/1/campaigns/1/surfaces"
+    try:
+        #Se registramos la recomendacion acceptada por el usuario.
+        response = requests.get(peticion, headers=headers)
+        if response.status_code == 200:
+                # La solicitud fue exitosa
+                data = response.json()
+                
+                surface_centre_lat=data['results'][0]['boundary']['centre']['Latitude']
+                surface_centre_long=data['results'][0]['boundary']['centre']['Longitude']
+                surface_radius=data['results'][0]['boundary']['radius']
+                # peticion= api_url +f"/members/{message.chat.id}/measurements"
+
+                mapa = folium.Map(location=[surface_centre_lat, surface_centre_long], zoom_start=18)
+                print(surface_centre_lat, surface_centre_long)
+                peticion = api_url +f"/hives/1/campaigns/show"
+                try:
+                                
+                    #Se registramos la recomendacion acceptada por el usuario.
+                    response = requests.get(peticion, headers=headers)
+                    if response.status_code == 200:
+                        df = pd.read_csv('src/Servicio/Telegram_bot/Pictures/CSVFILE.csv', names=['latitud', 'longitud', 'url_imagen'])
+                            # Obtener el número de combinaciones diferentes de las dos primeras columnas
+                        grupos = df.groupby(['latitud', 'longitud'])['url_imagen'].apply(list).reset_index()
+                        for index, row in grupos.iterrows():
+                            combinacion = (row['latitud'], row['longitud'])
+                            datos_tercera_columna = row['url_imagen']
+                            n_files=len(datos_tercera_columna)
+                            grados= 360/n_files
+                            # d= math.sqrt(2*(surface_radius/2)**2)/1000
+                            for i in range(0,n_files):
+                                tamano_imagen= min(95 * 2 ** (18 - 10), 150)
+                                # lat, long = bot_auxiliar.get_point_at_distance(lat1=combinacion[0], lon1=combinacion[1], bearing=i*grados, d=d)
+                                lat, long= combinacion[0], combinacion[1]
+                                if 0<=i*grados and 90>i*grados:
+                                    print("de 0 a 90 grados")
+                                    folium.Marker(location=[lat, long], icon=folium.CustomIcon(icon_image=datos_tercera_columna[i], icon_size=(95, 95), icon_anchor=(100,100))).add_to(mapa)
+                                    # marcador= agregar_imagen(mapa, lat, long, datos_tercera_columna[i], surface_radius,alineacion=(100,100))
+                                    # marcador.add_to(mapa)   
+                                elif 90<=i*grados and 180>i*grados:
+                                    print("de 90 a 180")
+                                    folium.Marker(location=[lat, long], icon=folium.CustomIcon(icon_image=datos_tercera_columna[i], icon_size=(95, 95), icon_anchor=(100,0))).add_to(mapa)
+
+                                    # marcador=agregar_imagen(mapa, lat, long, datos_tercera_columna[i], surface_radius,alineacion=(100,0))
+                                    # marcador.add_to(mapa)
+                                elif 180<=i*grados and 270>i*grados:
+                                    print("de 180 a 270")
+                                    folium.Marker(location=[lat, long], icon=folium.CustomIcon(icon_image=datos_tercera_columna[i], icon_size=(95, 95), icon_anchor=(0,0))).add_to(mapa)
+
+                                    # marcadr=agregar_imagen(mapa, lat,long, datos_tercera_columna[i], surface_radius,alineacion=(0,0))
+                                    # mapa.get_root().html.add_child(marcador)
+                                else:
+                                    print("de 270 a 360")
+                                    folium.Marker(location=[lat, long], icon=folium.CustomIcon(icon_image=datos_tercera_columna[i], icon_size=(95, 95),icon_anchor=(0,100))).add_to(mapa)
+
+                                    # marcador=agregar_imagen(mapa, lat, long, datos_tercera_columna[i], surface_radius,alineacion=(0,100))
+                                    # mapa.get_root().html.add_child(marcador)
+                                df = pd.read_csv('src/Servicio/Telegram_bot/Pictures/DATAMAP.csv',names=["list_point", "id_user", "Cardinal_actual", "expected_measurements","color_number"])
+                                for index, row in df.iterrows():
+                                        list_point=json.loads(row["list_point"])
+                                        id_user=row["id_user"]
+                                        Cardinal_actual=row["Cardinal_actual"]
+                                        excepted_measurements=row["expected_measurements"]
+                                        # color_number=str(row[4])
+                                    
+                                        folium.Polygon(locations=list_point, color='black', fill=False,
+                                                            weight=1, popup=(folium.Popup(str(id_user))), opacity=0.5, fill_opacity=0.2).add_to(mapa)
+                                        
+                                        folium.Marker(list_point[3],popup=f"Number of Expected measurements: {str(excepted_measurements)}",
+                                                icon=DivIcon(
+                                                    icon_size=(200, 36),
+                                                    icon_anchor=(0, 0),
+                                                    html=f'<div style="font-size: 20pt;">{str(Cardinal_actual)}</div>'
+                                                )).add_to(mapa)
+
+
+                                            # coordenadas = (lat,long)
+                                            # ubicaciones.add(coordenadas)
+                                    # mapa.save('map_antes_de_otro.html')
+                        mapa.save('map.html')
+                        print("Hemos terminado el mapa! ")
+                        with open("map.html", "rb") as map_file:
+
+                                        bot.send_document(message.chat.id, map_file, caption="Tu Mapa")
+                            
+                    else:
+                                    print(f"Error en la solicitud de update de la recomendation. Código de respuesta: {response.status_code}")             
+                except Exception as e:
+                                print("Error durante la solicitud:", e)         
+
+                # grupo_imagenes = folium.FeatureGroup(name='Imágenes')
+                # mapa.add_child(grupo_imagenes)
+
+        else:
+                print(f"Error en la solicitud de update de la recomendation. Código de respuesta: {response.status_code}")        
+   
+    except Exception as e:
+        print("Error durante la solicitud:", e)
+    
+    
+    
+import math 
+import json
+
+# def crear_collage(mapa, surface_radius):
+#     # ubicaciones = set()  # Conjunto para rastrear las ubicaciones ya procesadas
+#     df = pd.read_csv('src/Servicio/Telegram_bot/Pictures/CSVFILE.csv', names=['latitud', 'longitud', 'url_imagen'])
+#         # Obtener el número de combinaciones diferentes de las dos primeras columnas
+#     grupos = df.groupby(['latitud', 'longitud'])['url_imagen'].apply(list).reset_index()
+#     for index, row in grupos.iterrows():
+#         combinacion = (row['latitud'], row['longitud'])
+#         datos_tercera_columna = row['url_imagen']
+#         n_files=len(datos_tercera_columna)
+#         grados= 360/n_files
+#         # d= math.sqrt(2*(surface_radius/2)**2)/1000
+#         for i in range(0,n_files):
+#             tamano_imagen= min(95 * 2 ** (18 - 10), 150)
+#             # lat, long = bot_auxiliar.get_point_at_distance(lat1=combinacion[0], lon1=combinacion[1], bearing=i*grados, d=d)
+#             lat, long= combinacion[0], combinacion[1]
+#             if 0<=i*grados and 90>i*grados:
+#                 print("de 0 a 90 grados")
+#                 folium.Marker(location=[lat, long], icon=folium.CustomIcon(icon_image=datos_tercera_columna[i], icon_size=(95, 95), icon_anchor=(100,100))).add_to(mapa)
+#                 # marcador= agregar_imagen(mapa, lat, long, datos_tercera_columna[i], surface_radius,alineacion=(100,100))
+#                 # marcador.add_to(mapa)   
+#             elif 90<=i*grados and 180>i*grados:
+#                 print("de 90 a 180")
+#                 folium.Marker(location=[lat, long], icon=folium.CustomIcon(icon_image=datos_tercera_columna[i], icon_size=(95, 95), icon_anchor=(100,0))).add_to(mapa)
+
+#                 # marcador=agregar_imagen(mapa, lat, long, datos_tercera_columna[i], surface_radius,alineacion=(100,0))
+#                 # marcador.add_to(mapa)
+#             elif 180<=i*grados and 270>i*grados:
+#                 print("de 180 a 270")
+#                 folium.Marker(location=[lat, long], icon=folium.CustomIcon(icon_image=datos_tercera_columna[i], icon_size=(95, 95), icon_anchor=(0,0))).add_to(mapa)
+
+#                 # marcadr=agregar_imagen(mapa, lat,long, datos_tercera_columna[i], surface_radius,alineacion=(0,0))
+#                 # mapa.get_root().html.add_child(marcador)
+#             else:
+#                 print("de 270 a 360")
+#                 folium.Marker(location=[lat, long], icon=folium.CustomIcon(icon_image=datos_tercera_columna[i], icon_size=(95, 95),icon_anchor=(0,100))).add_to(mapa)
+
+#                 # marcador=agregar_imagen(mapa, lat, long, datos_tercera_columna[i], surface_radius,alineacion=(0,100))
+#                 # mapa.get_root().html.add_child(marcador)
+#     df = pd.read_csv('src/Servicio/Telegram_bot/Pictures/DATAMAP.csv',names=["list_point", "id_user", "Cardinal_actual", "expected_measurements","color_number"])
+#     for index, row in df.iterrows():
+#         list_point=json.loads(row["list_point"])
+#         id_user=row["id_user"]
+#         Cardinal_actual=row["Cardinal_actual"]
+#         excepted_measurements=row["expected_measurements"]
+#         # color_number=str(row[4])
+       
+#         folium.Polygon(locations=list_point, color='black', fill=False,
+#                             weight=1, popup=(folium.Popup(str(id_user))), opacity=0.5, fill_opacity=0.2).add_to(mapa)
+        
+#         folium.Marker(list_point[3],popup=f"Number of Expected measurements: {str(excepted_measurements)}",
+#                 icon=DivIcon(
+#                     icon_size=(200, 36),
+#                     icon_anchor=(0, 0),
+#                     html=f'<div style="font-size: 20pt;">{str(Cardinal_actual)}</div>'
+#                 )).add_to(mapa)
+
+
+#             # coordenadas = (lat,long)
+#             # ubicaciones.add(coordenadas)
+#     # mapa.save('map_antes_de_otro.html')
+#     mapa.save('map.html')
+#     print("Hemos terminado el mapa! ")
+#     with open("mapa.html", "rb") as map_file:
+
+#         bot.send_document(message.chat.id, map_file, caption="Tu Mapa")
+
+#     return mapa
 
 
 if __name__ == "__main__":
     # test_bot = bot_send_text('¡Hola, Telegram!')
     bot.polling()
+    
+    
     # user = bot.get_me()
     # print(user)
     # #Es equivalente a esto 
