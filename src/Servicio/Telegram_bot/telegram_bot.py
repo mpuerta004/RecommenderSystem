@@ -13,13 +13,16 @@ from folium.features import DivIcon
 import bot_auxiliar 
 import pandas as pd 
 
+from folium import plugins
+from folium.utilities import image_to_url
+
 TOKEN = "6738738196:AAFVC0OT3RAv4PJvHsV4Vj9zYIlulIlnPLw" # Ponemos nuestro Token generado con el @BotFather
 bot = telebot.TeleBot(TOKEN)  #Creamos nuestra instancia "bot" a partir de ese TOKEN
 # #https://api.telegram.org/bot<TU_TOKEN/getUpdates
 # #https://api.telegram.org/bot<TU_TOKEN>/getMe
 api_url= 'http://localhost:8001'
 last_recomendation_per_user={}
-localizacion_user_recomendacion_Aceptada={}
+last_location_of_user={}
 
 message_change_personal_information= ("Te recuerdo que puedes modificar tus datos personales con los siguientes comandos:\n" +
                             "/setname [TU NOMBRE] ->  para definir tu nombre, \n"
@@ -36,12 +39,7 @@ headers = {
     'Accept': 'application/json',
     'Content-Type': 'application/json'
     }
-#TODO explicar a los usuarios que no se pueden coger varias recomendaciones a la vez. 
 
-"""PREGUNTAS
-    - Es mejor enviar una especie de JSON y que los usuarios lo modifiquen si quieren? 
-    - 
-"""
 
 #TODO poner la opcion de que el usario pueda poner todos sus datos personales de una vez 
 
@@ -663,40 +661,30 @@ def set_city(message):
 #TODO aqui te tienes que fiar del usuario! 
 # Envia una ubicación para pedir la recomendación!
 @bot.message_handler(commands=['recomendacion','medicion'])
-def enviar_localizacion(message):
-    #TODO ver si tengo alguna recomendacion aceptada!
-        #En caso de que si tenga - le recuerdas la ubicación 
-    #En caso de que no tenga - le pedimos la ubicación y le damos las recomendaciones. 
+def recibir_localizacion(message):
     markup = types.ReplyKeyboardMarkup(row_width=1)
-    bot.send_message(message.chat.id, "Lo primero que necesitamos es que nos envies tu localización")
+
     location_btn = types.KeyboardButton("Compartir ubicación", request_location=True)
     markup.add(location_btn)
-    bot.send_message(message.chat.id, "Pulsa el botón para compartir tu ubicación:", reply_markup=markup)
-    #TODO comentar al usuario que para darle una recomendacion puede simplemente enviarle la posicion y ya. 
+    bot.send_message(message.chat.id, "Lo primero que necesitamos es que nos envies tu localización. Pulsa el botón para compartir tu ubicación:", reply_markup=markup)
+
 
 
 #Ofrecemos al usuario la posibilidad de compartir su ubicación.
 @bot.message_handler(content_types=['location'])
 def handle_location(message):
     user=bot_auxiliar.existe_user(message.chat.id)
-    info=           {
+    if user is not None:
+        info=           {
                     "member_current_location": {
                         "Longitude": message.location.longitude,
                         "Latitude": message.location.latitude
                     }  }
-    if user is not None:
-        # Aqui recomendation_aceptada[message.chat.id] deberia ser 0 
+        last_location_of_user[message.chat.id]= info
         rec= bot_auxiliar.recomendaciones_aceptadas(message.chat.id)
         #El usuario tiene recomendaciones aceptadas!
         if rec is not None:
-            # Se supone que el usuario esta en la celda. 
-            localizacion_user_recomendacion_Aceptada[message.chat.id]= info
             bot.reply_to(message, "Es momento de que envies la foto!")
-            # else:
-            #     # Si no esta dentro de la celda -> le recordamos donde debe hacer la foto!
-            #     bot.reply_to(message, "La medicion la tienes que sacar aqui:")
-            #     bot.send_location(chat_id=message.chat.id, latitude= rec['cell']['centre']['Latitude'], longitude=rec['cell']['centre']['Longitude'])
-            #     return None
         else:
             # En caso de no tener ninguna recomendacion aceptada -> creamos una.
             campaign=bot_auxiliar.get_campaign_hive_1(message.chat.id)
@@ -755,71 +743,9 @@ def handle_location(message):
             else:
                 bot.reply_to(message, "No hay campañas activas cerca de ti. Lo sentimos.")
     else:
-        print("El usuario no esta registrado.")
-        bot.reply_to(message, "Esta habiendo un problema, por favor envie el comando \start. Gracias!")        
+        bot.send_message(message.chat.id, "Esta habiendo un problema, por favor envie el comando \start. Gracias!")        
 
-@bot.message_handler(content_types=['photo'])
-def handle_photo_and_location(message):
-    # Verificar si el mensaje contiene una foto
-    if message.photo:
-        # Aquí puedes acceder a la información de la foto
-        peticion = api_url +f"/members/{message.chat.id}/measurements"
-        posicion_user= localizacion_user_recomendacion_Aceptada[message.chat.id]
-        date= datetime.datetime.utcnow()
-        measurement_creation={ 
-                              "datetime": date.strftime( "%Y-%m-%dT%H:%M:%S"),
-                              "location": {
-                                "Longitude":posicion_user["member_current_location"]["Longitude"],
-                                "Latitude": posicion_user["member_current_location"]["Latitude"]
-                                },
-                            "no2": 0,
-                            "co2": 0,
-                            "o3": 0,
-                            "so02": 0,
-                            "pm10": 0,
-                            "pm25": 0,
-                            "pm1": 0,
-                            "benzene": 0}
-        response = requests.post(peticion, headers=headers, json=measurement_creation)
- 
 
-        if response.status_code == 201:
-            data=response.json()
-            number= recomendation_aceptada[message.chat.id]
-            recomendacion_info=last_recomendation_per_user[message.chat.id][int(number)]
-            lat=recomendacion_info['cell']['centre']['Latitude']
-            long=recomendacion_info['cell']['centre']['Longitude']
-            file_id = message.photo[-1].file_id
-            recomendation_aceptada[message.chat.id]=0
-            del last_recomendation_per_user[message.chat.id]
-            # Obtiene información sobre el archivo de la foto
-            file_info = bot.get_file(file_id)
-
-            # Descarga la foto
-            downloaded_file = bot.download_file(file_info.file_path)
-
-            # Guarda la foto en el sistema de archivos
-            file_path = f'src/Servicio/Telegram_bot/Pictures/photo{data["id"]}.jpg'
-            with open(file_path, 'wb') as new_file:
-                new_file.write(downloaded_file)
-            
-            data_csv = [lat, long, file_path]
-            with open("src/Servicio/Telegram_bot/Pictures/CSVFILE.csv", "a", newline="") as f_object:
-                # Pass the CSV  file object to the writer() function
-                writer_object = writer(f_object)
-                # Result - a writer object
-                # Pass the data in the list as an argument into the writerow() function
-                writer_object.writerow(data_csv)
-                # Close the file object
-                f_object.close()
-            bot.reply_to(message, "¡Gracias por enviar la foto!")
-            
-        elif response.status_code == 404:
-            bot.reply_to(message, "Esta recomendacion no es viable... ")
-            print("Error en la medicion puede ser por que no halla ")
-        else:
-            print(f"Error en la solicitud de medicion. Código de respuesta: {response.status_code}")
- 
 
 # Dada la eleccion del usuario almacenamos su eleccion en la base de datos. 
 @bot.message_handler(func=lambda message: message.text=="Opción 1" or message.text=="Opción 2" or message.text=="Opción 3")
@@ -827,11 +753,8 @@ def handle_option(message):
     user_choice = message.text
     if last_recomendation_per_user[message.chat.id] is not None:
         #Asegurate que sigue activa la recomendacion es decir si tiene aceptadas y no las ha realizado hay que corregiirlo. 
-        #TODO  
         number = message.text.replace('Opción ', '').strip()
 
-        print(number)
-        #TODO verificar que esto existe! ademas que no se puede modificar una reocmendacion si ya hay alguna. 
         recomendation_aceptada[message.chat.id]=int(number) -1
         number=int(number)-1
         recomendacion_info=last_recomendation_per_user[message.chat.id][number]
@@ -859,9 +782,135 @@ def handle_option(message):
     
 
 
+@bot.message_handler(content_types=['photo'])
+def handle_photo_and_location(message):
+    # Verificar si el mensaje contiene una foto
+    if message.photo:
+        rec= bot_auxiliar.recomendaciones_aceptadas(message.chat.id)
+        #El usuario tiene recomendaciones aceptadas!
+        if rec is None:
+            bot.send_message(message.chat.id,"No tenemos tu localizacion. Porfavor pide una recomendacion")
+        else:
+            # Aquí puedes acceder a la información de la foto
+            peticion = api_url +f"/members/{message.chat.id}/measurements"
+            posicion_user= last_location_of_user[message.chat.id]
+            date= datetime.datetime.utcnow()
+            measurement_creation={ 
+                                "datetime": date.strftime( "%Y-%m-%dT%H:%M:%S"),
+                                "location": {
+                                    "Longitude":posicion_user["member_current_location"]["Longitude"],
+                                    "Latitude": posicion_user["member_current_location"]["Latitude"]
+                                    },
+                                "no2": 0,
+                                "co2": 0,
+                                "o3": 0,
+                                "so02": 0,
+                                "pm10": 0,
+                                "pm25": 0,
+                                "pm1": 0,
+                                "benzene": 0}
+            response = requests.post(peticion, headers=headers, json=measurement_creation)
+            if response.status_code == 201:
+                data=response.json()
+                if data['recommendation_id']==None:
+                    file_id = message.photo[-1].file_id
+                    file_info = bot.get_file(file_id)
+                    # Descarga la foto
+                    downloaded_file = bot.download_file(file_info.file_path)
 
-from folium import plugins
-from folium.utilities import image_to_url
+                    # Guarda la foto en el sistema de archivos
+                    file_path = f'src/Servicio/Telegram_bot/Pictures/photo{data["id"]}.jpg'
+                    with open(file_path, 'wb') as new_file:
+                        new_file.write(downloaded_file)
+                    peticion = api_url +f"/sync/get_location/{message.chat.id}"
+                    posicion_user= last_location_of_user[message.chat.id]
+                    date= datetime.datetime.utcnow()
+                    measurement_creation={ 
+                                "datetime": date.strftime( "%Y-%m-%dT%H:%M:%S"),
+                                "location": {
+                                    "Longitude":posicion_user["member_current_location"]["Longitude"],
+                                    "Latitude": posicion_user["member_current_location"]["Latitude"]
+                                    },
+                                "no2": 0,
+                                "co2": 0,
+                                "o3": 0,
+                                "so02": 0,
+                                "pm10": 0,
+                                "pm25": 0,
+                                "pm1": 0,
+                                "benzene": 0}
+                    
+                    response = requests.get(peticion, headers=headers, json=measurement_creation)
+                    if response.status_code == 200:
+                        data=response.json()
+                        data_csv = [data["Latitude"], data['Longitude'], file_path]
+                        with open("src/Servicio/Telegram_bot/Pictures/CSVFILE.csv", "a", newline="") as f_object:
+                            # Pass the CSV  file object to the writer() function
+                            writer_object = writer(f_object)
+                            # Result - a writer object
+                            # Pass the data in the list as an argument into the writerow() function
+                            writer_object.writerow(data_csv)
+                            # Close the file object
+                            f_object.close()
+                        bot.reply_to(message, "¡Gracias por enviar la foto!")
+                        print("Tu foto ha sido registrada pero, porfavor saca la foto en el lugar donde has aceptado sacar la foto!")
+                        bot.reply_to(message, "Porfavor saca la foto en el lugar donde has aceptado sacar la foto!")
+                        number= recomendation_aceptada[message.chat.id]
+                        recomendacion_info=last_recomendation_per_user[message.chat.id][int(number)]
+                        lat=recomendacion_info['cell']['centre']['Latitude']
+                        long=recomendacion_info['cell']['centre']['Longitude']
+                        bot.send_location(chat_id=message.chat.id, latitude= lat, longitude=long)
+                        
+                    else:
+                        print(f"Error en la solicitud de medicion. Código de respuesta: {response.status_code}")
+                    
+                    
+                else:    
+                    number= recomendation_aceptada[message.chat.id]
+                    recomendacion_info=last_recomendation_per_user[message.chat.id][int(number)]
+                    lat=recomendacion_info['cell']['centre']['Latitude']
+                    long=recomendacion_info['cell']['centre']['Longitude']
+                    file_id = message.photo[-1].file_id
+                    recomendation_aceptada[message.chat.id]=0
+                    del last_recomendation_per_user[message.chat.id]
+                    # Obtiene información sobre el archivo de la foto
+                    file_info = bot.get_file(file_id)
+
+                    # Descarga la foto
+                    downloaded_file = bot.download_file(file_info.file_path)
+
+                    # Guarda la foto en el sistema de archivos
+                    file_path = f'src/Servicio/Telegram_bot/Pictures/photo{data["id"]}.jpg'
+                    with open(file_path, 'wb') as new_file:
+                        new_file.write(downloaded_file)
+                    
+                    data_csv = [lat, long, file_path]
+                    with open("src/Servicio/Telegram_bot/Pictures/CSVFILE.csv", "a", newline="") as f_object:
+                        # Pass the CSV  file object to the writer() function
+                        writer_object = writer(f_object)
+                        # Result - a writer object
+                        # Pass the data in the list as an argument into the writerow() function
+                        writer_object.writerow(data_csv)
+                        # Close the file object
+                        f_object.close()
+                    bot.reply_to(message, "¡Gracias por enviar la foto!")
+                
+            elif response.status_code == 401:
+                bot.reply_to(message, "O no hay una camapaña activa. Esta posicion no esta en la campaña. Porfavor envia una localizacion en el punto que has aceptado. ")
+                print("Error en la medicion puede ser por que no halla ")
+                bot.reply_to(message, "Porfavor saca la foto en el lugar donde has aceptado sacar la foto!")
+                number= recomendation_aceptada[message.chat.id]
+                recomendacion_info=last_recomendation_per_user[message.chat.id][int(number)]
+                lat=recomendacion_info['cell']['centre']['Latitude']
+                long=recomendacion_info['cell']['centre']['Longitude']
+                bot.send_location(chat_id=message.chat.id, latitude= lat, longitude=long)
+            else:
+                print(f"Error en la solicitud de medicion. Código de respuesta: {response.status_code}")
+    
+
+
+
+
 
 @bot.message_handler(commands=['Map'])
 def crear_mapa(message):
@@ -942,15 +991,11 @@ def crear_mapa(message):
                                                 )).add_to(mapa)
 
 
-                                            # coordenadas = (lat,long)
-                                            # ubicaciones.add(coordenadas)
-                                    # mapa.save('map_antes_de_otro.html')
+                                           
                         mapa.save('map.html')
                         print("Hemos terminado el mapa! ")
                         with open("map.html", "rb") as map_file:
-
-                                        bot.send_document(message.chat.id, map_file, caption="Tu Mapa")
-                            
+                            bot.send_document(message.chat.id, map_file, caption="Tu Mapa")
                     else:
                                     print(f"Error en la solicitud de update de la recomendation. Código de respuesta: {response.status_code}")             
                 except Exception as e:

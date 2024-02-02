@@ -552,3 +552,55 @@ def update_campaign(
         campaign = crud.campaign.update(db=db, db_obj=campaign, obj_in=campaign_metadata)
     db.commit()
     return campaign
+
+
+@api_router_sync.get("/get_location/{member_id}", status_code=200,response_model=dict() )
+def obtain_cell_center(
+     *,
+    member_id: int,
+    recipe_in: MeasurementCreate,
+    db: Session = Depends(deps.get_db)
+) -> dict:
+    time = recipe_in.datetime
+    list_posible_cells_surface_campaign_distance = []
+    cell_id = None
+    surface = None
+    campaign_finaly = None
+    #Get all campaigns of the member
+    campaign_member = crud.campaign_member.get_Campaigns_of_member(
+        db=db, member_id=member_id)
+    for i in campaign_member:
+        #Verify if the campaign is active
+        campaign = crud.campaign.get(db=db, id=i.campaign_id)
+        if campaign.start_datetime.replace(tzinfo=timezone.utc) <= time.replace(tzinfo=timezone.utc) and campaign.end_datetime.replace(tzinfo=timezone.utc) > time.replace(tzinfo=timezone.utc):
+            for surface in campaign.surfaces:
+                
+                boundary=crud.boundary.get_Boundary_by_id(db=db, id=surface.boundary_id)
+                centre= boundary.centre
+                radius = boundary.radius
+                
+                distance = vincenty(( centre['Latitude'],centre['Longitude']), ( recipe_in.location['Latitude'],recipe_in.location['Longitude']))
+                #USer are in the surface of the campaign
+                if distance <= (radius + campaign.cells_distance):
+                    list_cells = crud.cell.get_cells_campaign(db=db, campaign_id=i.campaign_id)
+                    #We use hipotenusa to calculate the distance between the centre of the cell and the measurement because if we use the cell radious, in at the vertices of the edges there is none nearby. 
+                    hipotenusa = math.sqrt(2*((campaign.cells_distance/2)**2))
+                    if list_cells is not []:
+                        for cell in list_cells:
+                            #distance of user to a cell.
+                            distance2 = vincenty(( cell.centre['Latitude'],cell.centre['Longitude']), ( recipe_in.location['Latitude'],recipe_in.location['Longitude']))
+                            # 
+                            if distance2 <= hipotenusa:
+                                list_posible_cells_surface_campaign_distance.append((cell, surface, campaign, distance2))
+    if list_posible_cells_surface_campaign_distance == []:
+        raise HTTPException(
+            status_code=401, detail=f"This measurement is not from a active campaign or the localization is not inside of a any cell."
+        )
+    #List of close cells in where user could was.
+    list_posible_cells_surface_campaign_distance.sort(key=lambda tuple: (-tuple[3] ),reverse=True)
+    # Se these cells are sort by the distance ->  the first one is the most sure               
+    cell = list_posible_cells_surface_campaign_distance[0][0]
+    lat=cell.centre['Latitude']
+    long=cell.centre['Longitude']
+    dict={"Latitude":lat,"Longitude":long}
+    return dict
