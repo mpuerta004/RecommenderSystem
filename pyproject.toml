@@ -27,6 +27,7 @@ matplotlib = "^3.8.2"
 telebot = "^0.0.5"
 ipython = "^8.20.0"
 flask = "^3.0.1"
+shelves = "^0.3.8"
 
 [tool.poetry.group.dev.dependencies]
 folium = "^0.15.1"

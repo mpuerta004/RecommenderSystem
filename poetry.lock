@@ -1619,6 +1619,16 @@ testing = ["build[virtualenv]", "filelock (>=3.4.0)", "flake8-2020", "ini2toml[l
 testing-integration = ["build[virtualenv] (>=1.0.3)", "filelock (>=3.4.0)", "jaraco.envs (>=2.2)", "jaraco.path (>=3.2.0)", "packaging (>=23.1)", "pytest", "pytest-enabler", "pytest-xdist", "tomli", "virtualenv (>=13.0.0)", "wheel"]
 
 [[package]]
+name = "shelves"
+version = "0.3.8"
+description = "Shelves to store Box of documents in the brodacast-system"
+optional = false
+python-versions = "*"
+files = [
+    {file = "Shelves-0.3.8.tar.gz", hash = "sha256:ad0d715893f7397c8b3c263f2bb77764e86f0371f44daa109daf8abdab610f35"},
+]
+
+[[package]]
 name = "six"
 version = "1.16.0"
 description = "Python 2 and 3 compatibility utilities"
@@ -1931,4 +1941,4 @@ files = [
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.11"
-content-hash = "9454ace22ca1b53991ff1d659b99a5d74d3a86decccc71f86a5c338346e09c9f"
+content-hash = "196b1fde56dc24385db5279712165d5135921d452864084534d22ecd52262325"

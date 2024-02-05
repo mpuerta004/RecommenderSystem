@@ -177,7 +177,7 @@ def update_members(
             list_campaigns= list_campaigns + a
 
             # Verify if there is any active campaign
-            if list_campaigns is not []:
+            if len(list_campaigns)!=0:
                 # Add the member to the active campaigns with the role that was recived
                 campaign_create = Campaign_MemberCreate(role=role)
                 for i in list_campaigns:
@@ -205,7 +205,7 @@ def update_members(
                 list_campaigns= list_campaigns + a
 
                 # Verify if there is any active campaign
-                if list_campaigns is not []:
+                if len(list_campaigns)!=0:
                     # Add the member to the active campaigns with the role that was recived
                     campaign_create = Campaign_MemberCreate(role=role)
                     for i in list_campaigns:

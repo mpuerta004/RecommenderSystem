@@ -692,7 +692,7 @@ def handle_location(message):
                 campaign_id=campaign['id']
 
                 data=bot_auxiliar.recomendacion(id_user=message.chat.id, campaign_id=campaign_id, info=info )
-                if data is not None and data!={'detail': 'far_away'} :    
+                if data is not None and data!={'detail': 'far_away'} and data!={'details': 'Incorrect_user_role'}:    
                     #Eliminamos los datos anteriores guardados
                     recomendation_aceptada[message.chat.id]=0
                     last_recomendation_per_user[message.chat.id]=data['results']                    
