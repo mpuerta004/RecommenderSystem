@@ -15,7 +15,7 @@ from schemas.Priority import Priority, PriorityCreate, PrioritySearchResults
 from schemas.Slot import Slot, SlotCreate, SlotSearchResults
 from schemas.Surface import Surface, SurfaceCreate, SurfaceSearchResults
 from sqlalchemy.orm import Session
-from end_points.funtionalities import create_slots_per_cell
+from funtionalities import create_slots_per_cell
 
 
 api_router_cell = APIRouter(prefix="/surfaces/{surface_id}/cells")

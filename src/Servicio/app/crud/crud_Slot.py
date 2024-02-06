@@ -45,6 +45,14 @@ class CRUDSlot(CRUDBase[Slot, SlotCreate, SlotUpdate]):
             return db.query(Slot).filter( and_(Slot.cell_id== cell_id, Slot.start_datetime<=time, time<=Slot.end_datetime)).first()
         except Exception as e:
                         raise HTTPException(status_code=500, detail=f"Error with mysql {e}" )
+    
+    
+    
+    def get_list_slot_time(self, db: Session, *,  time:datetime ) -> List[Slot]:
+        try:
+            return db.query(Slot).filter( and_(Slot.start_datetime<=time, time<=Slot.end_datetime)).all()
+        except Exception as e:
+                        raise HTTPException(status_code=500, detail=f"Error with mysql {e}" )
    
     def create_slot_detras(self, db: Session, *, obj_in: SlotCreate) -> Slot:
         try:

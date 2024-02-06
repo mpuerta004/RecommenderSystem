@@ -20,8 +20,8 @@ from vincenty import vincenty
 import pytz
 from geopy.geocoders import Nominatim
 from geopy.point import Point
-from tzwhere import tzwhere
-from timezonefinder import TimezoneFinder
+# from tzwhere import tzwhere
+# from timezonefinder import TimezoneFinder
 from schemas.Boundary import BoundaryCreate
 from schemas.Campaign import (Campaign, CampaignCreate, CampaignSearchResults,
                               CampaignUpdate)
@@ -31,7 +31,7 @@ from schemas.Priority import Priority, PriorityCreate, PrioritySearchResults
 from schemas.Slot import Slot, SlotCreate, SlotSearchResults
 from schemas.Surface import Surface, SurfaceCreate, SurfaceSearchResults
 
-from end_points.funtionalities import create_slots_campaign, create_cells_for_a_surface, get_point_at_distance
+from funtionalities import create_slots_campaign, create_cells_for_a_surface, get_point_at_distance
 
 
 api_router_kpis = APIRouter(prefix="/kpis")

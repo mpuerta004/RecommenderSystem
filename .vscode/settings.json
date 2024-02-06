@@ -2,7 +2,8 @@
     "sqltools.connections": [
         {
             "mysqlOptions": {
-                "authProtocol": "default"
+                "authProtocol": "default",
+                "enableSsl": "Disabled"
             },
             "previewLimit": 50,
             "server": "mysql",
@@ -13,5 +14,7 @@
             "username": "root",
             "password": "mypasswd"
         }
-    ]
+    ],
+    "python.analysis.autoImportCompletions": false,
+    "python.analysis.typeCheckingMode": "off"
 }

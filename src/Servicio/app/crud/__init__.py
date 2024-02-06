@@ -13,3 +13,4 @@ from .crud_boundary import boundary
 from .crud_Beekeeper import beekeeper
 from .crud_Member_Device import member_device
 from .crud_Hive_Member import hive_member
+from .crud_bio_inspired import bio_inspired

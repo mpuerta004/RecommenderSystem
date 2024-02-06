@@ -1,6 +1,6 @@
 from pydantic import BaseModel, HttpUrl
 
-from schemas.Point import Point
+# from schemas.Point import Point
 from typing import Sequence, Union
 from datetime import datetime, time, timedelta
 from typing import NamedTuple

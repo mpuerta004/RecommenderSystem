@@ -11,12 +11,13 @@ from models.Campaign import Campaign
 from sqlalchemy import Integer, Enum
 
 
+from sqlalchemy import Integer, Enum, BigInteger
 
 
 class Campaign_Member(Base):
     __tablename__='Campaign_Member'
     campaign_id=Column(Integer, ForeignKey(Campaign.id, ondelete="CASCADE"),primary_key=True)
-    member_id=Column(Integer, ForeignKey(Member.id,ondelete="CASCADE"),primary_key=True)
+    member_id=Column(BigInteger, ForeignKey(Member.id,ondelete="CASCADE"),primary_key=True)
     role=Column(Enum("WorkerBee","QueenBee","DroneBee" ),primary_key=True)
 
     

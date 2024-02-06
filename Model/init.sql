@@ -22,7 +22,7 @@ GRANT ALL PRIVILEGES ON SocioBeeMVE.*  TO 'mve_automatic'@'%';
 -- Table Member
 -- -----------------------------------------------------
 CREATE TABLE Member (
-  id INT NOT NULL,
+  id BIGINT NOT NULL,
   birthday datetime,
   name VARCHAR(30) NULL DEFAULT NULL,
   surname VARCHAR(30) NULL DEFAULT NULL,
@@ -67,7 +67,7 @@ CREATE TABLE Hive (
 
 CREATE TABLE Hive_Member(
   hive_id int not null,
-  member_id int not null,
+  member_id BIGINT not null,
   role Varchar(30) not null default "WorkerBee",
 CONSTRAINT role_type_hiveMember CHECK (role IN ("WorkerBee","QueenBee","DroneBee")),
   primary key (hive_id,member_id,role),
@@ -91,11 +91,11 @@ year varchar(30) null default null
 
 Create Table Member_Device(
   device_id int Unique default Null,
-  member_id int not null, 
+  member_id BIGINT not null, 
   primary key(member_id),
   FOREIGN KEY (member_id)
     REFERENCES Member (id)
-    ON DELETE CASCADe,
+    ON DELETE CASCADE,
     FOREIGN KEY (device_id)
     REFERENCES Device (id)
     ON DELETE CASCADE
@@ -129,7 +129,7 @@ CREATE TABLE Campaign_Member (
     campaign_id int not null, 
     role VARCHAR(30) not null default "WorkerBee", 
     CONSTRAINT role_type CHECK (role IN ("WorkerBee","QueenBee","DroneBee")),
-    member_id int not null,
+    member_id BIGINT not null,
     PRIMARY KEY (campaign_id, member_id,role),
     FOREIGN KEY (campaign_id)
     REFERENCES Campaign (id)
@@ -186,6 +186,23 @@ CREATE TABLE Cell (
     );
 
 
+
+-- -----------------------------------------------------
+-- Table Cell
+-- -----------------------------------------------------
+CREATE TABLE Bio_inspired (
+  cell_id INT NOT NULL,
+  member_id BIGINT NOT NULL,
+  threshold float, 
+  PRIMARY KEY (cell_id,member_id),
+    FOREIGN KEY (cell_id)
+    REFERENCES Cell (id)
+    ON DELETE CASCADE,
+    FOREIGN KEY (member_id)
+    REFERENCES Member (id)
+    ON DELETE CASCADE
+    );
+
 -- -----------------------------------------------------
 -- Table Slot
 -- -----------------------------------------------------
@@ -207,7 +224,7 @@ FOREIGN KEY (cell_id)
 -- -----------------------------------------------------
 CREATE TABLE Recommendation (
   id int not null auto_increment,
-  member_id INT NOT NULL,
+  member_id BIGINT NOT NULL,
   sent_datetime datetime NOT NULL,
   state  VARCHAR(15),
   update_datetime datetime,
@@ -229,7 +246,7 @@ CREATE TABLE Recommendation (
 -- -----------------------------------------------------
 CREATE TABLE Measurement (
   id INT NOT NULL AUTO_INCREMENT,
-  member_id INT NOT NULL,
+  member_id BIGINT NOT NULL,
   device_id int default null, 
   datetime datetime NULL DEFAULT NULL,
   slot_id int not null, 

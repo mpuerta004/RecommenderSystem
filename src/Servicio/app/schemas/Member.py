@@ -2,7 +2,7 @@ from typing import Optional, List, Sequence
 from pydantic import BaseModel
 from datetime import datetime, timezone
 from enum import Enum
-
+import numpy as np
 
 class role(str, Enum):
     WorkerBee="WorkerBee" 

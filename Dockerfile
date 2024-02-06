@@ -1,4 +1,4 @@
-FROM python:3.8.10
+FROM python:3.11.4
 
 WORKDIR /
 
@@ -9,6 +9,8 @@ RUN pip install poetry && \
 
 ADD . /recommendersystem
 
-CMD  [ "poetry", "run", "python", "/recommendersystem/src/Servicio/app/main.py" ]
 
-# ENTRYPOINT ["tail", "-f", "/dev/null"]
+# CMD  [ "poetry", "run", "python", "/recommendersystem/src/Servicio/app/main.py" ] 
+
+# Develop option 
+ENTRYPOINT ["tail", "-f", "/dev/null"] 

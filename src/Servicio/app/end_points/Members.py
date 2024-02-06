@@ -22,7 +22,7 @@ def get_a_member(
     *,
     member_id: int,
     db: Session = Depends(deps.get_db),
-) -> Cell:
+) -> Member:
     """
     Get a member
     """
@@ -75,7 +75,7 @@ def create_member(
         id = id+1
     # create the new member
     member_new = crud.member.create_member(db=db, obj_in=recipe_in, id=id)
-
+    
     return member_new
 
 
@@ -231,7 +231,7 @@ def create_member_device(
         )
 
 ###################### DELETE DEVICE #########################################
-@api_router_members.delete("/{member_id}/devices/{device_id}", status_code=204)
+@api_router_members.delete("/{member_id}/devices/{device_id}/del", status_code=204)
 def delete_member_device(*,
                          member_id: int,
                          device_id: int,

@@ -14,8 +14,9 @@ from schemas.Measurement import (Measurement, MeasurementCreate,
                                  MeasurementSearchResults, MeasurementUpdate)
 from sqlalchemy.orm import Session
 from vincenty import vincenty
-from timezonefinder import TimezoneFinder
+# from timezonefinder import TimezoneFinder
 from datetime import datetime, timezone, timedelta
+from funtionalities import update_thesthold_based_action, prioriry_calculation
 import pytz
 api_router_measurements = APIRouter(prefix="/members/{member_id}/measurements")
 
@@ -155,7 +156,7 @@ def create_measurement(
     for i in campaign_member:
         #Verify if the campaign is active
         campaign = crud.campaign.get(db=db, id=i.campaign_id)
-        if campaign.start_datetime.replace(tzinfo=timezone.utc) <= time and campaign.end_datetime.replace(tzinfo=timezone.utc) > time:
+        if campaign.start_datetime.replace(tzinfo=timezone.utc) <= time.replace(tzinfo=timezone.utc) and campaign.end_datetime.replace(tzinfo=timezone.utc) > time.replace(tzinfo=timezone.utc):
             for surface in campaign.surfaces:
                 
                 boundary=crud.boundary.get_Boundary_by_id(db=db, id=surface.boundary_id)
@@ -210,6 +211,9 @@ def create_measurement(
     #Create the measurement
     cellMeasurement = crud.measurement.create_Measurement(
             db=db, obj_in=recipe_in, member_id=member_id, slot_id=slot.id, recommendation_id=recommendation_id, device_id=member_device.device_id)
+    update_thesthold_based_action(db=db, cell_id=slot.cell_id,member_id=member_id,campaign_id=campaign.id)
+    prioriry_calculation(time=time,cam=campaign, db=db)
+
     return cellMeasurement
         
 

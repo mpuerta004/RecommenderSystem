@@ -1,5 +1,4 @@
 from fastapi import FastAPI, APIRouter, Query, HTTPException, Request, Depends
-
 from typing import Optional, Any, List
 from pathlib import Path
 from sqlalchemy.orm import Session
@@ -8,7 +7,7 @@ from schemas.Campaign import CampaignSearchResults, Campaign, CampaignCreate,Cam
 from schemas.Slot import Slot, SlotCreate,SlotSearchResults
 from schemas.Hive import Hive, HiveCreate, HiveSearchResults
 from schemas.Member import Member,MemberCreate,MemberSearchResults
-from end_points.funtionalities import create_cells_for_a_surface,  create_slots_campaign
+from funtionalities import create_cells_for_a_surface,  create_slots_campaign, create_List_of_points_for_a_boundary
 from schemas.Campaign_Member import Campaign_Member,Campaign_MemberCreate,Campaign_MemberSearchResults
 from schemas.newMember import NewMemberBase
 from datetime import datetime, timedelta
@@ -42,21 +41,23 @@ from schemas.Hive_Member import Hive_MemberSearchResults, Hive_MemberBase, Hive_
 from schemas.Recommendation import Recommendation, RecommendationCreate
 from schemas.Member import Member, NewMembers, MemberUpdate
 from schemas.Hive import HiveUpdate
+from bio_inspired_recommender import variables_bio_inspired
+
 from schemas.Priority import Priority, PriorityCreate, PrioritySearchResults
 from schemas.Cell import Cell, CellCreate, CellSearchResults, Point
 from schemas.Surface import SurfaceSearchResults, Surface, SurfaceCreate
 from schemas.Member_Device import Member_DeviceCreate
 import deps
+from schemas.Bio_inspired import Bio_inspired, Bio_inspiredCreate, Bio_inspiredSearchResults
 import crud
 
-from timezonefinder import TimezoneFinder
-import pytz
+# from timezonefinder import TimezoneFinder
+# import pytz
 from datetime import datetime, timedelta
 import math 
 from vincenty import vincenty
 import numpy as np
 from numpy import sin, cos, arccos, pi, round
-from end_points.funtionalities import create_List_of_points_for_a_boundary
 
 from math import sin, cos, atan2, sqrt, radians, degrees, asin
 
@@ -143,7 +144,6 @@ def update_devices(
 
 
                 
-    
                 
 @api_router_sync.put("/hives/{hive_id}/members/", status_code=201, response_model=List[NewMembers])
 def update_members(
@@ -177,13 +177,17 @@ def update_members(
             list_campaigns= list_campaigns + a
 
             # Verify if there is any active campaign
-            if list_campaigns is not []:
+            if len(list_campaigns)!=0:
                 # Add the member to the active campaigns with the role that was recived
                 campaign_create = Campaign_MemberCreate(role=role)
                 for i in list_campaigns:
                     crud.campaign_member.create_Campaign_Member(
                         db=db, obj_in=campaign_create, campaign_id=i.id, member_id=member_db_new.id)
-
+                    list_cell=crud.cell.get_cells_campaign(db=db, campaign_id=i.id)
+                    for cell in list_cell:
+                        bio= Bio_inspiredCreate(cell_id=cell.id, member_id=member_db_new.id,threshold=variables_bio_inspired.O_max)
+                        bio_inspired= crud.bio_inspired.create(db=db,obj_in=bio)
+                        db.commit()
             result.append(NewMembers(member=member_db_new,role=role))
             
         else:
@@ -201,12 +205,17 @@ def update_members(
                 list_campaigns= list_campaigns + a
 
                 # Verify if there is any active campaign
-                if list_campaigns is not []:
+                if len(list_campaigns)!=0:
                     # Add the member to the active campaigns with the role that was recived
                     campaign_create = Campaign_MemberCreate(role=role)
                     for i in list_campaigns:
                         crud.campaign_member.create_Campaign_Member(
                             db=db, obj_in=campaign_create, campaign_id=i.id, member_id=member_db_new.id)
+                    list_cell=crud.cell.get_cells_campaign(db=db, campaign_id=i.id)
+                    for cell in list_cell:
+                        bio= Bio_inspiredCreate(cell_id=cell.id, member_id=member_db_new.id,threshold=variables_bio_inspired.O_max)
+                        bio_inspired= crud.bio_inspired.create(db=db,obj_in=bio)
+                        db.commit()  
                     result.append(NewMembers(member=member_db_new,role=role))
             else:
                 if(hive_member.role!=role):
@@ -219,6 +228,7 @@ def update_members(
 
                 result.append(NewMembers(member=member_db_new,role=role))
     return result
+
 
 
                 
@@ -542,3 +552,55 @@ def update_campaign(
         campaign = crud.campaign.update(db=db, db_obj=campaign, obj_in=campaign_metadata)
     db.commit()
     return campaign
+
+
+@api_router_sync.get("/get_location/{member_id}", status_code=200,response_model=dict() )
+def obtain_cell_center(
+     *,
+    member_id: int,
+    recipe_in: MeasurementCreate,
+    db: Session = Depends(deps.get_db)
+) -> dict:
+    time = recipe_in.datetime
+    list_posible_cells_surface_campaign_distance = []
+    cell_id = None
+    surface = None
+    campaign_finaly = None
+    #Get all campaigns of the member
+    campaign_member = crud.campaign_member.get_Campaigns_of_member(
+        db=db, member_id=member_id)
+    for i in campaign_member:
+        #Verify if the campaign is active
+        campaign = crud.campaign.get(db=db, id=i.campaign_id)
+        if campaign.start_datetime.replace(tzinfo=timezone.utc) <= time.replace(tzinfo=timezone.utc) and campaign.end_datetime.replace(tzinfo=timezone.utc) > time.replace(tzinfo=timezone.utc):
+            for surface in campaign.surfaces:
+                
+                boundary=crud.boundary.get_Boundary_by_id(db=db, id=surface.boundary_id)
+                centre= boundary.centre
+                radius = boundary.radius
+                
+                distance = vincenty(( centre['Latitude'],centre['Longitude']), ( recipe_in.location['Latitude'],recipe_in.location['Longitude']))
+                #USer are in the surface of the campaign
+                if distance <= (radius + campaign.cells_distance):
+                    list_cells = crud.cell.get_cells_campaign(db=db, campaign_id=i.campaign_id)
+                    #We use hipotenusa to calculate the distance between the centre of the cell and the measurement because if we use the cell radious, in at the vertices of the edges there is none nearby. 
+                    hipotenusa = math.sqrt(2*((campaign.cells_distance/2)**2))
+                    if list_cells is not []:
+                        for cell in list_cells:
+                            #distance of user to a cell.
+                            distance2 = vincenty(( cell.centre['Latitude'],cell.centre['Longitude']), ( recipe_in.location['Latitude'],recipe_in.location['Longitude']))
+                            # 
+                            if distance2 <= hipotenusa:
+                                list_posible_cells_surface_campaign_distance.append((cell, surface, campaign, distance2))
+    if list_posible_cells_surface_campaign_distance == []:
+        raise HTTPException(
+            status_code=401, detail=f"This measurement is not from a active campaign or the localization is not inside of a any cell."
+        )
+    #List of close cells in where user could was.
+    list_posible_cells_surface_campaign_distance.sort(key=lambda tuple: (-tuple[3] ),reverse=True)
+    # Se these cells are sort by the distance ->  the first one is the most sure               
+    cell = list_posible_cells_surface_campaign_distance[0][0]
+    lat=cell.centre['Latitude']
+    long=cell.centre['Longitude']
+    dict={"Latitude":lat,"Longitude":long}
+    return dict

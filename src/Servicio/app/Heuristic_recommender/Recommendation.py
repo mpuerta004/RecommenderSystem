@@ -11,7 +11,7 @@ import deps
 import crud
 from datetime import datetime, timezone, timedelta
 import math
-from end_points.funtionalities import prioriry_calculation
+from funtionalities import prioriry_calculation
 
 api_router_recommendation = APIRouter(prefix="/members/{member_id}")
 
@@ -39,7 +39,7 @@ def search_all_recommendations_of_member(
 
 
 ################################ GET  Recommendation ########################################
-@api_router_recommendation.get("/recommendations/{recommendation_id}", status_code=200, response_model=RecommendationSearchResults)
+@api_router_recommendation.get("/recommendations/{recommendation_id}", status_code=200, response_model=Recommendation)
 def get_recommendation(
     *,
     member_id: int,
@@ -63,10 +63,11 @@ def get_recommendation(
         raise HTTPException(
             status_code=404, detail=f"Recommendation with id=={recommendation_id} not found"
         )
-    return {"results": result}
+    return result
 
 
 ####################################### POST ########################################
+#TODO! Not work i think! 
 @api_router_recommendation.post("/recommendations", status_code=201, response_model=Union[RecommendationCellSearchResults,str])
 def create_recomendation(
     *,
@@ -75,7 +76,7 @@ def create_recomendation(
     db: Session = Depends(deps.get_db)
 ) -> dict:
     """
-    Create recomendation
+    Create recomendation NOT WORK!
     """
     time = datetime.now()
 
@@ -178,14 +179,16 @@ def create_recomendation_per_campaign(
     member_id: int,
     campaign_id:int,
     recipe_in: RecommendationCreate,
-    db: Session = Depends(deps.get_db)
-) -> dict:
+    db: Session = Depends(deps.get_db),
+    time: datetime = datetime.utcnow()
+    ) -> dict:
+
     """
     Create recomendation
     """
     print("---- RECOMENDATION ----------------------------")
     print("Campaign_user_want_id",campaign_id)
-    time = datetime.now()
+    #time = datetime.now()
     
     print("Actual_time:", time)
     # Get the member and verify if it exists
@@ -216,7 +219,7 @@ def create_recomendation_per_campaign(
             role_correct=True
             campaign = crud.campaign.get(db=db, id=i.campaign_id)
             # Verify if the campaign is active
-            if campaign.start_datetime <= time and time < campaign.end_datetime:
+            if campaign.start_datetime.replace(tzinfo=timezone.utc) <= time.replace(tzinfo=timezone.utc)  and time.replace(tzinfo=timezone.utc) < campaign.end_datetime.replace(tzinfo=timezone.utc):
                 print("campaign_id ------------------------------------------",i.campaign_id)
                 print("Campaign_ACTIVE", True)
                 print("user_has_correct_role",True)
@@ -267,10 +270,13 @@ def create_recomendation_per_campaign(
                 db=db, time=time, slot_id=slot.id)
             recommendation_accepted = crud.recommendation.get_aceptance_state_of_cell(
                 db=db, slot_id=slot.id)
-            expected_measurements  = Cardinal_actual + len(recommendation_accepted)*13
+            # expected_measurements  = Cardinal_actual + len(recommendation_accepted)*13
+            expected_measurements  = Cardinal_actual + len(recommendation_accepted)
             
             #We only consider the cell if the expected measurements are greater than the minimum samples of the campaign or if we dont have minnimun number of measuement per slot 
-            if expected_measurements < (cam.min_samples*13) or cam.min_samples == 0:
+            # if expected_measurements < (cam.min_samples*13) or cam.min_samples == 0:
+            if expected_measurements < (cam.min_samples) or cam.min_samples == 0:
+
                 print("campaign_id_of_cell:  ", cam.id)
                 print(f"Center (Lat: {cell.centre['Latitude']},Long: {cell.centre['Longitude']})")
                 print("cell_data: Cardinal_actual ", Cardinal_actual)
@@ -292,7 +298,6 @@ def create_recomendation_per_campaign(
         return {"detail": "no_measurements_needed"}
     cells_and_priority.sort(
         key=lambda order_features: (-order_features[3], order_features[1], -order_features[2]), reverse=True)
-    
     a=[]
     for i in cells_and_priority:
         if i[6].id==campaign_id:

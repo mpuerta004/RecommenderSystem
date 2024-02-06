@@ -10,7 +10,6 @@ from models.Point import Point
 class Cell(Base):
     __tablename__ = 'Cell'
     id = Column(Integer, unique=True, primary_key=True, index=True, autoincrement=True)
- 
     centre = Column(Point)
     radius=Column(Integer,default=1)
     cell_type = Column(String, default="Dynamic")

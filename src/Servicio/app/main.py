@@ -3,14 +3,16 @@ from datetime import datetime, timedelta
 from pathlib import Path
 import crud
 from apscheduler.schedulers.background import BackgroundScheduler
-from end_points import (BeeKeeper, Campaign_Member, Campaigns, Cells, Demo,
-                        Devices, Hive, Measurements, Members, Recommendation,
+from end_points import (BeeKeeper, Campaign_Member, Campaigns, Cells, Devices, Hive, Measurements, Members,
                         Surface, sync,KPIS)
+from Demo import Demo
+# from Heuristic_recommender import Recommendation
+from bio_inspired_recommender import bio_inspired_recomender as Recommendation
 from fastapi import (APIRouter, FastAPI)
 from fastapi.templating import Jinja2Templates
 from fastapi_utils.session import FastAPISessionMaker
-from datetime import datetime, timezone,timedelta
-from end_points.funtionalities import prioriry_calculation
+from datetime import datetime,timedelta
+from funtionalities import prioriry_calculation
 SQLALCHEMY_DATABASE_URL = "mysql+mysqlconnector://root:mypasswd@mysql:3306/SocioBeeMVE"
 sessionmaker = FastAPISessionMaker(SQLALCHEMY_DATABASE_URL)
 
@@ -31,7 +33,9 @@ app.include_router(Campaign_Member.api_router_campaign_member, tags=["Campaign -
 app.include_router(Surface.api_router_surface, tags=["Surfaces"])
 app.include_router(Cells.api_router_cell, tags=["Cells"])
 app.include_router(Measurements.api_router_measurements, tags=["Measurements"])
+# app.include_router(Recommendation.api_router_recommendation, tags=["Recommendations"])
 app.include_router(Recommendation.api_router_recommendation, tags=["Recommendations"])
+
 app.include_router(Demo.api_router_demo, tags=["Demo"])
 app.include_router(sync.api_router_sync, tags=["Sync"])
 app.include_router(KPIS.api_router_kpis, tags=["KPIS"])
@@ -60,7 +64,7 @@ async def state_calculation()->None:
         a = datetime.now()
         Current_time = datetime(year=a.year, month=a.month, day=a.day,
                         hour=a.hour, minute=a.minute, second=a.second)
-            
+        
         for i in list_of_recommendations:
           
             if (Current_time > i.update_datetime): # It is necessary to run demo 
@@ -70,6 +74,9 @@ async def state_calculation()->None:
                     db.commit()  
         db.close()
     return None
+
+
+
 
 #Funtions that automaticaly calculate the priority.
 def final_funtion():
@@ -90,11 +97,10 @@ if __name__ == "__main__":
     ## Use this for debugging purposes only
     import uvicorn
 
-    # #Add this line to run the system. 
+    #Add this line to run the system. 
     scheduler = BackgroundScheduler()
-    scheduler.add_job(final_funtion, 'interval', seconds=120)
-    scheduler.add_job(State_change, 'interval', seconds=420)
-
+    scheduler.add_job(final_funtion, 'interval', seconds=60)
+    scheduler.add_job(State_change, 'interval', seconds=60)
     scheduler.start()
 
     uvicorn.run(app, host="0.0.0.0", port=8001, log_level="debug")
