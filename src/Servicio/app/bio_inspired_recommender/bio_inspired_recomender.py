@@ -25,18 +25,65 @@ import deps
 import crud
 from datetime import datetime, timezone, timedelta
 import math
-api_router_recommendation = APIRouter(prefix="/members/{member_id}/bio_recommendation")
+api_router_recommendation = APIRouter(prefix="/members/{member_id}")
 
 
-@api_router_recommendation.post("", status_code=201, response_model=Union[RecommendationCellSearchResults,str])
+@api_router_recommendation.get("/recommendations", status_code=200, response_model=RecommendationSearchResults)
+def search_all_recommendations_of_member(
+    *,
+    member_id: int,
+    db: Session = Depends(deps.get_db),
+) -> dict:
+    """
+    Search all recommendations of a member
+    """
+    # Get the member and verify if it exists
+    member = crud.member.get_by_id(db=db, id=member_id)
+    if member is None:
+        raise HTTPException(
+            status_code=404, detail=f"Member with id=={member_id} not found"
+        )
+    # return the list of recommendations of the member
+    measurement = crud.recommendation.get_All_Recommendation(db=db, member_id=member_id)
+    return {"results": list(measurement)}
+
+
+################################ GET  Recommendation ########################################
+@api_router_recommendation.get("/recommendations/{recommendation_id}", status_code=200, response_model=Recommendation)
+def get_recommendation(
+    *,
+    member_id: int,
+    recommendation_id: int,
+    db: Session = Depends(deps.get_db),
+) -> dict:
+    """
+    Get a recommendation 
+    """
+
+    # Get the member and verify if it exists
+    member = crud.member.get_by_id(db=db, id=member_id)
+    if member is None:
+        raise HTTPException(
+            status_code=404, detail=f"Member with id=={member_id} not found"
+        )
+    # Get the recommendation and verify if it exists
+    result = crud.recommendation.get_recommendation(
+        db=db, recommendation_id=recommendation_id, member_id=member_id)
+    if result is None:
+        raise HTTPException(
+            status_code=404, detail=f"Recommendation with id=={recommendation_id} not found"
+        )
+    return result
+
+
+@api_router_recommendation.post("/campaigns/{campaign_id}/recommendations", status_code=201, response_model=Union[RecommendationCellSearchResults,str])
 def create_recomendation(
     *,
     member_id: int,
     recipe_in: RecommendationCreate,
     campaign_id: int,
     db: Session = Depends(deps.get_db),
-    time:datetime = datetime.now()
-
+    time:datetime = datetime.utcnow()
 ) -> dict:
         user_location=recipe_in.member_current_location
         list_of_cells=crud.cell.get_cells_campaign(db=db, campaign_id=campaign_id)
@@ -134,3 +181,53 @@ def create_recomendation(
         else:
             return {"results": result}
     
+    
+@api_router_recommendation.patch("/recommendations/{recommendation_id}", status_code=200, response_model=Recommendation)
+def partially_update_recommendation(
+    *,
+    recommendation_id: int,
+    member_id: int,
+    recipe_in: Union[state, Dict[str, Any]],
+    db: Session = Depends(deps.get_db),
+) -> dict:
+    """
+    Partially Update a Recommendation
+    """
+    recommendation = crud.recommendation.get_recommendation(
+        db=db, member_id=member_id, recommendation_id=recommendation_id)
+
+    if recommendation is None:
+        raise HTTPException(
+            status_code=404, detail=f"Recommendation with id=={recommendation_id} not found"
+        )
+
+    recomendation_update = RecommendationUpdate(
+        state=recipe_in, update_datetime=datetime.now())
+    # dict_update={"state":recipe_in, "update_datetime":datetime.utcnow()}
+    updated_recipe = crud.recommendation.update(
+        db=db, db_obj=recommendation, obj_in=recomendation_update)
+    db.commit()
+    return updated_recipe
+    
+@api_router_recommendation.delete("/recommendations/{recommendation_id}", status_code=204)
+def delete_recommendation(*,
+                          recommendation_id: int,
+                          member_id: int,
+                          db: Session = Depends(deps.get_db),
+                          ):
+    """
+    Delete recommendation in the database.
+    """
+    user = crud.member.get_by_id(db=db, id=member_id)
+    if user is None:
+        raise HTTPException(
+            status_code=404, detail=f"Member with id=={member_id} not found"
+        )
+    recommendation = crud.recommendation.get_recommendation(
+        db=db, member_id=member_id, recommendation_id=recommendation_id)
+    if recommendation is None:
+        raise HTTPException(
+            status_code=404, detail=f"Recommendation with recommendation_id=={recommendation_id} not found"
+        )
+    updated_recipe = crud.recommendation.remove(db=db, recommendation=recommendation)
+    return {"ok": True}

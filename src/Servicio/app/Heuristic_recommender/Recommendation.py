@@ -39,7 +39,7 @@ def search_all_recommendations_of_member(
 
 
 ################################ GET  Recommendation ########################################
-@api_router_recommendation.get("/recommendations/{recommendation_id}", status_code=200, response_model=RecommendationSearchResults)
+@api_router_recommendation.get("/recommendations/{recommendation_id}", status_code=200, response_model=Recommendation)
 def get_recommendation(
     *,
     member_id: int,
@@ -63,7 +63,7 @@ def get_recommendation(
         raise HTTPException(
             status_code=404, detail=f"Recommendation with id=={recommendation_id} not found"
         )
-    return {"results": result}
+    return result
 
 
 ####################################### POST ########################################
@@ -179,9 +179,9 @@ def create_recomendation_per_campaign(
     member_id: int,
     campaign_id:int,
     recipe_in: RecommendationCreate,
-    db: Session = Depends(deps.get_db)
+    db: Session = Depends(deps.get_db),
+    time: datetime = datetime.utcnow()
     ) -> dict:
-    time = datetime.utcnow()
 
     """
     Create recomendation

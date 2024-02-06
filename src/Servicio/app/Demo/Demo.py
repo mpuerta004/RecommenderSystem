@@ -37,7 +37,7 @@ from Demo.user_behaviour import User
 
 api_router_demo = APIRouter(prefix="/demos/hives/{hive_id}")
 
-@api_router_demo.post("/bio_inspired/campaign", status_code=201, response_model=None)
+@api_router_demo.post("/campaign", status_code=201, response_model=None)
 def asignacion_recursos_hive(
     hive_id:int,
     campaign_id:int,
@@ -103,8 +103,8 @@ def asignacion_recursos_hive(
                     if lat is not None and lon is not None:
                         a = RecommendationCreate(member_current_location={
                                                 'Longitude': lon, 'Latitude': lat}, recommendation_datetime=time)
-                        recomendaciones=create_recomendation_per_campaign(db=db,member_id=user_class.id,recipe_in=a,campaign_id=campaign_id,time=time)
-                        #recomendaciones = bio_inspired_recomender.create_recomendation(member_id=user_class.member.id,recipe_in=a,db=db,time=time,campaign_id=campaign_id)
+                        # recomendaciones=create_recomendation_per_campaign(db=db,member_id=user_class.id,recipe_in=a,campaign_id=campaign_id,time=time)
+                        recomendaciones = bio_inspired_recomender.create_recomendation(member_id=user_class.member.id,recipe_in=a,db=db,time=time,campaign_id=campaign_id)
                         if recomendaciones is not None and "results" in recomendaciones and  len(recomendaciones['results']) > 0:
                             recc= [i.recommendation for i in recomendaciones['results']] 
                             recomendation_coguida = user_class.user_selecction(db=db, list_recommendations=recc,user_position=(lat, lon))
@@ -188,10 +188,10 @@ def asignacion_recursos_hive(
     # # Cr    ear tres gráficos de líneas para cada variable
     # plt.plot(times, data_notified, marker='o', linestyle='-', color='b', label='Notified Recommendation')
     # Calcular la media acumulada de la variable mientras avanzamos en el tiempo
-    # media_accum = np.zeros(len(times))
-    # for i in range(len(times)):
-    #     current_slice = data_notified[:i + 1]
-    #     media_accum[i] = np.mean(current_slice)
+    media_accum = np.zeros(len(times))
+    for i in range(len(times)):
+        current_slice = data_notified[:i + 1]
+        media_accum[i] = np.mean(current_slice)
 
     # Trazar la media acumulada de la variable
     plt.plot(times, media_accum, linestyle='--', color='black', label='Media Acumulada')
