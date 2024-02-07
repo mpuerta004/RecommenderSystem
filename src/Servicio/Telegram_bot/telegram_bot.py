@@ -37,15 +37,19 @@ last_location_of_user = {}
 #                             "/setgender [NOBINARY or MALE or FEMALE or NOANSWER] -> para definir tu género. \n"+
 #                             "Esta información puede ser cambiada cuando quieras usando estos comandos.")
 
-message_change_personal_information = ("Just a reminder that you can modify your personal information using the following commands:\n" +
+message_change_personal_information = ("Also you can modify your personal information (if you want) using the following commands:\n" +
                                        "/setname [YOUR NAME] -> to set your name, \n"
                                        "/setsurname  [YOUR SURNAME] -> to set your surname, \n" +
                                        "/setage [YOUR AGE] -> Set your age, \n" +
-                                       "/setbirthday [YYYY-MM-DDT00:00:00] -> to set your birthday, \n" +
-                                       "/setcity [YOUR CITY] -> to set your city, \n" +
                                        "/setmail [YOUR EMAIL] -> to set your email, \n" +
                                        "/setgender [NOBINARY or MALE or FEMALE or NOANSWER] -> to set your gender. \n" +
                                        "This information can be changed anytime using these commands.")
+message_info_interaction = ("The goal of this system is to create a map of picture taken in diferentes places of Deusto. This system give you some recomendation of places to take photos and create a map of photos."+
+                            "You can interact with me using the following commands:\n" +
+                            "/recommendation -> to request places to take a photo, \n" +
+                            "/measurements -> to send the photo in the place you accepted \n" +
+                            "/map -> to see the map of the places with the photos \n" )
+                            
 
 recomendation_aceptada = {}
 headers = {
@@ -81,6 +85,7 @@ def send_locations(message):
         # bot.send_message(message.chat.id, f"Hola {message.chat.first_name}! Bienvenido de nuevo!")
         bot.send_message(
             message.chat.id, f"Hello {message.chat.first_name}! Welcome back!")
+        bot.send_message(message.chat.id, message_info_interaction)
         bot.send_message(message.chat.id, message_change_personal_information)
     # CASE (user dont exists in the database).
     else:
