@@ -243,7 +243,7 @@ def create_recomendation_per_campaign(
    
     if campaign_want==False:
         print("ERROR: far_away_1")
-        return {"detail": "far_away"}
+        return {"detail": "Incorrect_user_campaign"}
     if len(cells) ==0:
         print("ERROR: far_away_2")
         return {"detail": "far_away"}

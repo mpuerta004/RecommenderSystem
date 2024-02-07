@@ -119,7 +119,7 @@ def create_recomendation(
             return {"detail": "no_measurements_needed"}
         if campaign_want==False:
             print("ERROR: far_away_1")
-            return {"detail": "far_away"}
+            return {"detail": "Incorrect_user_campaign"}
         if role_correct==False:
             print("ERROR: Incorrect_user_role")
             return {"details": "Incorrect_user_role"}
@@ -130,9 +130,15 @@ def create_recomendation(
         list_cells_id=[cell.id for cell in list_of_cells]
         df_user_distance=pd.DataFrame([0 for i in range(0,len(list_of_cells))], index=list_cells_id,columns=["distance_cell_user"])
         list_of_cells=crud.cell.get_cells_campaign(db=db, campaign_id=campaign_id)
+        far_away=True
         for cell in list_of_cells:
             df_user_distance.loc[cell.id,"distance_cell_user"]=vincenty(
                 (cell.centre["Latitude"], cell.centre["Longitude"]), (user_location['Latitude'], user_location['Longitude']))
+            if  df_user_distance.loc[cell.id,"distance_cell_user"] <=campaign.cells_distance*5:
+                far_away=False
+        if far_away:
+            print("ERROR: far_away_2")
+            return {"detail": "far_away"}
         probability_user=pd.DataFrame([], index= list_cells_id,columns=["probability"])
         # if not (member_id in self.list_members_id):
         #     self.new_user(member_id=member_id, campaign_id=self.campaign_id, db=db)
