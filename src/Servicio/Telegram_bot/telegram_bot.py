@@ -62,7 +62,7 @@ headers = {
 
 # Manejar el comando /start ->
 @bot.message_handler(commands=['start'])
-def send_locations(message):
+def start(message):
 
     headers = {
         'Accept': 'application/json',
@@ -698,7 +698,7 @@ def handle_location(message):
 
                 data = bot_auxiliar.recomendacion(
                     id_user=message.chat.id, campaign_id=campaign_id, info=info)
-                if data is not None and data != {'detail': 'far_away'} and data != {'details': 'Incorrect_user_role'}:
+                if data is not None and data != {'detail': 'far_away'} and data != {'details': 'Incorrect_user_role'} and data != {"detail": "no_measurements_needed"}:
                     # Eliminamos los datos anteriores guardados
                     recomendation_aceptada[message.chat.id] = 0
                     last_recomendation_per_user[message.chat.id] = data['results']

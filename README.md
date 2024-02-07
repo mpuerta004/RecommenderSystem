@@ -291,7 +291,7 @@ Click on PUT endpoint and then in the "Try it out" button, complete the Request 
                 "birthday": "1997-08-07T00:00:00",
                 "city": "Bilabo",
                 "mail": "-",
-                "real_user": true
+                "real_user": true,
                 "id": 1
             },
             "role": "WorkerBee"
@@ -305,7 +305,7 @@ Click on PUT endpoint and then in the "Try it out" button, complete the Request 
                 "birthday": "1997-08-07T00:00:00",
                 "city": "Bilabo",
                 "mail": "-",
-                "real_user": true
+                "real_user": true,
                 "id": 2
             },
             "role": "QueenBee"
@@ -328,10 +328,10 @@ Click on PUT endpoint and then in the "Try it out" button, complete the Request 
         },
         "boundary_campaign": {
             "centre": {
-            "Longitude": 500,
-            "Latitude": 500
+                "Longitude":-2.936709840172603,
+                "Latitude":  43.26333718324741
             },
-            "radius": 300
+            "radius": 0.15
         }
     }
     ```
@@ -350,10 +350,10 @@ Click on PUT endpoint and then in the "Try it out" button, complete the Request 
     ```
     This can be done to be able to observe where measurements during the campaign should be obtained.
     ![](./Picture_readme/10.Create_centers.png)
-    In addition, after the creation of the campaign, we can visualize the campaign map with the show endpoint at the campaign section [/hives/{hive_id}/campaigns/{campaign_id}/show](http://localhost:8001/docs#/Campaigns/show_a_campaign_hives__hive_id__campaigns__campaign_id__show_get) endpoint. As an example of the result: 
+    In addition, after the creation of the campaign, we can visualize the campaign map with the show endpoint at the campaign section [/hives/{hive_id}/campaigns/{campaign_id}/show](http://localhost:8001/docs#/Campaigns/show_hive_hives__hive_id__campaigns_show_get) endpoint. As an example of the result: 
     ![](./Picture_readme/22.campaign_show.png)
 
-6. **Assign devices to users in newly created campaign:** This endpoint is enabled to allow Queen Bees to assign devices to each of the members of a hive taking part in a campaign. This endpoint is defined at [http://localhost:8001](http://localhost:8001) through POST command [/hives/{hive_id}/campaigns/{campaign_id}/devices](http://localhost:8001/docs#/Sync/post_members_devices_hives__hive_id__campaigns__campaign_id__devices_post). Click on POST endpoint and then in the "Try it out" button, complete the Request body (pìcture example) and click execute.
+6. **Assign devices to users in newly created campaign:** This endpoint is enabled to allow Queen Bees to assign devices to each of the members of a hive taking part in a campaign. This endpoint is defined at [http://localhost:8001](http://localhost:8001) through POST command [/sync/hives/{hive_id}/campaigns/{campaign_id}/devices](http://localhost:8001/docs#/Sync/post_members_devices_sync_hives__hive_id__campaigns__campaign_id__devices_put. Click on POST endpoint and then in the "Try it out" button, complete the Request body (pìcture example) and click execute.
     Request Body: 
     ```
     {
@@ -363,14 +363,13 @@ Click on PUT endpoint and then in the "Try it out" button, complete the Request 
     ```
     ![](./Picture_readme/23.sync.create_campaignMember.png)
     
-7. **Request the MVE to provide recommendations:** This endpoint is enabled to request recommendation of possible cells to which users (Worker Bees) should move in order to pollinize, i.e. grab measurements, in such point. This endpoint returns a configurable number of recommendations, currently the best nearby 3 cell locations for a given user, based on her current location. This endpoint is defined at [http://localhost:8001](http://localhost:8001) in section Recommendations through POST command [/members/{member_id}/recommendations/](http://localhost:8001/docs#/Recommendations/create_recomendation_members__member_id__recommendations__post)by filling out the following request body:
+7. **Request the MVE to provide recommendations:** This endpoint is enabled to request recommendation of possible cells to which users (Worker Bees) should move in order to pollinize, i.e. grab measurements, in such point. This endpoint returns a configurable number of recommendations, currently the best nearby 3 cell locations for a given user, based on her current location. This endpoint is defined at [http://localhost:8001](http://localhost:8001) in section Recommendations through POST command [/members/{member_id}/campaigns/{campaign_id}/recommendations](http://localhost:8001/docs#/Recommendations/create_recomendation_members__member_id__campaigns__campaign_id__recommendations_post)by filling out the following request body:
     ```
     {
         "member_current_location": {
-            "Longitude": 500,
-            "Latitude": 500
-        },
-        "sent_datetime": "2023-02-07T10:52:32.502003"
+            "Longitude": -2.94016692792444,
+            "Latitude":  43.27132328554241
+        }
     }
     ```
     ![](./Picture_readme/12.Create_recommendation.PNG)
@@ -381,10 +380,7 @@ Click on PUT endpoint and then in the "Try it out" button, complete the Request 
 
 8. **Inform MVE about the change of state of a recommendation:** This endpoint is enabled to indicate when a recommendation has been taken by a user (Worker Bee), i.e. the user is being directed to the cell centre. In this case the status of the recommendation would change from NOTIFIED to ACCEPTED. Besides, when a user does take a measurement, then the status of the recommendation is changed to REALIZED automatically. If a notification is never realized, after the slot sampling period is over, the status of the recommendation is changed by MVE to NON_REALIZED actuamatically. This method is defined at [http://localhost:8001](http://localhost:8001) in section Recommendations at the PATCH endpoint [/members/{member_id}/recommendations/{recommendation_id}](http://localhost:8001/docs#/Recommendations/partially_update_recommendation_members__member_id__recommendations__recommendation_id__patch) by filling out the following request body:
     ```
-    {
-        "state": "ACCEPTED",
-        "update_datetime": "2023-02-07T10:52:32.505306"
-    }
+       "ACCEPTED"
     ```
     ![](./Picture_readme/13.update_recomendation_state.PNG)  
 

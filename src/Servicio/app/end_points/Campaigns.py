@@ -53,13 +53,13 @@ color_list_h = ['#ffc3c3', '#ffdba7', '#f8f7bb', '#cbffbe', '#8ac683'
 def show_hive(
     *,
     hive_id: int,
-    # time: datetime= datetime.utcnow(),
+    time: datetime= datetime.utcnow(),
     db: Session = Depends(deps.get_db),
 ) -> Any:
     """
     Show a campaign
     """
-    time=datetime.utcnow()
+    # time=datetime.utcnow()
     campañas_activas= crud.campaign.get_all_active_campaign_for_a_hive(db=db, hive_id=hive_id,time=time)
     try:
         os.remove("src/Servicio/Telegram_bot/Pictures/DATAMAP.csv")

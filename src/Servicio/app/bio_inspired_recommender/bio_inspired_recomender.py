@@ -85,6 +85,46 @@ def create_recomendation(
     db: Session = Depends(deps.get_db),
     time:datetime = datetime.utcnow()
 ) -> dict:
+        print("---- RECOMENDATION ----------------------------")
+        print("Campaign_user_want_id",campaign_id)
+        #time = datetime.now()
+        
+        print("Actual_time:", time)
+        # Get the member and verify if it exists
+        user = crud.member.get_by_id(db=db, id=member_id)
+    
+        if user is None:
+            raise HTTPException(
+            status_code=404, detail=f"Member with id=={member_id} not found"
+            )
+    
+        print("user_id:",user.id)
+        print("user_name", user.name)
+        print(f"user_location: (Lat: {recipe_in.member_current_location['Latitude']},Long:{recipe_in.member_current_location['Longitude']})")
+        campaign = crud.campaign.get(db=db, id=campaign_id)
+        # De este modo si la campaña noesta activa sacara un error de no_measurements_needed! 
+        if campaign.start_datetime.replace(tzinfo=timezone.utc) <= time.replace(tzinfo=timezone.utc)  and time.replace(tzinfo=timezone.utc) < campaign.end_datetime.replace(tzinfo=timezone.utc):
+            campaign_member = crud.campaign_member.get_Campaigns_of_member(
+                db=db, member_id=user.id)
+            campaign_want=False
+            role_correct=False
+
+            for cam_member in campaign_member:
+                if campaign_id == cam_member.campaign_id:
+                    if (cam_member.role == "QueenBee" or cam_member.role == "WorkerBee"):
+                        role_correct=True 
+            
+                    campaign_want=True 
+        else:
+            return {"detail": "no_measurements_needed"}
+        if campaign_want==False:
+            print("ERROR: far_away_1")
+            return {"detail": "far_away"}
+        if role_correct==False:
+            print("ERROR: Incorrect_user_role")
+            return {"details": "Incorrect_user_role"}
+
+        
         user_location=recipe_in.member_current_location
         list_of_cells=crud.cell.get_cells_campaign(db=db, campaign_id=campaign_id)
         list_cells_id=[cell.id for cell in list_of_cells]
@@ -97,7 +137,7 @@ def create_recomendation(
         # if not (member_id in self.list_members_id):
         #     self.new_user(member_id=member_id, campaign_id=self.campaign_id, db=db)
             
-        campaign = crud.campaign.get(db=db, id=campaign_id)
+        
         NEW_VALUE=-1.0
         for cell in list_of_cells:
             # print(self.users_thesthold)
@@ -131,9 +171,11 @@ def create_recomendation(
         result = []
         probability_user_list_positive = probability_user.loc[probability_user["probability"]>0.0]
         list_order_cell = probability_user_list_positive.sort_values(by="probability", ascending=False).index.tolist()
+        
         definitivos=[]
         if len(list_order_cell)<3:
             definitivos=list_order_cell
+        #Esto es para asegurarnos de que los tres primeros si son iguales en prioridad no se cogan por order de id sino que revolvemos.  
         else:
             definitivos=[]
             # print(len(list_order_cell))
@@ -179,7 +221,9 @@ def create_recomendation(
             
             return {"results": result}
         else:
-            return {"results": result}
+            print("ERROR: no_measurements_needed; cells_and_priority empty for wanted campaign ")
+            return {"detail": "no_measurements_needed"}
+            # return {"results": result}
     
     
 @api_router_recommendation.patch("/recommendations/{recommendation_id}", status_code=200, response_model=Recommendation)
