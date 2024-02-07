@@ -356,7 +356,9 @@ def update_campaign(
             if campaign_metadata.sampling_period == 0:
                         duration = campaign_metadata.end_datetime - campaign_metadata.start_datetime        
                         campaign_metadata.sampling_period = duration.total_seconds()
-                        campaign_metadata.min_samples = 0
+            if campaign_metadata.min_samples == 0:
+                duration = campaign_metadata.end_datetime - campaign_metadata.start_datetime        
+                campaign_metadata.sampling_period = duration.total_seconds()
             if campaign_metadata.end_datetime <= campaign_metadata.start_datetime:
                         raise HTTPException(
                             status_code=400, detail=f"the end time cannot be earlier or same than the initial time."
@@ -392,10 +394,10 @@ def update_campaign(
             duration of this type of campaigns was short. 
             In this case the sampling_peirod ha to be the all campaing duration!!!! -> that its only one slot. 
             """
-            if campaign_metadata.sampling_period == 0:
-                duration = campaign_metadata.end_datetime - campaign_metadata.start_datetime        
-                campaign_metadata.sampling_period = duration.total_seconds()
-                campaign_metadata.min_samples = 0
+            # if campaign_metadata.sampling_period == 0:
+            #     duration = campaign_metadata.end_datetime - campaign_metadata.start_datetime        
+            #     campaign_metadata.sampling_period = duration.total_seconds()
+            #     campaign_metadata.min_samples = 0
 
             """
             Verify all case related with the start and end datetime of the campaign

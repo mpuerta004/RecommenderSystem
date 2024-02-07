@@ -76,7 +76,7 @@ def get_recommendation(
     return result
 
 
-@api_router_recommendation.post("/campaigns/{campaign_id}/recommendations", status_code=201, response_model=Union[RecommendationCellSearchResults,str])
+@api_router_recommendation.post("/campaigns/{campaign_id}/recommendations", status_code=201, response_model=Union[RecommendationCellSearchResults,dict])
 def create_recomendation(
     *,
     member_id: int,
@@ -145,14 +145,14 @@ def create_recomendation(
                     db=db, cell_id=cell.id, time=time)
             priority_cell=crud.priority.get_by_slot_and_time(db=db, slot_id=slot.id, time=time)
             if priority_cell.temporal_priority < 0.0:
-                NEW_VALUE=0.0
+                NEW_VALUE=-1.0
             else:
                 Cardinal_actual = crud.measurement.get_all_Measurement_from_cell_in_the_current_slot(
                     db=db, time=time, slot_id=slot.id)
                 recommendation_accepted = crud.recommendation.get_aceptance_state_of_cell(
                         db=db, slot_id=slot.id)
                 expected = Cardinal_actual + len(recommendation_accepted)
-                if expected < campaign.min_samples and df_user_distance.loc[cell.id,"distance_cell_user"]<3*campaign.cells_distance: 
+                if expected < campaign.min_samples and df_user_distance.loc[cell.id,"distance_cell_user"]<5*campaign.cells_distance: 
                     bio_inspired=crud.bio_inspired.get_threshole(db=db, cell_id=cell.id, member_id=member_id)
                     theshold= bio_inspired.threshold
                     priority= crud.priority.get_by_slot_and_time(db=db, slot_id=slot.id, time=time)
@@ -165,13 +165,12 @@ def create_recomendation(
                                                                     )
                     )
                 else:
-                    NEW_VALUE=0.0
+                    NEW_VALUE=-1.0
             probability_user.loc[cell.id,"probability" ]= NEW_VALUE
         probability_user["probability"]= pd.to_numeric(probability_user["probability"])
         result = []
-        probability_user_list_positive = probability_user.loc[probability_user["probability"]>0.0]
-        list_order_cell = probability_user_list_positive.sort_values(by="probability", ascending=False).index.tolist()
-        
+        probability_user_list_positive = probability_user.loc[probability_user["probability"]>=0.0]
+        list_order_cell=probability_user_list_positive.sort_values(by="probability", ascending=False).index.tolist()
         definitivos=[]
         if len(list_order_cell)<3:
             definitivos=list_order_cell
