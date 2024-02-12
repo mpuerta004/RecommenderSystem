@@ -61,10 +61,10 @@ def show_hive(
     """
     # time=datetime.utcnow()
     campañas_activas= crud.campaign.get_all_active_campaign_for_a_hive(db=db, hive_id=hive_id,time=time)
-    try:
-        os.remove("src/Servicio/Telegram_bot/Pictures/DATAMAP.csv")
-    except OSError:
-        print("No se pudo borrar el archivo")
+    # try:
+    #     os.remove("src/Servicio/Telegram_bot/Pictures/DATAMAP.csv")
+    # except OSError:
+    #     print("No se pudo borrar el archivo")
     if campañas_activas is None or campañas_activas is [] or len(campañas_activas)==0:
        return None
     count = 0
@@ -86,7 +86,7 @@ def show_hive(
     mapObj = folium.Map(location=[lat_center/n,
                         lon_center/n], zoom_start=variables.zoom_start)
     for cam in campañas_activas:
-        cell_distance = cam.cells_distance
+        cell_distance = cam.cells_distanceracias 
 
         hipotenusa = math.sqrt(2*((cell_distance/2)**2))
         for i in cam.surfaces:
