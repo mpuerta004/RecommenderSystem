@@ -663,7 +663,7 @@ def set_city(message):
 
 
 # Envia una ubicación para pedir la recomendación!
-@bot.message_handler(commands=['recomendation', 'measurement'])
+@bot.message_handler(commands=['recommendation', 'measurement'])
 def recibir_localizacion(message):
     markup = types.ReplyKeyboardMarkup(row_width=1)
 
@@ -958,40 +958,92 @@ def crear_mapa(message):
             try:
 
                 # Se registramos la recomendacion acceptada por el usuario.
-                response = requests.get(peticion, headers=headers)
+                response = requests.get(peticion, headers=headers,params={'time': datetime.datetime.utcnow()})
                 if response.status_code == 200:
                     df = pd.read_csv('src/Servicio/Telegram_bot/Pictures/CSVFILE.csv',
                                      names=['latitud', 'longitud', 'url_imagen'])
                     # Obtener el número de combinaciones diferentes de las dos primeras columnas
                     grupos = df.groupby(['latitud', 'longitud'])[
                         'url_imagen'].apply(list).reset_index()
+                    campaign=bot_auxiliar.get_campaign_hive_1(id_user=message.chat.id)
+                    radio=campaign['cells_distance']/2
+                    hipotenusa= math.sqrt(2*((radio)**2))
                     for index, row in grupos.iterrows():
                         combinacion = (row['latitud'], row['longitud'])
                         datos_tercera_columna = row['url_imagen']
                         n_files = len(datos_tercera_columna)
                         grados = 360/n_files
+                        
+                        
                         for i in range(0, n_files):
                             tamano_imagen = min(95 * 2 ** (18 - 10), 150)
                             lat, long = combinacion[0], combinacion[1]
                             if 0 <= i*grados and 90 > i*grados:
+                                esquina_derecha_arriba=bot_auxiliar.get_point_at_distance(lat1=lat, lon1=long, d=radio,bearing=0 )
+                                medio_ARRIBA=  bot_auxiliar.get_point_at_distance(lat1=lat, lon1=long, d=radio,bearing=90)
+                                image_overlay = folium.raster_layers.ImageOverlay(
+                                        image=datos_tercera_columna[i],
+                                        bounds=[medio_ARRIBA,esquina_derecha_arriba],
+                                        opacity=0.75,
+                                        interactive=True,
+                                        cross_origin=False,
+                                        zindex=1,
+                                    )
+                                image_overlay.add_to(mapa)
+
                                 print("de 0 a 90 grados")
-                                folium.Marker(location=[lat, long], icon=folium.CustomIcon(
-                                    icon_image=datos_tercera_columna[i], icon_size=(95, 95), icon_anchor=(100, 100))).add_to(mapa)
+                                
+                                # folium.Marker(location=[lat, long], icon=folium.CustomIcon(
+                                # icon_image=datos_tercera_columna[i], icon_size=(95, 95), icon_anchor=(100, 100))).add_to(mapa)
 
                             elif 90 <= i*grados and 180 > i*grados:
+                                esquina_arriba_izquierda=bot_auxiliar.get_point_at_distance(lat1=lat, lon1=long, d=hipotenusa,bearing=135 )
+                                medio_ARRIBA=  [lat,long]
+                                image_overlay = folium.raster_layers.ImageOverlay(
+                                        image=datos_tercera_columna[i],
+                                        bounds=[esquina_arriba_izquierda,medio_ARRIBA],
+                                        opacity=0.75,
+                                        interactive=True,
+                                        cross_origin=False,
+                                        zindex=1,
+                                    )
+                                image_overlay.add_to(mapa)
+
                                 print("de 90 a 180")
-                                folium.Marker(location=[lat, long], icon=folium.CustomIcon(
-                                    icon_image=datos_tercera_columna[i], icon_size=(95, 95), icon_anchor=(100, 0))).add_to(mapa)
+                                # folium.Marker(location=[lat, long], icon=folium.CustomIcon(
+                                #     icon_image=datos_tercera_columna[i], icon_size=(95, 95), icon_anchor=(100, 0))).add_to(mapa)
 
                             elif 180 <= i*grados and 270 > i*grados:
-                                print("de 180 a 270")
-                                folium.Marker(location=[lat, long], icon=folium.CustomIcon(
-                                    icon_image=datos_tercera_columna[i], icon_size=(95, 95), icon_anchor=(0, 0))).add_to(mapa)
+                                lateral_izq_medio=bot_auxiliar.get_point_at_distance(lat1=lat, lon1=long, d=radio,bearing=180 )
+                                punto_central= bot_auxiliar.get_point_at_distance(lat1=lat, lon1=long, d=radio,bearing=270)
+                                image_overlay = folium.raster_layers.ImageOverlay(
+                                        image=datos_tercera_columna[i],
+                                        bounds=[lateral_izq_medio,punto_central],
+                                        opacity=0.75,
+                                        interactive=True,
+                                        cross_origin=False,
+                                        zindex=1,
+                                    )
+                                image_overlay.add_to(mapa)
+                                # print("de 180 a 270")
+                                # folium.Marker(location=[lat, long], icon=folium.CustomIcon(
+                                #     icon_image=datos_tercera_columna[i], icon_size=(95, 95), icon_anchor=(0, 0))).add_to(mapa)
 
                             else:
+                                lateral_derecho_medio=bot_auxiliar.get_point_at_distance(lat1=lat, lon1=long, d=hipotenusa,bearing=315 )
+                                central_point= [lat,long]
+                                image_overlay = folium.raster_layers.ImageOverlay(
+                                        image=datos_tercera_columna[i],
+                                        bounds=[central_point,lateral_derecho_medio],
+                                        opacity=0.75,
+                                        interactive=True,
+                                        cross_origin=False,
+                                        zindex=1,
+                                    )
+                                image_overlay.add_to(mapa)
                                 print("de 270 a 360")
-                                folium.Marker(location=[lat, long], icon=folium.CustomIcon(
-                                    icon_image=datos_tercera_columna[i], icon_size=(95, 95), icon_anchor=(0, 100))).add_to(mapa)
+                                # folium.Marker(location=[lat, long], icon=folium.CustomIcon(
+                                #     icon_image=datos_tercera_columna[i], icon_size=(95, 95), icon_anchor=(0, 100))).add_to(mapa)
 
                             df = pd.read_csv('src/Servicio/Telegram_bot/Pictures/DATAMAP.csv', names=[
                                              "list_point", "id_user", "Cardinal_actual", "expected_measurements", "color_number"])
@@ -1003,7 +1055,7 @@ def crear_mapa(message):
                                 # color_number=str(row[4])
 
                                 folium.Polygon(locations=list_point, color='black', fill=False,
-                                               weight=1, popup=(folium.Popup(str(id_user))), opacity=0.5, fill_opacity=0.2).add_to(mapa)
+                                               weight=1, popup=(folium.Popup(str(id_user))), opacity=0.25, fill_opacity=0.2).add_to(mapa)
 
                                 folium.Marker(list_point[3], popup=f"Number of Expected measurements: {str(excepted_measurements)}",
                                               icon=DivIcon(
@@ -1030,6 +1082,11 @@ def crear_mapa(message):
 
     except Exception as e:
         print("Error durante la solicitud:", e)
+
+@bot.message_handler(commands=['info'])
+def info(message):
+    bot.reply_to(message, message_info_interaction)
+    bot.reply_to(message, message_change_personal_information)
 
 
 if __name__ == "__main__":

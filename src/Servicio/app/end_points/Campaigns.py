@@ -125,14 +125,14 @@ def show_hive(
                             weight=1, popup=(folium.Popup(str(j.id))), opacity=0.5, fill_opacity=0.2).add_to(mapObj)
                 
                 
-                with open("src/Servicio/Telegram_bot/Pictures/DATAMAP.csv", "a", newline="") as f_object:
-                    # Pass the CSV  file object to the writer() function
-                    writer_object = writer(f_object)
-                    # Result - a writer object
-                    # Pass the data in the list as an argument into the writerow() function
-                    writer_object.writerow([list_point, j.id, Cardinal_actual, expected_measurements,str(color_number)])
-                    # Close the file object
-                    f_object.close()
+                # with open("src/Servicio/Telegram_bot/Pictures/DATAMAP.csv", "a", newline="") as f_object:
+                #     # Pass the CSV  file object to the writer() function
+                #     writer_object = writer(f_object)
+                #     # Result - a writer object
+                #     # Pass the data in the list as an argument into the writerow() function
+                #     writer_object.writerow([list_point, j.id, Cardinal_actual, expected_measurements,str(color_number)])
+                #     # Close the file object
+                #     f_object.close()
                     
                 folium.Marker(list_point[3],popup=f"Number of Expected measurements: {expected_measurements}",
                             icon=DivIcon(
