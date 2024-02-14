@@ -86,7 +86,7 @@ def show_hive(
     mapObj = folium.Map(location=[lat_center/n,
                         lon_center/n], zoom_start=variables.zoom_start)
     for cam in campañas_activas:
-        cell_distance = cam.cells_distanceracias 
+        cell_distance = cam.cells_distance 
 
         hipotenusa = math.sqrt(2*((cell_distance/2)**2))
         for i in cam.surfaces:
