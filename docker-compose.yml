@@ -3,6 +3,9 @@ version: '3'
 # networks:
 #   academe-platform_sociobee_network:
 #     external: true
+networks:
+  my_network:
+    driver: bridge
 
 volumes:
   data-volume:
@@ -23,7 +26,8 @@ services:
       MYSQL_ROOT_PASSWORD: mypasswd
     ports:
       - "3306:3306"
-    
+    networks:
+      - my_network
     # networks:
     #   - academe-platform_sociobee_network
 
@@ -49,3 +53,5 @@ services:
       - DATABASE_HOST=mysql
     # networks:
     #   - academe-platform_sociobee_network
+    networks:
+      - my_network
