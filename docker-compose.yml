@@ -57,7 +57,7 @@ services:
       - my_network
   mysql_bot:
     image: mysql_bot
-    build: ./Model
+    build: ./Telegram_bot/Model
     volumes:
     #- ./Model/init.sql:/docker-entrypoint-initdb.d/dump.sql
     - data-volume:/var/lib/mysql_bot
@@ -79,7 +79,7 @@ services:
       - mysql_bot
     container_name: telegram_bot
     platform: linux/x86_64
-    build: .
+    build: ./Telegram_bot
     links:
       - mysql_bot
     restart: always

@@ -13,6 +13,17 @@
             "name": "Try",
             "username": "root",
             "password": "mypasswd"
+        },
+        {
+            "mysqlOptions": {
+                "authProtocol": "default",
+                "enableSsl": "Disabled"
+            },
+            "previewLimit": 50,
+            "server": "localhost",
+            "driver": "MySQL",
+            "connectString": "mysql+mysqlconnector://root:mypasswd@mysql_bot:3306/Telegram_bot_db",
+            "name": "Telegram_bot"
         }
     ],
     "python.analysis.autoImportCompletions": false,
