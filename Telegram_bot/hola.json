@@ -1,7 +1,0 @@
-{'recommendation': 
-{'member_current_location': {...},
-'member_id': 6079915078, 
-'state': 'NOTIFIED', 
-'update_datetime': '2024-02-13T14:58:44', 
-'sent_datetime': '2024-02-13T14:58:44', 
-'id': 599, 'slot_id': 20223}, 'cell': {'cell_type': 'Dynamic', 'centre': {...}, 'radius': 0.0, 'id': 1632, 'surface_id': 67}}
