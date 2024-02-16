@@ -871,7 +871,7 @@ def handle_photo_and_location(message):
                             bot.send_location(chat_id=message.chat.id, latitude=lat, longitude=long)
 
                         else:
-                            bot.reply_to(message, "Yout position is out of the campaign. Please send the location at the point you agreed.")
+                            bot.reply_to(message, "Your position is out of the campaign. Please send the location at the point you agreed.")
 
                     else:
                         
