@@ -8,8 +8,11 @@ Conf.py
 *.py[cod]
 __pycache__/*
 */__pycache__/
-
-*/
+Model/sociobee-mve-20-09-2023.sql
+*.html
+*.png
+*.mp4
+*.rar
 # C extensions
 *.so
 #Pictures! 
