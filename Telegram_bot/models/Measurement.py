@@ -5,7 +5,6 @@ from sqlalchemy.orm import relationship
 
 from db.base_class import Base
 
-from models.Member import Measurement
 # from models.State import State
 from models.Point import Point
 

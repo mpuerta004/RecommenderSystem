@@ -8,7 +8,7 @@ from csv import writer
 import folium
 # from fastapi import FastAPI, APIRouter, Query, HTTPException, Request, Depends
 from folium import plugins
-# from IPython.display import display
+from IPython.display import display
 import csv
 from folium.features import DivIcon
 import bot_auxiliar
@@ -105,7 +105,7 @@ def start(message):
                         engine = create_db_engine()
                         db = create_db_session(engine)
                         Member= MemberCreate(id=message.chat.id, name=message.chat.first_name,surname="",age=0, gender="NOANSWER", city="", mail=message.chat.username, birthday=datetime.datetime.now())
-                        crud.member.create_member(db=db, member=Member)
+                        crud.member.create_member(db=db, obj_in=Member)
                         db.close()
                     else:
                         print(f"Error en la solicitud. Código de respuesta: {response.status_code}") 
@@ -636,9 +636,9 @@ def recommendation(message):
             crud.last_user_position.remove(db=db,Last_user_position=last_user_position)
             db.commit()
         # Elimino las recomendaciones pasadas. 
-        list_recomendation= crud.redcomendation.get_All_Recommendation(db=db, member_id=message.chat.id)
+        list_recomendation= crud.recommendation.get_All_Recommendation(db=db, member_id=message.chat.id)
         for i in list_recomendation:
-            crud.recomendation.remove(db=db, recommendation=i)
+            crud.recommendation.remove(db=db, recommendation=i)
     else: 
         bot.reply_to(message, "Please first send the comand /start to be in the database. Thanks you! ")
     db.close()
@@ -689,8 +689,6 @@ def handle_location(message):
         last_location_of_user= Last_user_positionCreate(member_id=message.chat.id, location={
                 'Longitude': message.location.longitude, 'Latitude': message.location.latitude})
         crud.last_user_position.create_last_user_position(db=db, obj_in=last_location_of_user)
-
-        
         rec = bot_auxiliar.recomendaciones_aceptadas(message.chat.id)
         # El usuario tiene recomendaciones aceptadas!
         if rec != None:
@@ -698,7 +696,7 @@ def handle_location(message):
             list_notified_recommendation=crud.recommendation.get_recommendation_notified(db=db, member_id=message.chat.id)
             for i in list_notified_recommendation:
                 crud.recommendation.remove(db=db, recommendation=i)
-            bot.reply_to(message, "It's time for you to send the photo! Plese send to me the photo to integrate it in the collague.")
+            bot.reply_to(message, "You have a active recomendation. It's time for you to send the photo! Plese send to me the photo to integrate it in the collague.")
             
         else:
             #Eliminamos las enteriores en caso de existir
@@ -816,7 +814,7 @@ def handle_option(message):
                 else:
                     rec=crud.recommendation.get_recommendation_for_position(db=db,member_id=message.chat.id,position=int(number)-1)
                     # Registramos la recomendacion aceptada que tiene el usuario. 
-                    accepted_recomendation=bot_auxiliar.update_recomendation(member_id=message.chat.id, recomendation_id=rec.id)
+                    accepted_recomendation=bot_auxiliar.update_recomendation(id_user=message.chat.id, recomendation_id=rec.id)
                     if accepted_recomendation != None:
                         crud.recommendation.update(db=db, db_obj=rec, obj_in={"state":"ACCEPTED"})
                         bot.reply_to(message,
@@ -851,21 +849,21 @@ def handle_photo_and_location(message):
                     file_id = message.photo[-1].file_id
                     file_info = bot.get_file(file_id)
                     downloaded_file = bot.download_file(file_info.file_path)
-                    file_path = f'Pictures/photo{data["id"]}.jpg'
+                    file_path = f'Telegram_bot/Pictures/photo{data["id"]}.jpg'
                     with open(file_path, 'wb') as new_file:
                         new_file.write(downloaded_file)
                     if data['recommendation_id'] == None:
-                        lat, long = bot_auxiliar.get_point(id_user=message.chat.id, lat=last_user_position.location['Latitude'], long=last_user_position.location['Longitude'])
+                        lat, long = bot_auxiliar.get_point(id_user=message.chat.id, latitud=last_user_position.location['Latitude'], longuitud=last_user_position.location['Longitude'])
                         if lat != None and long != None:
                             #Calculado el punto de la celda dond eha ido la medicion. 
-                            measurement=MeasurementCreate(id=data['id'],url=file_path, location={'Latitud':lat, 'Longitud':long})
+                            measurement=MeasurementCreate(id=data['id'],url=file_path, location={'Latitude':lat, 'Longitude':long})
                             crud.measurement.create_measurement(db=db, obj_in=measurement)
                             crear_mapa(message)
                             bot.reply_to(
                                     message, "Thanks for sending the photo!")
                             bot.send_message(
                                     message, "Your photo has been registered, but please take the photo at the location where you agreed to do so. You can see the map with photos with the command /map.")
-                            #Todo no se si esto esta bien!
+                            #TODO! no se si esto esta bien!
                             lat = recomendation_aceptada_2['cell']['centre']['Latitude']
                             long = recomendation_aceptada_2['cell']['centre']['Longitude']
                             bot.send_location(chat_id=message.chat.id, latitude=lat, longitude=long)
@@ -874,20 +872,18 @@ def handle_photo_and_location(message):
                             bot.reply_to(message, "Your position is out of the campaign. Please send the location at the point you agreed.")
 
                     else:
-                        
+                        #LA medicion no es donde debe! 
                         elements=crud.recommendation.get_All_Recommendation(db=db, member_id=message.chat.id)
-                        for i in elements['results']:
-                                crud.recommendation.remove(db=db, db_obj=i)
+                        for i in elements:
+                                crud.recommendation.remove(db=db, recommendation=i)
                         crud.last_user_position.remove(db=db, Last_user_position=last_user_position)
-                        lat = recomendation_aceptada_2['cell']['centre']['Latitude']
-                        long = recomendation_aceptada_2['cell']['centre']['Longitude']
-                        measurement=MeasurementCreate(id=data['id'],url=file_path, location={'Latitud':lat, 'Longitud':long})
+                        #TODO! verificar que esta todo bien 
+                        lat, long= bot_auxiliar.get_point(id_user=message.chat.id, latitud=recomendation_aceptada_2['member_current_location']['Latitude'], longuitud=recomendation_aceptada_2['member_current_location']['Longitude'])
+                        measurement=MeasurementCreate(id=data['id'],url=file_path, location={ 'Longitude': long, 'Latitude': lat})
                         crud.measurement.create_measurement(db=db, obj_in=measurement)   
-                    
+                        db.commit()
                         crear_mapa(message)
                         bot.reply_to(message, "Thanks for sending the photo! You you se the result with the command /map.")
-
-
                 else:
                     bot.reply_to(message, "Plase try again. Be sure that the location you send is in the accepted recomendation you select.")
             else:
@@ -902,7 +898,7 @@ def handle_photo_and_location(message):
 
 def actualizar_repositorio():
     # Ejecutar el comando para agregar, hacer commit y hacer push del archivo HTML
-    subprocess.run(['git', 'add', 'docs/index.html'])
+    subprocess.run(['git', 'add', '-f', 'docs/index.html'])
     subprocess.run(['git', 'commit', '-m', 'Actualizar HTML'])
     subprocess.run(['git', 'push'])
 
@@ -922,9 +918,6 @@ def crear_mapa(message):
         measuerements =crud.measurement.get_all(db=db)
         db.close()
         # Obtener el número de combinaciones diferentes de las dos primeras columnas
-        df = pd.DataFrame(measuerements)
-        grupos = df.groupby(['latitud', 'longitud'])[
-                        'url_imagen'].apply(list).reset_index()
         campaign=bot_auxiliar.get_campaign_hive_1(id_user=message.chat.id)
         if campaign is None:
                 bot.reply_to("Error in the visualizacion. Perhaps there is no active campaign. Please contact with @Maite314")
@@ -932,20 +925,24 @@ def crear_mapa(message):
         else:
             radio=campaign['cells_distance']/2
             hipotenusa= math.sqrt(2*((radio)**2))
-            for index, row in grupos.iterrows():
-                combinacion = (row['latitud'], row['longitud'])
-                datos_tercera_columna = row['url_imagen']
-                n_files = len(datos_tercera_columna)
-                grados = 360/4
-                        
-                        
-                for i in range(0, n_files):
-                    lat, long = combinacion[0], combinacion[1]
-                    if 0 <= i*grados and 90 > i*grados:
+            las_pos_lat, las_pos_long= measuerements[0].location['Latitude'], measuerements[0].location['Longitude']
+            n_files=0
+            for i in measuerements:
+                if i.location['Latitude'] != las_pos_lat and i.location['Longitude'] != las_pos_long:
+                    n_files=1
+                else: 
+                    n_files=n_files+1
+                            
+                combinacion = (i.location['Latitude'], i.location['Longitude'] )
+                datos_tercera_columna = i.url
+                grados = 90
+                lat, long = combinacion[0], combinacion[1]
+                print(n_files*grados)
+                if 0 <= n_files*grados and 90 > n_files*grados:
                                 esquina_derecha_arriba=bot_auxiliar.get_point_at_distance(lat1=lat, lon1=long, d=radio,bearing=0 )
                                 medio_ARRIBA=  bot_auxiliar.get_point_at_distance(lat1=lat, lon1=long, d=radio,bearing=90)
                                 image_overlay = folium.raster_layers.ImageOverlay(
-                                        image=datos_tercera_columna[i],
+                                        image=datos_tercera_columna,
                                         bounds=[medio_ARRIBA,esquina_derecha_arriba],
                                         opacity=0.75,
                                         interactive=True,
@@ -954,11 +951,11 @@ def crear_mapa(message):
                                     )
                                 image_overlay.add_to(mapa)
 
-                    elif 90 <= i*grados and 180 > i*grados:
+                elif 90 <= n_files*grados and 180 > n_files*grados:
                                 esquina_arriba_izquierda=bot_auxiliar.get_point_at_distance(lat1=lat, lon1=long, d=hipotenusa,bearing=135 )
                                 medio_ARRIBA=  [lat,long]
                                 image_overlay = folium.raster_layers.ImageOverlay(
-                                        image=datos_tercera_columna[i],
+                                        image=datos_tercera_columna,
                                         bounds=[esquina_arriba_izquierda,medio_ARRIBA],
                                         opacity=0.75,
                                         interactive=True,
@@ -966,11 +963,11 @@ def crear_mapa(message):
                                         zindex=1,
                                     )
                                 image_overlay.add_to(mapa)                               
-                    elif 180 <= i*grados and 270 > i*grados:
+                elif 180 <= n_files*grados and 270 > n_files*grados:
                                 lateral_izq_medio=bot_auxiliar.get_point_at_distance(lat1=lat, lon1=long, d=radio,bearing=180 )
                                 punto_central= bot_auxiliar.get_point_at_distance(lat1=lat, lon1=long, d=radio,bearing=270)
                                 image_overlay = folium.raster_layers.ImageOverlay(
-                                        image=datos_tercera_columna[i],
+                                        image=datos_tercera_columna,
                                         bounds=[lateral_izq_medio,punto_central],
                                         opacity=0.75,
                                         interactive=True,
@@ -978,11 +975,11 @@ def crear_mapa(message):
                                         zindex=1,
                                     )
                                 image_overlay.add_to(mapa)
-                    else:
+                else:
                                 lateral_derecho_medio=bot_auxiliar.get_point_at_distance(lat1=lat, lon1=long, d=hipotenusa,bearing=315 )
                                 central_point= [lat,long]
                                 image_overlay = folium.raster_layers.ImageOverlay(
-                                        image=datos_tercera_columna[i],
+                                        image=datos_tercera_columna,
                                         bounds=[central_point,lateral_derecho_medio],
                                         opacity=0.75,
                                         interactive=True,
@@ -1001,7 +998,8 @@ def crear_mapa(message):
 
 
 @bot.message_handler(commands=['map'])
-def crear_mapa(message):
+def crear_mapa_bot(message):
+    crear_mapa(message)
     # Tengo que pedir el centro de la camapaña- surface
     bot.reply_to( message, "The map is in this URL: https://mpuerta004.github.io/Telegram_bot/. if your photo is not in the web page, wait a few seconds and reload the page.")
 

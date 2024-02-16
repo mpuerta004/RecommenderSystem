@@ -92,7 +92,6 @@ def State_change():
 app.include_router(api_router)
 
 
-
 if __name__ == "__main__":
     ## Use this for debugging purposes only
     import uvicorn

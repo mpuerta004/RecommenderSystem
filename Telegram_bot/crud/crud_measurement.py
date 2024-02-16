@@ -4,8 +4,8 @@ from sqlalchemy.orm import Session
 from fastapi import HTTPException
 
 from crud.base import CRUDBase
-from models.Member import Measurement
-from schemas.Member import MeasurementCreate, MeasurementUpdate, MeasurementSearchResults
+from models.Measurement import Measurement
+from schemas.Measurement import MeasurementCreate, MeasurementUpdate, MeasurementSearchResults
 from fastapi.encoders import jsonable_encoder
 from sqlalchemy import and_, extract
 from sqlalchemy import func

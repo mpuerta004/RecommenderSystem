@@ -54,7 +54,7 @@ class CRUDRecommendation(CRUDBase[Recommendation, RecommendationCreate, Recommen
                         raise HTTPException(status_code=500, detail=f"Error with mysql {e}" )
         def get_recommendation_notified(self, db: Session, *, member_id:int) -> List[Recommendation]:
                 try:
-                        return db.query(Recommendation).filter( and_(Recommendation.member_id==member_id, Recommendation.state=="NOTIFIED")).first()
+                        return db.query(Recommendation).filter( and_(Recommendation.member_id==member_id, Recommendation.state=="NOTIFIED")).all()
                 except Exception as e:
                         raise HTTPException(status_code=500, detail=f"Error with mysql {e}" )
         
