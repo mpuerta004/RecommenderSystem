@@ -6,8 +6,8 @@ from apscheduler.schedulers.background import BackgroundScheduler
 from end_points import (BeeKeeper, Campaign_Member, Campaigns, Cells, Devices, Hive, Measurements, Members,
                         Surface, sync,KPIS)
 from Demo import Demo
-#from Heuristic_recommender import Recommendation
-from bio_inspired_recommender import bio_inspired_recomender as Recommendation
+from Heuristic_recommender import Recommendation
+# from bio_inspired_recommender import bio_inspired_recomender as Recommendation
 from fastapi import (APIRouter, FastAPI)
 from fastapi.templating import Jinja2Templates
 from fastapi_utils.session import FastAPISessionMaker
