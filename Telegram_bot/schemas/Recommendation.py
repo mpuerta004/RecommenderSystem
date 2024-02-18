@@ -10,6 +10,7 @@ from datetime import datetime, time, timedelta,timezone
 from schemas.Point import Point
 # from schemas.State import State
 from enum import Enum
+from schemas.Point import Point
 
 
 class state(str, Enum):
@@ -23,6 +24,7 @@ class RecommendationBase(BaseModel):
     state:state
     posicion:str
     id:int
+    point:Point
     
 
 class RecommendationCreate(RecommendationBase):
@@ -35,10 +37,7 @@ class RecommendationUpdate(BaseModel):
     
 # Properties shared by models stored in DB
 class RecommendationInDBBase(RecommendationBase):
-    member_id:int
-    state:state
-    posicion:str
-    id:int
+    pass
     
     class Config:
         orm_mode = True

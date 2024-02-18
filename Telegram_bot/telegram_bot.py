@@ -50,7 +50,7 @@ last_location_of_user = {}
 recomendation_aceptada = {}
 
 # Mensajes determinados 
-message_goal_of_the_system={"The goal of this system is create a collage of our neighborhood.This system will ask you to go to different places in the neighborhood and take pictures that catch your attention in that place."}
+message_goal_of_the_system={"The goal of this system is create a collage of our neighborhood. This system will recommend different places of the neighborhood to go to take a pictures  for something that catch your attention in that place."}
 message_change_personal_information = ("Also you can modify your personal information (if you want) using the following commands:\n" +
                                        "/setname [YOUR NAME] -> to set your name, \n"
                                        "/setsurname  [YOUR SURNAME] -> to set your surname, \n" +
@@ -59,8 +59,7 @@ message_change_personal_information = ("Also you can modify your personal inform
                                        "/setgender [NOBINARY or MALE or FEMALE or NOANSWER] -> to set your gender. \n" +
                                        "This information can be changed anytime using these commands.")
 
-message_info_interaction = ("The goal of this system is to create a map of picture taken in diferentes places of Deusto. To create a map of the Deusto as pictures of Deusto. This system give you some recomendation of places to take photos and create a map of photos."+
-                            "You can interact with me using the following commands:\n" +
+message_info_interaction = ("You can interact with me using the following commands:\n" +
                             "/recommendation -> to request places to take a photo, \n" +
                             "/measurements -> to send the photo in the place you accepted \n" +
                             "/map -> to see the map of the places with the photos \n" )
@@ -82,6 +81,15 @@ def start(message):
         # CASE (user exists in the database).
         if response.status_code == 200:
             data = response.json()  # data -> user information -> Member
+            engine = create_db_engine()
+            db = create_db_session(engine)
+            member=crud.member.get_by_id(db=db, id=message.chat.id)
+            if member == None:
+                engine = create_db_engine()
+                db = create_db_session(engine)
+                Member= MemberCreate(id=message.chat.id, name=message.chat.first_name,surname="",age=0, gender="NOANSWER", city="", mail=message.chat.username, birthday=datetime.datetime.now())
+                crud.member.create_member(db=db, obj_in=Member)
+                db.close()
             bot.send_message(message.chat.id, f"Hello {message.chat.first_name}! Welcome back!")
             bot.send_message(message.chat.id, message_goal_of_the_system)
             bot.send_message(message.chat.id, message_info_interaction)
@@ -96,17 +104,20 @@ def start(message):
                     data=bot_auxiliar.add_member_device(member_id=message.chat.id, device_id=data['id'])
                     # We insert in the database the Member_Device entity.
                     if data != None:
+                       # Insert the user in the telegram_bot_db
+                        engine = create_db_engine()
+                        db = create_db_session(engine)
+                        member=crud.member.get_by_id(db=db, id=message.chat.id)
+                        if member == None:
+                            Member= MemberCreate(id=message.chat.id, name=message.chat.first_name,surname="",age=0, gender="NOANSWER", city="", mail=message.chat.username, birthday=datetime.datetime.now())
+                            crud.member.create_member(db=db, obj_in=Member)
+                        db.close()
                         bot.send_message(
                                 message.chat.id, f"Hello! Nice to meet you {message.chat.first_name}!")
                         bot.send_message(message.chat.id, message_goal_of_the_system)
                         bot.send_message(message.chat.id, message_info_interaction)
                         bot.send_message(message.chat.id, message_change_personal_information)
-                        # Insert the user in the telegram_bot_db
-                        engine = create_db_engine()
-                        db = create_db_session(engine)
-                        Member= MemberCreate(id=message.chat.id, name=message.chat.first_name,surname="",age=0, gender="NOANSWER", city="", mail=message.chat.username, birthday=datetime.datetime.now())
-                        crud.member.create_member(db=db, obj_in=Member)
-                        db.close()
+                        
                     else:
                         print(f"Error en la solicitud. Código de respuesta: {response.status_code}") 
                         bot.send_message(message.chat.id,"Error with the system. please contact with @Maite314. Wait few minutes and try again.")
@@ -673,7 +684,8 @@ def measurement(message):
     else: 
         bot.reply_to(message, "Please first send the comand /start to be in the database. Thanks you! ")
     db.close()
-    
+
+
 @bot.message_handler(content_types=['location'])
 def handle_location(message):
     user = bot_auxiliar.existe_user(message.chat.id)
@@ -682,6 +694,7 @@ def handle_location(message):
         #De etse modo nos aseguramos que solo hay una!  
         engine = create_db_engine()
         db = create_db_session(engine)  
+        #Borrar la anterior y creas la nueva! 
         last_user_position=crud.last_user_position.get_by_id(db=db, member_id=message.chat.id)
         if last_user_position !=None:
             crud.last_user_position.remove(db=db,Last_user_position=last_user_position)
@@ -689,14 +702,15 @@ def handle_location(message):
         last_location_of_user= Last_user_positionCreate(member_id=message.chat.id, location={
                 'Longitude': message.location.longitude, 'Latitude': message.location.latitude})
         crud.last_user_position.create_last_user_position(db=db, obj_in=last_location_of_user)
-        rec = bot_auxiliar.recomendaciones_aceptadas(message.chat.id)
+        rec= crud.recommendation.get_recommendation_to_measurement(db=db, member_id=message.chat.id)
+        # rec = bot_auxiliar.recomendaciones_aceptadas(message.chat.id)
         # El usuario tiene recomendaciones aceptadas!
         if rec != None:
             #Elimino las recomendaciones que no son la aceptada. 
             list_notified_recommendation=crud.recommendation.get_recommendation_notified(db=db, member_id=message.chat.id)
             for i in list_notified_recommendation:
                 crud.recommendation.remove(db=db, recommendation=i)
-            bot.reply_to(message, "You have a active recomendation. It's time for you to send the photo! Plese send to me the photo to integrate it in the collague.")
+            bot.reply_to(message, "You have a active recomendation. It's time for you to send the photo! Please send to me the photo to integrate it in the collague.")
             
         else:
             #Eliminamos las enteriores en caso de existir
@@ -704,6 +718,7 @@ def handle_location(message):
             if list_recommendation !=None:
                 for i in list_recommendation:
                     crud.recommendation.remove(db=db, recommendation=i)
+                    
             # En caso de no tener ninguna recomendacion aceptada -> creamos nuevas recomendaciones y eliminamos las anteriores. 
             campaign = bot_auxiliar.get_campaign_hive_1(message.chat.id)
             if campaign is not None:
@@ -718,7 +733,8 @@ def handle_location(message):
                 if data is not None and data!={"detail": "Incorrect_user_campaign"} and data != {'detail': 'far_away'} and data != {'details': 'Incorrect_user_role'} and data != {"detail": "no_measurements_needed"}:
                     # Metemos en nuestra base de datos las recomendaciones que nos han dado.
                     for i in range(0,len(data['results'])):
-                        recomendation= RecommendationCreate(id=data['results'][i]['recommendation']['id'],member_id=message.chat.id, posicion=str(i), state="NOTIFIED")
+                        point = data['results'][i]['cell']['centre']
+                        recomendation= RecommendationCreate(id=data['results'][i]['recommendation']['id'],member_id=message.chat.id, posicion=str(i), state="NOTIFIED",point={"Longitude":point['Longitude'],"Latitude":point['Latitude']})
                         crud.recommendation.create_recommendation(db=db, obj_in=recomendation)
                     # TODO! ExTEPCIONES
                     if len(data['results']) == 0:
@@ -727,7 +743,7 @@ def handle_location(message):
                         crud.last_user_position.remove(db=db,Last_user_position=last_location_of_user)
                     elif len(data['results']) == 1:
                         markup = types.ReplyKeyboardMarkup(row_width=1)
-                        option1 = types.KeyboardButton(f"Option 1")
+                        option1 = types.KeyboardButton(f"Option {1}")
                         markup.add(option1)
                         bot.send_message(
                             message.chat.id, "At the moment, based on your location, we only have one recommendation for you. Hope you like it! \n")
@@ -738,8 +754,8 @@ def handle_location(message):
                             message.chat.id, "Please choose from the menu where you want to take the photo.", reply_markup=markup)
                     elif len(data['results']) == 2:
                         markup = types.ReplyKeyboardMarkup(row_width=1)
-                        option1 = types.KeyboardButton(f"Option 1")
-                        option2 = types.KeyboardButton(f"Option 2")
+                        option1 = types.KeyboardButton(f"Option {1}")
+                        option2 = types.KeyboardButton(f"Option {2}")
                         markup.add(option1, option2)
                         bot.send_message(
                             message.chat.id, "Given your location, we have 2 possible recommendations for you. Both options are explained here! \n")
@@ -754,7 +770,7 @@ def handle_location(message):
 
                     else:
                         markup = types.ReplyKeyboardMarkup(row_width=1)
-                        option1 = types.KeyboardButton(f"Option {1} ")
+                        option1 = types.KeyboardButton(f"Option {1}")
                         option2 = types.KeyboardButton(f"Option {2}")
                         option3 = types.KeyboardButton(f"Option {3}")
                         markup.add(option1, option2, option3)
@@ -820,7 +836,7 @@ def handle_option(message):
                         bot.reply_to(message,
                                 f"You chose {user_choice}. Thanks for your choice. When you're at the location, please type the /measurement command and follow the instructions. then we will ask your location again and a picture in this place.")       
                     else:
-                            bot.reply_to(message.chat.id,"system error. Plase contact with @Maite314")
+                        bot.reply_to(message.chat.id,"system error. Plase contact with @Maite314")
         else:
             bot.reply_to(
                 message, f"First please go the There are no recommendations for you at this time. We're sorry. Please request a recommendation.")
@@ -841,9 +857,8 @@ def handle_photo_and_location(message):
         recomendation_aceptada_2=bot_auxiliar.recomendaciones_aceptadas(message.chat.id)
         #Todo! asegurate que cuando recomendacion_Aceptada_2 es vacia te devuelve None. 
         if accepted_recomendation != None:
-
-            if recomendation_aceptada_2 != None:
-                data=bot_auxiliar.create_measurement(id_user=message.chat.id, Latitud=last_user_position.location['Latitude'], Longitud=last_user_position.location['Longitude'])
+            # if recomendation_aceptada_2 != None:
+                data=bot_auxiliar.create_measurement(id_user=message.chat.id,  Latitud=last_user_position.location['Latitude'], Longitud=last_user_position.location['Longitude'])
                 if data != None:
                     #Guardamos la photo. 
                     file_id = message.photo[-1].file_id
@@ -858,42 +873,47 @@ def handle_photo_and_location(message):
                             #Calculado el punto de la celda dond eha ido la medicion. 
                             measurement=MeasurementCreate(id=data['id'],url=file_path, location={'Latitude':lat, 'Longitude':long})
                             crud.measurement.create_measurement(db=db, obj_in=measurement)
-                            crear_mapa(message)
-                            bot.reply_to(
-                                    message, "Thanks for sending the photo!")
-                            bot.send_message(
-                                    message, "Your photo has been registered, but please take the photo at the location where you agreed to do so. You can see the map with photos with the command /map.")
-                            #TODO! no se si esto esta bien!
-                            lat = recomendation_aceptada_2['cell']['centre']['Latitude']
-                            long = recomendation_aceptada_2['cell']['centre']['Longitude']
-                            bot.send_location(chat_id=message.chat.id, latitude=lat, longitude=long)
-
+                            if recomendation_aceptada_2 == None:
+                                crud.recommendation.remove(db=db, recommendation=accepted_recomendation)
+                                crear_mapa(message)
+                                bot.reply_to(
+                                        message, "Thanks for sending the photo!")
+                            else:
+                                # lat, long = bot_auxiliar.get_point(id_user=message.chat.id, latitud=recomendation_aceptada_2['member_current_location']['Latitude'], longuitud=recomendation_aceptada_2['member_current_location']['Longitude'])
+                                crear_mapa(message)
+                                bot.reply_to(
+                                        message, "Thanks for sending the photo!")
+                                bot.send_message(
+                                        message.chat.id, "Your photo has been registered, but please take the photo at the location where you agreed to do so. You can see the map with photos with the command /map.")
+                                lat = accepted_recomendation.point['Latitude']
+                                long = accepted_recomendation.point['Longitude']
+                                bot.send_location(chat_id=message.chat.id, latitude=lat, longitude=long)
                         else:
                             bot.reply_to(message, "Your position is out of the campaign. Please send the location at the point you agreed.")
 
                     else:
-                        #LA medicion no es donde debe! 
+                        #LA medicion es donde debe! 
+                        # lat, long = accepted_recomendation.point['Latitude'], accepted_recomendation.point['Longitude']
+                        #TODO! verificar que esta todo bien 
+                        measurement=MeasurementCreate(id=data['id'],url=file_path, location={ 'Longitude': accepted_recomendation.point['Longitude'], 'Latitude': accepted_recomendation.point['Latitude']})
+                        crud.measurement.create_measurement(db=db, obj_in=measurement)  
                         elements=crud.recommendation.get_All_Recommendation(db=db, member_id=message.chat.id)
                         for i in elements:
                                 crud.recommendation.remove(db=db, recommendation=i)
-                        crud.last_user_position.remove(db=db, Last_user_position=last_user_position)
-                        #TODO! verificar que esta todo bien 
-                        lat, long= bot_auxiliar.get_point(id_user=message.chat.id, latitud=recomendation_aceptada_2['member_current_location']['Latitude'], longuitud=recomendation_aceptada_2['member_current_location']['Longitude'])
-                        measurement=MeasurementCreate(id=data['id'],url=file_path, location={ 'Longitude': long, 'Latitude': lat})
-                        crud.measurement.create_measurement(db=db, obj_in=measurement)   
+                        crud.last_user_position.remove(db=db, Last_user_position=last_user_position) 
                         db.commit()
                         crear_mapa(message)
                         bot.reply_to(message, "Thanks for sending the photo! You you se the result with the command /map.")
                 else:
                     bot.reply_to(message, "Plase try again. Be sure that the location you send is in the accepted recomendation you select.")
-            else:
-                crud.recomendation.remove(db=db, db_obj=accepted_recomendation)
-                bot.reply_to(message, "Please first send the comand /mesasurement or /recomendation to have your location. Thanks you! ")
+            # else:
+            #     crud.recomendation.remove(db=db, db_obj=accepted_recomendation)
+            #     bot.reply_to(message, "Please first send the comand /mesasurement or /recomendation to have your location. Thanks you! ")
           
         else:
-            bot.reply_to(message, "Please first send the comand /mesasurement or /recomendation to have your location. Thanks you! ")
+            bot.reply_to(message, "Please first send the comand /recomendation to have your location. Thanks you! ")
     else:
-        bot.reply_to(message, "Please first send the comand /mesasurement or /recomendation to have your location. Thanks you! ")
+        bot.reply_to(message, "Please first send the comand or /recomendation to have your location. Thanks you! ")
     db.close()
 
 def actualizar_repositorio():
@@ -925,73 +945,76 @@ def crear_mapa(message):
         else:
             radio=campaign['cells_distance']/2
             hipotenusa= math.sqrt(2*((radio)**2))
-            las_pos_lat, las_pos_long= measuerements[0].location['Latitude'], measuerements[0].location['Longitude']
-            n_files=0
+            dics={}
             for i in measuerements:
-                if i.location['Latitude'] != las_pos_lat and i.location['Longitude'] != las_pos_long:
-                    n_files=1
-                else: 
-                    n_files=n_files+1
-                            
+                (lat, long ) = i.location['Latitude'], i.location['Longitude']
+                if (lat,long)  in list(dics.keys()):
+                    dics[(lat,long)]=dics[(lat,long)]+1 
+                    
+                else:
+                    dics[(lat,long)]=0
+                
+                n_files=dics[(lat,long)]
+                
+
                 combinacion = (i.location['Latitude'], i.location['Longitude'] )
                 datos_tercera_columna = i.url
                 grados = 90
                 lat, long = combinacion[0], combinacion[1]
-                print(n_files*grados)
-                if 0 <= n_files*grados and 90 > n_files*grados:
-                                esquina_derecha_arriba=bot_auxiliar.get_point_at_distance(lat1=lat, lon1=long, d=radio,bearing=0 )
-                                medio_ARRIBA=  bot_auxiliar.get_point_at_distance(lat1=lat, lon1=long, d=radio,bearing=90)
-                                image_overlay = folium.raster_layers.ImageOverlay(
+                print(n_files*grados, n_files)
+                if 0 <= (n_files*grados)%360 and 90 > (n_files*grados)%360:                    
+                    esquina_derecha_arriba=bot_auxiliar.get_point_at_distance(lat1=lat, lon1=long, d=radio,bearing=0 )
+                    medio_ARRIBA=  bot_auxiliar.get_point_at_distance(lat1=lat, lon1=long, d=radio,bearing=90)
+                    image_overlay = folium.raster_layers.ImageOverlay(
                                         image=datos_tercera_columna,
                                         bounds=[medio_ARRIBA,esquina_derecha_arriba],
-                                        opacity=0.75,
+                                        opacity=0.65,
                                         interactive=True,
                                         cross_origin=False,
                                         zindex=1,
                                     )
-                                image_overlay.add_to(mapa)
-
-                elif 90 <= n_files*grados and 180 > n_files*grados:
-                                esquina_arriba_izquierda=bot_auxiliar.get_point_at_distance(lat1=lat, lon1=long, d=hipotenusa,bearing=135 )
-                                medio_ARRIBA=  [lat,long]
-                                image_overlay = folium.raster_layers.ImageOverlay(
+                    image_overlay.add_to(mapa)
+                elif(n_files*grados)%360 >= 270 and (n_files*grados)%360 < 360:
+                    esquina_arriba_izquierda=bot_auxiliar.get_point_at_distance(lat1=lat, lon1=long, d=hipotenusa,bearing=135 )
+                    medio_ARRIBA=  [lat,long]
+                    image_overlay = folium.raster_layers.ImageOverlay(
                                         image=datos_tercera_columna,
                                         bounds=[esquina_arriba_izquierda,medio_ARRIBA],
-                                        opacity=0.75,
+                                        opacity=0.65,
                                         interactive=True,
                                         cross_origin=False,
                                         zindex=1,
                                     )
-                                image_overlay.add_to(mapa)                               
-                elif 180 <= n_files*grados and 270 > n_files*grados:
-                                lateral_izq_medio=bot_auxiliar.get_point_at_distance(lat1=lat, lon1=long, d=radio,bearing=180 )
-                                punto_central= bot_auxiliar.get_point_at_distance(lat1=lat, lon1=long, d=radio,bearing=270)
-                                image_overlay = folium.raster_layers.ImageOverlay(
+                    image_overlay.add_to(mapa)                               
+                elif 180 <= (n_files*grados)%360 and 270 > (n_files*grados)%360:
+                    lateral_izq_medio=bot_auxiliar.get_point_at_distance(lat1=lat, lon1=long, d=radio,bearing=180 )
+                    punto_central= bot_auxiliar.get_point_at_distance(lat1=lat, lon1=long, d=radio,bearing=270)
+                    image_overlay = folium.raster_layers.ImageOverlay(
                                         image=datos_tercera_columna,
                                         bounds=[lateral_izq_medio,punto_central],
-                                        opacity=0.75,
+                                        opacity=0.65,
                                         interactive=True,
                                         cross_origin=False,
                                         zindex=1,
                                     )
-                                image_overlay.add_to(mapa)
-                else:
-                                lateral_derecho_medio=bot_auxiliar.get_point_at_distance(lat1=lat, lon1=long, d=hipotenusa,bearing=315 )
-                                central_point= [lat,long]
-                                image_overlay = folium.raster_layers.ImageOverlay(
+                    image_overlay.add_to(mapa)
+                elif  90 <= (n_files*grados)%360 and 180 > (n_files*grados)%360:
+                    lateral_derecho_medio=bot_auxiliar.get_point_at_distance(lat1=lat, lon1=long, d=hipotenusa,bearing=315 )
+                    central_point= [lat,long]
+                    image_overlay = folium.raster_layers.ImageOverlay(
                                         image=datos_tercera_columna,
                                         bounds=[central_point,lateral_derecho_medio],
-                                        opacity=0.75,
+                                        opacity=0.65,
                                         interactive=True,
                                         cross_origin=False,
                                         zindex=1,
                                     )
-                                image_overlay.add_to(mapa)
+                    image_overlay.add_to(mapa)
                            
             mapa.save('docs/index.html')
             actualizar_repositorio()
             bot.reply_to(
-                        message, "The map is inb this URL: https://mpuerta004.github.io/Telegram_bot/")
+                        message, "The map is inb this URL: https://mpuerta004.github.io/RecommenderSystem/")
 
     else:
         bot.reply_to(message, "Problem with the representation, campaigns and surface. Please contact with @Maite314")
@@ -1001,13 +1024,13 @@ def crear_mapa(message):
 def crear_mapa_bot(message):
     crear_mapa(message)
     # Tengo que pedir el centro de la camapaña- surface
-    bot.reply_to( message, "The map is in this URL: https://mpuerta004.github.io/Telegram_bot/. if your photo is not in the web page, wait a few seconds and reload the page.")
+    bot.reply_to( message, "The map is in this URL: https://mpuerta004.github.io/RecommenderSystem/ . if your photo is not in the web page, wait a few seconds and reload the page.")
 
 @bot.message_handler(commands=['info'])
 def info(message):
     bot.send_message(message.chat.id, message_info_interaction)
     bot.send_message(message.chat.id, message_change_personal_information)
-    bot.send_message(message.chat.id, "The map is in this URL: https://mpuerta004.github.io/Telegram_bot/")
+    bot.send_message(message.chat.id, "The map is in this URL: https://mpuerta004.github.io/RecommenderSystem/")
 
 
 if __name__ == "__main__":

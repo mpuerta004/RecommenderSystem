@@ -30,7 +30,7 @@ class CRUDMeasurement(CRUDBase[Measurement, MeasurementCreate, MeasurementUpdate
                    
      def get_all(self, db: Session) -> List[Measurement]:
           try:
-              return db.query(Measurement).all()
+              return db.query(Measurement).order_by(Measurement.location).all()
           except Exception as e:
                         raise HTTPException(status_code=500, detail=f"Error with mysql {e}" )
         

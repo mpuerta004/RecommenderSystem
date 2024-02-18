@@ -53,6 +53,7 @@ CREATE TABLE Recommendation (
   posicion VARCHAR(30) not Null, 
   member_id BIGINT NOT NULL,
   state  VARCHAR(15),
+  point POINT,
   CONSTRAINT state_type CHECK (state IN ("NOTIFIED","ACCEPTED","REALIZED","NON_REALIZED")),
   PRIMARY KEY (id,member_id),
     FOREIGN KEY (member_id)

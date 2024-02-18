@@ -68,7 +68,7 @@ async def state_calculation()->None:
         for i in list_of_recommendations:
           
             if (Current_time > i.update_datetime): # It is necessary to run demo 
-                if (Current_time - i.update_datetime) > timedelta(minutes=7):
+                if (Current_time - i.update_datetime) > timedelta(minutes=5):
                     print("Modificiacion")
                     crud.recommendation.update(db=db,db_obj=i, obj_in={"state":"NON_REALIZED","update_datetime":Current_time})
                     db.commit()  
@@ -96,9 +96,9 @@ if __name__ == "__main__":
     ## Use this for debugging purposes only
     import uvicorn
 
-    #Add this line to run the system. 
+    # #Add this line to run the system. 
     scheduler = BackgroundScheduler()
-    scheduler.add_job(final_funtion, 'interval', seconds=60)
+    scheduler.add_job(final_funtion, 'interval', seconds=180)
     scheduler.add_job(State_change, 'interval', seconds=60)
     scheduler.start()
 

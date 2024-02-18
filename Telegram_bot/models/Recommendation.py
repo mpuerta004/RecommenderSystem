@@ -17,6 +17,7 @@ from sqlalchemy import Integer, Enum
 #     REALIZED="REALIZED"
 #     NON_REALIZED="NON_REALIZED"
 from sqlalchemy import Integer, Enum, BigInteger
+from models.Point import Point
 
 
 
@@ -26,5 +27,5 @@ class Recommendation(Base):
     posicion=Column(String,nullable=False)
     id=Column(Integer,primary_key=True,  autoincrement=True, nullable=False )
     state=Column(Enum('NOTIFIED', 'ACCEPTED', 'REALIZED', 'NON_REALIZED'),nullable=False)
-    
+    point = Column(Point)
    
