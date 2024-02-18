@@ -968,7 +968,7 @@ def crear_mapa(message):
                     image_overlay = folium.raster_layers.ImageOverlay(
                                         image=datos_tercera_columna,
                                         bounds=[medio_ARRIBA,esquina_derecha_arriba],
-                                        opacity=0.65,
+                                        opacity=0.75,
                                         interactive=True,
                                         cross_origin=False,
                                         zindex=1,
@@ -980,7 +980,7 @@ def crear_mapa(message):
                     image_overlay = folium.raster_layers.ImageOverlay(
                                         image=datos_tercera_columna,
                                         bounds=[esquina_arriba_izquierda,medio_ARRIBA],
-                                        opacity=0.65,
+                                        opacity=0.75,
                                         interactive=True,
                                         cross_origin=False,
                                         zindex=1,
@@ -992,7 +992,7 @@ def crear_mapa(message):
                     image_overlay = folium.raster_layers.ImageOverlay(
                                         image=datos_tercera_columna,
                                         bounds=[lateral_izq_medio,punto_central],
-                                        opacity=0.65,
+                                        opacity=0.75,
                                         interactive=True,
                                         cross_origin=False,
                                         zindex=1,
@@ -1004,7 +1004,7 @@ def crear_mapa(message):
                     image_overlay = folium.raster_layers.ImageOverlay(
                                         image=datos_tercera_columna,
                                         bounds=[central_point,lateral_derecho_medio],
-                                        opacity=0.65,
+                                        opacity=0.75,
                                         interactive=True,
                                         cross_origin=False,
                                         zindex=1,
