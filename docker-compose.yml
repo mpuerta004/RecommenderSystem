@@ -79,7 +79,7 @@ services:
       - mysql_bot
     container_name: telegram_bot
     platform: linux/x86_64
-    build: ./Telegram_bot
+    build: ./telegram_bot
     links:
       - mysql_bot
     restart: always

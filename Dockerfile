@@ -10,7 +10,7 @@ RUN pip install poetry && \
 ADD . /recommendersystem
 
 
-# CMD  [ "poetry", "run", "python", "/recommendersystem/src/Servicio/app/main.py" ] 
+CMD  [ "poetry", "run", "python", "/recommendersystem/src/Servicio/app/main.py" ] 
 
 # Develop option 
-ENTRYPOINT ["tail", "-f", "/dev/null"] 
+# ENTRYPOINT ["tail", "-f", "/dev/null"] 

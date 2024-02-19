@@ -864,7 +864,7 @@ def handle_photo_and_location(message):
                     file_id = message.photo[-1].file_id
                     file_info = bot.get_file(file_id)
                     downloaded_file = bot.download_file(file_info.file_path)
-                    file_path = f'Telegram_bot/Pictures/photo{data["id"]}.jpg'
+                    file_path = f'telegram_bot/Pictures/photo{data["id"]}.jpg'
                     with open(file_path, 'wb') as new_file:
                         new_file.write(downloaded_file)
                     if data['recommendation_id'] == None:
@@ -1002,12 +1002,12 @@ def crear_mapa(message):
                     lateral_derecho_medio=bot_auxiliar.get_point_at_distance(lat1=lat, lon1=long, d=hipotenusa,bearing=315 )
                     central_point= [lat,long]
                     image_overlay = folium.raster_layers.ImageOverlay(
-                                        image=datos_tercera_columna,
-                                        bounds=[central_point,lateral_derecho_medio],
-                                        opacity=0.75,
-                                        interactive=True,
-                                        cross_origin=False,
-                                        zindex=1,
+                        image=datos_tercera_columna,
+                        bounds=[central_point,lateral_derecho_medio],
+                        opacity=0.75,
+                        interactive=True,
+                        cross_origin=False,
+                        zindex=1,
                                     )
                     image_overlay.add_to(mapa)
                            
@@ -1024,7 +1024,7 @@ def crear_mapa(message):
 def crear_mapa_bot(message):
     crear_mapa(message)
     # Tengo que pedir el centro de la camapaña- surface
-    bot.reply_to( message, "The map is in this URL: https://mpuerta004.github.io/RecommenderSystem/ . if your photo is not in the web page, wait a few seconds and reload the page.")
+    # bot.reply_to( message, "The map is in this URL: https://mpuerta004.github.io/RecommenderSystem/ . if your photo is not in the web page, wait a few seconds and reload the page.")
 
 @bot.message_handler(commands=['info'])
 def info(message):
