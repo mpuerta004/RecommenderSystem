@@ -308,3 +308,245 @@ def get_point_at_distance(lat1, lon1, d, bearing, R=6371):
     )
     return (degrees(lat2), degrees(lon2),)
 
+
+def  set_name(member_id:int,name:str):
+    
+        # We look if the user is in the database.
+        peticion = api_url + f'/members/{member_id}'
+
+        try:
+            # Realizar una petición POST con datos en el cuerpo
+            response = requests.get(peticion, headers=headers)
+        
+
+            # if the user is in the database we update the name.
+            if response.status_code == 200:
+                data = response.json()  # Si la respuesta es JSON
+                # We update the name in the database!
+                peticion = api_url + '/sync/hives/1/members/'
+                payload = [
+                    {
+                        "member": {
+                            "name": name,
+                            "surname": data['surname'],
+                            "age": data['age'],
+                            "gender": data['gender'],
+                            "city": data['city'],
+                            "mail": data['mail'],
+                            "birthday": data['birthday'],
+                            "real_user": True,
+                            "id": member_id
+                        },
+                        "role": "WorkerBee"
+                    }
+                ]
+                    # Realizar una petición POST con datos en el cuerpo
+                response = requests.put(peticion, headers=headers,
+                                            json=payload)
+                
+                # Verificar el código de respuesta
+                if response.status_code == 201:
+                    data = response.json()  # Si la respuesta es JSON
+                    return data
+                else:
+                    print("Error with mysql")
+                    return None
+            else:
+                print("Error with mysql")
+                return None
+        except Exception as e:
+            print("Error durante la conexion con la base de datos:", e)
+            return None
+def set_mail(member_id:int,mail:str):
+    peticion = api_url + f'/members/{member_id}'
+    try:
+            # Realizar una petición POST con datos en el cuerpo
+            response = requests.get(peticion, headers=headers)
+
+            # Verificar el código de respuesta
+            if response.status_code == 200:
+                # La solicitud fue exitosa
+                data = response.json()  # Si la respuesta es JSON
+                # print("Respuesta exitosa:", data) # data -> Member
+                # en caso de que si -> update y respuesta acorde
+                peticion = api_url + '/sync/hives/1/members/'
+                payload = [
+                    {
+                        "member": {
+                            "name": data['name'],
+                            "surname": data['surname'],
+                            "age": data['age'],
+                            "gender": data['gender'],
+                            "city": data['city'],
+                            "mail": mail,
+                            "birthday":  data['birthday'],
+                            "real_user": True,
+                            "id": member_id
+                        },
+                        "role": "WorkerBee"
+                    }
+                ]
+                response = requests.put(peticion, headers=headers,
+                                        json=payload)
+
+                # Verificar el código de respuesta
+                if response.status_code == 201:
+                    # La solicitud fue exitosa
+                    data = response.json()  # Si la respuesta es JSON
+                    return data
+                else:
+                    print("Error with mysql")
+                    return None
+            else:
+                print("Error with mysql")
+                return None
+    except Exception as e:
+            print("Error durante la conexion con la base de datos:", e)
+            return None
+
+def set_gender(member_id:int, gender:str):
+    peticion = api_url + f'/members/{member_id}'
+    try:
+            # Realizar una petición POST con datos en el cuerpo
+            response = requests.get(peticion, headers=headers)
+
+            # Verificar el código de respuesta
+            if response.status_code == 200:
+                # La solicitud fue exitosa
+                data = response.json()  # Si la respuesta es JSON
+                # en caso de que si -> update y respuesta acorde
+                peticion = api_url + '/sync/hives/1/members/'
+                payload = [
+                    {
+                        "member": {
+                            "name": data['name'],
+                            "surname": data['surname'],
+                            "age": data['age'],
+                            "gender": gender,
+                            "city": data['city'],
+                            "mail": data['mail'],
+                            "birthday": data['birthday'],
+                            "real_user": True,
+                            "id": member_id
+                        },
+                        "role": "WorkerBee"
+                    }
+                ]
+
+                # Realizar una petición POST con datos en el cuerpo
+                response = requests.put(peticion, headers=headers,
+                                        json=payload)
+
+                # Verificar el código de respuesta
+                if response.status_code == 201:
+                    # La solicitud fue exitosa
+                    data = response.json()  # Si la respuesta es JSON
+                    return data
+                else:
+                    print("Error with mysql")
+                    return None
+            else:
+                print("Error with mysql")
+                return None
+    except Exception as e:
+            print("Error durante la conexion con la base de datos:", e)
+            return None
+
+def set_age(member_id:int,age: int):
+    # en caso de que no -> Le preguntamos informacion y explicamos de que es el proyecto!
+        peticion = api_url + f'/members/{member_id}'
+        try:
+            # Realizar una petición POST con datos en el cuerpo
+            response = requests.get(peticion, headers=headers)
+
+            # Verificar el código de respuesta
+            if response.status_code == 200:
+                # La solicitud fue exitosa
+                data = response.json()  # Si la respuesta es JSON
+                # print("Respuesta exitosa:", data) # data -> Member
+                # en caso de que si -> update y respuesta acorde
+
+                peticion = api_url + '/sync/hives/1/members/'
+                payload = [
+                    {
+                        "member": {
+                            "name": data['name'],
+                            "surname": data['surname'],
+                            "age": age,
+                            "gender": data['gender'],
+                            "city": data['city'],
+                            "mail": data['mail'],
+                            "birthday": data['birthday'],
+                            "real_user": True,
+                            "id": member_id
+                        },
+                        "role": "WorkerBee"
+                    }
+                ]
+
+                # Realizar una petición POST con datos en el cuerpo
+                response = requests.put(peticion, headers=headers,
+                                        json=payload)
+
+                # Verificar el código de respuesta
+                if response.status_code == 201:
+                    # La solicitud fue exitosa
+                    data = response.json()  # Si la respuesta es JSON
+                    return data
+                else:
+                    print("Error with mysql")
+                    return None
+            else:
+                print("Error with mysql")
+                return None
+        except Exception as e:
+            print("Error durante la conexion con la base de datos:", e)
+            return None
+
+def set_surname(member_id:int, surname:str):
+    peticion = api_url + f'/members/{member_id}'
+    try:
+            # Realizar una petición POST con datos en el cuerpo
+            response = requests.get(peticion, headers=headers)
+
+            # Verificar el código de respuesta
+            if response.status_code == 200:
+                # La solicitud fue exitosa
+                data = response.json()  # Si la respuesta es JSON
+            
+                peticion = api_url + '/sync/hives/1/members/'
+                payload = [
+                    {
+                        "member": {
+                            "name": data['name'],
+                            "surname": surname,
+                            "age": data['age'],
+                            "gender": data['gender'],
+                            "city": data['city'],
+                            "mail": data['mail'],
+                            "birthday": data['birthday'],
+                            "real_user": True,
+                            "id": member_id
+                        },
+                        "role": "WorkerBee"
+                    }
+                ]
+
+                # Realizar una petición POST con datos en el cuerpo
+                response = requests.put(peticion, headers=headers,
+                                        json=payload)
+
+                # Verificar el código de respuesta
+                if response.status_code == 201:
+                    # La solicitud fue exitosa
+                    data = response.json()  # Si la respuesta es JSON
+                    return data 
+                else:
+                    print("Error with mysql")
+                    return None
+            else:
+                print("Error with mysql")
+                return None
+    except Exception as e:
+            print("Error durante la conexion con la base de datos:", e)
+            return None

@@ -16,7 +16,7 @@ class CRUDMeasurement(CRUDBase[Measurement, MeasurementCreate, MeasurementUpdate
           try:
               return db.query(Measurement).filter(and_(Measurement.id == id)).first()
           except Exception as e:
-                        raise HTTPException(status_code=500, detail=f"Error with mysql {e}" )
+               raise HTTPException(status_code=500, detail=f"Error with mysql {e}" )
    
         
      def remove(self, db: Session, *, Measurement:Measurement) -> Measurement:

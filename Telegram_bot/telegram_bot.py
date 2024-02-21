@@ -51,20 +51,19 @@ recomendation_aceptada = {}
 
 # Mensajes determinados 
 message_goal_of_the_system={"The goal of this system is create a collage of our neighborhood. This system will recommend different places of the neighborhood to go to take a pictures  for something that catch your attention in that place."}
-message_change_personal_information = ("Also you can modify your personal information (if you want) using the following commands:\n" +
+message_change_personal_information = ("First please introduce your personal data using the following commands:\n" +
                                        "/setname [YOUR NAME] -> to set your name, \n"
                                        "/setsurname  [YOUR SURNAME] -> to set your surname, \n" +
                                        "/setage [YOUR AGE] -> Set your age, \n" +
                                        "/setmail [YOUR EMAIL] -> to set your email, \n" +
                                        "/setgender [NOBINARY or MALE or FEMALE or NOANSWER] -> to set your gender. \n" +
-                                       "This information can be changed anytime using these commands.")
+                                       "This information can be changed anytime you want with this commands.")
 
 message_info_interaction = ("You can interact with me using the following commands:\n" +
                             "/recommendation -> to request places to take a photo, \n" +
                             "/measurements -> to send the photo in the place you accepted \n" +
-                            "/map -> to see the map of the places with the photos \n" )
+                            "/map -> to see the map of the places with the photos. \n" )
                             
-
 headers = {
     'Accept': 'application/json',
     'Content-Type': 'application/json'
@@ -115,8 +114,8 @@ def start(message):
                         bot.send_message(
                                 message.chat.id, f"Hello! Nice to meet you {message.chat.first_name}!")
                         bot.send_message(message.chat.id, message_goal_of_the_system)
-                        bot.send_message(message.chat.id, message_info_interaction)
                         bot.send_message(message.chat.id, message_change_personal_information)
+                        bot.send_message(message.chat.id, message_info_interaction)
                         
                     else:
                         print(f"Error en la solicitud. Código de respuesta: {response.status_code}") 
@@ -141,7 +140,6 @@ def start(message):
 # command /setname.
 @bot.message_handler(commands=['setname'])
 def set_name(message):
-
     # Obtain the name of the user.
     name = message.text.replace('/setname', '').strip()
     # Int he case no name we explain the user how to do it.
@@ -151,135 +149,51 @@ def set_name(message):
     # if we have name:
     else:
         # We look if the user is in the database.
-        peticion = api_url + f'/members/{message.chat.id}'
-        response = None
-
-        try:
-            # Realizar una petición POST con datos en el cuerpo
-            response = requests.get(peticion, headers=headers)
-        except Exception as e:
-            print("Error durante la conexion con la base de datos:", e)
-            return None
-
-        # if the user is in the database we update the name.
-        if response.status_code == 200:
-            data = response.json()  # Si la respuesta es JSON
-            surname = data['surname']
-            age = data['age']
-            birthday = data['birthday']
-            city = data['city']
-            gender = data['gender']
-            mail = data['mail']
-            # We update the name in the database!
-            peticion = api_url + '/sync/hives/1/members/'
-            payload = [
-                {
-                    "member": {
-                        "name": name,
-                        "surname": surname,
-                        "age": age,
-                        "gender": gender,
-                        "city": city,
-                        "mail": mail,
-                        "birthday": birthday,
-                        "real_user": True,
-                        "id": message.chat.id
-                    },
-                    "role": "WorkerBee"
-                }
-            ]
-            response = None
-            try:
-                # Realizar una petición POST con datos en el cuerpo
-                response = requests.put(peticion, headers=headers,
-                                        json=payload)
-            except Exception as e:
-                print("Error durante la conexion con la base de datos:", e)
-                return None
-            # Verificar el código de respuesta
-            if response.status_code == 201:
-                data = response.json()  # Si la respuesta es JSON
-                bot.reply_to(
+        set_name=bot_auxiliar.set_name(member_id=message.chat.id, name=name)
+        if set_name != None:
+            engine = create_db_engine()
+            db = create_db_session(engine)
+            member=crud.member.get_by_id(db=db, id=message.chat.id)
+            crud.member.update(db=db, db_obj=member, obj_in={"name":name})
+            db.close()
+            bot.reply_to(
                     message, f"Hello, {name}! Your name has been successfully registered.")
                 # bot.reply_to(message, f"¡Hola, {name}! Tu nombre ha sido registrado correctamente.")
-                bot.send_message(
+            bot.send_message(
                     message.chat.id, message_change_personal_information)
-            else:
-                print(
-                    f"Error en la solicitud. Código de respuesta: {response.status_code}")
+            
         else:
-            print(
-                f"Error en la solicitud. Código de respuesta: {response.status_code}")
-
+            bot.send_message(message.chat.id,"Error with the system. please contact with @Maite314")
+            return None
 
 @bot.message_handler(commands=['setgender'])
 def set_gender(message):
 
     # Obtiene el nombre enviado por el usuario
     gender = message.text.replace('/setgender', '').strip()
-    if not gender:
-        bot.reply_to(
-            message, f"Please provide a valid gender after the /setgender command. For example: '/setgender NOBINARY'. Possible genders are: [NOBINARY, MALE, FEMALE, or NOANSWER]")
+    if not gender or gender  not in ["NOBINARY","MALE","FEMALE",'NOANSWER']:
+            bot.reply_to(
+                message, f"Please provide a valid gender after the /setgender command. For example: '/setgender NOBINARY'. Possible genders are: [NOBINARY, MALE, FEMALE, or NOANSWER]")
+    
     else:
         # en caso de que no -> Le preguntamos informacion y explicamos de que es el proyecto!
-        peticion = api_url + f'/members/{message.chat.id}'
-        response = None
-        try:
-            # Realizar una petición POST con datos en el cuerpo
-            response = requests.get(peticion, headers=headers)
-
-            # Verificar el código de respuesta
-            if response.status_code == 200:
-                # La solicitud fue exitosa
-                data = response.json()  # Si la respuesta es JSON
-                # en caso de que si -> update y respuesta acorde
-                name = data['name']
-                surname = data['surname']
-                age = data['age']
-                birthday = data['birthday']
-                city = data['city']
-                mail = data['mail']
-                peticion = api_url + '/sync/hives/1/members/'
-                payload = [
-                    {
-                        "member": {
-                            "name": name,
-                            "surname": surname,
-                            "age": age,
-                            "gender": gender,
-                            "city": city,
-                            "mail": mail,
-                            "birthday": birthday,
-                            "real_user": True,
-                            "id": message.chat.id
-                        },
-                        "role": "WorkerBee"
-                    }
-                ]
-
-                # Realizar una petición POST con datos en el cuerpo
-                response = requests.put(peticion, headers=headers,
-                                        json=payload)
-
-                # Verificar el código de respuesta
-                if response.status_code == 201:
-                    # La solicitud fue exitosa
-                    data = response.json()  # Si la respuesta es JSON
-                    bot.reply_to(
-                        message, f"Your gender has been successfully registered. Thanks for your cooperation!")
-                    bot.send_message(
-                        message.chat.id, message_change_personal_information)
-                    # data -> List[NewMembers]
-                    print("Respuesta exitosa:", data)
-                    # bot.send_message(message.chat.id, "Respuesta exitosa")
-                else:
-                    print(
-                        f"Error en la solicitud. Código de respuesta: {response.status_code}")
-
-        except Exception as e:
-            print("Error durante la solicitud:", e)
-
-
+        set_gender=bot_auxiliar.set_gender(member_id=message.chat.id, gender=gender)
+        if set_gender !=None:
+            engine = create_db_engine()
+            db = create_db_session(engine)
+            member=crud.member.get_by_id(db=db, id=message.chat.id)
+            crud.member.update(db=db, db_obj=member, obj_in={"gender":gender})
+            db.close()
+            bot.reply_to(
+                            message, f"Your gender has been successfully registered. Thanks for your cooperation!")
+            bot.send_message(
+                            message.chat.id, message_change_personal_information)
+                
+        else:
+            bot.send_message(message.chat.id,"Error with the system. please contact with @Maite314")
+            return None            
+               
+       
 @bot.message_handler(commands=['setmail'])
 def set_mail(message):
 
@@ -290,135 +204,94 @@ def set_mail(message):
             message, "Please provide a valid email after the /setmail command. For example: '/setmail user@example.com'")
     else:
         # en caso de que no -> Le preguntamos informacion y explicamos de que es el proyecto!
-        peticion = api_url + f'/members/{message.chat.id}'
-        try:
-            # Realizar una petición POST con datos en el cuerpo
-            response = requests.get(peticion, headers=headers)
-
-            # Verificar el código de respuesta
-            if response.status_code == 200:
-                # La solicitud fue exitosa
-                data = response.json()  # Si la respuesta es JSON
-                # print("Respuesta exitosa:", data) # data -> Member
-                # en caso de que si -> update y respuesta acorde
-                print(data)
-                surname = data['surname']
-                age = data['age']
-                birthday = data['birthday']
-                city = data['city']
-                name = data['name']
-                gender = data['gender']
-
-                peticion = api_url + '/sync/hives/1/members/'
-                payload = [
-                    {
-                        "member": {
-                            "name": name,
-                            "surname": surname,
-                            "age": age,
-                            "gender": gender,
-                            "city": city,
-                            "mail": mail,
-                            "birthday": birthday,
-                            "real_user": True,
-                            "id": message.chat.id
-                        },
-                        "role": "WorkerBee"
-                    }
-                ]
-
-                # Realizar una petición POST con datos en el cuerpo
-                response = requests.put(peticion, headers=headers,
-                                        json=payload)
-
-                # Verificar el código de respuesta
-                if response.status_code == 201:
-                    # La solicitud fue exitosa
-                    data = response.json()  # Si la respuesta es JSON
+        data= bot_auxiliar.set_mail(member_id=message.chat.id, mail=mail)
+        if data !=None:
+            engine = create_db_engine()
+            db = create_db_session(engine)
+            member=crud.member.get_by_id(db=db, id=message.chat.id)
+            crud.member.update(db=db, db_obj=member, obj_in={"mail":mail})
+            db.close()
                     # data -> List[NewMembers]
-                    print("Respuesta exitosa:", data)
-                    bot.reply_to(
+            bot.reply_to(
                         message, f"Your email has been successfully registered.")
-                    bot.send_message(
+            bot.send_message(
                         message.chat.id, message_change_personal_information)
                     # bot.send_message(message.chat.id, "Respuesta exitosa")
-                else:
-                    print(
-                        f"Error en la solicitud. Código de respuesta: {response.status_code}")
-
-        except Exception as e:
-            print("Error durante la solicitud:", e)
+        else:
+            bot.send_message(message.chat.id,"Error with the system. please contact with @Maite314")
+            return None
+       
 
 
-@bot.message_handler(commands=['setbirthday'])
-def set_birthday(message):
+# @bot.message_handler(commands=['setbirthday'])
+# def set_birthday(message):
 
-    # Obtiene el nombre enviado por el usuario
-    birthday = message.text.replace('/setbirthday', '').strip()
-    if not birthday:
-        bot.reply_to(
-            message, "Please provide a valid date after the /setbirthday command. For example: '/setbirthday 2021-01-11T00:00:00'")
-    else:
-        # en caso de que no -> Le preguntamos informacion y explicamos de que es el proyecto!
-        peticion = api_url + f'/members/{message.chat.id}'
-        try:
-            # Realizar una petición POST con datos en el cuerpo
-            response = requests.get(peticion, headers=headers)
+#     # Obtiene el nombre enviado por el usuario
+#     birthday = message.text.replace('/setbirthday', '').strip()
+#     if not birthday:
+#         bot.reply_to(
+#             message, "Please provide a valid date after the /setbirthday command. For example: '/setbirthday 2021-01-11T00:00:00'")
+#     else:
+#         # en caso de que no -> Le preguntamos informacion y explicamos de que es el proyecto!
+#         peticion = api_url + f'/members/{message.chat.id}'
+#         try:
+#             # Realizar una petición POST con datos en el cuerpo
+#             response = requests.get(peticion, headers=headers)
 
-            # Verificar el código de respuesta
-            if response.status_code == 200:
-                # La solicitud fue exitosa
-                data = response.json()  # Si la respuesta es JSON
-                # print("Respuesta exitosa:", data) # data -> Member
-                # en caso de que si -> update y respuesta acorde
-                print(data)
-                surname = data['surname']
-                age = data['age']
-                city = data['city']
-                name = data['name']
-                mail = data['mail']
-                gender = data['gender']
+#             # Verificar el código de respuesta
+#             if response.status_code == 200:
+#                 # La solicitud fue exitosa
+#                 data = response.json()  # Si la respuesta es JSON
+#                 # print("Respuesta exitosa:", data) # data -> Member
+#                 # en caso de que si -> update y respuesta acorde
+#                 print(data)
+#                 surname = data['surname']
+#                 age = data['age']
+#                 city = data['city']
+#                 name = data['name']
+#                 mail = data['mail']
+#                 gender = data['gender']
 
-                peticion = api_url + '/sync/hives/1/members/'
-                payload = [
-                    {
-                        "member": {
-                            "name": name,
-                            "surname": surname,
-                            "age": age,
-                            "gender": gender,
-                            "city": city,
-                            "mail": mail,
-                            "birthday": birthday,
-                            "real_user": True,
-                            "id": message.chat.id
-                        },
-                        "role": "WorkerBee"
-                    }
-                ]
+#                 peticion = api_url + '/sync/hives/1/members/'
+#                 payload = [
+#                     {
+#                         "member": {
+#                             "name": name,
+#                             "surname": surname,
+#                             "age": age,
+#                             "gender": gender,
+#                             "city": city,
+#                             "mail": mail,
+#                             "birthday": birthday,
+#                             "real_user": True,
+#                             "id": message.chat.id
+#                         },
+#                         "role": "WorkerBee"
+#                     }
+#                 ]
 
-                # Realizar una petición POST con datos en el cuerpo
-                response = requests.put(peticion, headers=headers,
-                                        json=payload)
+#                 # Realizar una petición POST con datos en el cuerpo
+#                 response = requests.put(peticion, headers=headers,
+#                                         json=payload)
 
-                # Verificar el código de respuesta
-                if response.status_code == 201:
-                    # La solicitud fue exitosa
-                    data = response.json()  # Si la respuesta es JSON
-                    # data -> List[NewMembers]
-                    print("Respuesta exitosa:", data)
-                    bot.reply_to(
-                        message, f"Your date of birth has been registered.")
-                    bot.send_message(
-                        message.chat.id, message_change_personal_information)
-                    # bot.send_message(message.chat.id, "Respuesta exitosa")
-                else:
-                    print(
-                        f"Error en la solicitud. Código de respuesta: {response.status_code}")
-                    # bot.send_message(message.chat.id, "Por favor, asegurate que la informacion esta bien. Debes introducir /setbirthday [YYYY-MM-DDT00:00:00], por ejemplo /setbirthday 2021-01-11T00:00:00 es un comando válido.")
+#                 # Verificar el código de respuesta
+#                 if response.status_code == 201:
+#                     # La solicitud fue exitosa
+#                     data = response.json()  # Si la respuesta es JSON
+#                     # data -> List[NewMembers]
+#                     print("Respuesta exitosa:", data)
+#                     bot.reply_to(
+#                         message, f"Your date of birth has been registered.")
+#                     bot.send_message(
+#                         message.chat.id, message_change_personal_information)
+#                     # bot.send_message(message.chat.id, "Respuesta exitosa")
+#                 else:
+#                     print(
+#                         f"Error en la solicitud. Código de respuesta: {response.status_code}")
+#                     # bot.send_message(message.chat.id, "Por favor, asegurate que la informacion esta bien. Debes introducir /setbirthday [YYYY-MM-DDT00:00:00], por ejemplo /setbirthday 2021-01-11T00:00:00 es un comando válido.")
 
-        except Exception as e:
-            print("Error durante la solicitud:", e)
+#         except Exception as e:
+#             print("Error durante la solicitud:", e)
 
 
 @bot.message_handler(commands=['setage'])
@@ -430,200 +303,120 @@ def set_age(message):
             message, "Please provide a valid age after the /setage command. For example: /setage 25")
 
     else:
-        # en caso de que no -> Le preguntamos informacion y explicamos de que es el proyecto!
-        peticion = api_url + f'/members/{message.chat.id}'
-        try:
-            # Realizar una petición POST con datos en el cuerpo
-            response = requests.get(peticion, headers=headers)
-
-            # Verificar el código de respuesta
-            if response.status_code == 200:
-                # La solicitud fue exitosa
-                data = response.json()  # Si la respuesta es JSON
-                # print("Respuesta exitosa:", data) # data -> Member
-                # en caso de que si -> update y respuesta acorde
-                print(data)
-                surname = data['surname']
-                name = data['name']
-                birthday = data['birthday']
-                city = data['city']
-                gender = data['gender']
-                mail = data['mail']
-                bot.send_message(
-                    message.chat.id, message_change_personal_information)
-
-                peticion = api_url + '/sync/hives/1/members/'
-                payload = [
-                    {
-                        "member": {
-                            "name": name,
-                            "surname": surname,
-                            "age": age,
-                            "gender": gender,
-                            "city": city,
-                            "mail": mail,
-                            "birthday": birthday,
-                            "real_user": True,
-                            "id": message.chat.id
-                        },
-                        "role": "WorkerBee"
-                    }
-                ]
-
-                # Realizar una petición POST con datos en el cuerpo
-                response = requests.put(peticion, headers=headers,
-                                        json=payload)
-
-                # Verificar el código de respuesta
-                if response.status_code == 201:
-                    # La solicitud fue exitosa
-                    data = response.json()  # Si la respuesta es JSON
+        set_age=bot_auxiliar.set_age(member_id=message.chat.id, age=int(age))
+        if set_age !=None:
+            engine = create_db_engine()
+            db = create_db_session(engine)
+            member=crud.member.get_by_id(db=db, id=message.chat.id)
+            crud.member.update(db=db, db_obj=member, obj_in={"age":int(age)})
+            db.close()
                     # data -> List[NewMembers]
                     # print("Respuesta exitosa:", data)
-                    bot.reply_to(
-                        message, f"Your age has been successfully registered.")
-                else:
-                    print(
-                        f"Error en la solicitud. Código de respuesta: {response.status_code}")
-
-        except Exception as e:
-            print("Error durante la solicitud:", e)
+            bot.reply_to( message, f"Your age has been successfully registered.")
+            bot.send_message(
+                        message.chat.id, message_change_personal_information)
+                    # bot.send_message(message.chat.id, "Respuesta exitosa")
+        else:
+            bot.send_message(message.chat.id,"Error with the system. please contact with @Maite314")
+            return None  
 
 
 @bot.message_handler(commands=['setsurname'])
 def set_surname(message):
 
-    # Obtiene el nombre enviado por el usuario
+    #Obtiene el nombre enviado por el usuario
     surname = message.text.replace('/setsurname', '').strip()
     if not surname:
         bot.reply_to(
             message, "Please provide a valid surname after the /setsurname command. For example '/setsurname Doe'.")
     else:
         # en caso de que no -> Le preguntamos informacion y explicamos de que es el proyecto!
-        peticion = api_url + f'/members/{message.chat.id}'
-        try:
-            # Realizar una petición POST con datos en el cuerpo
-            response = requests.get(peticion, headers=headers)
-
-            # Verificar el código de respuesta
-            if response.status_code == 200:
-                # La solicitud fue exitosa
-                data = response.json()  # Si la respuesta es JSON
-                name = data['name']
-                age = data['age']
-                birthday = data['birthday']
-                city = data['city']
-                gender = data['gender']
-                mail = data['mail']
-
-                bot.send_message(
-                    message.chat.id, message_change_personal_information)
-
-                peticion = api_url + '/sync/hives/1/members/'
-                payload = [
-                    {
-                        "member": {
-                            "name": name,
-                            "surname": surname,
-                            "age": age,
-                            "gender": gender,
-                            "city": city,
-                            "mail": mail,
-                            "birthday": birthday,
-                            "real_user": True,
-                            "id": message.chat.id
-                        },
-                        "role": "WorkerBee"
-                    }
-                ]
-
-                # Realizar una petición POST con datos en el cuerpo
-                response = requests.put(peticion, headers=headers,
-                                        json=payload)
-
-                # Verificar el código de respuesta
-                if response.status_code == 201:
-                    # La solicitud fue exitosa
-                    data = response.json()  # Si la respuesta es JSON
-                    bot.reply_to(
+        set_surname=bot_auxiliar.set_surname(member_id=message.chat.id, surname=surname)
+        if set_surname != None:
+            engine = create_db_engine()
+            db = create_db_session(engine)
+            member=crud.member.get_by_id(db=db, id=message.chat.id)
+            crud.member.update(db=db, db_obj=member, obj_in={"surname":surname})
+            db.close()        
+                
+            bot.reply_to(
                         message, f"Your surname has been successfully registered.")
 
-                else:
-                    print(
-                        f"Error en la solicitud. Código de respuesta: {response.status_code}")
+            bot.send_message(
+                        message.chat.id, message_change_personal_information)
+                    # bot.send_message(message.chat.id, "Respuesta exitosa")
+        else:
+            bot.send_message(message.chat.id,"Error with the system. please contact with @Maite314")
+            return None   
 
-        except Exception as e:
-            print("Error durante la solicitud:", e)
+# @bot.message_handler(commands=['setcity'])
+# def set_city(message):
 
+#     # Obtiene el nombre enviado por el usuario
+#     city = message.text.replace('/setcity', '').strip()
+#     if not city:
+#         bot.reply_to(
+#             message, "Please provide a valid city after the /setcity command. For example '/setcity Madrid'.")
+#     else:
+#         # en caso de que no -> Le preguntamos informacion y explicamos de que es el proyecto!
+#         peticion = api_url + f'/members/{message.chat.id}'
+#         try:
+#             # Realizar una petición POST con datos en el cuerpo
+#             response = requests.get(peticion, headers=headers)
 
-@bot.message_handler(commands=['setcity'])
-def set_city(message):
+#             # Verificar el código de respuesta
+#             if response.status_code == 200:
+#                 # La solicitud fue exitosa
+#                 data = response.json()  # Si la respuesta es JSON
+#                 # print("Respuesta exitosa:", data) # data -> Member
+#                 # en caso de que si -> update y respuesta acorde
+#                 print(data)
+#                 surname = data['surname']
+#                 name = data['name']
+#                 age = data['age']
+#                 birthday = data['birthday']
+#                 gender = data['gender']
+#                 mail = data['mail']
 
-    # Obtiene el nombre enviado por el usuario
-    city = message.text.replace('/setcity', '').strip()
-    if not city:
-        bot.reply_to(
-            message, "Please provide a valid city after the /setcity command. For example '/setcity Madrid'.")
-    else:
-        # en caso de que no -> Le preguntamos informacion y explicamos de que es el proyecto!
-        peticion = api_url + f'/members/{message.chat.id}'
-        try:
-            # Realizar una petición POST con datos en el cuerpo
-            response = requests.get(peticion, headers=headers)
+#                 bot.send_message(
+#                     message.chat.id, message_change_personal_information)
 
-            # Verificar el código de respuesta
-            if response.status_code == 200:
-                # La solicitud fue exitosa
-                data = response.json()  # Si la respuesta es JSON
-                # print("Respuesta exitosa:", data) # data -> Member
-                # en caso de que si -> update y respuesta acorde
-                print(data)
-                surname = data['surname']
-                name = data['name']
-                age = data['age']
-                birthday = data['birthday']
-                gender = data['gender']
-                mail = data['mail']
+#                 peticion = api_url + '/sync/hives/1/members/'
+#                 payload = [
+#                     {
+#                         "member": {
+#                             "name": name,
+#                             "surname": surname,
+#                             "age": age,
+#                             "gender": gender,
+#                             "city": city,
+#                             "mail": mail,
+#                             "birthday": birthday,
+#                             "real_user": True,
+#                             "id": message.chat.id
+#                         },
+#                         "role": "WorkerBee"
+#                     }
+#                 ]
 
-                bot.send_message(
-                    message.chat.id, message_change_personal_information)
+#                 # Realizar una petición POST con datos en el cuerpo
+#                 response = requests.put(peticion, headers=headers,
+#                                         json=payload)
 
-                peticion = api_url + '/sync/hives/1/members/'
-                payload = [
-                    {
-                        "member": {
-                            "name": name,
-                            "surname": surname,
-                            "age": age,
-                            "gender": gender,
-                            "city": city,
-                            "mail": mail,
-                            "birthday": birthday,
-                            "real_user": True,
-                            "id": message.chat.id
-                        },
-                        "role": "WorkerBee"
-                    }
-                ]
+#                 # Verificar el código de respuesta
+#                 if response.status_code == 201:
+#                     # La solicitud fue exitosa
+#                     data = response.json()  # Si la respuesta es JSON
+#                     # data -> List[NewMembers]
+#                     print("Respuesta exitosa:", data)
+#                     bot.reply_to(
+#                         message, f"Your city has been successfully registered.")
+#                 else:
+#                     print(
+#                         f"Error en la solicitud. Código de respuesta: {response.status_code}")
 
-                # Realizar una petición POST con datos en el cuerpo
-                response = requests.put(peticion, headers=headers,
-                                        json=payload)
-
-                # Verificar el código de respuesta
-                if response.status_code == 201:
-                    # La solicitud fue exitosa
-                    data = response.json()  # Si la respuesta es JSON
-                    # data -> List[NewMembers]
-                    print("Respuesta exitosa:", data)
-                    bot.reply_to(
-                        message, f"Your city has been successfully registered.")
-                else:
-                    print(
-                        f"Error en la solicitud. Código de respuesta: {response.status_code}")
-
-        except Exception as e:
-            print("Error durante la solicitud:", e)
+#         except Exception as e:
+#             print("Error durante la solicitud:", e)
 
 
 
@@ -826,7 +619,7 @@ def handle_option(message):
                 number = message.text.replace('Option ', '').strip()
                 if int(number) != 1 and int(number)!= 2 and int(number) != 3:
                     bot.reply_to(
-                        message, "Please choose a valid option from the menu. For example: 'Option 1', 'Option 2', or 'Option 3'. Or send a text with this information.")
+                        message, "Please choose a valid option from the menu (the four square inside other square). For example: 'Option 1', 'Option 2', or 'Option 3'. Or send a text with this information.")
                 else:
                     rec=crud.recommendation.get_recommendation_for_position(db=db,member_id=message.chat.id,position=int(number)-1)
                     # Registramos la recomendacion aceptada que tiene el usuario. 
@@ -902,8 +695,8 @@ def handle_photo_and_location(message):
                                 crud.recommendation.remove(db=db, recommendation=i)
                         crud.last_user_position.remove(db=db, Last_user_position=last_user_position) 
                         db.commit()
+                        bot.reply_to(message, "We are integrating your photo to the collage. This may take a few seconds." )
                         crear_mapa(message)
-                        bot.reply_to(message, "Thanks for sending the photo! You you se the result with the command /map.")
                 else:
                     bot.reply_to(message, "Plase try again. Be sure that the location you send is in the accepted recomendation you select.")
             # else:
@@ -924,8 +717,9 @@ def actualizar_repositorio():
 
 
 def crear_mapa(message):
+    
     data=bot_auxiliar.get_surface()
-   
+    
     if data != None:
         surface_centre_lat = data['results'][0]['boundary']['centre']['Latitude'] 
         surface_centre_long = data['results'][0]['boundary']['centre']['Longitude']
@@ -1014,7 +808,7 @@ def crear_mapa(message):
             mapa.save('docs/index.html')
             actualizar_repositorio()
             bot.reply_to(
-                        message, "The map is inb this URL: https://mpuerta004.github.io/RecommenderSystem/")
+                        message, "The photo is integrated in the collage. In a few minutes you can see in the next link: https://mpuerta004.github.io/RecommenderSystem/")
 
     else:
         bot.reply_to(message, "Problem with the representation, campaigns and surface. Please contact with @Maite314")

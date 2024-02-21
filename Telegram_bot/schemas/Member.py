@@ -32,7 +32,13 @@ class MemberCreate(MemberBase):
 
 # Properties to receive via API on update
 class MemberUpdate(MemberBase):
-    pass
+    name: str 
+    surname: str=None
+    age: int
+    gender:gender_type
+    city: str=None
+    mail:str
+    birthday:datetime
 
 
 class MemberInDBBase(MemberBase):
