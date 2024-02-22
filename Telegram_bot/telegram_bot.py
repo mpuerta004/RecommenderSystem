@@ -105,7 +105,7 @@ def explain_interaction(message):
 @bot.message_handler(commands=['goal_of_the_system'])
 def goal_of_the_system(message):
     bot.send_message(message.chat.id,message_goal_of_the_system)
-bot.send_message(message.chat.id, "You can find the collage of our work at: https://mpuerta004.github.io/RecommenderSystem/")
+    bot.send_message(message.chat.id, "You can find the collage of our work at: https://mpuerta004.github.io/RecommenderSystem/")
 
 @bot.message_handler(commands=['explain_bottons'])
 def explain_bottons(message):
@@ -257,74 +257,6 @@ def set_mail(message):
             bot.send_message(message.chat.id,"Error with the system. please contact with @Maite314")
             return None
        
-
-
-# @bot.message_handler(commands=['setbirthday'])
-# def set_birthday(message):
-
-#     # Obtiene el nombre enviado por el usuario
-#     birthday = message.text.replace('/setbirthday', '').strip()
-#     if not birthday:
-#         bot.reply_to(
-#             message, "Please provide a valid date after the /setbirthday command. For example: '/setbirthday 2021-01-11T00:00:00'")
-#     else:
-#         # en caso de que no -> Le preguntamos informacion y explicamos de que es el proyecto!
-#         peticion = api_url + f'/members/{message.chat.id}'
-#         try:
-#             # Realizar una petición POST con datos en el cuerpo
-#             response = requests.get(peticion, headers=headers)
-
-#             # Verificar el código de respuesta
-#             if response.status_code == 200:
-#                 # La solicitud fue exitosa
-#                 data = response.json()  # Si la respuesta es JSON
-#                 # print("Respuesta exitosa:", data) # data -> Member
-#                 # en caso de que si -> update y respuesta acorde
-#                 print(data)
-#                 surname = data['surname']
-#                 age = data['age']
-#                 city = data['city']
-#                 name = data['name']
-#                 mail = data['mail']
-#                 gender = data['gender']
-
-#                 peticion = api_url + '/sync/hives/1/members/'
-#                 payload = [
-#                     {
-#                         "member": {
-#                             "name": name,
-#                             "surname": surname,
-#                             "age": age,
-#                             "gender": gender,
-#                             "city": city,
-#                             "mail": mail,
-#                             "birthday": birthday,
-#                             "real_user": True,
-#                             "id": message.chat.id
-#                         },
-#                         "role": "WorkerBee"
-#                     }
-#                 ]
-#                 # Realizar una petición POST con datos en el cuerpo
-#                 response = requests.put(peticion, headers=headers,
-#                                         json=payload)
-#                 # Verificar el código de respuesta
-#                 if response.status_code == 201:
-#                     # La solicitud fue exitosa
-#                     data = response.json()  # Si la respuesta es JSON
-#                     # data -> List[NewMembers]
-#                     print("Respuesta exitosa:", data)
-#                     bot.reply_to(
-#                         message, f"Your date of birth has been registered.")
-#                     bot.send_message(
-#                         message.chat.id, message_change_personal_information)
-#                     # bot.send_message(message.chat.id, "Respuesta exitosa")
-#                 else:
-#                     print(
-#                         f"Error en la solicitud. Código de respuesta: {response.status_code}")
-#                     # bot.send_message(message.chat.id, "Por favor, asegurate que la informacion esta bien. Debes introducir /setbirthday [YYYY-MM-DDT00:00:00], por ejemplo /setbirthday 2021-01-11T00:00:00 es un comando válido.")
-#         except Exception as e:
-#             print("Error durante la solicitud:", e)
 
 
 @bot.message_handler(commands=['setage'])
