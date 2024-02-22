@@ -6,7 +6,6 @@ from telebot import types
 import datetime
 from csv import writer
 import folium
-# from fastapi import FastAPI, APIRouter, Query, HTTPException, Request, Depends
 from folium import plugins
 from IPython.display import display
 import csv
@@ -17,7 +16,6 @@ from folium import plugins
 from folium.utilities import image_to_url
 import subprocess
 from fastapi_utils.session import FastAPISessionMaker
-# from fastapi import (APIRouter, Depends, HTTPException, Query)
 import deps
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
