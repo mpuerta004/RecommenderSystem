@@ -59,10 +59,11 @@ The bot features several buttons from left to right:
 """)
 commands_for_the_general_info={
     """I have different topics that you may want to learn more about. 
-    - How to change your personal information. - use the command /change_personal_information
-    - Steps to follow in the interaction with the bot to create the collage. - use the command  /explain_interaction to recibe the interaction intructions.  
-    - Goal of the system & The result of the experiment. - use the comand /goal_of_the_system
-    - How the bot buttons work - use the comans /explain_bottons
+    - How to change your personal information. - Use the command /change_personal_information
+    - Steps to follow in the interaction with the bot to create the collage. - Use the command  /explain_interaction to recibe the interaction intructions.  
+    - Goal of the system & The result of the experiment. - Use the comand /goal_of_the_system
+    - How the bot buttons work - Use the comans /explain_bottons
+    - Final evalution of the bot. - Use the link https://docs.google.com/forms/d/e/1FAIpQLSdOBW_1TyYy1dEpQHC0D5jowBtDpkVf951x7BeaL4-lMICeFQ/viewform?usp=sharing to complete the evaluation. 
     Send /start to go the main menu. 
     """
 }
