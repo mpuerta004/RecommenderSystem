@@ -92,7 +92,6 @@ headers = {
 
 @bot.message_handler(commands=['change_personal_information'])
 def change_personal_information(message):
-    bot.send_message(message.chat.id, message_goal_of_the_system)
     bot.send_message(message.chat.id, message_change_personal_information)
 
 
@@ -179,7 +178,7 @@ def set_name(message):
     # Obtain the name of the user.
     name = message.text.replace('/setname', '').strip()
     # Int he case no name we explain the user how to do it.
-    if not name or name is not str:
+    if type(name) != str or name == "":
         bot.reply_to(message, "Please provide a valid name after the /setname command. For example: /setname John")
     # if we have name:
     else:
@@ -206,7 +205,7 @@ def set_gender(message):
 
     # Obtiene el nombre enviado por el usuario
     gender = message.text.replace('/setgender', '').strip()
-    if not gender or gender  not in ["NOBINARY","MALE","FEMALE",'NOANSWER']:
+    if not gender or gender not in ["NOBINARY","MALE","FEMALE",'NOANSWER']:
             bot.reply_to(
                 message, f"Please provide a valid gender after the /setgender command. For example: '/setgender NOBINARY'. Possible genders are: [NOBINARY, MALE, FEMALE, or NOANSWER]")
     
@@ -234,7 +233,7 @@ def set_mail(message):
 
     # Obtiene el nombre enviado por el usuario
     mail = message.text.replace('/setmail', '').strip()
-    if not mail or mail is not str:
+    if type(mail) != str or mail == "":
         bot.reply_to(
             message, "Please provide a valid email after the /setmail command. For example: '/setmail user@example.com'")
     else:
@@ -262,27 +261,29 @@ def set_mail(message):
 def set_age(message):
     # Obtiene el nombre enviado por el usuario
     age = message.text.replace('/setage', '').strip()
-    if not age or age is not int: 
-        bot.reply_to(
-            message, "Please provide a valid age after the /setage command. For example: /setage 25")
+    try:
+            age= int(age)
+            set_age=bot_auxiliar.set_age(member_id=message.chat.id, age=int(age))
+            if set_age !=None:
+                engine = create_db_engine()
+                db = create_db_session(engine)
+                member=crud.member.get_by_id(db=db, id=message.chat.id)
+                crud.member.update(db=db, db_obj=member, obj_in={"age":int(age)})
+                db.close()
+                        # data -> List[NewMembers]
+                        # print("Respuesta exitosa:", data)
+                bot.reply_to( message, f"Your age has been successfully registered.")
+                bot.send_message(
+                            message.chat.id, message_change_personal_information)
+                        # bot.send_message(message.chat.id, "Respuesta exitosa")
+            else:
+                bot.send_message(message.chat.id,"Error with the system. please contact with @Maite314")
+                return None  
+    except:        
+              bot.reply_to(
+                message, "Please provide a valid age after the /setage command. For example: /setage 25")
 
-    else:
-        set_age=bot_auxiliar.set_age(member_id=message.chat.id, age=int(age))
-        if set_age !=None:
-            engine = create_db_engine()
-            db = create_db_session(engine)
-            member=crud.member.get_by_id(db=db, id=message.chat.id)
-            crud.member.update(db=db, db_obj=member, obj_in={"age":int(age)})
-            db.close()
-                    # data -> List[NewMembers]
-                    # print("Respuesta exitosa:", data)
-            bot.reply_to( message, f"Your age has been successfully registered.")
-            bot.send_message(
-                        message.chat.id, message_change_personal_information)
-                    # bot.send_message(message.chat.id, "Respuesta exitosa")
-        else:
-            bot.send_message(message.chat.id,"Error with the system. please contact with @Maite314")
-            return None  
+        
 
 
 @bot.message_handler(commands=['setsurname'])
@@ -290,7 +291,7 @@ def set_surname(message):
 
     #Obtiene el nombre enviado por el usuario
     surname = message.text.replace('/setsurname', '').strip()
-    if not surname or surname is not str:
+    if type(surname) != str or surname == "":
         bot.reply_to(
             message, "Please provide a valid surname after the /setsurname command. For example '/setsurname Doe'.")
     else:
@@ -308,7 +309,6 @@ def set_surname(message):
 
             bot.send_message(
                         message.chat.id, message_change_personal_information)
-                    # bot.send_message(message.chat.id, "Respuesta exitosa")
         else:
             bot.send_message(message.chat.id,"Error with the system. please contact with @Maite314")
             return None   
@@ -327,7 +327,8 @@ def recommendation(message):
         markup = types.ReplyKeyboardMarkup(row_width=1)
         location_btn = types.KeyboardButton("Share location", request_location=True)
         markup.add(location_btn)
-        bot.send_message(message.chat.id, "To begin, please share your location by pressing the button below. If you don't see it, please press the button before the clip button:", reply_markup=markup)
+        bot.send_message(message.chat.id, "To begin, please share your location by pressing the button below. If you don't see it, please press the button before the clip button.", reply_markup=markup)
+        bot.send_message(message.chat.id, "In case you can't send the correct location, you can send it with the location option that allows you the clip button.")
         #in the case we have the last position we delete this information! 
         last_user_position=crud.last_user_position.get_by_id(db=db, member_id=message.chat.id)
         db.commit()
@@ -367,6 +368,8 @@ def measurement(message):
             location_btn = types.KeyboardButton("Share location", request_location=True)
             markup.add(location_btn)
             bot.send_message(message.chat.id, "Great! The first step is to share your location. Please tap the button below to do so:", reply_markup=markup)
+            bot.send_message(message.chat.id, "In case you can't send the correct location, you can send it with the location option that allows you the clip button.")
+
         else:
             bot.reply_to(message, "You don't have any accepted recommendations yet. Please use the /recommendation command before performing this action.")
     else: 
@@ -398,7 +401,7 @@ def handle_location(message):
             list_notified_recommendation=crud.recommendation.get_recommendation_notified(db=db, member_id=message.chat.id)
             for i in list_notified_recommendation:
                 crud.recommendation.remove(db=db, recommendation=i)
-            bot.reply_to(message, "You've accepted a recommendation before. It's time for you to send the photo! Please send the photo to me to integrate it into the collage.")
+            bot.reply_to(message, "It's time for you to send the photo! Please send the photo to me to integrate it into the collage.")
             
         else:
             #Eliminamos las enteriores en caso de existir
@@ -459,7 +462,7 @@ def handle_location(message):
                         option3 = types.KeyboardButton(f"Option {3}")
                         markup.add(option1, option2, option3)
                         bot.send_message(message.chat.id, "Based on your location, we have 3 recommendations for you. All three options are explained below!\n")
-
+                        bot.send_message(message.chat.id, "Option 1:")
                         bot.send_location(chat_id=message.chat.id, latitude=data['results'][0]['cell'][
                                           'centre']['Latitude'], longitude=data['results'][0]['cell']['centre']['Longitude'])
                         bot.send_message(message.chat.id, "Option 2:")
@@ -505,7 +508,7 @@ def handle_option(message):
                 bot.send_location(message.chat.id, latitude=recomendation['cell']['centre']['Latitude'], longitude=recomendation['cell']['centre']['Longitude'])  
             else:
                 number = message.text.replace('Option ', '').strip()
-                if  int(number) == 1 and int(number)== 2 and int(number) == 3:
+                if  int(number) == 1 or int(number)== 2 or int(number) == 3:
                     rec=crud.recommendation.get_recommendation_for_position(db=db,member_id=message.chat.id,position=int(number)-1)
                     # Registramos la recomendacion aceptada que tiene el usuario. 
                     accepted_recomendation=bot_auxiliar.update_recomendation(id_user=message.chat.id, recomendation_id=rec.id)
@@ -557,9 +560,10 @@ def handle_photo_and_location(message):
                             crud.measurement.create_measurement(db=db, obj_in=measurement)
                             if recomendation_aceptada_2 == None:
                                 crud.recommendation.remove(db=db, recommendation=accepted_recomendation)
-                                crear_mapa(message)
                                 bot.reply_to(
-                                        message, "Thanks for sending the photo!")
+                                        message, "Thanks for sending the photo! We are integration it in the map. This may take a few seconds.")
+                                crear_mapa(message)
+                                
                             else:
                                 # lat, long = bot_auxiliar.get_point(id_user=message.chat.id, latitud=recomendation_aceptada_2['member_current_location']['Latitude'], longuitud=recomendation_aceptada_2['member_current_location']['Longitude'])
                                 crear_mapa(message)
