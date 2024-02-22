@@ -267,7 +267,7 @@ def get_campaign_hive_1(id_user:int):
         print( f"Error with mysql {e}" )
         return None
 
-def recomendacion(id_user:int, info,campaign_id:int):
+def recomendacion_2(id_user:int, info,campaign_id:int):
     peticion = api_url + f'/members/{id_user}/campaigns/{campaign_id}/recommendations'    
     try:               
         response = requests.post(peticion, params={'time': datetime.datetime.utcnow()},headers=headers,json=info) 

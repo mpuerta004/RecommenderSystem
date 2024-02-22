@@ -139,7 +139,7 @@ def show_hive(
                     icon_size=(200, 36),
                     icon_anchor=(0, 0),
                     
-                    html=f'<div style="font-size: 20pt;color:{color_number};">{Cardinal_actual}</div>'
+                    html=f'<div style="font-size: 20pt;color:{color_number};">{str(j.id)}</div>'
                 )
                 ).add_to(mapObj)
 

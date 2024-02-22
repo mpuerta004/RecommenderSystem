@@ -48,14 +48,14 @@ last_location_of_user = {}
 recomendation_aceptada = {}
 
 # Mensajes determinados 
-message_goal_of_the_system={""" My goal is to collaborate with you to create together a map of pictures of our neighborhood. For it, I will offer recommendations to you for various photo-worthy locations using the /recommendation command. This allows you to select the ideal spot for your photographs. The photo can be of anything you see near the location. Once you're near your chosen location, you can utilize the /take_photo command to capture an image, which will then be included in the collective collage."""} 
+message_goal_of_the_system={""" My goal is to collaborate with you to create together a map of pictures of our neighborhood. For it, I will offer recommendations to you for various photo-worthy locations using the command: /recommendation. This allows you to select the ideal spot for your photographs. The photo can be of anything you see near the location. Once you're near your chosen location, you can utilize the /upload_photo command to capture an image, which will then be included in the collective collage."""} 
 instruction_of_the_buttons = ("""
 The bot features several buttons from left to right:
 - The first button is blue and serves as the menu button. You can find interactive commands here.
-- The second button is the emoji button.
+- The second button is the emoji/gif/sticker button.
 - Next, you have the text bar where you can type your messages.
 - Sometimes, between the text bar and the clip icon, you may see a square icon. When you tap on this icon, you'll find options to interact with the bot. Please select the option you need.
-- The clip icon allows you to send photos. If you encounter any issues sharing your location via GPS, you can use the clip icon to share your location. Please ensure you only share your actual location and exercise caution.
+- The clip icon allows you to send photos. If you encounter any issues sharing your location via GPS, you can use the clip icon to share your location. Please ensure you only share your actual location.
 """)
 commands_for_the_general_info={
     """I have different topics that you may want to learn more about. 
@@ -78,7 +78,7 @@ message_change_personal_information = ("Introduce your personal data using the f
 message_info_interaction = (""" Here are the main commands:
 - /start - Begin a conversation with the bot.
 - /recommendation - Request suggestions for photo locations.
-- /take_photo - Capture and send a photo from your accepted location.
+- /upload_photo - Share your location and send a photo.
 - /map - View a map of locations with associated photos. 
 - /general_info - Obtain general instructions and explanations about the bot's functionalities.
 
@@ -346,7 +346,7 @@ def recommendation(message):
 
 
 # Envia una ubicación para pedir la recomendación!
-@bot.message_handler(commands=['take_photo'])
+@bot.message_handler(commands=['upload_photo'])
 def measurement(message):
     engine = create_db_engine()
     db = create_db_session(engine)
@@ -419,7 +419,7 @@ def handle_location(message):
                 "Longitude": message.location.longitude,
                 "Latitude": message.location.latitude
             }} 
-                data = bot_auxiliar.recomendacion(
+                data = bot_auxiliar.recomendacion_2(
                     id_user=message.chat.id, campaign_id=campaign_id, info=info)
                 if data is not None and data!={"detail": "Incorrect_user_campaign"} and data != {'detail': 'far_away'} and data != {'details': 'Incorrect_user_role'} and data != {"detail": "no_measurements_needed"}:
                     # Metemos en nuestra base de datos las recomendaciones que nos han dado.
@@ -505,7 +505,8 @@ def handle_option(message):
             if accepted_recomendation !=None:
                 bot.reply_to(message, "You have already accepted a recommendation for this location. Please send the photo to complete the process.")
                 recomendation= bot_auxiliar.recomendacion(id_user=message.chat.id, recomendation_id=  accepted_recomendation.id)
-                bot.send_location(message.chat.id, latitude=recomendation['cell']['centre']['Latitude'], longitude=recomendation['cell']['centre']['Longitude'])  
+                recomendation=crud.recommendation.get_recommendation_to_measurement(db=db, member_id=message.chat.id)
+                bot.send_location(message.chat.id, latitude=recomendation.point['Latitude'], longitude=recomendation.point['Longitude'])  
             else:
                 number = message.text.replace('Option ', '').strip()
                 if  int(number) == 1 or int(number)== 2 or int(number) == 3:
@@ -515,7 +516,7 @@ def handle_option(message):
                     if accepted_recomendation != None:
                         crud.recommendation.update(db=db, db_obj=rec, obj_in={"state":"ACCEPTED"})
                         bot.reply_to(message,
-                                f"You chose {user_choice}. Thanks for your choice. When you're at the location, please type the /take_photo command and follow the instructions. then we will ask your location again and a picture in this place.")       
+                                f"You chose {user_choice}. Thanks for your choice. When you're at the location, please type the /upload_photo command and follow the instructions. then we will ask your location again and a picture in this place.")       
                     else:
                         bot.reply_to(message.chat.id,"System error. Plase contact with @Maite314")
                 else:
@@ -578,7 +579,6 @@ def handle_photo_and_location(message):
                     else:
                         #LA medicion es donde debe! 
                         # lat, long = accepted_recomendation.point['Latitude'], accepted_recomendation.point['Longitude']
-                        #TODO! verificar que esta todo bien 
                         measurement=MeasurementCreate(id=data['id'],url=file_path, location={ 'Longitude': accepted_recomendation.point['Longitude'], 'Latitude': accepted_recomendation.point['Latitude']})
                         crud.measurement.create_measurement(db=db, obj_in=measurement)  
                         elements=crud.recommendation.get_All_Recommendation(db=db, member_id=message.chat.id)
