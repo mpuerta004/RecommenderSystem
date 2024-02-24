@@ -62,7 +62,7 @@ commands_for_the_general_info={
     - How to change your personal information. - Use the command /change_personal_information
     - Steps to follow in the interaction with the bot to create the collage. - Use the command  /explain_interaction to recibe the interaction intructions.  
     - Goal of the system & The result of the experiment. - Use the comand /goal_of_the_system
-    - How the bot buttons work - Use the comans /explain_bottons
+    - How the bot buttons work - Use the comans /explain_buttons
     - Final evalution of the bot. - Use the link https://docs.google.com/forms/d/e/1FAIpQLSdOBW_1TyYy1dEpQHC0D5jowBtDpkVf951x7BeaL4-lMICeFQ/viewform?usp=sharing to complete the evaluation. 
     Send /start to go the main menu. 
     """
@@ -82,7 +82,7 @@ message_info_interaction = (""" Here are the main commands:
 - /map - View a map of locations with associated photos. 
 - /general_info - Obtain general instructions and explanations about the bot's functionalities.
 
-If you're using this bot for the first time, please make sure to define your personal data with /change_personal_information and carefully and read how to use the botton using the /explain_bottons command.
+If you're using this bot for the first time, please make sure to define your personal data with /change_personal_information and carefully and read how to use the botton using the /explain_buttons command.
 Enjoy the experience, and thank you for participating! Together, we can create a truly beautiful collage.\n""")
 
 headers = {
@@ -105,8 +105,8 @@ def goal_of_the_system(message):
     bot.send_message(message.chat.id,message_goal_of_the_system)
     bot.send_message(message.chat.id, "You can find the collage of our work at: https://mpuerta004.github.io/RecommenderSystem/")
 
-@bot.message_handler(commands=['explain_bottons'])
-def explain_bottons(message):
+@bot.message_handler(commands=['explain_buttons'])
+def explain_buttons(message):
     bot.send_message(message.chat.id,instruction_of_the_buttons )
 
 
@@ -126,10 +126,10 @@ def start(message):
             if member == None:
                 engine = create_db_engine()
                 db = create_db_session(engine)
-                Member= MemberCreate(id=message.chat.id, name=message.chat.first_name,surname="",age=0, gender="NOANSWER", city="", mail=message.chat.username, birthday=datetime.datetime.now())
+                Member= MemberCreate(id=message.chat.id, name="PEPITO",surname="",age=0, gender="NOANSWER", city="", mail=message.chat.username, birthday=datetime.datetime.now())
                 crud.member.create_member(db=db, obj_in=Member)
                 db.close()
-            bot.send_message(message.chat.id, f"Hello {message.chat.first_name}! I am the MVE bot.")
+            bot.send_message(message.chat.id, f"Hello! I am the MVE bot.")
             explain_interaction(message)
         # CASE (user dont exists in the database).
         else:
