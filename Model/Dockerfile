@@ -1,11 +1,8 @@
 FROM mysql as init-data-mysql-mve
 
 COPY Model/init.sql /docker-entrypoint-initdb.d/
-COPY Model/setup.sh /tmp/setup.sh
-
-RUN chmod +x /tmp/setup.sh
-RUN ["sh", "/tmp/setup.sh"]
-
+ENV MYSQL_ROOT_PASSWORD=${DATABASE_PASSWORD}
+RUN ["docker-entrypoint.sh", "mysql", "--user=root", "--password=${DATABASE_PASSWORD}", "<", "/docker-entrypoint-initdb.d/init.sql"]
 EXPOSE 3306
 
 FROM mysql:8.0.32 as default
