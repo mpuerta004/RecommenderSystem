@@ -69,7 +69,7 @@ spec:
               valueFrom:
                 configMapKeyRef:
                   key: DATABASE_PASSWORD
-                  value: "mysql"
+                  name: env
           image: fvergaracl/mve-fork-mysql:main
           imagePullPolicy: Always
           name: mysql
