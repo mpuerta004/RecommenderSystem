@@ -63,6 +63,7 @@ spec:
             - name: MYSQL_DATABASE
             - name: MYSQL_ROOT_PASSWORD
           image: fvergaracl/mve-fork-mysql:main
+          imagePullPolicy: Always
           name: mysql
           ports:
             - containerPort: 3306

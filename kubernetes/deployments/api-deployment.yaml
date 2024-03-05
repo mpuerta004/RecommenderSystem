@@ -54,5 +54,6 @@ spec:
                   key: DATABASE_USERNAME
                   name: env
           image: fvergaracl/mve-fork:main
+          imagePullPolicy: Always
           name: mve-fork
       restartPolicy: Always
