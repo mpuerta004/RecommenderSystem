@@ -13,7 +13,16 @@ from fastapi.templating import Jinja2Templates
 from fastapi_utils.session import FastAPISessionMaker
 from datetime import datetime, timedelta
 from funtionalities import prioriry_calculation
-SQLALCHEMY_DATABASE_URL = "mysql+DATABASE_HOST://root:mypasswd@mysql:3306/SocioBeeMVE"
+
+import os
+DATABASE_HOST = os.getenv("DATABASE_HOST", "localhost")
+DATABASE_USER = os.getenv("DATABASE_USER", "root")
+DATABASE_PASSWORD = os.getenv("DATABASE_PASSWORD", "mypasswd")
+DATABASE_NAME = os.getenv("DATABASE_NAME", "SocioBeeMVE")
+DATABASE_PORT = os.getenv("DATABASE_PORT", "3306")
+
+
+SQLALCHEMY_DATABASE_URL = f"mysql+mysqlconnector://{DATABASE_USER}:{DATABASE_PASSWORD}@{DATABASE_HOST}:{DATABASE_PORT}/{DATABASE_NAME}"
 sessionmaker = FastAPISessionMaker(SQLALCHEMY_DATABASE_URL)
 
 
