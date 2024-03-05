@@ -61,7 +61,15 @@ spec:
                   key: DATABASE_USERNAME
                   name: env
             - name: MYSQL_DATABASE
+              valueFrom:
+                configMapKeyRef:
+                  key: DATABASE
+                  name: env
             - name: MYSQL_ROOT_PASSWORD
+              valueFrom:
+                configMapKeyRef:
+                  key: DATABASE_PASSWORD
+                  value: "mysql"
           image: fvergaracl/mve-fork-mysql:main
           imagePullPolicy: Always
           name: mysql

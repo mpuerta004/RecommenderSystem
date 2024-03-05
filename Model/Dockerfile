@@ -1,6 +1,14 @@
 FROM mysql as init-data-mysql-mve
 
 COPY Model/init.sql /docker-entrypoint-initdb.d/
+COPY Model/setup.sh /tmp/setup.sh
+
+RUN chmod +x /tmp/setup.sh
+RUN /tmp/setup.sh
+
+
+
+# Set environment variables
 
 EXPOSE 3306
 
