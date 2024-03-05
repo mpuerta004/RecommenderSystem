@@ -7,7 +7,6 @@ on:
 jobs:
   docker:
     runs-on: ubuntu-latest
-    if: github.ref_name != 'main'
     steps:
       - name: Get current date
         id: date
