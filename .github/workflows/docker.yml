@@ -33,4 +33,3 @@ jobs:
             fvergaracl/mve-fork:latest
             fvergaracl/mve-fork:${{ github.ref_name }}
             fvergaracl/mve-fork:${{ github.ref_name }}.${{ steps.date.outputs.date }}
-          target: prod
