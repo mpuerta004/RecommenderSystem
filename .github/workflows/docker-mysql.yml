@@ -34,3 +34,4 @@ jobs:
             fvergaracl/mve-fork-mysql:latest
             fvergaracl/mve-fork-mysql:${{ github.ref_name }}
             fvergaracl/mve-fork-mysql:${{ github.ref_name }}.${{ steps.date.outputs.date }}
+          target: init-data-mysql-mve

@@ -1,5 +1,10 @@
-FROM mysql
+FROM mysql as init-data-mysql-mve
 
+COPY Model/init.sql /docker-entrypoint-initdb.d/
+
+EXPOSE 3306
+
+FROM mysql:8.0.32 as default
 
 # Copy the database file to the init directory
 # COPY init.sql /docker-entrypoint-initdb.d/
@@ -21,6 +26,5 @@ ADD init.sql /docker-entrypoint-initdb.d
 
 EXPOSE 3306
 
-RUN chmod +x /mysql/setup.sh
-RUN /mysql/setup.sh
+#RUN /mysql/setup.sh
 # ENTRYPOINT ["tail", "-f", "/dev/null"]
