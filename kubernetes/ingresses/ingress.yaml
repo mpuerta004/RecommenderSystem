@@ -1,0 +1,19 @@
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  annotations:
+    cert-manager.io/cluster-issuer: "letsencrypt-staging"
+  name: "mve-ingress"
+  namespace: "mve"
+spec:
+  rules:
+    - host: "mve.dev.apps.deustotech.eu"
+      http:
+        paths:
+          - backend:
+              serviceName: "api"
+              servicePort: 80
+  tls:
+    - hosts:
+        - "mve.dev.apps.deustotech.eu"
+      secretName: "mve-dev-tls"

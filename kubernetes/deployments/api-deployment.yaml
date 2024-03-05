@@ -53,18 +53,6 @@ spec:
                 configMapKeyRef:
                   key: DATABASE_USERNAME
                   name: env
-          image: api
-          name: mve
-          ports:
-            - containerPort: 8001
-              hostPort: 8001
-              protocol: TCP
-          tty: true
-          volumeMounts:
-            - mountPath: /recommendersystem
-              name: data-api-mve
+          image: fvergaracl/mve-fork:main
+          name: mve-fork
       restartPolicy: Always
-      volumes:
-        - name: data-api-mve
-          persistentVolumeClaim:
-            claimName: data-api-mve
