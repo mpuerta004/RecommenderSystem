@@ -23,13 +23,13 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Build and push Docker Image MVE
+      - name: Build and push Docker Image MVE-MYSQL with init data
         uses: docker/build-push-action@v2
         with:
-          context: .
+          context: ./Model
           file: Dockerfile
           push: true
           tags: |
-            fvergaracl/mve-fork:latest
-            fvergaracl/mve-fork:${{ github.ref_name }}
-            fvergaracl/mve-fork:${{ github.ref_name }}.${{ steps.date.outputs.date }}
+            fvergaracl/mve-fork-mysql:latest
+            fvergaracl/mve-fork-mysql:${{ github.ref_name }}
+            fvergaracl/mve-fork-mysql:${{ github.ref_name }}.${{ steps.date.outputs.date }}
