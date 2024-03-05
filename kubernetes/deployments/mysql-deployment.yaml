@@ -50,6 +50,11 @@ spec:
                 configMapKeyRef:
                   key: DATABASE_PASSWORD
                   name: env
+            - name: MYSQL_ROOT_PASSWORD
+              valueFrom:
+                configMapKeyRef:
+                  key: DATABASE_PASSWORD
+                  name: env
             - name: DATABASE_USERNAME
               valueFrom:
                 configMapKeyRef:
@@ -66,6 +71,7 @@ spec:
           volumeMounts:
             - mountPath: /var/lib/mysql
               name: data-mysql-mve
+      hostname: mysql
       restartPolicy: Always
       volumes:
         - name: data-mysql-mve
