@@ -1,7 +1,7 @@
 FROM mysql as init-data-mysql-mve
 
-COPY init.sql /docker-entrypoint-initdb.d/
-COPY setup.sh /mysql/setup.sh
+COPY Model/init.sql /docker-entrypoint-initdb.d/
+COPY Model/setup.sh /mysql/setup.sh
 
 RUN chmod +x /mysql/setup.sh
 RUN chmod +x /docker-entrypoint-initdb.d/init.sql
