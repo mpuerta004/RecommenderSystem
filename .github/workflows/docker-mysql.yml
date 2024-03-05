@@ -1,4 +1,4 @@
-name: Publish Docker Image
+name: Publish Docker Image MVE-MYSQL with init data
 
 on:
   push:
@@ -25,9 +25,10 @@ jobs:
 
       - name: Build and push Docker Image MVE-MYSQL with init data
         uses: docker/build-push-action@v2
+        # DOCKERFILE into "Model" folder
         with:
-          context: ./Model
-          file: Dockerfile
+          context: .
+          file: Model/Dockerfile
           push: true
           tags: |
             fvergaracl/mve-fork-mysql:latest
