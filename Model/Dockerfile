@@ -4,11 +4,7 @@ COPY Model/init.sql /docker-entrypoint-initdb.d/
 COPY Model/setup.sh /tmp/setup.sh
 
 RUN chmod +x /tmp/setup.sh
-RUN /tmp/setup.sh
-
-
-
-# Set environment variables
+RUN ["sh", "/tmp/setup.sh"]
 
 EXPOSE 3306
 
