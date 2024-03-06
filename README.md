@@ -2,6 +2,12 @@
 
 ## Execution
 
+### Mandatory
+
+Before to run, you may define the environment variables into the `.env` file. You can use the `.env.sample` as example 
+
+---
+
 You may launch with the support of Docker the Micro-Volunteering Engine (MVE). For that follow these steps:
 1. `git clone https://github.com/mpuerta004/RecommenderSystem` to get hold of the source code of MVE
 2. `cd RecommenderSystem`
@@ -23,6 +29,99 @@ Alternatively, you may follow these manual steps to be able to launch the Micro-
 The diagram below shows the process that has to be carried out within SOCIO-BEE to set-up a campaign in a pilot where air quality measurements will be gathered in a certain area and time period in order to deliver visualizations and indicators summarizing the air quality situation and evolution in a spatiotemporal manner. Essentially several steps must be carried out to configure a campaign. Once the campaign is configured the recommendation service from MVE can be requested. 
 
 ![](./Picture_readme/QueenBeesWorkflow.drawio.png)
+
+## Kubernetes
+
+To deploy a new version of an application on Kubernetes, you need to understand the purpose of various YAML files that define resources within the Kubernetes cluster. Below, I explain each of the mentioned files and how they interact with each other to deploy and manage an application. I will also provide you with commands for viewing logs and accessing the shell of deployed containers.
+
+### Files and Their Meanings
+
+#### ConfigMaps
+- `configmaps/env-configmap.yaml`: Defines environment variables that can be used in containers. These variables could be API keys, server addresses, etc., and are used to configure the application without needing to hardcode this information inside the container image.
+
+#### Deployments
+- `deployments/api-deployment.yaml`: Defines the deployment of the application's API, specifying the container image to use, the number of replicas, and how to update the instances.
+- `deployments/mysql-deployment.yaml`: Similar to the previous one but for the MySQL database. It specifies the deployment configuration of a container running MySQL.
+
+#### Ingresses
+- `ingresses/ingress.yaml`: Configures routing rules for traffic coming into Kubernetes services from the outside. It allows accessing the application via friendly URLs.
+
+#### Services
+- `services/api-service.yaml`: Defines how the API deployment is exposed to other components within the cluster or from the outside. Generally, it specifies ports and the type of service (ClusterIP, NodePort, LoadBalancer).
+- `services/mysql-service.yaml`: Defines how the MySQL deployment is exposed within the cluster, allowing other containers to connect to the database.
+
+#### Volume
+- `volumen/api-claim0-persistentvolumeclaim.yaml`: Defines a persistent storage claim for the API, which allows data to survive container restarts or redeployments.
+- `volumen/data-volume-persistentvolumeclaim.yaml`: Defines a persistent storage claim for the database, ensuring that data persists beyond the lifespan of containers.
+
+### Commands for Application Management
+
+#### Viewing Logs
+To view logs from a specific container, first identify the name of the pod where the container is running:
+
+```bash
+kubectl get pods
+```
+
+Then, to view the logs:
+
+```bash
+kubectl logs <pod-name>
+```
+
+If the deployment has multiple replicas, make sure to specify the name of the pod of the specific instance you want to view logs from.
+
+#### Accessing Container Shell
+To execute commands inside a container, use the `exec` command. You'll need to know the name of the pod in which the container is running:
+
+```bash
+kubectl exec -it <pod-name> -- /bin/sh
+```
+
+Or if the container does not have `/bin/sh`, you can try `/bin/bash`:
+
+```bash
+kubectl exec -it <pod-name> -- /bin/bash
+```
+
+This command gives you access to an interactive shell inside the container, from where you can execute commands interactively.
+
+## Gitaction CI/CD
+
+To enable this, a continuous integration/continuous deployment (CI/CD) pipeline can be set up, often using GitHub Actions, which automates the build and deployment process based on specific triggers, such as a push or pull request to a repository.
+
+To get started with automatic deployment of Docker images, here are the key components and requirements you'll need to understand:
+
+### Prerequisites
+- **Dockerfile**: A Dockerfile in your repository with the necessary instructions to build your Docker image.
+- **Docker Hub Account**: You'll need an account on Docker Hub (or another container registry) where the Docker images will be stored.
+- **Repository on GitHub**: Your source code hosted on GitHub with the Dockerfile included.
+
+### Secrets for Docker Hub Authentication
+- **`DOCKERHUB_USERNAME`**: Your Docker Hub username. This is used to authenticate with Docker Hub to push the Docker image.
+- **`DOCKERHUB_TOKEN`**: A personal access token from Docker Hub which is used instead of a password for better security. You can generate a token in your Docker Hub account under Security settings.
+
+### GitHub Actions Workflow
+The workflow you provided outlines the steps for building and pushing a Docker image to Docker Hub upon a `push` or `pull_request` event. Here's a brief explanation of each step:
+
+1. **Get current date**: This step gets the current date to tag the image with a unique identifier.
+2. **Checkout**: This action checks out your repository under `$GITHUB_WORKSPACE`, so your workflow can access it.
+3. **Set up Docker Buildx**: This action sets up Docker Buildx to support advanced build features like building multi-arch images.
+4. **Login to DockerHub**: Authenticates to Docker Hub using your username and the token. These should be stored as GitHub secrets for security.
+5. **Build and push Docker Image MVE**: This action builds the Docker image from the Dockerfile in your repository and pushes it to Docker Hub. It tags the image with `latest`, the branch name, and a unique tag that includes the branch name and the current date.
+
+### Tags Explanation
+- **latest**: A tag used to indicate the most recent version of the image.
+- **`${{ github.ref_name }}`**: Tags the image with the branch name, useful for versioning images based on branch.
+- **`${{ github.ref_name }}.${{ steps.date.outputs.date }}`**: A more specific tag that includes the branch name and the current date, providing a way to uniquely identify builds.
+
+### Requirements for the Workflow
+- **Actions**: Ensure the GitHub repository has GitHub Actions enabled.
+- **Secrets**: You must set the `DOCKERHUB_USERNAME` and `DOCKERHUB_TOKEN` in your GitHub repository's secrets to securely store your Docker Hub credentials.
+
+This setup allows for automated building and pushing of Docker images to Docker Hub, facilitating continuous integration and deployment processes. It's important to replace `fvergaracl/mve-fork` with your Docker Hub repository and adjust the Dockerfile path if necessary.
+
+
 
 ## Context
 
