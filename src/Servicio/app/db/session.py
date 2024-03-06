@@ -4,7 +4,15 @@ from sqlalchemy.orm import sessionmaker
 
 
 # mysql.connector.connect(host='localhost', user='mve', passwd='mvepassword', db='SocioBee')
-SQLALCHEMY_DATABASE_URL = "mysql+mysqlconnector://root:mypasswd@mysql:3306/SocioBeeMVE"
+import os
+
+DATABASE_HOST = os.getenv("DATABASE_HOST", "localhost")
+DATABASE_USER = os.getenv("DATABASE_USER", "root")
+DATABASE_PASSWORD = os.getenv("DATABASE_PASSWORD", "mypasswd")
+DATABASE_NAME = os.getenv("DATABASE_NAME", "SocioBeeMVE")
+DATABASE_PORT = os.getenv("DATABASE_PORT", "3306")
+
+SQLALCHEMY_DATABASE_URL = f"mysql+mysqlconnector://{DATABASE_USER}:{DATABASE_PASSWORD}@{DATABASE_HOST}:{DATABASE_PORT}/{DATABASE_NAME}"
 # SQLALCHEMY_DATABASE_URL = "postgresql://user:password@postgresserver/db"
 
 # SQLALCHEMY_DATABASE_URL = (
@@ -17,8 +25,7 @@ SQLALCHEMY_DATABASE_URL = "mysql+mysqlconnector://root:mypasswd@mysql:3306/Socio
 
 engine = create_engine(
     SQLALCHEMY_DATABASE_URL, pool_pre_ping=True
-    
-)
-#Each instance of the SessionLocal class will be a database session.
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
+)
+# Each instance of the SessionLocal class will be a database session.
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
