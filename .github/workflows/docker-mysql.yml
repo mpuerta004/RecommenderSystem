@@ -31,7 +31,7 @@ jobs:
           file: Model/Dockerfile
           push: true
           tags: |
-            fvergaracl/mve-fork-mysql:latest
-            fvergaracl/mve-fork-mysql:${{ github.ref_name }}
-            fvergaracl/mve-fork-mysql:${{ github.ref_name }}.${{ steps.date.outputs.date }}
+            /mve-fork-mysql:latest
+            maitepuerta1997/mve-fork-mysql:${{ github.ref_name }}
+            maitepuerta1997/mve-fork-mysql:${{ github.ref_name }}.${{ steps.date.outputs.date }}
           target: init-data-mysql-mve

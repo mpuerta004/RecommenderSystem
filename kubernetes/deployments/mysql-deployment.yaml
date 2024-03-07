@@ -70,7 +70,7 @@ spec:
                 configMapKeyRef:
                   key: DATABASE_PASSWORD
                   name: env
-          image: fvergaracl/mve-fork-mysql:main
+          image: maitepuerta1997/mve-fork-mysql:main
           imagePullPolicy: Always
           name: mysql
           ports:
