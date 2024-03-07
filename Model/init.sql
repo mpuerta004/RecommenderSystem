@@ -4,6 +4,7 @@ DROP USER IF EXISTS 'mve'@'localhost';
 DROP USER IF EXISTS 'mve_automatic'@'localhost';
 
 
+
 CREATE DATABASE SocioBeeMVE;
 use SocioBeeMVE;
 

@@ -12,7 +12,7 @@
             "database": "SocioBeeMVE",
             "name": "Try",
             "username": "root",
-            "password": "mypasswd"
+            "password": "mvepasswd123"
         }
     ],
     "python.analysis.autoImportCompletions": false,

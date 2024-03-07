@@ -30,6 +30,6 @@ jobs:
           file: Dockerfile
           push: true
           tags: |
-            fvergaracl/mve-fork:latest
-            fvergaracl/mve-fork:${{ github.ref_name }}
-            fvergaracl/mve-fork:${{ github.ref_name }}.${{ steps.date.outputs.date }}
+            maitepuerta1997/mve:latest
+            maitepuerta1997/mve:${{ github.ref_name }}
+            maitepuerta1997/mve:${{ github.ref_name }}.${{ steps.date.outputs.date }}

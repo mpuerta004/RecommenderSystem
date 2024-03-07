@@ -1,10 +1,22 @@
 version: "3"
 
+# networks:
+#   academe-platform_sociobee_network:
+#     external: true
+networks:
+  my_network:
+    driver: bridge
+
+volumes:
+  data-volume:
+
+
 services:
   mysql:
     image: mysql
     build: ./Model
     volumes:
+      #- ./Model/init.sql:/docker-entrypoint-initdb.d/dump.sql
       - data-volume:/var/lib/mysql
     container_name: mysql
     command: --default-authentication-plugin=mysql_native_password
@@ -17,7 +29,7 @@ services:
     ports:
       - "3306:3306"
     networks:
-      - mve_network
+      - my_network
   api:
     container_name: MVE
     platform: linux/x86_64
@@ -41,11 +53,7 @@ services:
     depends_on:
       - mysql
     networks:
-      - mve_network
+      - my_network
 
-networks:
-  mve_network:
-    driver: bridge
 
-volumes:
-  data-volume:
+
