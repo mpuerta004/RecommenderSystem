@@ -11,6 +11,8 @@ ENV MYSQL_ALLOW_EMPTY_PASSWORD=true
 #mysql -u root -p mysql < /docker-entrypoint-initdb.d/init.sql
 CMD ["mysqld" , "--init-file=/docker-entrypoint-initdb.d/init.sql" , "--user=root"]
 
+
+
 EXPOSE 3306
 
 FROM mysql:8.0.32 as default
