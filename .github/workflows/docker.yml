@@ -30,6 +30,6 @@ jobs:
           file: Dockerfile
           push: true
           tags: |
-            maitepuerta1997/mve-fork:latest
-            maitepuerta1997/mve-fork:${{ github.ref_name }}
-            maitepuerta1997/mve-fork:${{ github.ref_name }}.${{ steps.date.outputs.date }}
+            maitepuerta1997/mve:latest
+            maitepuerta1997/mve:${{ github.ref_name }}
+            maitepuerta1997/mve:${{ github.ref_name }}.${{ steps.date.outputs.date }}
