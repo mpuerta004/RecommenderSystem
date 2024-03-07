@@ -70,7 +70,7 @@ spec:
                 configMapKeyRef:
                   key: DATABASE_PASSWORD
                   name: env
-          image: maitepuerta1997/mysql:main
+          image: maitepuerta1997/mysql:main.20240307
           imagePullPolicy: Always
           name: mysql
           ports:
