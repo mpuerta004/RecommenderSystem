@@ -53,6 +53,7 @@ spec:
                 configMapKeyRef:
                   key: DATABASE_USERNAME
                   name: env
+                  
           image: maitepuerta1997/mve:lastest
           imagePullPolicy: Always
           name: mve
