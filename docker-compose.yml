@@ -19,7 +19,7 @@ services:
       #- ./Model/init.sql:/docker-entrypoint-initdb.d/dump.sql
       - data-volume:/var/lib/mysql
     container_name: mysql
-    command: --default-authentication-plugin=mysql_native_password
+    command: --default-authentication-plugin=caching_sha2_password 
     restart: always
     env_file:
       - .env

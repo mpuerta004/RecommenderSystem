@@ -28,7 +28,7 @@ spec:
             limits:
               memory: 1Gi
           args:
-            - --default-authentication-plugin=mysql_native_password
+            - --default-authentication-plugin=caching_sha2_password 
           env:
             - name: APP_SECRET_STRING
               valueFrom:
