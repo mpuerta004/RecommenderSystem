@@ -71,7 +71,6 @@ spec:
                   key: DATABASE_PASSWORD
                   name: env
           image: maitepuerta1997/mysql:latest
-
           imagePullPolicy: Always
           name: mysql
           ports:
