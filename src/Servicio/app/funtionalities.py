@@ -236,6 +236,7 @@ def prioriry_calculation(time: datetime, cam: Campaign, db: Session = Depends(de
                         slot_id=slot.id, datetime=time, temporal_priority=result, trend_priority=trendy)  
                     priority = crud.priority.create_priority_detras(
                         db=db, obj_in=priority_create)
+                    print("Insertado Dato prioridad")
                     db.commit()
     return None
 

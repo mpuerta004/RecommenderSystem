@@ -49,6 +49,8 @@ class CRUDPriority(CRUDBase[Priority, PriorityCreate,PriorityUpdate]):
             db_obj = self.model(**obj_in_data)  # type: ignore
             db.add(db_obj)
             db.commit()
+            db.refresh(db_obj)
+
             return db_obj
         except Exception as e:
                         raise HTTPException(status_code=500, detail=f"Error with mysql {e}" )
