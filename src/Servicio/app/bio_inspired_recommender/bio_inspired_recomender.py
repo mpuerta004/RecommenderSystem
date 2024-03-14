@@ -165,8 +165,8 @@ def create_recomendation(
                 if expected < campaign.min_samples and df_user_distance.loc[cell.id,"distance_cell_user"]<5*campaign.cells_distance: 
                     bio_inspired=crud.bio_inspired.get_threshole(db=db, cell_id=cell.id, member_id=member_id)
                     theshold= bio_inspired.threshold
-                    priority= crud.priority.get_by_slot_and_time(db=db, slot_id=slot.id, time=time)
-                    priority= priority.temporal_priority
+                    # priority= crud.priority.get_by_slot_and_time(db=db, slot_id=slot.id, time=time)
+                    priority= temporal_priority
                     NEW_VALUE=(
                     ((priority)**2 ) / 
                                 ((priority)**2  + 
