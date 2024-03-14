@@ -15,7 +15,7 @@ from datetime import datetime, timedelta
 from funtionalities import prioriry_calculation
 
 import os
-DATABASE_HOST = os.getenv("DATABASE_HOST", "localhost")
+DATABASE_HOST = os.getenv("DATABASE_HOST", "mysql")
 DATABASE_USER = os.getenv("DATABASE_USER", "root")
 DATABASE_PASSWORD = os.getenv("DATABASE_PASSWORD", "mvepasswd123")
 DATABASE_NAME = os.getenv("DATABASE_NAME", "SocioBeeMVE")
@@ -55,12 +55,14 @@ api_router = APIRouter()
 
 
 async def prioriry_calculation_main() -> None:
+    print("Insertando datos de prioridad!")
     """
     Create the priorirty af all campaign based on the measurements
     """
     # await  asyncio.sleep(1)
     with sessionmaker.context_session() as db:
         time = datetime.now()
+        
         List_campaigns = crud.campaign.get_all_active_campaign(
             db=db, time=time)
         for cam in List_campaigns:
@@ -92,14 +94,14 @@ async def state_calculation() -> None:
 # Funtions that automaticaly calculate the priority.
 def final_funtion():
     asyncio.run(prioriry_calculation_main())
-    print("He terminado!")
+    print("He terminado prioridad!")
 
 # Funtions that automaticaly calculate the update of the states.
 
 
 def State_change():
     asyncio.run(state_calculation())
-    print("He terminado!")
+    print("He terminado state!")
 
 
 app.include_router(api_router)
