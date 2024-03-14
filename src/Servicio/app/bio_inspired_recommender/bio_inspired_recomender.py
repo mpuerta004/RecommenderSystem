@@ -150,7 +150,11 @@ def create_recomendation(
             slot = crud.slot.get_slot_time(
                     db=db, cell_id=cell.id, time=time)
             priority_cell=crud.priority.get_by_slot_and_time(db=db, slot_id=slot.id, time=time)
-            if priority_cell.temporal_priority < 0.0:
+            if priority_cell is None:
+                temporal_priority=0.0
+            else:
+                temporal_priority=priority_cell.temporal_priority
+            if temporal_priority < 0.0:
                 NEW_VALUE=-1.0
             else:
                 Cardinal_actual = crud.measurement.get_all_Measurement_from_cell_in_the_current_slot(
