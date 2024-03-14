@@ -17,7 +17,7 @@ from funtionalities import prioriry_calculation
 import os
 DATABASE_HOST = os.getenv("DATABASE_HOST", "localhost")
 DATABASE_USER = os.getenv("DATABASE_USER", "root")
-DATABASE_PASSWORD = os.getenv("DATABASE_PASSWORD", "mypasswd")
+DATABASE_PASSWORD = os.getenv("DATABASE_PASSWORD", "mvepasswd123")
 DATABASE_NAME = os.getenv("DATABASE_NAME", "SocioBeeMVE")
 DATABASE_PORT = os.getenv("DATABASE_PORT", "3306")
 
