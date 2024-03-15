@@ -194,6 +194,7 @@ def prioriry_calculation(time: datetime, cam: Campaign, db: Session = Depends(de
                     print("Cuidado")
                     print(time)
                     print(f"Tengo id -> cell_id {cell.id} y slot {slot} ")
+                    return None
                 Cardinal_actual = crud.measurement.get_all_Measurement_from_cell_in_the_current_slot(
                     db=db, time=time, slot_id=slot.id)
                 recommendation_accepted = crud.recommendation.get_aceptance_state_of_cell(
@@ -229,14 +230,13 @@ def prioriry_calculation(time: datetime, cam: Campaign, db: Session = Depends(de
 
                     n_cells = crud.cell.get_count_cells(db=db, campaign_id=cam.id)
                     trendy = (measurement_of_cell/total_measurements)*n_cells
-                #Create the prioritu
-                a=crud.priority.get_by_slot_and_time(db=db, slot_id=slot.id, time= time)
-                if a is None:
-                    priority_create = PriorityCreate(
+                #Create the priority
+
+                priority_create = PriorityCreate(
                         slot_id=slot.id, datetime=time, temporal_priority=result, trend_priority=trendy)  
-                    priority = crud.priority.create_priority_detras(
+                priority = crud.priority.create_priority_detras(
                         db=db, obj_in=priority_create)
-                    db.commit()
+                db.commit()
     return None
 
 
