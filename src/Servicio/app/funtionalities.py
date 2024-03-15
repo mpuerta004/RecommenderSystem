@@ -180,14 +180,6 @@ def prioriry_calculation(time: datetime, cam: Campaign, db: Session = Depends(de
         for sur in surfaces:
             for cell in sur.cells:
                 momento = time
-                # Verify if momento is not in the first slot
-                # if (cam.start_datetime+timedelta(seconds=cam.sampling_period)).replace(tzinfo=timezone.utc) <= momento.replace(tzinfo=timezone.utc):
-                #     slot_pasado = crud.slot.get_slot_time(db=db, cell_id=cells.id, time=(
-                #         momento - timedelta(seconds=cam.sampling_period-1)))
-                #     Cardinal_pasado = crud.measurement.get_all_Measurement_from_cell_in_the_current_slot(
-                #         db=db, cell_id=cells.id, time=slot_pasado.end_datetime, slot_id=slot_pasado.id)
-                # else:
-                #     Cardinal_pasado = 0
                 slot = crud.slot.get_slot_time(
                     db=db, cell_id=cell.id, time=time)
                 if slot is None:
@@ -231,13 +223,12 @@ def prioriry_calculation(time: datetime, cam: Campaign, db: Session = Depends(de
                     trendy = (measurement_of_cell/total_measurements)*n_cells
                 #Create the prioritu
                 a=crud.priority.get_by_slot_and_time(db=db, slot_id=slot.id, time= time)
-                if a is None:
-                    priority_create = PriorityCreate(
+                priority_create = PriorityCreate(
                         slot_id=slot.id, datetime=time, temporal_priority=result, trend_priority=trendy)  
-                    priority = crud.priority.create_priority_detras(
+                priority = crud.priority.create_priority_detras(
                         db=db, obj_in=priority_create)
-                    print("Insertado Dato prioridad")
-                    db.commit()
+                print("Insertado Dato prioridad")
+                db.commit()
     return None
 
 
