@@ -62,7 +62,7 @@ async def prioriry_calculation_main() -> None:
     # await  asyncio.sleep(1)
     with sessionmaker.context_session() as db:
         time = datetime.now()
-        
+        print(time)
         List_campaigns = crud.campaign.get_all_active_campaign(
             db=db, time=time)
         for cam in List_campaigns:
