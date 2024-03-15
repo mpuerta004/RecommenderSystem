@@ -55,14 +55,12 @@ api_router = APIRouter()
 
 
 async def prioriry_calculation_main() -> None:
-    print("Insertando datos de prioridad!")
     """
     Create the priorirty af all campaign based on the measurements
     """
     # await  asyncio.sleep(1)
     with sessionmaker.context_session() as db:
         time = datetime.now()
-        print(time)
         List_campaigns = crud.campaign.get_all_active_campaign(
             db=db, time=time)
         for cam in List_campaigns:
