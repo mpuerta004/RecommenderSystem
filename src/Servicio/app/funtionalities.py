@@ -223,7 +223,7 @@ def prioriry_calculation(time: datetime, cam: Campaign, db: Session = Depends(de
                     trendy = (measurement_of_cell/total_measurements)*n_cells
                 #Create the prioritu
                 
-                a=crud.priority.get_by_slot_anget_by_slot_and_current_timed_time(db=db, slot_id=slot.id, time= time)
+                a=crud.priority.get_by_slot_and_current_time(db=db, slot_id=slot.id, time= time)
                 if a is None:
                     priority_create = PriorityCreate(
                             slot_id=slot.id, datetime=time, temporal_priority=result, trend_priority=trendy)  
