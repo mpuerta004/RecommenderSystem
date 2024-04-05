@@ -19,6 +19,7 @@ from datetime import datetime, timedelta
 import math
 import numpy as np
 import io
+import csv
 from Heuristic_recommender.Recommendation import create_recomendation_per_campaign
 from end_points.Measurements import create_measurement
 import numpy as np
@@ -103,14 +104,14 @@ def asignacion_recursos_hive(
                     if lat is not None and lon is not None:
                         a = RecommendationCreate(member_current_location={
                                                 'Longitude': lon, 'Latitude': lat}, recommendation_datetime=time)
-                        # recomendaciones=create_recomendation_per_campaign(db=db,member_id=user_class.id,recipe_in=a,campaign_id=campaign_id,time=time)
-                        recomendaciones = bio_inspired_recomender.create_recomendation(member_id=user_class.member.id,recipe_in=a,db=db,time=time,campaign_id=campaign_id)
+                        recomendaciones=create_recomendation_per_campaign(db=db,member_id=user_class.id,recipe_in=a,campaign_id=campaign_id,time=time)
+                        # recomendaciones = bio_inspired_recomender.create_recomendation(member_id=user_class.member.id,recipe_in=a,db=db,time=time,campaign_id=campaign_id)
                         if recomendaciones is not None and "results" in recomendaciones and  len(recomendaciones['results']) > 0:
                             recc= [i.recommendation for i in recomendaciones['results']] 
                             recomendation_coguida = user_class.user_selecction(db=db, list_recommendations=recc,user_position=(lat, lon))
                             
                             if recomendation_coguida is not None:
-                                show_recomendation_with_thesholes(db=db, user=user_class, cam=cam, result=recc,time=time,recomendation=recomendation_coguida)
+                                # show_recomendation_with_thesholes(db=db, user=user_class, cam=cam, result=recc,time=time,recomendation=recomendation_coguida)
                                 show_recomendation(db=db, cam=cam, user=user_class.member, time=time, result=recc,recomendation=recomendation_coguida)
                                 recomendation_a_polinizar = crud.recommendation.get_recommendation(db=db, member_id=user_class.member.id, recommendation_id=recomendation_coguida.id)
                                 recomendacion_polinizar = crud.recommendation.update(
@@ -142,152 +143,271 @@ def asignacion_recursos_hive(
             else:
                 new.append(mediciones[i])
         mediciones = new
-        #TODO! la metrica no tiene en cuenta la camapaña! 
+        
         list_slots=crud.slot.get_list_slot_time(db=db, time=time)
-        accepted_Recomendation=0
-        notidied_recomendation=0
-        realize_recommendation=0
+        accepted_Recomendation = 0
+        notidied_recomendation = 0
+        realize_recommendation = 0
         times.append(time)
 
-        if list_slots!=[]:
+        if list_slots != []:
             for slot in list_slots:
-                accepted_Recomendation=accepted_Recomendation+ len( crud.recommendation.get_aceptance_state_of_slot(db=db, time=time,slot_id=slot.id))
-                realize_recommendation=realize_recommendation + len(crud.recommendation.get_relize_state_of_slot(db=db, slot_id=slot.id,time=time))
-                
-                notidied_recomendation=notidied_recomendation + len(crud.recommendation.get_notified_state_of_slot(db=db, slot_id=slot.id,time=time))
+                accepted_Recomendation += len(crud.recommendation.get_aceptance_state_of_slot(db=db, time=time,slot_id=slot.id))
+                realize_recommendation += len(crud.recommendation.get_relize_state_of_slot(db=db, slot_id=slot.id,time=time))
+                notidied_recomendation += len(crud.recommendation.get_notified_state_of_slot(db=db, slot_id=slot.id,time=time))
         data_accepted.append(accepted_Recomendation)
         data_notified.append(notidied_recomendation)
         data_realized.append(realize_recommendation)
-        
-    # Ancho de las barras
-    plt.figure(figsize=(25, 6))  # Ancho x Alto
-
+    with open("output.csv", "wb") as f:
+        writer = csv.writer(f)
+        writer.writerows(times)
+        writer.writerows(data_accepted)
+        writer.writerows(data_notified)
+        writer.writerows(data_realized)
     
-    # Cr    ear tres gráficos de líneas para cada variable
-    plt.plot(times, data_notified, marker='o', linestyle='-', color='b', label='Notified Recommendation')
-    plt.plot(times, data_accepted, marker='o', linestyle='-', color='g', label='Accepted Recommendation')
-    plt.plot(times, data_realized, marker='o', linestyle='-', color='r', label='Realized Recommendation')
+    fig, axs = plt.subplots(3, 1, figsize=(15, 15), sharex=True)
 
-    # Etiquetas, título y leyenda
-    plt.xlabel('Time')
-    plt.ylabel('Number')
-    plt.title('Numer of recommendation')
-    plt.legend()
-        
-    # Mostrar la gráfica combinada
-    plt.grid(True)
+    for ax, data, label, color in zip(axs, [data_notified, data_accepted, data_realized], ['Notified', 'Accepted', 'Realized'],['b','g','r']):
+        ax.plot(times, data, marker='o', linestyle='-', color=color, label=f'{label} Recommendation')
+        window_size = 25  # Tamaño de la ventana para la media móvil
+        mov_avg = np.convolve(data, np.ones(window_size) / window_size, mode='valid')
+        ax.plot(times[window_size-1:], mov_avg, linestyle='--', color='r', label=f'Moving Average ({window_size})')
+        ax.set_title(f'Number of {label} Recommendations')
+        ax.set_ylabel('Number')
+        ax.legend()
+        ax.grid(True)
+        ax.tick_params(axis='x', rotation=45)
+        ax.tick_params(axis='both', which='major', labelsize=10)
+
+    axs[-1].set_xlabel('Time')
+    
     plt.tight_layout()
-    plt.xticks(rotation='vertical')  # Rotar etiquetas del eje x
+    plt.savefig("recommendations_metrics_with_moving_average.jpg")
+    plt.show()
 
-    # Mostrar la gráfica
-    plt.savefig("data.jpg")    
-    
-    plt.figure(figsize=(25, 6))  # Ancho x Alto
+    print("rate_number: ", number_of_recomendation_rate(campaign_id=cam.id,times=times, db=db))
+    print("user_rate;", number_of_recomendation_rate_users(campaign_id=cam.id,times=times, db=db))
+    return None
+
+
+
+    #     accepted_Recomendation=0
+    #     notidied_recomendation=0
+    #     realize_recommendation=0
+    #     times.append(time)
+
+    #     if list_slots!=[]:
+    #         for slot in list_slots:
+    #             accepted_Recomendation=accepted_Recomendation+ len( crud.recommendation.get_aceptance_state_of_slot(db=db, time=time,slot_id=slot.id))
+    #             realize_recommendation=realize_recommendation + len(crud.recommendation.get_relize_state_of_slot(db=db, slot_id=slot.id,time=time))
+                
+    #             notidied_recomendation=notidied_recomendation + len(crud.recommendation.get_notified_state_of_slot(db=db, slot_id=slot.id,time=time))
+    # #     data_accepted.append(accepted_Recomendation)
+    #     data_notified.append(notidied_recomendation)
+    #     data_realized.append(realize_recommendation)
+        
+    # # Ancho de las barras
+    # plt.figure(figsize=(25, 6))  # Ancho x Alto
 
     
     # # Cr    ear tres gráficos de líneas para cada variable
     # plt.plot(times, data_notified, marker='o', linestyle='-', color='b', label='Notified Recommendation')
-    # Calcular la media acumulada de la variable mientras avanzamos en el tiempo
-    media_accum = np.zeros(len(times))
-    for i in range(len(times)):
-        current_slice = data_notified[:i + 1]
-        media_accum[i] = np.mean(current_slice)
+    # plt.plot(times, data_accepted, marker='o', linestyle='-', color='g', label='Accepted Recommendation')
+    # plt.plot(times, data_realized, marker='o', linestyle='-', color='r', label='Realized Recommendation')
 
-    # Trazar la media acumulada de la variable
-    plt.plot(times, media_accum, linestyle='--', color='black', label='Media Acumulada')
-    #Calcular la media móvil con ventana de 10 puntos (ajustable según tus necesidades)
-    ventana = 25
-    media_movil = np.convolve(data_notified, np.ones(ventana) / ventana, mode='valid')
-
-    # Ajustar las unidades de tiempo para la media móvil
-    unidades_tiempo_media_movil = times[(ventana - 1) // 2 : -(ventana - 1) // 2]
-
-    # Trazar la media móvil
-    plt.plot(unidades_tiempo_media_movil, media_movil, linestyle='--', color='black', label='Media Móvil')
-
-    # Etiquetas, título y leyenda
-    plt.xlabel('Time')
-    plt.ylabel('Number')
-    plt.title('Numer of recommendation')
-    plt.legend()
+    # # Etiquetas, título y leyenda
+    # plt.xlabel('Time')
+    # plt.ylabel('Number')
+    # plt.title('Numer of recommendation')
+    # plt.legend()
         
-    # Mostrar la gráfica combinada
-    plt.grid(True)
-    plt.tight_layout()
-    plt.xticks(rotation='vertical')  # Rotar etiquetas del eje x
+    # # Mostrar la gráfica combinada
+    # plt.grid(True)
+    # plt.tight_layout()
+    # plt.xticks(rotation=45)  # Rotar etiquetas del eje x
 
-    # Mostrar la gráfica
-    plt.savefig("data_notified.jpg")    
+    # # Mostrar la gráfica
+    # plt.savefig("data.jpg")    
     
-    plt.figure(figsize=(25, 6))  # Ancho x Alto
+    # plt.figure(figsize=(25, 6))  # Ancho x Alto
 
-    plt.plot(times, data_accepted, marker='o', linestyle='-', color='g', label='Accepted Recommendation')
+    
+    # # # Cr    ear tres gráficos de líneas para cada variable
+    # # plt.plot(times, data_notified, marker='o', linestyle='-', color='b', label='Notified Recommendation')
+    # # Calcular la media acumulada de la variable mientras avanzamos en el tiempo
     # media_accum = np.zeros(len(times))
     # for i in range(len(times)):
-    #     current_slice = data_accepted[:i + 1]
+    #     current_slice = data_notified[:i + 1]
     #     media_accum[i] = np.mean(current_slice)
 
     # # Trazar la media acumulada de la variable
     # plt.plot(times, media_accum, linestyle='--', color='black', label='Media Acumulada')
+    # #Calcular la media móvil con ventana de 10 puntos (ajustable según tus necesidades)
+    # ventana = 25
+    # media_movil = np.convolve(data_notified, np.ones(ventana) / ventana, mode='valid')
+
+    # # Ajustar las unidades de tiempo para la media móvil
+    # unidades_tiempo_media_movil = times[(ventana - 1) // 2 : -(ventana - 1) // 2]
+
+    # # Trazar la media móvil
+    # plt.plot(unidades_tiempo_media_movil, media_movil, linestyle='--', color='black', label='Media Móvil')
+
+    # # Etiquetas, título y leyenda
+    # plt.xlabel('Time')
+    # plt.ylabel('Number')
+    # plt.title('Numer of recommendation')
+    # plt.legend()
+        
+    # # Mostrar la gráfica combinada
+    # plt.grid(True)
+    # plt.tight_layout()
+    # plt.xticks(rotation=45)  # Rotar etiquetas del eje x
+
+    # # Mostrar la gráfica
+    # plt.savefig("data_notified.jpg")    
+    
+    # plt.figure(figsize=(25, 6))  # Ancho x Alto
+
+    # plt.plot(times, data_accepted, marker='o', linestyle='-', color='g', label='Accepted Recommendation')
+    # # media_accum = np.zeros(len(times))
+    # # for i in range(len(times)):
+    # #     current_slice = data_accepted[:i + 1]
+    # #     media_accum[i] = np.mean(current_slice)
+
+    # # # Trazar la media acumulada de la variable
+    # # plt.plot(times, media_accum, linestyle='--', color='black', label='Media Acumulada')
+    # # # Cr    ear tres gráficos de líneas para cada variable
+    # ventana = 25
+    # media_movil = np.convolve(data_accepted, np.ones(ventana) / ventana, mode='valid')
+
+    # # Ajustar las unidades de tiempo para la media móvil
+    # unidades_tiempo_media_movil = times[(ventana - 1) // 2 : -(ventana - 1) // 2]
+
+    # # Trazar la media móvil
+    # plt.plot(unidades_tiempo_media_movil, media_movil, linestyle='--', color='black', label='Media Móvil')
+
+    # # Etiquetas, título y leyenda
+    # plt.xlabel('Time')
+    # plt.ylabel('Number')
+    # plt.title('Numer of recommendation')
+    # plt.legend()
+    # plt.xticks(rotation=45)  # Rotar etiquetas del eje x
+
+    # # Mostrar la gráfica combinada
+    # plt.grid(True)
+    # plt.tight_layout()
+    # # Mostrar la gráfica
+    # plt.savefig("data_accepted.jpg")  
+    # plt.figure(figsize=(25, 6))  # Ancho x Alto
+    
+    # plt.plot(times, data_realized, marker='o', linestyle='-', color='r', label='Realized Recommendation')
     # # Cr    ear tres gráficos de líneas para cada variable
-    ventana = 25
-    media_movil = np.convolve(data_accepted, np.ones(ventana) / ventana, mode='valid')
+    # # media_accum = np.zeros(len(times))
+    # # for i in range(len(times)):
+    # #     current_slice = data_realized[:i + 1]
+    # #     media_accum[i] = np.mean(current_slice)
 
-    # Ajustar las unidades de tiempo para la media móvil
-    unidades_tiempo_media_movil = times[(ventana - 1) // 2 : -(ventana - 1) // 2]
+    # # # Trazar la media acumulada de la variable
+    # # plt.plot(times, media_accum, linestyle='--', color='black', label='Media Acumulada')
+    # ventana = 25
+    # media_movil = np.convolve(data_realized, np.ones(ventana) / ventana, mode='valid')
 
-    # Trazar la media móvil
-    plt.plot(unidades_tiempo_media_movil, media_movil, linestyle='--', color='black', label='Media Móvil')
+    # # Ajustar las unidades de tiempo para la media móvil
+    # unidades_tiempo_media_movil = times[(ventana - 1) // 2 : -(ventana - 1) // 2]
 
-    # Etiquetas, título y leyenda
-    plt.xlabel('Time')
-    plt.ylabel('Number')
-    plt.title('Numer of recommendation')
-    plt.legend()
-    plt.xticks(rotation='vertical')  # Rotar etiquetas del eje x
+    # # Trazar la media móvil
+    # plt.plot(unidades_tiempo_media_movil, media_movil, linestyle='--', color='black', label='Media Móvil')
 
-    # Mostrar la gráfica combinada
-    plt.grid(True)
-    plt.tight_layout()
-    # Mostrar la gráfica
-    plt.savefig("data_accepted.jpg")  
-    plt.figure(figsize=(25, 6))  # Ancho x Alto
-    
-    plt.plot(times, data_realized, marker='o', linestyle='-', color='r', label='Realized Recommendation')
-    # Cr    ear tres gráficos de líneas para cada variable
-    # media_accum = np.zeros(len(times))
-    # for i in range(len(times)):
-    #     current_slice = data_realized[:i + 1]
-    #     media_accum[i] = np.mean(current_slice)
-
-    # # Trazar la media acumulada de la variable
-    # plt.plot(times, media_accum, linestyle='--', color='black', label='Media Acumulada')
-    ventana = 25
-    media_movil = np.convolve(data_realized, np.ones(ventana) / ventana, mode='valid')
-
-    # Ajustar las unidades de tiempo para la media móvil
-    unidades_tiempo_media_movil = times[(ventana - 1) // 2 : -(ventana - 1) // 2]
-
-    # Trazar la media móvil
-    plt.plot(unidades_tiempo_media_movil, media_movil, linestyle='--', color='black', label='Media Móvil')
-
-    # Cr    ear tres gráficos de líneas para cada variable
-    # Etiquetas, título y leyenda
-    plt.xlabel('Time')
-    plt.ylabel('Number')
-    plt.title('Numer of recommendation')
-    plt.legend()
+    # # Cr    ear tres gráficos de líneas para cada variable
+    # # Etiquetas, título y leyenda
+    # plt.xlabel('Time')
+    # plt.ylabel('Number')
+    # plt.title('Numer of recommendation')
+    # plt.legend()
         
-    # Mostrar la gráfica combinada
-    plt.grid(True)
-    plt.tight_layout()
-    plt.xticks(rotation='vertical')  # Rotar etiquetas del eje x
+    # # Mostrar la gráfica combinada
+    # plt.grid(True)
+    # plt.tight_layout()
+    # plt.xticks(rotation=45)  # Rotar etiquetas del eje x
 
-    # Mostrar la gráfica
-    plt.savefig("data_realized.jpg")  
+    # # Mostrar la gráfica
+    # plt.savefig("data_realized.jpg")  
+    # print("rate_number: ", number_of_recomendation_rate(campaign_id=cam.id,times=times, db=db))
+    # print("user_rate;", number_of_recomendation_rate_users(campaign_id=cam.id,times=times, db=db))
+    # return None
+
+
+
+
+@api_router_demo.post("/campaign/metrics", status_code=201, response_model=None)
+def metric_calculation(
+    hive_id:int,
+    campaign_id:int,
+    db: Session = Depends(deps.get_db)):
+    """
+    Create different pictures with the amount of recommendations for the period of the campaign.
+    """
+    cam = crud.campaign.get(db=db, id=campaign_id)
+    start = cam.start_datetime
+    end = cam.end_datetime
+    dur = int((end - start).total_seconds())
+    times = []
+    data_accepted = []
+    data_notified = []
+    data_realized = []
+
+    for segundo in range(60, int(dur), 60):
+        time = start + timedelta(seconds=segundo)
+        list_slots = crud.slot.get_list_slot_time(db=db, time=time)
+        accepted_Recomendation = 0
+        notidied_recomendation = 0
+        realize_recommendation = 0
+        times.append(time)
+
+        if list_slots != []:
+            for slot in list_slots:
+                accepted_Recomendation += len(crud.recommendation.get_aceptance_state_of_slot(db=db, time=time,slot_id=slot.id))
+                realize_recommendation += len(crud.recommendation.get_relize_state_of_slot(db=db, slot_id=slot.id,time=time))
+                notidied_recomendation += len(crud.recommendation.get_notified_state_of_slot(db=db, slot_id=slot.id,time=time))
+        data_accepted.append(accepted_Recomendation)
+        data_notified.append(notidied_recomendation)
+        data_realized.append(realize_recommendation)
+
+    fig, axs = plt.subplots(3, 1, figsize=(15, 15), sharex=True)
+
+    # axs[0].plot(times, data_notified, marker='o', linestyle='-', color='b', label='Notified Recommendation')
+    # axs[0].axhline(y=np.mean(data_notified), color='black', linestyle='--', label='Mean')
+    # axs[0].set_title('Number of Notified Recommendations')
+    # axs[0].set_ylabel('Number')
+    # axs[0].legend()
+
+    # axs[1].plot(times, data_accepted, marker='o', linestyle='-', color='g', label='Accepted Recommendation')
+    # axs[1].axhline(y=np.mean(data_accepted), color='black', linestyle='--', label='Mean')
+    # axs[1].set_title('Number of Accepted Recommendations')
+    # axs[1].set_ylabel('Number')
+    # axs[1].legend()
+
+    axs[2].plot(times, data_realized, marker='o', linestyle='-', color='r', label='Realized Recommendation')
+    axs[2].axhline(y=np.mean(data_realized), color='black', linestyle='--', label='Mean')
+    axs[2].set_title('Number of Realized Recommendations')
+    axs[2].set_xlabel('Time')
+    axs[2].set_ylabel('Number')
+    axs[2].legend()
+
+    for ax in axs:
+        ax.grid(True)
+        ax.tick_params(axis='x', rotation=45)
+        ax.tick_params(axis='both', which='major', labelsize=10)
+
+    plt.tight_layout()
+    plt.savefig("recommendations_metrics.jpg")
+    plt.show()
+
     print("rate_number: ", number_of_recomendation_rate(campaign_id=cam.id,times=times, db=db))
     print("user_rate;", number_of_recomendation_rate_users(campaign_id=cam.id,times=times, db=db))
     return None
+
+
 
 #TODO! la metrica no tiene en cuenta la camapaña! 
 @api_router_demo.post("/metric/recomendation_rate", status_code=201, response_model=float)
@@ -310,7 +430,10 @@ def number_of_recomendation_rate(campaign_id:int,times:List, db: Session = Depen
                 
     result=0
     for cell_id in list(number_of_recomendation_notified_and_not_realize.keys()):
-        result = result + number_or_recomendation_realize[cell_id]/number_of_recomendation_notified_and_not_realize[cell_id]
+        if number_of_recomendation_notified_and_not_realize[cell_id]==0:
+            result=result+0
+        else:
+            result = result + number_or_recomendation_realize[cell_id]/number_of_recomendation_notified_and_not_realize[cell_id]
 
     cardinal=len(list(number_of_recomendation_notified_and_not_realize.keys()))
     return result/cardinal

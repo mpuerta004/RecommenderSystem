@@ -145,13 +145,13 @@ def show_recomendation(*, cam: Campaign, user: Member, result: list(), time: dat
 
                     list_point.append([lat2, lon2])
                 folium.Polygon(locations=list_point, color='black', fill_color=color,
-                            weight=1, popup=(folium.Popup(str(j.id))), opacity=0.5, fill_opacity=0.85).add_to(mapObj)
+                            weight=1, popup=(folium.Popup(str(expected_measurements))), opacity=0.5, fill_opacity=0.85).add_to(mapObj)
 
                 folium.Marker(list_point[3],popup=f"Number of Expected measurements: {expected_measurements}",
                             icon=DivIcon(
                     icon_size=(200, 36),
                     icon_anchor=(0, 0),
-                    html=f'<div style="font-size: 20pt">{Cardinal_actual}</div>'
+                    html=f'<div style="font-size: 10pt">{Cardinal_actual, expected_measurements}</div>'
                 )
                 ).add_to(mapObj)
                 
@@ -188,7 +188,7 @@ def show_recomendation(*, cam: Campaign, user: Member, result: list(), time: dat
                                 <br>
                                 '''.format(variables.dict_icon_simbols["User's Position"],variables.dict_color_simbols_recommendation["User's Position"])
                                 )).add_to(mapObj)
-    direcion_html = f"/recommendersystem/src/Servicio/app/Pictures/Recomendaciones_html/{time.strftime('%m-%d-%Y-%H-%M-%S')}User_id{user.id}Cam{cam.id}HI{cam.hive_id}.html"
+    direcion_html = f"/recommendersystem/src/Servicio/app/Pictures/Recomendaciones_html_PAPER/{time.strftime('%m-%d-%Y-%H-%M-%S')}User_id{user.id}Cam{cam.id}HI{cam.hive_id}.html"
 
     # direcion_png = f"/recommendersystem/src/Servicio/app/Pictures/Recomendaciones/{time.strftime('%m-%d-%Y-%H-%M-%S')}User_id{user.id}.Cam{cam.id}Hi{cam.hive_id}.png"
     legend_html=legend_measurements_scale(time.strftime('%m/%d/%Y, %H:%M:%S'))
@@ -274,7 +274,7 @@ def show_recomendation_with_thesholes(*, cam: Campaign, result: list(), time: da
                             icon=DivIcon(
                     icon_size=(200, 36),
                     icon_anchor=(0, 0),
-                    html=f'<div style="font-size: 20pt">{Cardinal_actual, expected_measurements}</div>'
+                    html=f'<div style="font-size: 10pt">{Cardinal_actual, expected_measurements}</div>'
                 )
                 ).add_to(mapObj)
 
@@ -424,11 +424,11 @@ def show_hive(
                     icon_size=(200, 36),
                     icon_anchor=(0, 0),
                     
-                    html=f'<div style="font-size: 20pt;color:{color_number};">{Cardinal_actual}</div>'
+                    html=f'<div style="font-size: 10pt;color:{color_number};">{Cardinal_actual,expected_measurements}</div>'
                 )
                 ).add_to(mapObj)
 
-    direcion_html = f"/recommendersystem/src/Servicio/app/Pictures/Measurements_html/{time.strftime('%m-%d-%Y-%H-%M-%S')}Hi{hive_id}.html"
+    direcion_html = f"/recommendersystem/src/Servicio/app/Pictures/Measurements_html_PAPER/{time.strftime('%m-%d-%Y-%H-%M-%S')}Hi{hive_id}.html"
     # direcion_png = f"/recommendersystem/src/Servicio/app/Pictures/Measurements/{time.strftime('%m-%d-%Y-%H-%M-%S')}Hi{hive_id}.png"
     
     legend_html = legend_measurements_scale(time.strftime('%m/%d/%Y, %H:%M:%S'))
@@ -500,7 +500,7 @@ def show_a_campaign(
                           icon=DivIcon(
                 icon_size=(200, 36),
                 icon_anchor=(0, 0),
-                html=f'<div style="font-size: 20pt">{Cardinal_actual}</div>',
+                html=f'<div style="font-size: 10pt">{Cardinal_actual}</div>',
             )
             ).add_to(mapObj)
 

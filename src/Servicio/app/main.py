@@ -13,7 +13,7 @@ from fastapi.templating import Jinja2Templates
 from fastapi_utils.session import FastAPISessionMaker
 from datetime import datetime,timedelta
 from funtionalities import prioriry_calculation
-SQLALCHEMY_DATABASE_URL = "mysql+mysqlconnector://root:mypasswd@mysql:3306/SocioBeeMVE"
+SQLALCHEMY_DATABASE_URL = "mysql+mysqlconnector://mve:mvepasswd123@mysql:3306/SocioBeeMVE"
 sessionmaker = FastAPISessionMaker(SQLALCHEMY_DATABASE_URL)
 
 
@@ -97,9 +97,9 @@ if __name__ == "__main__":
     import uvicorn
 
     # #Add this line to run the system. 
-    scheduler = BackgroundScheduler()
-    scheduler.add_job(final_funtion, 'interval', seconds=180)
-    scheduler.add_job(State_change, 'interval', seconds=60)
-    scheduler.start()
+    # scheduler = BackgroundScheduler()
+    # scheduler.add_job(final_funtion, 'interval', seconds=180)
+    # scheduler.add_job(State_change, 'interval', seconds=180)
+    # scheduler.start()
 
     uvicorn.run(app, host="0.0.0.0", port=8001, log_level="debug")

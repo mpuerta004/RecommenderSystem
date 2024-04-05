@@ -25,7 +25,7 @@ class User(object):
         if user is None:
             self.member=member
             self.id=member.id
-            self.probability_of_trajectory_recursivity=0.7
+            self.probability_of_trajectory_recursivity=random.random()
             self.trajectory= trajectory(member_id=member.id)
             listUSers.añadir(self)
             self.user_available_probability= variables.variables_comportamiento["user_availability"]
@@ -111,8 +111,8 @@ class User(object):
         # print(self.trajectory.direction)
         self.trajectory.update_direction()
         if len(list_recommendations)!=0:
-            #aletorio = random.random()   
-            #if aletorio > variables.variables_comportamiento["user_availability"]:
+            aletorio = random.random()   
+            if aletorio > variables.variables_comportamiento["user_availability"]:
                 user_position=list_recommendations[0].member_current_location 
                 lat_final, lon_final= self.trajectory.end_position
                 direction_long_user_way=user_position["Longitude"] - lon_final

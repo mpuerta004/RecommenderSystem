@@ -99,9 +99,9 @@ class trajectory(object):
             surface=crud.surface.get_surface_by_ids(db=db, campaign_id=campaign_id, surface_id=surface_id)
             boundary = surface.boundary
             distance_start = random.randint(
-                50, round(1000*(boundary.radius + 1.5*cam.cells_distance)))
+                50, round(1000*(boundary.radius)))
             distance_final = random.randint(
-                50, round(1000*(boundary.radius + 1.5*cam.cells_distance)))
+                50, round(1000*(boundary.radius )))
             distance_start = distance_start/1000
             distance_final = distance_final/1000
             
@@ -109,6 +109,7 @@ class trajectory(object):
             direccion_end = random.randint(0, 360)
             lon1 = boundary.centre['Longitude']
             lat1 = boundary.centre['Latitude']
+            print("Posicion user-----------------------", (lat1, lon1))
             lat_init, lon_init = get_point_at_distance(
                 lat1=lat1, lon1=lon1, d=distance_start, bearing=direction_start)
             lat_end, lon_end = get_point_at_distance(
