@@ -38,6 +38,11 @@ class CRUDPriority(CRUDBase[Priority, PriorityCreate,PriorityUpdate]):
             return db.query(Priority).filter(and_(Priority.datetime<=time,Priority.slot_id == slot_id)).order_by(Priority.datetime.desc()).first()
         except Exception as e:
                         raise HTTPException(status_code=500, detail=f"Error with mysql {e}" )
+    def get_by_slot_and_current_time(self, *, db: Session, slot_id:int,time:datetime) -> Priority :
+        try:
+            return db.query(Priority).filter(and_(Priority.datetime==time,Priority.slot_id == slot_id)).order_by(Priority.datetime.desc()).first()
+        except Exception as e:
+                        raise HTTPException(status_code=500, detail=f"Error with mysql {e}" )
     def get_by_slot(self, *, db: Session, slot_id:int) -> Priority :
         try:
             return db.query(Priority).filter(Priority.slot_id == slot_id).first()

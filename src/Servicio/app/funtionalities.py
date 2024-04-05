@@ -222,12 +222,14 @@ def prioriry_calculation(time: datetime, cam: Campaign, db: Session = Depends(de
                     n_cells = crud.cell.get_count_cells(db=db, campaign_id=cam.id)
                     trendy = (measurement_of_cell/total_measurements)*n_cells
                 #Create the prioritu
-                a=crud.priority.get_by_slot_and_time(db=db, slot_id=slot.id, time= time)
-                priority_create = PriorityCreate(
-                        slot_id=slot.id, datetime=time, temporal_priority=result, trend_priority=trendy)  
-                priority = crud.priority.create_priority_detras(
-                        db=db, obj_in=priority_create)
-                db.commit()
+                
+                a=crud.priority.get_by_slot_anget_by_slot_and_current_timed_time(db=db, slot_id=slot.id, time= time)
+                if a is None:
+                    priority_create = PriorityCreate(
+                            slot_id=slot.id, datetime=time, temporal_priority=result, trend_priority=trendy)  
+                    priority = crud.priority.create_priority_detras(
+                            db=db, obj_in=priority_create)
+                    db.commit()
     return None
 
 
