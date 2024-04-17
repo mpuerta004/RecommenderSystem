@@ -28,7 +28,7 @@ from schemas.Priority import Priority, PriorityCreate, PrioritySearchResults
 import deps
 from datetime import datetime, timezone
 from datetime import datetime, timezone, timedelta
-from vincenty import vincenty
+# import vincenty
 from Demo.user_behaviour import User
 # import folium.colormap as cm
 import folium.plugins
@@ -43,11 +43,11 @@ def legend_measurements_scale(time:str):
     # Create the legend with a white background and opacity 0.5
     legend_html = '''
         <div style="position: fixed; 
-            bottom: 80px; left: 90px; width: 290px; height: 240px; 
+            bottom: 50px; left: 90px; width: 290px; height: 200px; 
             border:2px solid grey; z-index:9999;
             background-color: rgba(255, 255, 255, 0.75);
             font-size:15px;">
-            <p style="margin:10px;"><b>Progress of measurements</b></p>
+            <p style="margin:10px;"><b>Progress of Tasks </b></p>
             '''
     # Add the colored boxes to the legend
     for i in range(len(variables.color_list_hex)):
@@ -58,19 +58,42 @@ def legend_measurements_scale(time:str):
             <p style="display: inline-block; margin-left: 10px;">{}</p>
             <br>
             '''.format(variables.color_list_hex[i], variables.names_legend_color[i])
-    legend_html += '''
-    <div ></div><p style=display: inline-block; margin-left: 5px;">time: {}</p>
-    '''.format(time)
+    # legend_html += '''
+    # <div ></div><p style=display: inline-block; margin-left: 5px;">time: {}</p>
+    # '''.format(time)
     legend_html += '</div>'
     return legend_html
-
-
+def legend_generation(time: str):
+    
+    legend_html_2 = '''
+        <div style="position: fixed; 
+            bottom: 480px; left: 90px; width:  290px; height: auto;
+            border: 2px solid grey; z-index: 9999;
+            background-color: rgba(255, 255, 255, 0.75);
+            font-size: 15px; padding: 10px;">
+            <p style="margin: 0;"><b>Legend</b></p>
+            '''
+    # Add the map-legend symbols to the legend
+    legend_html_2 += '''
+    <div style="margin-top: 5px; vertical-align: middle;"><p style="display: inline-block; margin: 0;">(x, y)</p></div>
+    '''
+    legend_html_2 += '''
+    <div style="margin-top: 5px; vertical-align: middle;"><p style="display: inline-block; margin: 0;">-- x: Number of Realized Tasks</p></div>
+    '''
+    legend_html_2 += '''
+    <div style="margin-top: 5px; vertical-align: middle;"><p style="display: inline-block; margin: 0;">-- y: Number of Accepted Tasks</p></div>
+    '''
+    legend_html_2 += '''
+    <div style="margin-top: 5px;"><p style="display: inline-block; margin: 0;">Time: {}</p></div>
+    '''.format(time)
+    legend_html_2 += '</div>'
+    return legend_html_2
 
 def legend_generation_recommendation(time:str):
     
     legend_html_2 = '''
         <div style="position: fixed; 
-            bottom: 350px; left: 90px; width: 290px; height: 170px; 
+            bottom: 275px; left: 90px; width: 290px; height: 170px; 
             border:2px solid grey; z-index:9999;
             background-color: rgba(255, 255, 255, 0.75);
             font-size:15px;">
@@ -90,7 +113,7 @@ def legend_generation_recommendation(time:str):
     return  legend_html_2
 
 
-def show_recomendation(*, cam: Campaign, user: Member, result: list(), time: datetime, recomendation: Recommendation, db: Session = Depends(deps.get_db)) -> Any:
+def show_recomendation(*, cam: Campaign, user: Member,  user_2:User, result: list(), time: datetime, recomendation: Recommendation, db: Session = Depends(deps.get_db)) -> Any:
     if result is []:
         return True
     
@@ -188,6 +211,15 @@ def show_recomendation(*, cam: Campaign, user: Member, result: list(), time: dat
                                 <br>
                                 '''.format(variables.dict_icon_simbols["User's Position"],variables.dict_color_simbols_recommendation["User's Position"])
                                 )).add_to(mapObj)
+        (lat2, lon2)=user_2.trajectory.end_position
+        folium.Marker(location=[float(lat2), float(lon2)],
+                  icon= DivIcon( icon_anchor=(19, 19),  html='''
+                             <i class="{} fa-4x"
+                                style="color:blue"></i>
+                            <br>
+                            '''.format( variables.dict_icon_simbols["User's Position"])
+                            ),popup=(folium.Popup(str(user_2.trajectory.direction)))).add_to(mapObj)
+    
     direcion_html = f"/recommendersystem/src/Servicio/app/Pictures/Recomendaciones_html_PAPER/{time.strftime('%m-%d-%Y-%H-%M-%S')}User_id{user.id}Cam{cam.id}HI{cam.hive_id}.html"
 
     # direcion_png = f"/recommendersystem/src/Servicio/app/Pictures/Recomendaciones/{time.strftime('%m-%d-%Y-%H-%M-%S')}User_id{user.id}.Cam{cam.id}Hi{cam.hive_id}.png"
@@ -197,6 +229,8 @@ def show_recomendation(*, cam: Campaign, user: Member, result: list(), time: dat
     # Add the map-legend symbols to the legend
     legend_html_2 = legend_generation_recommendation(time.strftime('%m/%d/%Y, %H:%M:%S'))
     mapObj.get_root().html.add_child(folium.Element(legend_html))
+    legend_html_3= legend_generation(time.strftime('%m/%d/%Y, %H:%M:%S'))
+    mapObj.get_root().html.add_child(folium.Element(legend_html_3))
 
     mapObj.get_root().html.add_child(folium.Element(legend_html_2))
     mapObj.save(direcion_html)
@@ -430,7 +464,8 @@ def show_hive(
 
     direcion_html = f"/recommendersystem/src/Servicio/app/Pictures/Measurements_html_PAPER/{time.strftime('%m-%d-%Y-%H-%M-%S')}Hi{hive_id}.html"
     # direcion_png = f"/recommendersystem/src/Servicio/app/Pictures/Measurements/{time.strftime('%m-%d-%Y-%H-%M-%S')}Hi{hive_id}.png"
-    
+    legend_html_3= legend_generation(time.strftime('%m/%d/%Y, %H:%M:%S'))
+    mapObj.get_root().html.add_child(folium.Element(legend_html_3))
     legend_html = legend_measurements_scale(time.strftime('%m/%d/%Y, %H:%M:%S'))
     mapObj.get_root().html.add_child(folium.Element(legend_html))
     mapObj.save(direcion_html)
@@ -508,8 +543,9 @@ def show_a_campaign(
     direcion_html = f"/recommendersystem/src/Servicio/app/Pictures/Measurements_html/{time.strftime('%m-%d-%Y-%H-%M-%S')}Cam{campañas_activas.id}Hi{campañas_activas.hive_id}.html"
     # print(direcion)
     # cv2.imwrite(direcion, imagen)
-    direcion_png = f"/recommendersystem/src/Servicio/app/Pictures/Measurements/{time.strftime('%m-%d-%Y-%H-%M-%S')}Cam{campañas_activas.id}Hi{campañas_activas.hive_id}.png"
-    
+    legend_html_3= legend_generation(time.strftime('%m/%d/%Y, %H:%M:%S'))
+    mapObj.get_root().html.add_child(folium.Element(legend_html_3))
+
     mapObj.get_root().html.add_child(folium.Element(legend_measurements_scale(time.strftime('%m/%d/%Y, %H:%M:%S'))))
     mapObj.save(direcion_html)
 

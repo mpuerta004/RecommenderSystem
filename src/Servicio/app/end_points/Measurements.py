@@ -13,7 +13,8 @@ from schemas.Cell import Cell, CellCreate, CellSearchResults, Point
 from schemas.Measurement import (Measurement, MeasurementCreate,
                                  MeasurementSearchResults, MeasurementUpdate)
 from sqlalchemy.orm import Session
-from vincenty import vincenty
+from vincenty import vincenty_inverse
+
 # from timezonefinder import TimezoneFinder
 from datetime import datetime, timezone, timedelta
 from funtionalities import update_thesthold_based_action, prioriry_calculation
@@ -163,7 +164,7 @@ def create_measurement(
                 centre= boundary.centre
                 radius = boundary.radius
                 
-                distance = vincenty(( centre['Latitude'],centre['Longitude']), ( recipe_in.location['Latitude'],recipe_in.location['Longitude']))
+                distance = vincenty_inverse(( centre['Latitude'],centre['Longitude']), ( recipe_in.location['Latitude'],recipe_in.location['Longitude']))
                 #USer are in the surface of the campaign
                 if distance <= (radius + campaign.cells_distance):
                     list_cells = crud.cell.get_cells_campaign(db=db, campaign_id=i.campaign_id)
@@ -172,7 +173,7 @@ def create_measurement(
                     if list_cells is not []:
                         for cell in list_cells:
                             #distance of user to a cell.
-                            distance2 = vincenty(( cell.centre['Latitude'],cell.centre['Longitude']), ( recipe_in.location['Latitude'],recipe_in.location['Longitude']))
+                            distance2 = vincenty_inverse(( cell.centre['Latitude'],cell.centre['Longitude']), ( recipe_in.location['Latitude'],recipe_in.location['Longitude']))
                             # 
                             if distance2 <= hipotenusa:
                                 list_posible_cells_surface_campaign_distance.append((cell, surface, campaign, distance2))

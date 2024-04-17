@@ -4,7 +4,7 @@ import crud
 from datetime import datetime, timedelta, timezone
 from bio_inspired_recommender import variables_bio_inspired as variables
 from schemas.Recommendation import state, Recommendation, RecommendationCell, RecommendationCellSearchResults, RecommendationCreate, RecommendationSearchResults, RecommendationUpdate
-from vincenty import vincenty
+from vincenty import vincenty_inverse
 from funtionalities import get_point_at_distance, prioriry_calculation, point_to_line_distance
 from datetime import datetime, timedelta
 import deps

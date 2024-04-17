@@ -6,7 +6,8 @@ from typing import Any, Dict, Generic, List, Optional, Type, TypeVar, Union
 import crud
 import deps
 import folium
-from vincenty import vincenty
+from vincenty import vincenty_inverse
+
 from datetime import datetime, timedelta
 from sqlalchemy.orm import Session
 from fastapi import (APIRouter, Depends,
@@ -15,7 +16,7 @@ from fastapi.responses import HTMLResponse
 from fastapi_utils.session import FastAPISessionMaker
 from folium.features import DivIcon
 from numpy import arccos, cos, pi, round, sin
-from vincenty import vincenty
+# import vincenty
 
 import pytz
 from geopy.geocoders import Nominatim

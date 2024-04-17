@@ -2,7 +2,7 @@ from fastapi_utils.session import FastAPISessionMaker
 import asyncio
 from fastapi import APIRouter, Query, HTTPException, Request, Depends
 from sqlalchemy.orm import Session
-from vincenty import vincenty
+from vincenty import vincenty_inverse
 
 from schemas.Slot import Slot, SlotCreate, SlotSearchResults
 from schemas.Boundary import Boundary, BoundaryCreate, BoundarySearchResults, BoundaryUpdate

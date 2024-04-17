@@ -12,7 +12,7 @@ import matplotlib
 import matplotlib.pyplot as plt
 from datetime import datetime, timezone
 from datetime import datetime, timezone, timedelta
-from vincenty import vincenty
+# import vincenty
 from funtionalities import get_point_at_distance, prioriry_calculation
 import crud
 from datetime import datetime, timedelta
@@ -29,7 +29,7 @@ from math import sin, cos, atan2, sqrt, radians, degrees, asin
 from fastapi.responses import HTMLResponse
 from folium.plugins import HeatMap
 from bio_inspired_recommender import bio_inspired_recomender
-from Heuristic_recommender.Recommendation import create_recomendation_per_campaign
+from Heuristic_recommender.Recommendation import create_recomendation_system_per_campaign, create_recomendation_per_campaign
 import Demo.variables as variables
 from Demo.map_funtions import show_hive,show_recomendation_with_thesholes,show_recomendation
 import random
@@ -62,8 +62,7 @@ def asignacion_recursos_hive(
         time = start + timedelta(seconds=segundo)
         prioriry_calculation(time=time, cam=cam, db=db)
         show_hive(hive_id=hive_id, time=time, db=db)
-       
-       
+        
         
         #Change the old recomendations in accepted and notified state to non realized state
         Current_time = datetime(year=time.year, month=time.month, day=time.day,
@@ -96,14 +95,16 @@ def asignacion_recursos_hive(
                 bool=user.user_available(db=db, hive_id=hive_id)
                 if bool is True:
                     list_users_available.append(user)
-            print(len(list_users_available))
+            # print(len(list_users_available))
             if list_users_available != []:
                 for user_class in list_users_available:
-                    user_class.user_new_position(time=time, db=db)
+                    user_class.user_new_position(time=time, db=db,hive_id=hive_id)
                     lat, lon = user_class.trajectory.posicion
                     if lat is not None and lon is not None:
                         a = RecommendationCreate(member_current_location={
                                                 'Longitude': lon, 'Latitude': lat}, recommendation_datetime=time)
+                        # recomendaciones=create_recomendation_system_per_campaign(db=db,member_id=user_class.id,recipe_in=a,campaign_id=campaign_id,time=time)
+
                         recomendaciones=create_recomendation_per_campaign(db=db,member_id=user_class.id,recipe_in=a,campaign_id=campaign_id,time=time)
                         # recomendaciones = bio_inspired_recomender.create_recomendation(member_id=user_class.member.id,recipe_in=a,db=db,time=time,campaign_id=campaign_id)
                         if recomendaciones is not None and "results" in recomendaciones and  len(recomendaciones['results']) > 0:
@@ -112,10 +113,11 @@ def asignacion_recursos_hive(
                             
                             if recomendation_coguida is not None:
                                 # show_recomendation_with_thesholes(db=db, user=user_class, cam=cam, result=recc,time=time,recomendation=recomendation_coguida)
-                                show_recomendation(db=db, cam=cam, user=user_class.member, time=time, result=recc,recomendation=recomendation_coguida)
+                                if user_class.id==1:
+                                    show_recomendation(db=db, user_2=user_class, cam=cam, user=user_class.member, time=time, result=recc,recomendation=recomendation_coguida)
                                 recomendation_a_polinizar = crud.recommendation.get_recommendation(db=db, member_id=user_class.member.id, recommendation_id=recomendation_coguida.id)
                                 recomendacion_polinizar = crud.recommendation.update(
-                                    db=db, db_obj=recomendation_a_polinizar, obj_in={"state": "ACCEPTED", "update_datetime": time})
+                                     db=db, db_obj=recomendation_a_polinizar, obj_in={"state": "ACCEPTED", "update_datetime": time})
                                 db.commit()
                                 db.commit()
                                 mediciones.append(
@@ -128,7 +130,7 @@ def asignacion_recursos_hive(
             mediciones[i][2] = int(mediciones[i][2]) - 60
             if mediciones[i][2] <= 0:
                 aletorio = random.random()
-                if aletorio > user_class.user_realize:
+                if aletorio >= user_class.user_realize:
                     slot = crud.slot.get(db=db, id=mediciones[i][1].slot_id)
                     cell = crud.cell.get_Cell(db=db, cell_id=slot.cell_id)
                     Member_Device_user = crud.member_device.get_by_member_id(
@@ -158,12 +160,12 @@ def asignacion_recursos_hive(
         data_accepted.append(accepted_Recomendation)
         data_notified.append(notidied_recomendation)
         data_realized.append(realize_recommendation)
-    with open("output.csv", "wb") as f:
+    with open("output.csv", "w") as f:
         writer = csv.writer(f)
-        writer.writerows(times)
-        writer.writerows(data_accepted)
-        writer.writerows(data_notified)
-        writer.writerows(data_realized)
+        writer.writerow(times)
+        writer.writerow(data_accepted)
+        writer.writerow(data_notified)
+        writer.writerow(data_realized)
     
     fig, axs = plt.subplots(3, 1, figsize=(15, 15), sharex=True)
 
@@ -171,7 +173,7 @@ def asignacion_recursos_hive(
         ax.plot(times, data, marker='o', linestyle='-', color=color, label=f'{label} Recommendation')
         window_size = 25  # Tamaño de la ventana para la media móvil
         mov_avg = np.convolve(data, np.ones(window_size) / window_size, mode='valid')
-        ax.plot(times[window_size-1:], mov_avg, linestyle='--', color='r', label=f'Moving Average ({window_size})')
+        ax.plot(times[window_size-1:], mov_avg, linestyle='--', label=f'Moving Average ({window_size})')
         ax.set_title(f'Number of {label} Recommendations')
         ax.set_ylabel('Number')
         ax.legend()

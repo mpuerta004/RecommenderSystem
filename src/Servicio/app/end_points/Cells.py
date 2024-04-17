@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 from typing import Any, Dict, Generic, List, Optional, Type, TypeVar, Union
 import crud
 import deps
-from vincenty import vincenty
+from vincenty import vincenty_inverse
 
 from crud import crud_cell
 from fastapi import (APIRouter, BackgroundTasks, Depends, FastAPI,
@@ -197,7 +197,7 @@ def create_cell(
     # Verify if the center of the new cell is inside the surface
     centre = surface.boundary.centre
     point = recipe_in.centre
-    distance = vincenty(( centre['Latitude'],centre['Longitude']), ( point[1],point[0]))
+    distance = vincenty_inverse(( centre['Latitude'],centre['Longitude']), ( point[1],point[0]))
     if distance <= surface.boundary.radius:
         cell = crud.cell.create_cell(db=db, obj_in=recipe_in, surface_id=surface_id)
         db.commit()
@@ -263,7 +263,7 @@ def update_cell(
     centre = surface.boundary.centre
     point = recipe_in.centre
     radius=surface.boundary.radius
-    distance = vincenty(( centre['Latitude'],centre['Longitude']), ( point[1],point[0]))
+    distance = vincenty_inverse(( centre['Latitude'],centre['Longitude']), ( point[1],point[0]))
 
     if distance <= radius:
         updated_cell= crud.cell.update(db=db, db_obj=cell, obj_in=recipe_in)

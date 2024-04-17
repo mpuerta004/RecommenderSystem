@@ -3,7 +3,7 @@ import crud
 from datetime import datetime, timedelta, timezone
 from bio_inspired_recommender import variables_bio_inspired
 from schemas.Recommendation import state, Recommendation, RecommendationCell, RecommendationCellSearchResults, RecommendationCreate, RecommendationSearchResults, RecommendationUpdate
-from vincenty import vincenty
+from vincenty import vincenty_inverse
 from datetime import datetime, timedelta
 import deps
 import pandas as pd 
@@ -15,7 +15,7 @@ from fastapi import FastAPI, APIRouter, Query, HTTPException, Request, Depends
 
 from sqlalchemy.orm import Session
 
-from vincenty import vincenty
+# import vincenty
 
 from typing import Any, Dict, Generic, List, Optional, Type, TypeVar, Union
 
@@ -132,7 +132,7 @@ def create_recomendation(
         list_of_cells=crud.cell.get_cells_campaign(db=db, campaign_id=campaign_id)
         far_away=True
         for cell in list_of_cells:
-            df_user_distance.loc[cell.id,"distance_cell_user"]=vincenty(
+            df_user_distance.loc[cell.id,"distance_cell_user"]=vincenty_inverse(
                 (cell.centre["Latitude"], cell.centre["Longitude"]), (user_location['Latitude'], user_location['Longitude']))
             if  df_user_distance.loc[cell.id,"distance_cell_user"] <=campaign.cells_distance*5:
                 far_away=False

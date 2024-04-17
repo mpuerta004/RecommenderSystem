@@ -18,7 +18,6 @@ from fastapi.responses import HTMLResponse
 from fastapi_utils.session import FastAPISessionMaker
 from folium.features import DivIcon
 from numpy import arccos, cos, pi, round, sin
-from vincenty import vincenty
 import branca
 import branca.colormap as cm
 from funtionalities import get_point_at_distance

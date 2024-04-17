@@ -19,7 +19,7 @@ from schemas.Slot import Slot, SlotCreate, SlotSearchResults
 from schemas.Bio_inspired import Bio_inspired, Bio_inspiredCreate, Bio_inspiredSearchResults, Bio_inspiredUpdate
 from schemas.Surface import Surface, SurfaceCreate, SurfaceSearchResults
 from sqlalchemy.orm import Session
-from vincenty import vincenty
+from vincenty import vincenty_inverse
 
 
 def get_point_at_distance(lat1, lon1, d, bearing, R=6371):
@@ -93,7 +93,7 @@ def create_cells_for_a_surface(surface: Surface, campaign: Campaign, centre, rad
                     final2 = [lon2, lat2]
             # Verify if the center of this cell is inside the boundary (Circle)
             for poin in list_point:
-                distance = vincenty(
+                distance = vincenty_inverse(
                     (centre['Latitude'], centre['Longitude']), (poin[1], poin[0]))
                 if distance <= radius:
                     cell_create = CellCreate(
@@ -120,7 +120,7 @@ def create_cells_for_a_surface(surface: Surface, campaign: Campaign, centre, rad
                         list_point.append([lon2, lat2])
             for poin in list_point:
                 # NOTE: Latitud has to be the first parameter and longitude the second!!!!!! in oder case the circle is a ellipse in the map!
-                distance = vincenty(
+                distance = vincenty_inverse(
                     (centre['Latitude'], centre['Longitude']), (poin[1], poin[0]))
                 if distance <= radius:
 
@@ -161,7 +161,7 @@ def point_to_line_distance(point, line_start, bearing):
     projected_point = (line_start[0] + dot_product * line_direction[0],
                   line_start[1] + dot_product * line_direction[1])
     
-    distance_to_line = vincenty((point[0], point[1]), projected_point)
+    distance_to_line = vincenty_inverse((point[0], point[1]), projected_point)
     
     return distance_to_line
 
@@ -180,14 +180,6 @@ def prioriry_calculation(time: datetime, cam: Campaign, db: Session = Depends(de
         for sur in surfaces:
             for cell in sur.cells:
                 momento = time
-                # Verify if momento is not in the first slot
-                # if (cam.start_datetime+timedelta(seconds=cam.sampling_period)).replace(tzinfo=timezone.utc) <= momento.replace(tzinfo=timezone.utc):
-                #     slot_pasado = crud.slot.get_slot_time(db=db, cell_id=cells.id, time=(
-                #         momento - timedelta(seconds=cam.sampling_period-1)))
-                #     Cardinal_pasado = crud.measurement.get_all_Measurement_from_cell_in_the_current_slot(
-                #         db=db, cell_id=cells.id, time=slot_pasado.end_datetime, slot_id=slot_pasado.id)
-                # else:
-                #     Cardinal_pasado = 0
                 slot = crud.slot.get_slot_time(
                     db=db, cell_id=cell.id, time=time)
                 if slot is None:
@@ -203,11 +195,8 @@ def prioriry_calculation(time: datetime, cam: Campaign, db: Session = Depends(de
                         db=db, time=time, slot_id=slot.id)
                     recommendation_accepted = crud.recommendation.get_aceptance_state_of_cell(
                     db=db, slot_id=slot.id)
-                    # print("Recomendation accepted", len(recommendation_accepted))
                     expected= Cardinal_actual + len(recommendation_accepted)
-                    # b = max(2, cam.min_samples - int(Cardinal_pasado))
-                    # a = max(2, cam.min_samples - int(Cardinal_actual))
-                    # result = math.log(a) * math.log(b, int(Cardinal_actual) + 2)
+                    
                     init = (momento.replace(tzinfo=timezone.utc) - cam.start_datetime.replace(tzinfo=timezone.utc)).total_seconds() / cam.sampling_period - (momento.replace(tzinfo=timezone.utc) - cam.start_datetime.replace(tzinfo=timezone.utc)).total_seconds() //cam.sampling_period 
 
                     # a = init - timedelta(seconds=((init).total_seconds() //
@@ -241,6 +230,12 @@ def prioriry_calculation(time: datetime, cam: Campaign, db: Session = Depends(de
                     priority = crud.priority.create_priority_detras(
                             db=db, obj_in=priority_create)
                     db.commit()
+                    #Coger todas las prioridades anteriores en ese slot y eliminarlas. 
+                    list_priority=crud.priority.get_all_in_slot(db=db, slot_id=slot.id,time=time)
+                    if list_priority is not None:
+                        for priority in list_priority:
+                            crud.priority.remove(db=db, Priority=priority)
+                            db.commit()
     return None
 
 
@@ -275,7 +270,7 @@ def create_List_of_points_for_a_boundary(cells_distance, centre, radius):
                     final2 = [lon2, lat2]
             # Verify if the center of this cell is inside the boundary (Circle)
             for poin in list_point:
-                distance = vincenty(
+                distance = vincenty_inverse(
                     (centre['Latitude'], centre['Longitude']), (poin[1], poin[0]))
                 if distance <= radius:
                     List_points.append({'Longitude': poin[0], 'Latitude': poin[1]})
@@ -293,7 +288,7 @@ def create_List_of_points_for_a_boundary(cells_distance, centre, radius):
                         list_point.append([lon2, lat2])
             for poin in list_point:
                 # NOTE: Latitud has to be the first parameter and longitude the second!!!!!! in oder case the circle is a ellipse in the map!
-                distance = vincenty(
+                distance = vincenty_inverse(
                     (centre['Latitude'], centre['Longitude']), (poin[1], poin[0]))
                 if distance <= radius:
                     List_points.append({'Longitude': poin[0], 'Latitude': poin[1]})
@@ -368,7 +363,7 @@ def get_cells_neighbour_id(cell_id:int, db: Session = Depends(deps.get_db)):
         campaign=crud.campaign.get(db=db, id=campaign_id)
         list_cell_campaign=crud.cell.get_cells_campaign(db=db, campaign_id=campaign_id)
         for cell in list_cell_campaign:
-            if vincenty((cell_origin.centre['Latitude'], cell_origin.centre['Longitude']), (cell.centre['Latitude'], cell.centre['Longitude']))<= variables_bio_inspired.neighbour_close*campaign.cells_distance:
+            if vincenty_inverse((cell_origin.centre['Latitude'], cell_origin.centre['Longitude']), (cell.centre['Latitude'], cell.centre['Longitude']))<= variables_bio_inspired.neighbour_close*campaign.cells_distance:
                 list_cell_cercanas.append(cell)
         return list_cell_cercanas
     

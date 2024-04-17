@@ -3,7 +3,7 @@ import crud
 from datetime import datetime, timedelta, timezone
 from bio_inspired_recommender import variables_bio_inspired as variables
 from schemas.Recommendation import state, Recommendation, RecommendationCell, RecommendationCellSearchResults, RecommendationCreate, RecommendationSearchResults, RecommendationUpdate
-from vincenty import vincenty
+from vincenty import vincenty_inverse
 from funtionalities import get_point_at_distance, prioriry_calculation, point_to_line_distance
 from datetime import datetime, timedelta
 import deps
@@ -48,8 +48,7 @@ class User(object):
             #Si tiene recomendaciones pendientes no esta disponible. 
             if len(list_of_recomendations) == 0:
                 aletorio = random.random()
-                if aletorio > self.user_available_probability:
-                    
+                if aletorio >= self.user_available_probability:
                     return True
             else:
                 return False 
@@ -77,7 +76,7 @@ class User(object):
         return cam, surface
     
     
-    def user_new_position(self, time:datetime, db: Session = Depends(deps.get_db)):
+    def user_new_position(self, time:datetime, hive_id:int,db: Session = Depends(deps.get_db)):
         #Si se ha acabado la trajectoria anterior en el ultimo paso! 
         if self.trajectory.end_trajectory==True:
             if self.trajectory.posicion_final_final==None:
@@ -88,12 +87,21 @@ class User(object):
                 cam, surface = self.seleccion_campaign_over_hive(hive_id=hive_id, time=time, db=db)
                 self.trajectory.generar_new_trajectory(campaign_id=cam.id,surface_id=surface.id, hive_id=hive_id,time=time, db=db)
                 self.trajectory.end_trajectory=False
+                if self.id==1:
+                    print("---------------------------------------/n")
+                    print(self.trajectory.posicion)
+                    print("inicial", self.trajectory.posicion_inicial_inicial)
+                    print("final", self.trajectory.posicion_final_final)
+
             else:
                 #En el caso de que no sea la primera trajectoria puedes ver si se va a repetir o no la trayectoria. 
                 aleatorio = random.random()
                 if aleatorio> self.probability_of_trajectory_recursivity:
                     self.trajectory.repeticion_trajectoria_inicial()
                     self.trajectory.end_trajectory=False
+                    if self.id==1:
+                        print("---------------------------------------/n")
+                        print(self.trajectory.posicion)
                 else:
                     hive_members=crud.hive_member.get_by_member_id(db=db, member_id=self.member.id)
                     hive_member= random.randint(0, len(hive_members)-1)
@@ -101,9 +109,17 @@ class User(object):
                     cam, surface = self.seleccion_campaign_over_hive(hive_id=hive_id, time=time, db=db)
                     self.trajectory.generar_new_trajectory(campaign_id=cam.id,surface_id=surface.id, hive_id=hive_id,time=time, db=db)
                     self.trajectory.end_trajectory=False
+                    if self.id==1:
+                        print("---------------------------------------/n")
+                        print(self.trajectory.posicion)
         else:
+            cam, surface = self.seleccion_campaign_over_hive(hive_id=hive_id, time=time, db=db)
+
             #Esto significa que ya esta en una trajectoria iniciada. 
-            self.trajectory.actualizar_poscion_trayectoria_iniciada()
+            self.trajectory.actualizar_poscion_trayectoria_iniciada(db=db, campaign_id=cam.id, hive_id=hive_id,surface_id=surface.id)
+            if self.id==1:
+                    print("---------------------------------------/n")
+                    print(self.trajectory.posicion)
     
     
     
@@ -111,8 +127,9 @@ class User(object):
         # print(self.trajectory.direction)
         self.trajectory.update_direction()
         if len(list_recommendations)!=0:
-            aletorio = random.random()   
-            if aletorio > variables.variables_comportamiento["user_availability"]:
+            # aletorio = random.random()   
+            # if aletorio >= variables.variables_comportamiento["user_availability"]:
+            if True:
                 user_position=list_recommendations[0].member_current_location 
                 lat_final, lon_final= self.trajectory.end_position
                 direction_long_user_way=user_position["Longitude"] - lon_final
@@ -124,10 +141,10 @@ class User(object):
                     cell=crud.cell.get_Cell(db=db, cell_id=cell_id)
                     direction_lat_cell=user_position["Latitude"] - cell.centre['Latitude']
                     direction_long_cell=user_position["Longitude"] - cell.centre['Longitude']
-                    distance= vincenty((user_position["Latitude"],user_position["Longitude"]), (cell.centre['Latitude'],cell.centre['Longitude']))
-                    distance_final= vincenty((user_position["Latitude"],user_position["Longitude"]), (lat_final,lon_final))
+                    distance= vincenty_inverse((user_position["Latitude"],user_position["Longitude"]), (cell.centre['Latitude'],cell.centre['Longitude']))
+                    distance_final= vincenty_inverse((user_position["Latitude"],user_position["Longitude"]), (lat_final,lon_final))
                     if distance<distance_final:
-                        if (np.sign(direction_long_user_way)==np.sign(direction_long_cell) and np.sign(direction_lat_user_way)==np.sign(direction_lat_cell)) or distance<=0.01:
+                        if (np.sign(direction_long_user_way)==np.sign(direction_long_cell) and np.sign(direction_lat_user_way)==np.sign(direction_lat_cell)) or distance<=0.001:
                             list_distance.append((i,distance))
                 if len(list_distance)!=0:
                     list_distance.sort(key=lambda recomendation_distance : (recomendation_distance[1 ]))

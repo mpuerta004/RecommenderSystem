@@ -55,7 +55,7 @@ import crud
 # import pytz
 from datetime import datetime, timedelta
 import math 
-from vincenty import vincenty
+from vincenty import vincenty_inverse
 import numpy as np
 from numpy import sin, cos, arccos, pi, round
 
@@ -581,7 +581,7 @@ def obtain_cell_center(
                 centre= boundary.centre
                 radius = boundary.radius
                 
-                distance = vincenty(( centre['Latitude'],centre['Longitude']), ( recipe_in.location['Latitude'],recipe_in.location['Longitude']))
+                distance = vincenty_inverse(( centre['Latitude'],centre['Longitude']), ( recipe_in.location['Latitude'],recipe_in.location['Longitude']))
                 #USer are in the surface of the campaign
                 if distance <= (radius + campaign.cells_distance):
                     list_cells = crud.cell.get_cells_campaign(db=db, campaign_id=i.campaign_id)
@@ -590,7 +590,7 @@ def obtain_cell_center(
                     if list_cells is not []:
                         for cell in list_cells:
                             #distance of user to a cell.
-                            distance2 = vincenty(( cell.centre['Latitude'],cell.centre['Longitude']), ( recipe_in.location['Latitude'],recipe_in.location['Longitude']))
+                            distance2 = vincenty_inverse(( cell.centre['Latitude'],cell.centre['Longitude']), ( recipe_in.location['Latitude'],recipe_in.location['Longitude']))
                             # 
                             if distance2 <= hipotenusa:
                                 list_posible_cells_surface_campaign_distance.append((cell, surface, campaign, distance2))

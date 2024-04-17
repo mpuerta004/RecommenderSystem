@@ -75,3 +75,6 @@ target/
 Untitled.xcf
 
 
+
+*.csv
+/src/Servicio/app/Demo/graficas/*.xlsx

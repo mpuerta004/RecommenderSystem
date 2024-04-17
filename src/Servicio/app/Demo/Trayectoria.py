@@ -3,7 +3,7 @@ import crud
 from datetime import datetime, timedelta, timezone
 from bio_inspired_recommender import variables_bio_inspired as variables
 from schemas.Recommendation import state, Recommendation, RecommendationCell, RecommendationCellSearchResults, RecommendationCreate, RecommendationSearchResults, RecommendationUpdate
-from vincenty import vincenty
+from vincenty import vincenty_inverse
 from funtionalities import get_point_at_distance, prioriry_calculation, point_to_line_distance
 from datetime import datetime, timedelta
 import deps
@@ -46,13 +46,13 @@ class trajectory(object):
             magnitud_w = np.linalg.norm(vector_ref)
 
             # Calcular el coseno del ángulo entre v y w usando la fórmula
-            coseno_angulo = producto_punto / (magnitud_v * magnitud_w)
-
+            vector_unitario = direction_vector / (magnitud_v ) #* magnitud_w)
+            angulo=np.arctan2(vector_unitario[1], vector_unitario[0])
             # Calcular el ángulo en radianes usando la función arcocoseno (arccos) para obtener el valor del ángulo
-            angulo_radianes = np.arccos(coseno_angulo)
+            # angulo_radianes = np.arccos(vector_unitario)
 
             # Convertir el ángulo de radianes a grados si se desea
-            self.direction = np.degrees(angulo_radianes)
+            self.direction = np.degrees(angulo)
             return self.direction
         else:
             return None
@@ -63,10 +63,17 @@ class trajectory(object):
     
     
     #TODO! cuando es el fin de la trajectoria no se muy bien si estoy devolviendo lo correcto.    
-    def actualizar_poscion_trayectoria_iniciada(self,):
+    def actualizar_poscion_trayectoria_iniciada(self,surface_id:int,campaign_id:int, hive_id:int, db: Session = Depends(deps.get_db)):
         #La trayectoria termino la interaccion pasada. 
-            distance=random.randint(0, 150)/1000
-            distancia_final_objetive= vincenty((self.posicion[0], self.posicion[1]), (self.end_position[0], self.end_position[1]))
+            cam = crud.campaign.get_campaign(
+                db=db, campaign_id=campaign_id, hive_id=hive_id)
+            
+            surface=crud.surface.get_surface_by_ids(db=db, campaign_id=campaign_id, surface_id=surface_id)
+            boundary = surface.boundary
+            distance = random.randint(
+                0, round(100*(boundary.radius + cam.cells_distance) ))
+            distancia_final_objetive= vincenty_inverse((self.posicion[0], self.posicion[1]), (self.end_position[0], self.end_position[1]))
+            distance=distance/100
             if distance > distancia_final_objetive:
                 #End_TRAJECTORY! 
                 self.end_trajectory=True
@@ -99,17 +106,17 @@ class trajectory(object):
             surface=crud.surface.get_surface_by_ids(db=db, campaign_id=campaign_id, surface_id=surface_id)
             boundary = surface.boundary
             distance_start = random.randint(
-                50, round(1000*(boundary.radius)))
+                0, round(100*(boundary.radius + cam.cells_distance) ))
             distance_final = random.randint(
-                50, round(1000*(boundary.radius )))
-            distance_start = distance_start/1000
-            distance_final = distance_final/1000
+                0, round(100*(boundary.radius +  cam.cells_distance)))
+            distance_start = distance_start/100
+            distance_final = distance_final/100
             
             direction_start = random.randint(0, 360)
             direccion_end = random.randint(0, 360)
             lon1 = boundary.centre['Longitude']
             lat1 = boundary.centre['Latitude']
-            print("Posicion user-----------------------", (lat1, lon1))
+            # print("Posicion user-----------------------", (lat1, lon1))
             lat_init, lon_init = get_point_at_distance(
                 lat1=lat1, lon1=lon1, d=distance_start, bearing=direction_start)
             lat_end, lon_end = get_point_at_distance(
