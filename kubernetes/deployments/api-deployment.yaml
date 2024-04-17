@@ -54,7 +54,7 @@ spec:
                   key: DATABASE_USERNAME
                   name: env
 
-          image: maitepuerta1997/mve:latest
+          image: maitepuerta1997/mve:main
           imagePullPolicy: Always
           name: mve
       restartPolicy: Always

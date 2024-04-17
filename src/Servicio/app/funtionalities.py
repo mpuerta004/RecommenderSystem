@@ -166,6 +166,8 @@ def point_to_line_distance(point, line_start, bearing):
     return distance_to_line
 
 
+
+
 def prioriry_calculation(time: datetime, cam: Campaign, db: Session = Depends(deps.get_db)) -> None:
     """
     Create the priorirty of a campaign (all its surfaces) based on the measurements
@@ -186,50 +188,56 @@ def prioriry_calculation(time: datetime, cam: Campaign, db: Session = Depends(de
                     print("Cuidado")
                     print(time)
                     print(f"Tengo id -> cell_id {cell.id} y slot {slot} ")
-                Cardinal_actual = crud.measurement.get_all_Measurement_from_cell_in_the_current_slot(
-                    db=db, time=time, slot_id=slot.id)
-                recommendation_accepted = crud.recommendation.get_aceptance_state_of_cell(
-                db=db, slot_id=slot.id)
-                # print("Recomendation accepted", len(recommendation_accepted))
-                expected= Cardinal_actual + len(recommendation_accepted)
-                # b = max(2, cam.min_samples - int(Cardinal_pasado))
-                # a = max(2, cam.min_samples - int(Cardinal_actual))
-                # result = math.log(a) * math.log(b, int(Cardinal_actual) + 2)
-                init = (momento.replace(tzinfo=timezone.utc) - cam.start_datetime.replace(tzinfo=timezone.utc)).total_seconds() / cam.sampling_period - (momento.replace(tzinfo=timezone.utc) - cam.start_datetime.replace(tzinfo=timezone.utc)).total_seconds() //cam.sampling_period 
-
-                # a = init - timedelta(seconds=((init).total_seconds() //
-                #                      cam.sampling_period)*cam.sampling_period)
-                if cam.min_samples == 0:  # To dont have a infinite reward.
-                    # print("prioridad sin ver mas alla", init - (Cardinal_actual) / cam.sampling_period)
-                    # print("prioridad viendo mas alla", init - (expected) / cam.sampling_period)
-                    result = init - (expected) / cam.sampling_period
+                    return None
+                priority=crud.priority.get_by_slot_and_exact_time(db=db, slot_id=slot.id,time=time)
+                if priority is not None:
+                    continue
                 else:
-                    if expected == cam.min_samples:
-                        result = -1.0
-                    else:
-                        result = init - expected/cam.min_samples
+                    Cardinal_actual = crud.measurement.get_all_Measurement_from_cell_in_the_current_slot(
+                        db=db, time=time, slot_id=slot.id)
+                    recommendation_accepted = crud.recommendation.get_aceptance_state_of_cell(
+                    db=db, slot_id=slot.id)
+                    expected= Cardinal_actual + len(recommendation_accepted)
+                    
+                    init = (momento.replace(tzinfo=timezone.utc) - cam.start_datetime.replace(tzinfo=timezone.utc)).total_seconds() / cam.sampling_period - (momento.replace(tzinfo=timezone.utc) - cam.start_datetime.replace(tzinfo=timezone.utc)).total_seconds() //cam.sampling_period 
+
+                    # a = init - timedelta(seconds=((init).total_seconds() //
+                    #                      cam.sampling_period)*cam.sampling_period)
+                    if cam.min_samples == 0:  # To dont have a infinite reward.
                         # print("prioridad sin ver mas alla", init - (Cardinal_actual) / cam.sampling_period)
                         # print("prioridad viendo mas alla", init - (expected) / cam.sampling_period)
-                    result = init - (expected) / cam.sampling_period
-                total_measurements = crud.measurement.get_all_Measurement_campaign(
-                    db=db, campaign_id=cam.id, time=time)
-                if total_measurements == 0.0:  # Important not divide by 0.0.
-                    trendy = 0.0
-                else:
-                    measurement_of_cell = crud.measurement.get_all_Measurement_from_cell(
-                        db=db, cell_id=cell.id, time=time)
+                        result = init - (expected) / cam.sampling_period
+                    else:
+                        if expected == cam.min_samples:
+                            result = -1.0
+                        else:
+                            result = init - expected/cam.min_samples
+                            # print("prioridad sin ver mas alla", init - (Cardinal_actual) / cam.sampling_period)
+                            # print("prioridad viendo mas alla", init - (expected) / cam.sampling_period)
+                        result = init - (expected) / cam.sampling_period
+                    total_measurements = crud.measurement.get_all_Measurement_campaign(
+                        db=db, campaign_id=cam.id, time=time)
+                    if total_measurements == 0.0:  # Important not divide by 0.0.
+                        trendy = 0.0
+                    else:
+                        measurement_of_cell = crud.measurement.get_all_Measurement_from_cell(
+                            db=db, cell_id=cell.id, time=time)
 
-                    n_cells = crud.cell.get_count_cells(db=db, campaign_id=cam.id)
-                    trendy = (measurement_of_cell/total_measurements)*n_cells
-                #Create the prioritu
-                
-                a=crud.priority.get_by_slot_and_current_time(db=db, slot_id=slot.id, time= time)
-                if a is None:
+                        n_cells = crud.cell.get_count_cells(db=db, campaign_id=cam.id)
+                        trendy = (measurement_of_cell/total_measurements)*n_cells
+                    #Create the priority
+                    
                     priority_create = PriorityCreate(
                             slot_id=slot.id, datetime=time, temporal_priority=result, trend_priority=trendy)  
                     priority = crud.priority.create_priority_detras(
                             db=db, obj_in=priority_create)
                     db.commit()
+                    #Coger todas las prioridades anteriores en ese slot y eliminarlas. 
+                    list_priority=crud.priority.get_all_in_slot(db=db, slot_id=slot.id,time=time)
+                    if list_priority is not None:
+                        for priority in list_priority:
+                            crud.priority.remove(db=db, Priority=priority)
+                            db.commit()
     return None
 
 

@@ -75,3 +75,4 @@ target/
 Untitled.xcf
 .env
 
+/recommendersystem/src/Servicio/app/Demo/graficas/*.xlsx

@@ -58,7 +58,21 @@ class CRUDPriority(CRUDBase[Priority, PriorityCreate,PriorityUpdate]):
             return db_obj
         except Exception as e:
                         raise HTTPException(status_code=500, detail=f"Error with mysql {e}" )
-   
+    def remove(self, db: Session, *, Priority:Priority) -> Priority:
+            try:    
+                obj = Priority
+                db.delete(obj)
+                db.commit()
+                return obj
+            except Exception as e:
+                raise HTTPException(status_code=500, detail=f"Error with mysql {e}" )
+    def get_all_in_slot(self, *, db: Session, slot_id:int,time:datetime) -> List[Priority] :
+        try:
+            return db.query(Priority).filter(and_(Priority.datetime<time,Priority.slot_id == slot_id)).order_by(Priority.datetime.desc()).all()
+        except Exception as e:
+                        raise HTTPException(status_code=500, detail=f"Error with mysql {e}" )
+    
+
 
 
 priority = CRUDPriority(Priority)
