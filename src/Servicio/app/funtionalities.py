@@ -189,7 +189,7 @@ def prioriry_calculation(time: datetime, cam: Campaign, db: Session = Depends(de
                     print(time)
                     print(f"Tengo id -> cell_id {cell.id} y slot {slot} ")
                     return None
-                priority=crud.priority.get_by_slot_and_exact_time(db=db, slot_id=slot.id,time=time)
+                priority=crud.priority.get_by_slot_and_current_time(db=db, slot_id=slot.id,time=time)
                 if priority is not None:
                     continue
                 else:
