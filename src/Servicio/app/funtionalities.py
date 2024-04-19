@@ -21,6 +21,8 @@ from schemas.Surface import Surface, SurfaceCreate, SurfaceSearchResults
 from sqlalchemy.orm import Session
 from vincenty import vincenty
 
+from schemas.Bio_inspired import Bio_inspired, Bio_inspiredCreate, Bio_inspiredSearchResults, Bio_inspiredUpdate
+from bio_inspired_recommender import variables_bio_inspired
 
 def get_point_at_distance(lat1, lon1, d, bearing, R=6371):
     """
@@ -388,6 +390,11 @@ def update_thesthold_based_action(
         list_cell_id_campaign=[cell.id for cell in list_cell_campaign] 
         for id in list_cell_id_campaign:
             bio_inspired=crud.bio_inspired.get_threshole(db=db, cell_id=id, member_id=member_id)
+            if bio_inspired is None:
+                        bio= Bio_inspiredCreate(cell_id=id, member_id=member_id,threshold=variables_bio_inspired.O_max)
+                        bio_inspired= crud.bio_inspired.create(db=db,obj_in=bio)
+                        db.commit()
+                        bio_inspired=crud.bio_inspired.get_threshole(db=db, cell_id=id, member_id=member_id)
             theshold = bio_inspired.threshold
             if id==cell_id:
                 new_theshold= theshold - variables_bio_inspired.e_0

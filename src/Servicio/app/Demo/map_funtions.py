@@ -30,6 +30,9 @@ from datetime import datetime, timezone
 from datetime import datetime, timezone, timedelta
 from vincenty import vincenty
 from Demo.user_behaviour import User
+from bio_inspired_recommender import variables_bio_inspired
+from schemas.Bio_inspired import Bio_inspired, Bio_inspiredCreate, Bio_inspiredSearchResults, Bio_inspiredUpdate
+
 # import folium.colormap as cm
 import folium.plugins
 
@@ -243,6 +246,11 @@ def show_recomendation_with_thesholes(*, cam: Campaign, result: list(), time: da
             count = count+1
             for j in i.cells:
                 bio_inpired= crud.bio_inspired.get_threshole(db=db, cell_id=j.id, member_id=user.member.id)
+                if bio_inspired is None:
+                        bio= Bio_inspiredCreate(cell_id=j.id, member_id=user.member.id,threshold=variables_bio_inspired.O_max)
+                        bio_inspired= crud.bio_inspired.create(db=db,obj_in=bio)
+                        db.commit()
+                        bio_inspired=crud.bio_inspired.get_threshole(db=db, cell_id=j.id, member_id=user.member.id)
                 theshole=bio_inpired.threshold
                 slot = crud.slot.get_slot_time(db=db, cell_id=j.id, time=time)
                 # Ponermos el color en funcion de la cantidad de datos no de la prioridad.

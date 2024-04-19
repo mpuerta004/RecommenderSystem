@@ -164,6 +164,11 @@ def create_recomendation(
                 expected = Cardinal_actual + len(recommendation_accepted)
                 if expected < campaign.min_samples and df_user_distance.loc[cell.id,"distance_cell_user"]<5*campaign.cells_distance: 
                     bio_inspired=crud.bio_inspired.get_threshole(db=db, cell_id=cell.id, member_id=member_id)
+                    if bio_inspired is None:
+                        bio= Bio_inspiredCreate(cell_id=cell.id, member_id=member_id,threshold=variables_bio_inspired.O_max)
+                        bio_inspired= crud.bio_inspired.create(db=db,obj_in=bio)
+                        db.commit()
+                        bio_inspired=crud.bio_inspired.get_threshole(db=db, cell_id=cell.id, member_id=member_id)
                     theshold= bio_inspired.threshold
                     # priority= crud.priority.get_by_slot_and_time(db=db, slot_id=slot.id, time=time)
                     priority= temporal_priority

@@ -149,7 +149,8 @@ def update_devices(
 def update_members(
     hive_id:int,
     recipe_in: List[NewMembers],
-    db: Session = Depends(deps.get_db),
+    time=datetime,
+    db: Session = Depends(deps.get_db)
 ) -> dict:
     """
     synchronization members -> hive_member  and the campaign_memb
@@ -171,9 +172,9 @@ def update_members(
             hiveCreate=Hive_MemberCreate(hive_id=hive_id,member_id=member_db_new.id)
             hive_member=crud.hive_member.create_hiveMember(db=db,obj_in=hiveCreate,role=role)
             list_campaigns = crud.campaign.get_campaigns_from_hive_id_active(
-                db=db, time=datetime.utcnow(), hive_id=hive_id)
+                db=db, time=time, hive_id=hive_id)
             a= crud.campaign.get_campaigns_from_hive_id_future(
-                    db=db, time=datetime.utcnow(), hive_id=hive_id)
+                    db=db, time=time, hive_id=hive_id)
             list_campaigns= list_campaigns + a
 
             # Verify if there is any active campaign
