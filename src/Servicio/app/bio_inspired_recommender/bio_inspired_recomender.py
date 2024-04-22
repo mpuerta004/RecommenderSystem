@@ -134,8 +134,10 @@ def create_recomendation(
         for cell in list_of_cells:
             df_user_distance.loc[cell.id,"distance_cell_user"]=vincenty(
                 (cell.centre["Latitude"], cell.centre["Longitude"]), (user_location['Latitude'], user_location['Longitude']))
-            if  df_user_distance.loc[cell.id,"distance_cell_user"] <=campaign.cells_distance*5:
-                far_away=False
+            distance=df_user_distance.loc[cell.id,"distance_cell_user"]
+            if distance is not None:
+                if  distance <=campaign.cells_distance*5:
+                    far_away=False
         if far_away:
             print("ERROR: far_away_2")
             return {"detail": "far_away"}

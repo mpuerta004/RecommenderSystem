@@ -232,10 +232,11 @@ def create_recomendation_per_campaign(
                         point=recipe_in.member_current_location
                         centre= cell.centre
                         distancia = vincenty((centre['Latitude'], centre['Longitude']), (point['Latitude'], (point['Longitude'])))
-                        if distancia <= (campaign.cells_distance)*5:
-                            cells.append([cell, campaign])
-                            if campaign.id == campaign_id:
-                                    campaign_want=True
+                        if distancia is not None:
+                            if distancia <= (campaign.cells_distance)*5:
+                                cells.append([cell, campaign])
+                                if campaign.id == campaign_id:
+                                        campaign_want=True
     print("number_possible_cells_1: +++++++++++++++++++++++++++++++++++", len(cells))
     if role_correct==False:
         print("ERROR: Incorrect_user_role")
