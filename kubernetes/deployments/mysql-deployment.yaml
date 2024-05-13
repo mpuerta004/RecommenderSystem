@@ -26,9 +26,9 @@ spec:
       containers:
         - resources:
             limits:
-              memory: 1Gi
+              memory: 2Gi
           args:
-            - --default-authentication-plugin=mysql_native_password
+            - --default-authentication-plugin=caching_sha2_password
           env:
             - name: APP_SECRET_STRING
               valueFrom:
