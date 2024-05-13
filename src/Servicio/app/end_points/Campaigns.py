@@ -152,6 +152,116 @@ def show_hive(
    
     return mapObj._repr_html_()
 
+
+
+########                         Show Endpoint                   #########
+@api_router_campaign.get("/show_campaign", status_code=200, response_class=HTMLResponse)
+def show_hive(
+    *,
+    hive_id: int,
+    campaign_id:int,
+    time: datetime= datetime.utcnow(),
+    db: Session = Depends(deps.get_db),
+) -> Any:
+    """
+    Show a campaign
+    """
+    # time=datetime.utcnow()
+    campaign=crud.campaign.get_campaign(db=db, hive_id=hive_id, campaign_id=campaign_id)
+    # try:
+    #     os.remove("src/Servicio/Telegram_bot/Pictures/DATAMAP.csv")
+    # except OSError:
+    #     print("No se pudo borrar el archivo")
+    # if campañas_activas is None or campañas_activas is [] or len(campañas_activas)==0:
+    #    return None
+    count = 0
+    
+    
+    lat_center=0
+    lon_center=0
+    n=0
+    # for i in campañas_activas:
+    surface=crud.surface.get_multi_surface_from_campaign_id(db=db, campaign_id=campaign_id)
+    boundary=surface[0].boundary
+    lat_center= boundary.centre['Latitude']
+    lon_center= boundary.centre['Longitude']
+    
+    
+    # print(lat_center/n, lon_center/n)
+    
+    mapObj = folium.Map(location=[lat_center,
+                        lon_center], zoom_start=variables.zoom_start)
+    cam=campaign
+    if True:
+        cell_distance = cam.cells_distance 
+
+        hipotenusa = math.sqrt(2*((cell_distance/2)**2))
+        for i in cam.surfaces:
+
+            count = count+1
+            for j in i.cells:
+                slot = crud.slot.get_slot_time(db=db, cell_id=j.id, time=time)
+                if slot is None: 
+                    return None
+                Cardinal_actual = crud.measurement.get_all_Measurement_from_cell_in_the_current_slot(
+                    db=db, time=time, slot_id=slot.id)
+                expected_measurements=len( crud.recommendation.get_aceptance_state_of_cell(
+                db=db, slot_id=slot.id))
+                if Cardinal_actual >= cam.min_samples:
+                    numero = 4
+                    color_number='#FFFFFF'
+                else:
+                    numero = int((Cardinal_actual/cam.min_samples)//(1/4))
+                    color_number='#000000'
+                # color= (color_list[numero][2],color_list[numero][1],color_list[numero][0])
+                color = variables.color_list_hex[numero]
+                lon1 = j.centre['Longitude']
+                lat1 = j.centre['Latitude']
+
+                # Desired distance in kilometers
+                distance = hipotenusa
+                list_direction = [45, 135, 225, 315]
+                list_point = []
+                for dir in list_direction:
+                    lat2, lon2 = get_point_at_distance(
+                        lat1=lat1, lon1=lon1, d=distance, bearing=dir)
+
+                    list_point.append([lat2, lon2])
+
+               
+                folium.Polygon(locations=list_point, color='black', fill=False,
+                            weight=1, popup=(folium.Popup(str(j.id))), opacity=0.5, fill_opacity=0.2).add_to(mapObj)
+                
+                
+                # with open("src/Servicio/Telegram_bot/Pictures/DATAMAP.csv", "a", newline="") as f_object:
+                #     # Pass the CSV  file object to the writer() function
+                #     writer_object = writer(f_object)
+                #     # Result - a writer object
+                #     # Pass the data in the list as an argument into the writerow() function
+                #     writer_object.writerow([list_point, j.id, Cardinal_actual, expected_measurements,str(color_number)])
+                #     # Close the file object
+                #     f_object.close()
+                    
+                folium.Marker(list_point[3],popup=f"Number of Expected measurements: {expected_measurements}",
+                            icon=DivIcon(
+                    icon_size=(200, 36),
+                    icon_anchor=(0, 0),
+                    
+                    html=f'<div style="font-size: 20pt;color:{color_number};">{str(j.id)}</div>'
+                )
+                ).add_to(mapObj)
+
+    direcion_html = f"/recommendersystem/src/Servicio/app/Pictures/Measurements_html/{time.strftime('%m-%d-%Y-%H-%M-%S')}Hi{hive_id}.html"
+    # direcion_png = f"/recommendersystem/src/Servicio/app/Pictures/Measurements/{time.strftime('%m-%d-%Y-%H-%M-%S')}Hi{hive_id}.png"
+    
+    legend_html = legend_measurements_scale(time.strftime('%m/%d/%Y, %H:%M:%S'))
+    mapObj.get_root().html.add_child(folium.Element(legend_html))
+    mapObj.save(direcion_html)
+    # Renderizar el mapa como HTML
+   
+    return mapObj._repr_html_()
+
+
 #### GET ENDPOINT #####
 @api_router_campaign.get("/", status_code=200, response_model=CampaignSearchResults)
 def get_all_Campaigns_of_hive(

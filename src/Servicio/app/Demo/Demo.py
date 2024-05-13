@@ -9,6 +9,7 @@ from schemas.Member import Member
 from schemas.Priority import Priority, PriorityCreate, PrioritySearchResults
 import deps
 import matplotlib
+from statistics import variance
 import matplotlib.pyplot as plt
 from datetime import datetime, timezone
 from datetime import datetime, timezone, timedelta
@@ -54,6 +55,7 @@ def asignacion_recursos_hive(
     mediciones = []
     dur = int((end - start).total_seconds())
     times=[]
+    varianza=[]
     data_accepted=[]
     data_notified=[]
     data_realized=[]
@@ -103,9 +105,9 @@ def asignacion_recursos_hive(
                     if lat is not None and lon is not None:
                         a = RecommendationCreate(member_current_location={
                                                 'Longitude': lon, 'Latitude': lat}, recommendation_datetime=time)
-                        #recomendaciones=create_recomendation_system_per_campaign(db=db,member_id=user_class.id,recipe_in=a,campaign_id=campaign_id,time=time)
+                        recomendaciones=create_recomendation_system_per_campaign(db=db,member_id=user_class.id,recipe_in=a,campaign_id=campaign_id,time=time)
 
-                        recomendaciones=create_recomendation_per_campaign(db=db,member_id=user_class.id,recipe_in=a,campaign_id=campaign_id,time=time)
+                        #recomendaciones=create_recomendation_per_campaign(db=db,member_id=user_class.id,recipe_in=a,campaign_id=campaign_id,time=time)
                         # recomendaciones = bio_inspired_recomender.create_recomendation(member_id=user_class.member.id,recipe_in=a,db=db,time=time,campaign_id=campaign_id)
                         if recomendaciones is not None and "results" in recomendaciones and  len(recomendaciones['results']) > 0:
                             recc= [i.recommendation for i in recomendaciones['results']] 
@@ -151,18 +153,22 @@ def asignacion_recursos_hive(
         notidied_recomendation = 0
         realize_recommendation = 0
         times.append(time)
-
+        numbers_of_realized_recomendation=[]
         if list_slots != []:
             for slot in list_slots:
                 accepted_Recomendation += len(crud.recommendation.get_aceptance_state_of_slot(db=db, time=time,slot_id=slot.id))
                 realize_recommendation += len(crud.recommendation.get_relize_state_of_slot(db=db, slot_id=slot.id,time=time))
+                numbers_of_realized_recomendation.append(len(crud.recommendation.get_relize_state_of__all_slot(db=db, slot_id=slot.id,time=time)))
                 notidied_recomendation += len(crud.recommendation.get_notified_state_of_slot(db=db, slot_id=slot.id,time=time))
         data_accepted.append(accepted_Recomendation)
         data_notified.append(notidied_recomendation)
         data_realized.append(realize_recommendation)
+        element = variance(numbers_of_realized_recomendation)
+        varianza.append(element)
     with open("output.csv", "w") as f:
         writer = csv.writer(f)
         writer.writerow(times)
+        writer.writerow(varianza)
         writer.writerow(data_accepted)
         writer.writerow(data_notified)
         writer.writerow(data_realized)
