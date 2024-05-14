@@ -111,8 +111,8 @@ if __name__ == "__main__":
 
     # Add this line to run the system.
     scheduler = BackgroundScheduler()
-    scheduler.add_job(final_funtion, 'interval', seconds=120)
-    scheduler.add_job(State_change, 'interval', seconds=420)
+    scheduler.add_job(final_funtion, 'interval', seconds=420)
+    scheduler.add_job(State_change, 'interval', seconds=600)
     scheduler.start()
 
     uvicorn.run(app, host="0.0.0.0", port=8001, log_level="debug")
