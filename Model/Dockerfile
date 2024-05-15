@@ -19,6 +19,11 @@ COPY Model/init.sql /mysql/init.sql
 
 ADD Model/init.sql /docker-entrypoint-initdb.d
 
+CMD ["mysqld", "--default-authentication-plugin=mysql_native_password"]
+
+
+#
+
 EXPOSE 3306
 
 #RUN /mysql/setup.sh
