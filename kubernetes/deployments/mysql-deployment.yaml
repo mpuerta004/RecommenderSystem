@@ -50,11 +50,6 @@ spec:
                 configMapKeyRef:
                   key: DATABASE_PASSWORD
                   name: env
-            - name: MYSQL_ROOT_PASSWORD
-              valueFrom:
-                configMapKeyRef:
-                  key: DATABASE_PASSWORD
-                  name: env
             - name: DATABASE_USERNAME
               valueFrom:
                 configMapKeyRef:
