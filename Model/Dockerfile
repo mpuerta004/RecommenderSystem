@@ -1,4 +1,4 @@
-FROM mysql
+FROM mysql:8.4.0
 
 
 # Copy the database file to the init directory
