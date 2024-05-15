@@ -34,4 +34,3 @@ jobs:
             maitepuerta1997/mysql:latest
             maitepuerta1997/mysql:${{ github.ref_name }}
             maitepuerta1997/mysql:${{ github.ref_name }}.${{ steps.date.outputs.date }}
-          target: init-data-mysql-mve
