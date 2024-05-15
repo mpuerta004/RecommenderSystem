@@ -17,7 +17,7 @@ COPY Model/init.sql /mysql/init.sql
 #COPY sociobee-mve-20-09-2023.sql /mysql/sociobee-mve-20-09-2023.sql   
 
 
-ADD init.sql /docker-entrypoint-initdb.d
+ADD Model/init.sql /docker-entrypoint-initdb.d
 
 EXPOSE 3306
 
