@@ -113,9 +113,9 @@ CREATE TABLE Campaign (
   cells_distance float8 NULL DEFAULT NULL,
   min_samples INT NULL DEFAULT NULL,
   sampling_period INT NULL DEFAULT NULL,
-  hypothesis  VARCHAR(1050) NULL DEFAULT NULL,
+  hypothesis  Text NULL DEFAULT NULL,
   end_datetime datetime NULL DEFAULT NULL,
-  title Varchar(70),
+  title Text,
   PRIMARY KEY (id),
   UNIQUE INDEX unique_hive_campaign (hive_id, id),
   FOREIGN KEY (hive_id) REFERENCES Hive (id) ON DELETE CASCADE
