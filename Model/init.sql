@@ -1,7 +1,7 @@
-DROP DATABASE IF EXISTS SocioBeeMVE;
-/* DELETE USER 'mve' AT LOCAL SERVER*/
-DROP USER IF EXISTS 'mve'@'localhost';
-DROP USER IF EXISTS 'mve_automatic'@'localhost';
+-- DROP DATABASE IF EXISTS SocioBeeMVE;
+-- /* DELETE USER 'mve' AT LOCAL SERVER*/
+-- DROP USER IF EXISTS 'mve'@'localhost';
+-- DROP USER IF EXISTS 'mve_automatic'@'localhost';
 
 
 
@@ -107,20 +107,19 @@ Create Table Member_Device(
 -- Table Campaign
 -- -----------------------------------------------------
 CREATE TABLE Campaign (
-  hive_id int not null, 
   id INT NOT NULL AUTO_INCREMENT,
+  hive_id int not null,
   start_datetime datetime NULL DEFAULT NULL,
   cells_distance float8 NULL DEFAULT NULL,
   min_samples INT NULL DEFAULT NULL,
   sampling_period INT NULL DEFAULT NULL,
-  hypothesis  VARCHAR(70) NULL DEFAULT NULL,
+  hypothesis  VARCHAR(1050) NULL DEFAULT NULL,
   end_datetime datetime NULL DEFAULT NULL,
   title Varchar(70),
-  PRIMARY KEY (id, hive_id),
-     FOREIGN KEY (hive_id)
-    REFERENCES Hive (id)
-    ON DELETE CASCADE
-   );
+  PRIMARY KEY (id),
+  UNIQUE INDEX unique_hive_campaign (hive_id, id),
+  FOREIGN KEY (hive_id) REFERENCES Hive (id) ON DELETE CASCADE
+);
 
 
 -- -----------------------------------------------------
@@ -158,33 +157,27 @@ CREATE TABLE Boundary (
 -- -----------------------------------------------------
 CREATE TABLE Surface (
   id INT NOT NULL AUTO_INCREMENT,
-  campaign_id INT not NULL,
-  boundary_id INT not null,
-  PRIMARY KEY (id, campaign_id),
-    FOREIGN KEY (campaign_id)
-    REFERENCES Campaign (id)
-    ON DELETE CASCADE,
-     FOREIGN KEY (boundary_id)
-    REFERENCES Boundary (id)
-    ON DELETE CASCADE
-    );
+  campaign_id INT NOT NULL,
+  boundary_id INT NOT NULL,
+  PRIMARY KEY (id),
+  FOREIGN KEY (campaign_id) REFERENCES Campaign (id) ON DELETE CASCADE,
+  FOREIGN KEY (boundary_id) REFERENCES Boundary (id) ON DELETE CASCADE
+);
 
 
 -- -----------------------------------------------------
 -- Table Cell
 -- -----------------------------------------------------
-CREATE TABLE Cell (
+ CREATE TABLE Cell (
   id INT NOT NULL AUTO_INCREMENT,
-  centre POINT not NULL,
+  centre POINT NOT NULL,
   radius INT,
   cell_type VARCHAR(30) DEFAULT 'Dynamic',
-  surface_id INT not null,
+  surface_id INT NOT NULL,
   CONSTRAINT cell_type CHECK (cell_type IN ("DYNAMIC","STATIC")),
   PRIMARY KEY (id),
-    FOREIGN KEY (surface_id)
-    REFERENCES Surface (id)
-    ON DELETE CASCADE#,
-    );
+  FOREIGN KEY (surface_id) REFERENCES Surface (id) ON DELETE CASCADE
+);
 
 
 
@@ -208,42 +201,40 @@ CREATE TABLE Bio_inspired (
 -- Table Slot
 -- -----------------------------------------------------
 CREATE TABLE Slot (
-id int not null auto_increment,
-cell_id INT not null,
-start_datetime datetime, 
-end_datetime datetime, 
-PRIMARY key(id,cell_id),
-FOREIGN KEY (cell_id)
+  id int NOT NULL AUTO_INCREMENT,
+  cell_id INT NOT NULL,
+  start_datetime datetime, 
+  end_datetime datetime, 
+  PRIMARY KEY (id),
+  UNIQUE KEY unique_slot (cell_id, id),
+  FOREIGN KEY (cell_id)
     REFERENCES Cell (id)
     ON DELETE CASCADE
 );
 
-
-
 -- -----------------------------------------------------
--- Table sociobee.recommendation
+-- Table Recommendation
 -- -----------------------------------------------------
 CREATE TABLE Recommendation (
-  id int not null auto_increment,
+  id int NOT NULL AUTO_INCREMENT,
   member_id BIGINT NOT NULL,
   sent_datetime datetime NOT NULL,
   state  VARCHAR(15),
   update_datetime datetime,
   slot_id int, 
   member_current_location POINT NULL, 
-  CONSTRAINT state_type CHECK (state IN ("NOTIFIED","ACCEPTED","REALIZED","NON_REALIZED")),
-  PRIMARY KEY (id,member_id),
-
-    FOREIGN KEY (member_id)
+  CONSTRAINT state_type CHECK (state IN ('NOTIFIED','ACCEPTED','REALIZED','NON_REALIZED')),
+  PRIMARY KEY (id),
+  FOREIGN KEY (member_id)
     REFERENCES Member (id)
     ON DELETE CASCADE,
-    FOREIGN KEY (slot_id)
+  FOREIGN KEY (slot_id)
     REFERENCES Slot (id)
     ON DELETE CASCADE
-    );
+);
 
 -- -----------------------------------------------------
--- Table CellMeasurement
+-- Table Measurement
 -- -----------------------------------------------------
 CREATE TABLE Measurement (
   id INT NOT NULL AUTO_INCREMENT,
@@ -261,21 +252,20 @@ CREATE TABLE Measurement (
   pm25 DOUBLE NULL DEFAULT NULL,
   pm1 DOUBLE NULL DEFAULT NULL,
   benzene DOUBLE NULL DEFAULT NULL,
-  PRIMARY KEY (id, member_id),
-
-    FOREIGN KEY (member_id)
+  PRIMARY KEY (id),
+  FOREIGN KEY (member_id)
     REFERENCES Member (id)
     ON DELETE CASCADE,
-     FOREIGN KEY (slot_id)
+  FOREIGN KEY (slot_id)
     REFERENCES Slot (id)
-        ON DELETE CASCADE,
-     FOREIGN KEY (device_id)
+    ON DELETE CASCADE,
+  FOREIGN KEY (device_id)
     REFERENCES Device (id)
-        ON DELETE CASCADE,
-        FOREIGN KEY (recommendation_id)
+    ON DELETE CASCADE,
+  FOREIGN KEY (recommendation_id)
     REFERENCES Recommendation (id)
     ON DELETE CASCADE
-    );
+);
 
 
 
