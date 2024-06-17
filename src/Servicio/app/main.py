@@ -6,14 +6,15 @@ from apscheduler.schedulers.background import BackgroundScheduler
 from end_points import (BeeKeeper, Campaign_Member, Campaigns, Cells, Devices, Hive, Measurements, Members,
                         Surface, sync,KPIS)
 from Demo import Demo
-from Heuristic_recommender import Recommendation
-# from bio_inspired_recommender import bio_inspired_recomender as Recommendation
+# from Heuristic_recommender import Recommendation
+from bio_inspired_recommender import bio_inspired_recomender as Recommendation
 from fastapi import (APIRouter, FastAPI)
 from fastapi.templating import Jinja2Templates
 from fastapi_utils.session import FastAPISessionMaker
 from datetime import datetime,timedelta
 from funtionalities import prioriry_calculation
-SQLALCHEMY_DATABASE_URL = "mysql+mysqlconnector://mve:mvepasswd123@mysql:3306/SocioBeeMVE"
+import keys
+SQLALCHEMY_DATABASE_URL = keys.SQLALCHEMY_DATABASE_URL
 sessionmaker = FastAPISessionMaker(SQLALCHEMY_DATABASE_URL)
 
 
@@ -90,6 +91,9 @@ def State_change():
     
 
 app.include_router(api_router)
+from Telegram_bot.Telegram_bot_2 import bot, definir_mensajes
+import telebot
+import threading
 
 
 if __name__ == "__main__":
@@ -101,5 +105,19 @@ if __name__ == "__main__":
     # scheduler.add_job(final_funtion, 'interval', seconds=180)
     # scheduler.add_job(State_change, 'interval', seconds=180)
     # scheduler.start()
+    
+    bot.set_my_commands([
+        telebot.types.BotCommand("/start", "Start the bot"), #Command, description
+        # telebot.types.BotCommand("/general_info", "general information"),
+        telebot.types.BotCommand("/recommendation", "get a recommendation"),
+        telebot.types.BotCommand("/upload_photo", "Upload photo"),
+        telebot.types.BotCommand("/map", "Generate the map"),
+        telebot.types.BotCommand("/personal_information", "Change and consult your personal information")
+    ])
+    # bot.polling()
+    hilo_bot= threading.Thread(name="hilo_bot", target=definir_mensajes)
+    hilo_bot.start()
+    
 
     uvicorn.run(app, host="0.0.0.0", port=8001, log_level="debug")
+    print("hola")

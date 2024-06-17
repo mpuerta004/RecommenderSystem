@@ -74,7 +74,8 @@ target/
 *.mkv
 Untitled.xcf
 
-
+/recommendersystem/Telegram_bot/Token.py
 
 *.csv
 /src/Servicio/app/Demo/graficas/*.xlsx
+

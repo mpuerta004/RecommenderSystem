@@ -19,13 +19,13 @@ class gender_type(str, Enum):
     
 
 class MemberBase(BaseModel):
-    name: str 
+    name: str =None
     surname: str=None
-    age: int
-    gender:gender_type
+    age: int =None
+    gender:gender_type=None
     city: str=None
-    mail:str
-    birthday:datetime
+    mail:str =None
+    birthday:datetime =None
     real_user:bool=True
     # device_id:int=None
 

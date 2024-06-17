@@ -75,7 +75,6 @@ def get_recommendation(
         )
     return result
 
-
 @api_router_recommendation.post("/campaigns/{campaign_id}/recommendations", status_code=201, response_model=Union[RecommendationCellSearchResults,dict])
 def create_recomendation(
     *,
@@ -134,8 +133,10 @@ def create_recomendation(
         for cell in list_of_cells:
             df_user_distance.loc[cell.id,"distance_cell_user"]=vincenty_inverse(
                 (cell.centre["Latitude"], cell.centre["Longitude"]), (user_location['Latitude'], user_location['Longitude']))
-            if  df_user_distance.loc[cell.id,"distance_cell_user"] <=campaign.cells_distance*5:
-                far_away=False
+            distance=df_user_distance.loc[cell.id,"distance_cell_user"]
+            if distance is not None:
+                if  distance <=campaign.cells_distance*5:
+                    far_away=False
         if far_away:
             print("ERROR: far_away_2")
             return {"detail": "far_away"}
@@ -150,7 +151,11 @@ def create_recomendation(
             slot = crud.slot.get_slot_time(
                     db=db, cell_id=cell.id, time=time)
             priority_cell=crud.priority.get_by_slot_and_time(db=db, slot_id=slot.id, time=time)
-            if priority_cell.temporal_priority < 0.0:
+            if priority_cell is None:
+                temporal_priority=0.0
+            else:
+                temporal_priority=priority_cell.temporal_priority
+            if temporal_priority < 0.0:
                 NEW_VALUE=-1.0
             else:
                 Cardinal_actual = crud.measurement.get_all_Measurement_from_cell_in_the_current_slot(
@@ -160,9 +165,14 @@ def create_recomendation(
                 expected = Cardinal_actual + len(recommendation_accepted)
                 if expected < campaign.min_samples and df_user_distance.loc[cell.id,"distance_cell_user"]<5*campaign.cells_distance: 
                     bio_inspired=crud.bio_inspired.get_threshole(db=db, cell_id=cell.id, member_id=member_id)
+                    if bio_inspired is None:
+                        bio= Bio_inspiredCreate(cell_id=cell.id, member_id=member_id,threshold=variables_bio_inspired.O_max)
+                        bio_inspired= crud.bio_inspired.create(db=db,obj_in=bio)
+                        db.commit()
+                        bio_inspired=crud.bio_inspired.get_threshole(db=db, cell_id=cell.id, member_id=member_id)
                     theshold= bio_inspired.threshold
-                    priority= crud.priority.get_by_slot_and_time(db=db, slot_id=slot.id, time=time)
-                    priority= priority.temporal_priority
+                    # priority= crud.priority.get_by_slot_and_time(db=db, slot_id=slot.id, time=time)
+                    priority= temporal_priority
                     NEW_VALUE=(
                     ((priority)**2 ) / 
                                 ((priority)**2  + 
@@ -229,6 +239,8 @@ def create_recomendation(
             print("ERROR: no_measurements_needed; cells_and_priority empty for wanted campaign ")
             return {"detail": "no_measurements_needed"}
             # return {"results": result}
+    
+    
     
     
 @api_router_recommendation.patch("/recommendations/{recommendation_id}", status_code=200, response_model=Recommendation)

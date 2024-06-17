@@ -11,13 +11,13 @@ class gender_type(str, Enum):
     
     
 class BeeKeeperBase(BaseModel):
-    name: str 
+    name: str =None
     surname: str=None
-    age: int
-    gender:gender_type
-    birthday:datetime
+    age: int=None
+    gender:gender_type=None
+    birthday:datetime=None
     city: str=None
-    mail:str
+    mail:str=None
     real_user:bool=True
 
     

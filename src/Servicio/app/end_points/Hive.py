@@ -153,9 +153,10 @@ def get_real_members_of_hive(
         # Get the user
         user = crud.member.get_by_id(db=db, id=i.member_id)
         # Add to the list if is not None and if it is a real user
-        if user != None:
+        if user is not None:
             if user.real_user == True:
                 List_members.append(user)
+                print(user)
     return {"results": List_members}
 
 

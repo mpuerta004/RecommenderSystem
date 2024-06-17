@@ -105,16 +105,16 @@ def asignacion_recursos_hive(
                     if lat is not None and lon is not None:
                         a = RecommendationCreate(member_current_location={
                                                 'Longitude': lon, 'Latitude': lat}, recommendation_datetime=time)
-                        recomendaciones=create_recomendation_system_per_campaign(db=db,member_id=user_class.id,recipe_in=a,campaign_id=campaign_id,time=time)
+                        # recomendaciones=create_recomendation_system_per_campaign(db=db,member_id=user_class.id,recipe_in=a,campaign_id=campaign_id,time=time)
 
                         # recomendaciones=create_recomendation_per_campaign(db=db,member_id=user_class.id,recipe_in=a,campaign_id=campaign_id,time=time)
-                        # recomendaciones = bio_inspired_recomender.create_recomendation(member_id=user_class.member.id,recipe_in=a,db=db,time=time,campaign_id=campaign_id)
+                        recomendaciones = bio_inspired_recomender.create_recomendation(member_id=user_class.member.id,recipe_in=a,db=db,time=time,campaign_id=campaign_id)
                         if recomendaciones is not None and "results" in recomendaciones and  len(recomendaciones['results']) > 0:
                             recc= [i.recommendation for i in recomendaciones['results']] 
                             recomendation_coguida = user_class.user_selecction(db=db, list_recommendations=recc,user_position=(lat, lon))
                             
                             if recomendation_coguida is not None:
-                                # show_recomendation_with_thesholes(db=db, user=user_class, cam=cam, result=recc,time=time,recomendation=recomendation_coguida)
+                                show_recomendation_with_thesholes(db=db, user=user_class, cam=cam, result=recc,time=time,recomendation=recomendation_coguida)
                                 if user_class.id==1:
                                     show_recomendation(db=db, user_2=user_class, cam=cam, user=user_class.member, time=time, result=recc,recomendation=recomendation_coguida)
                                 recomendation_a_polinizar = crud.recommendation.get_recommendation(db=db, member_id=user_class.member.id, recommendation_id=recomendation_coguida.id)
@@ -173,28 +173,28 @@ def asignacion_recursos_hive(
         writer.writerow(data_notified)
         writer.writerow(data_realized)
     
-    fig, axs = plt.subplots(3, 1, figsize=(15, 15), sharex=True)
+    # fig, axs = plt.subplots(3, 1, figsize=(15, 15), sharex=True)
 
-    for ax, data, label, color in zip(axs, [data_notified, data_accepted, data_realized], ['Notified', 'Accepted', 'Realized'],['b','g','r']):
-        ax.plot(times, data, marker='o', linestyle='-', color=color, label=f'{label} Recommendation')
-        window_size = 25  # Tamaño de la ventana para la media móvil
-        mov_avg = np.convolve(data, np.ones(window_size) / window_size, mode='valid')
-        ax.plot(times[window_size-1:], mov_avg, linestyle='--', label=f'Moving Average ({window_size})')
-        ax.set_title(f'Number of {label} Recommendations')
-        ax.set_ylabel('Number')
-        ax.legend()
-        ax.grid(True)
-        ax.tick_params(axis='x', rotation=45)
-        ax.tick_params(axis='both', which='major', labelsize=10)
+    # for ax, data, label, color in zip(axs, [data_notified, data_accepted, data_realized], ['Notified', 'Accepted', 'Realized'],['b','g','r']):
+    #     ax.plot(times, data, marker='o', linestyle='-', color=color, label=f'{label} Recommendation')
+    #     window_size = 25  # Tamaño de la ventana para la media móvil
+    #     mov_avg = np.convolve(data, np.ones(window_size) / window_size, mode='valid')
+    #     ax.plot(times[window_size-1:], mov_avg, linestyle='--', label=f'Moving Average ({window_size})')
+    #     ax.set_title(f'Number of {label} Recommendations')
+    #     ax.set_ylabel('Number')
+    #     ax.legend()
+    #     ax.grid(True)
+    #     ax.tick_params(axis='x', rotation=45)
+    #     ax.tick_params(axis='both', which='major', labelsize=10)
 
-    axs[-1].set_xlabel('Time')
+    # axs[-1].set_xlabel('Time')
     
-    plt.tight_layout()
-    plt.savefig("recommendations_metrics_with_moving_average.jpg")
-    plt.show()
+    # plt.tight_layout()
+    # plt.savefig("recommendations_metrics_with_moving_average.jpg")
+    # plt.show()
 
-    print("rate_number: ", number_of_recomendation_rate(campaign_id=cam.id,times=times, db=db))
-    print("user_rate;", number_of_recomendation_rate_users(campaign_id=cam.id,times=times, db=db))
+    # print("rate_number: ", number_of_recomendation_rate(campaign_id=cam.id,times=times, db=db))
+    # print("user_rate;", number_of_recomendation_rate_users(campaign_id=cam.id,times=times, db=db))
     return None
 
 
