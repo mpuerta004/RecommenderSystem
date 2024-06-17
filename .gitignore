@@ -79,3 +79,4 @@ Untitled.xcf
 *.csv
 /src/Servicio/app/Demo/graficas/*.xlsx
 
+src/Servicio/app/Telegram_bot/Token.py

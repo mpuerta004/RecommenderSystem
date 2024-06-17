@@ -307,7 +307,7 @@ def get_measurement():
     return measurements
     
 
-def get_campaign_hive_1(id_user:int):
+def get_campaign_hive_1():
     peticion = api_url +"/hives/1/campaigns"
     try:
         response = requests.get(peticion, headers=headers)

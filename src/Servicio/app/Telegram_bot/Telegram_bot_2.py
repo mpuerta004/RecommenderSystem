@@ -3,12 +3,13 @@ import math
 import json
 import requests
 import telebot
-from Telegram_bot.Token  import TOKEN
+from Telegram_bot.Token  import TOKEN, radio_cell
 from telebot import types
 import datetime
 from csv import writer
 import folium
 import threading
+from vincenty import vincenty_inverse
 from folium import plugins
 from schemas.Recommendation import RecommendationCreate, RecommendationUpdate, RecommendationSearchResults
 from schemas.Measurement import MeasurementCreate, MeasurementUpdate, MeasurementSearchResults
@@ -237,8 +238,9 @@ def registrar_email(message):
             user.set_mail(mail=mail,list_users=list_users)
             markup=ReplyKeyboardMarkup(one_time_keyboard=True, 
                                        input_field_placeholder="Selecciona tu Genero",
+                                       row_width=2,
                                        resize_keyboard=True)
-            markup.add("NO BINARY","MALE","FEMALE",'NO ANSWER')
+            markup.add("MALE","FEMALE","NO BINARY",'NO ANSWER')
 
             msg=bot.send_message(message.chat.id, "Cual es tu genero?", reply_markup=markup) 
             bot.register_next_step_handler(msg, registrar_genero) 
@@ -331,14 +333,15 @@ def recommendation(message):
     
 
 def crear_la_Recomendacion(message):
-    
+    bot.send_chat_action(message.chat.id, 'typing')
+
     #El uusario ha enviado la ubicación debemos crear la recomendación
     # message.text="location"
     # print(message.location.live_period)
     # time.sleep(2* 60)
     # print(message.location.live_period)
     
-    campaign = bot_auxiliar.get_campaign_hive_1(message.chat.id)
+    campaign = bot_auxiliar.get_campaign_hive_1()
     if campaign is not None:
         campaign_id = campaign['id'] 
         info = {
@@ -364,12 +367,12 @@ def crear_la_Recomendacion(message):
                 for i in range(0,len(data['results'])):
                     point = data['results'][i]['cell']['centre']
                     
-                    recomendation= RecommendationCreate(id=data['results'][i]['recommendation']['id'],member_id=message.chat.id, posicion=str(i), state="NOTIFIED",point={"Longitude":point['Longitude'],"Latitude":point['Latitude']})
+                    # recomendation= RecommendationCreate(id=data['results'][i]['recommendation']['id'],member_id=message.chat.id, posicion=str(i), state="NOTIFIED",point={"Longitude":point['Longitude'],"Latitude":point['Latitude']})
                     
                     locations=locations+[{"latitude":point['Latitude'],"longitude":point['Longitude'],"title":f"Recommendation {i}"}]
                     markup.add(f"Recommendation {i}")
                     
-                    recommendations.append(recomendation)
+                    recommendations.append({"latitude":point['Latitude'],"longitude":point['Longitude'],"id":data['results'][i]['recommendation']['id']})
                     
                     # Generar el mapa con folium
                 map = folium.Map(location=[message.location.latitude, message.location.longitude], zoom_start=17)
@@ -413,6 +416,8 @@ def crear_la_Recomendacion(message):
 
             
 def user_select_recomendations(message):
+    bot.send_chat_action(message.chat.id, 'typing')
+
     a=message.text
     recommendation=list_users[message.chat.id].recommendations[int(a[-1])]
     list_users[message.chat.id].recommendations=[]
@@ -420,11 +425,11 @@ def user_select_recomendations(message):
     list_users[message.chat.id].recommendations_aceptada.append(recommendation)
     print(message.text)
     print(recommendation)
-    accepted_recomendation=bot_auxiliar.update_recomendation(id_user=message.chat.id, recomendation_id=recommendation.id)
+    accepted_recomendation=bot_auxiliar.update_recomendation(id_user=message.chat.id, recomendation_id=recommendation['id'])
     markup=ReplyKeyboardRemove()
     bot.send_message(message.chat.id, f"¨Porfavor cuando llegues al punto seleccionado utiliza el comando /upload_photo",reply_markup=markup)
     bot.send_message(message.chat.id, f"Te recuerdo que la ubicacion a la que tienes que ir para sacar la foto es la siguiente",reply_markup=markup)
-    bot.send_location(chat_id=message.chat.id, latitude=recommendation.point['Latitude'], longitude=recommendation.point['Longitude'])
+    bot.send_location(chat_id=message.chat.id, latitude=recommendation['latitude'], longitude=recommendation['longitude'])
 
 
 @bot.message_handler(commands=['upload_photo'])
@@ -454,7 +459,7 @@ def medicion(message):
             markup=ReplyKeyboardRemove()
             bot.send_message(message.chat.id, "You have already accepted a recommendation. Please first finish the measurement before requesting a new recommendation. I will send you the location of the recomendation",reply_markup=markup)
             rec_Accepted=list_users[message.chat.id].recommendations_aceptada
-            bot.send_location(chat_id=message.chat.id, latitude=rec_Accepted.point['Latitude'], longitude=rec_Accepted.point['Longitude'])
+            bot.send_location(chat_id=message.chat.id, latitude=rec_Accepted['Latitude'], longitude=rec_Accepted['Longitude'])
             
         
     else: 
@@ -462,6 +467,8 @@ def medicion(message):
 
 
 def pedir_photo(message):
+    bot.send_chat_action(message.chat.id, 'typing')
+
     list_users[message.chat.id].location_to_measure={"Longitude": message.location.longitude,"Latitude": message.location.latitude}
     # Longitude: message.location.longitude
     # Latitude: message.location.latitude
@@ -483,99 +490,81 @@ def pedir_photo(message):
     bot.register_next_step_handler(msg, subir_la_photo ) 
     
     
-def subir_la_photo(message):    
-    if list_users[message.chat.id].location_to_measure != None:
-        red_acceptada=list_users[message.chat.id].recommendations_aceptada
-        recomendation_aceptada_2=bot_auxiliar.recomendaciones_aceptadas(message.chat.id)
-        #Todo! asegurate que cuando recomendacion_Aceptada_2 es vacia te devuelve None. 
-        if red_acceptada != None and recomendation_aceptada_2!=None:
-            # if recomendation_aceptada_2 != None:
-                #TODO esto no se si esta bien
-                data=bot_auxiliar.create_measurement(id_user=message.chat.id,  Latitud=list_users[message.chat.id].location_to_measure['Latitude'], Longitud=list_users[message.chat.id].location_to_measure['Longitude'])
-
-                if data != None:
-                    #Guardamos la photo. 
-                    
-                    if data['recommendation_id'] == None:
-                        lat, long = bot_auxiliar.get_point(id_user=message.chat.id, latitud=list_users[message.chat.id].location_to_measure['Latitude'], longuitud=list_users[message.chat.id].location_to_measure['Longitude'])
-                        if lat != None and long != None:
-                                file_id = message.photo[-1].file_id
-                                file_info = bot.get_file(file_id)
-                                downloaded_file = bot.download_file(file_info.file_path)
-                                file_path = f'Telegram_bot/Pictures/photo{data["id"]}.jpg'
-                                measurement=MeasurementCreate(id=data['id'],url=file_path, location={ 'Longitude': list_users[message.chat.id].location_to_measure['Longitude'], 'Latitude': list_users[message.chat.id].location_to_measure['Latitude']})
-                                with open(file_path, 'wb') as new_file:
-                                            new_file.write(downloaded_file)
-                                measuremenmt= Measurement_bot(list_users[message.chat.id].location_to_measure, file_path)
-                                list_users[message.chat.id].measurement.append(measuremenmt)  
-                                list_users[message.chat.id].recommendations_aceptada=[]
-
-                                # bot.reply_to(message, "We are integrating your photo to the collage. This may take a few seconds." )
-                                # crear_mapa(message)
-                                #Calculado el punto de la celda donde ha ido la medicion. 
-                                # file_id = message.photo[-1].file_id
-                                # file_info = bot.get_file(file_id)
-                                # downloaded_file = bot.download_file(file_info.file_path)
-                                # file_path = f'telegram_bot/Pictures/photo{data["id"]}.jpg'
-                                # with open(file_path, 'wb') as new_file:
-                                #     new_file.write(downloaded_file)
-                                # measuremenmt= Measurement_bot(list_users[message.chat.id].location_to_measure, file_path)
-                                # list_users[message.chat.id].measurement.append(measuremenmt)  
-                                # measurement=MeasurementCreate(id=data['id'],url=file_path, location={'Latitude':lat, 'Longitude':long})
-                                # list_users[message.chat.id].recommendations_aceptada=[]
-
-                                # lat, long = bot_auxiliar.get_point(id_user=message.chat.id, latitud=recomendation_aceptada_2['member_current_location']['Latitude'], longuitud=recomendation_aceptada_2['member_current_location']['Longitude'])
-                                # crear_mapa(message)
-                                # bot.reply_to( message, "Thanks for sending the photo!") 
-                                bot.send_message(message.chat.id, "Please ensure that you take the photo at the agreed location. You can view the map with photos using the command /map.")
-                                lat = red_acceptada[0].point['Latitude']
-                                long = red_acceptada[0].point['Longitude']
-                                bot.send_location(chat_id=message.chat.id, latitude=lat, longitude=long)
-                        else:
-                            bot.reply_to(message, "Your current position is outside the campaign area. Please send your location at the agreed-upon point.")
-
-                    else:
-                        #LA medicion es donde debe! 
-                        # lat, long = accepted_recomendation.point['Latitude'], accepted_recomendation.point['Longitude']
+def subir_la_photo(message): 
+    bot.send_chat_action(message.chat.id, 'typing')
+    if message.chat.id in list(list_users.keys()):
+        if list_users[message.chat.id].location_to_measure != None:
+            #No tenem,os su ubicacion (Esto no es posible!)
+            red_acceptada=list_users[message.chat.id].recommendations_aceptada
+            recomendation_aceptada_2=bot_auxiliar.recomendaciones_aceptadas(message.chat.id)
+            if red_acceptada != None and recomendation_aceptada_2!=None:
+                #Que la base de datos sigue reguistrando que tienes una recopmendacion aceptada y ell bot tambien la tiene registrada. 
+                # if recomendation_aceptada_2 != None:
+                    #TODO esto no se si esta bien
+                    # data=bot_auxiliar.create_measurement(id_user=message.chat.id,  Latitud=list_users[message.chat.id].location_to_measure['Latitude'], Longitud=list_users[message.chat.id].location_to_measure['Longitude'])
+                    Latitud_user=list_users[message.chat.id].location_to_measure['Latitude']
+                    Longitud_user=list_users[message.chat.id].location_to_measure['Longitude']
+                    lat = red_acceptada[0]['latitude']
+                    long = red_acceptada[0]['longitude']
+                    distance = vincenty_inverse(
+                    (Latitud_user, Longitud_user), (lat, long))
+                    if distance <= radio_cell:
+                        # El usuario esta donde debe para hacer la medicion!
+                        
+                        data=bot_auxiliar.create_measurement(id_user=message.chat.id,  Latitud=list_users[message.chat.id].location_to_measure['Latitude'], Longitud=list_users[message.chat.id].location_to_measure['Longitude'])
                         file_id = message.photo[-1].file_id
                         file_info = bot.get_file(file_id)
                         downloaded_file = bot.download_file(file_info.file_path)
-                        file_path = f'telegram_bot/Pictures/photo{data["id"]}.jpg'
-                        measurement=MeasurementCreate(id=data['id'],url=file_path, location={ 'Longitude': list_users[message.chat.id].location_to_measure['Longitude'], 'Latitude': list_users[message.chat.id].location_to_measure['Latitude']})
+                        file_path = f'/recommendersystem/src/Servicio/app/Telegram_bot/Pictures/photo{data["id"]}.jpg'
+                        # measurement=MeasurementCreate(id=data['id'],url=file_path, location={ 'Longitude': list_users[message.chat.id].location_to_measure['Longitude'], 'Latitude': list_users[message.chat.id].location_to_measure['Latitude']})
                         with open(file_path, 'wb') as new_file:
-                                    new_file.write(downloaded_file)
+                            new_file.write(downloaded_file)
                         measuremenmt= Measurement_bot(list_users[message.chat.id].location_to_measure, file_path)
                         list_users[message.chat.id].measurement.append(measuremenmt)  
                         list_users[message.chat.id].recommendations_aceptada=[]
 
-                        bot.reply_to(message, "We are integrating your photo to the collage. This may take a few seconds." )
-                        crear_mapa(message)
-                else:
-                    bot.reply_to(message, "Please try again. Make sure that the location you send is within the accepted recommendation you selected.")
-            # else:
-            #     crud.recomendation.remove(db=db, db_obj=accepted_recomendation)
-            #     bot.reply_to(message, "Please first send the comand /mesasurement or /recomendation to have your location. Thanks you! ")
-        else:
-                if recomendation_aceptada_2 == None:
-                    list_users[message.chat.id].recommendations_aceptada=[]
-                    bot.reply_to(message, "Has tardado demasiado, su recomendacion no puede ser integrada. Pôrfavor pìda otra recomendación ")
-                                # crear_mapa(message)
-                                
-       
-    else:
-            bot.reply_to(message, "Please first send the command /recommendation to share your location. Thank you!")
+                        bot.reply_to(message, "Tu foto a sido registrada! Si quieres mirar el mapa consulta este link. Cada minuto se suben las nuevas foto! Si todavia no esta la tuya espera un poco! y que tal si tomas mas fotos  mientras esperas!!" )
+                        markup=InlineKeyboardMarkup(row_width=1)
+                        b1=InlineKeyboardButton("Deusto collage picture map", url="https://raw.githack.com/mpuerta004/RecommenderSystem/Bot/index.html")
+                        markup.add(b1)
+                        bot.send_message(message.chat.id, "Please visit the following link to see the collage of the photos taken.", reply_markup=markup)
+                    else:
+                        bot.send_message(message.chat.id, "Please ensure that you take the photo at the agreed location. You can view the map with photos using the command /map.")
+                        lat = red_acceptada[0]['latitude']
+                        long = red_acceptada[0]['longitude']
+                        bot.send_location(chat_id=message.chat.id, latitude=lat, longitude=long)
+                        
+                        
+                
+                    
+                # else:
+                #     crud.recomendation.remove(db=db, db_obj=accepted_recomendation)
+                #     bot.reply_to(message, "Please first send the comand /mesasurement or /recomendation to have your location. Thanks you! ")
+            else:
+                    if recomendation_aceptada_2 == None:
+                        list_users[message.chat.id].recommendations_aceptada=[]
+                        markup=ReplyKeyboardRemove()
 
+                        bot.reply_to(message, "Has tardado demasiado, su recomendacion no puede ser integrada. Pôrfavor pìda otra recomendación " ,reply_markup=markup)                          
+        
+        else:
+            markup=ReplyKeyboardRemove()
+            bot.reply_to(message, "Please first send the command /recommendation to share your location. Thank you!",reply_markup=markup)
+    else:
+        markup=ReplyKeyboardRemove()
+        bot.reply_to(message, "Please, first prees /start botton. Thanks you!",reply_markup=markup)
     
 
 def actualizar_repositorio():
     # Ejecutar el comando para agregar, hacer commit y hacer push del archivo HTML
-    subprocess.run(['git', 'add', '-f', 'docs/index.html'])
+    subprocess.run(['git', 'add', '-f', 'index.html'])
     subprocess.run(['git', 'commit', '-m', 'Actualizar HTML'])
     subprocess.run(['git', 'push'])
 
 
 
-def crear_mapa(message):
+def crear_mapa():
+
     data=bot_auxiliar.get_surface()
     
     if data != None:
@@ -592,10 +581,9 @@ def crear_mapa(message):
                 measu.append(j)
         
         # Obtener el número de combinaciones diferentes de las dos primeras columnas
-        campaign=bot_auxiliar.get_campaign_hive_1(id_user=message.chat.id)
+        campaign=bot_auxiliar.get_campaign_hive_1()
         if campaign is None:
-                bot.reply_to(message, "Error in the visualization. Perhaps there is no active campaign. Please contact @Maite314 for assistance.")
-                return None
+            return None
         else:
             radio=campaign['cells_distance']/2
             hipotenusa= math.sqrt(2*((radio)**2))
@@ -667,36 +655,52 @@ def crear_mapa(message):
                         image_overlay.add_to(mapa)
                             
             mapa.save('index.html')
+            return True
                 # Enviar el mapa al usuario
                 # try:
-            map_path = f'index.html'
-            with open(map_path, 'rb') as map_file:
-                bot.send_document(message.chat.id, document=map_file, parse_mode="html")
+            #map_path = f'index.html'
+            #with open(map_path, 'rb') as map_file:
+            #     bot.send_document(message.chat.id, document=map_file, parse_mode="html")
+    #         markup=InlineKeyboardMarkup(row_width=1)
+    #         b1=InlineKeyboardButton("Deusto collage picture map", url="https://raw.githack.com/mpuerta004/RecommenderSystem/Bot/index.html")
+    #         #https://raw.githack.com/mpuerta004/RecommenderSystem/Bot/index.html
+    #         markup.add(b1)
+    #         bot.send_message(message.chat.id, "Please visit the following link to see the collage of the photos taken.", reply_markup=markup)
 
-            # bot.send_photo(message.chat.id, photo=open('/recommendersystem/Telegram_bot/index.html', 'rb'), caption="Here is the collage of the photos taken.")
-            # text='Your photo is part of the collague. \n Please visit  <a href="Deusto_collegue_picture_map">http://htmlpreview.github.io/?https:https://mpuerta004.github.io/RecommenderSystem/index.html</a> to see!\n'
-    else:
-        bot.reply_to(message, "There seems to be an issue with the representation, campaigns, or surface. Please contact @Maite314 for assistance.")
+    #         # bot.send_photo(message.chat.id, photo=open('/recommendersystem/Telegram_bot/index.html', 'rb'), caption="Here is the collage of the photos taken.")
+    #         # text='Your photo is part of the collague. \n Please visit  <a href="Deusto_collegue_picture_map">http://htmlpreview.github.io/?https:https://mpuerta004.github.io/RecommenderSystem/index.html</a> to see!\n'
+    # else:
+    #     bot.reply_to(message, "There seems to be an issue with the representation, campaigns, or surface. Please contact @Maite314 for assistance.")
 
+from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
+
+
+    
+    
 
 @bot.message_handler(commands=['map'])
-def crear_mapa_bot(message):
-    crear_mapa(message)
-    actualizar_repositorio()
+def enviar_map(message):
+    markup=InlineKeyboardMarkup(row_width=1)
+    b1=InlineKeyboardButton("Deusto collage picture map", url="https://raw.githack.com/mpuerta004/RecommenderSystem/Bot/index.html")
+    #https://raw.githack.com/mpuerta004/RecommenderSystem/Bot/index.html
+    markup.add(b1)
+    bot.send_message(message.chat.id, "Please visit the following link to see the collage of the photos taken.", reply_markup=markup)
+
 
 
 def definir_mensajes():
     "Bucle infinito que comprueba si hay nuevos mensajes en el bot"
     bot.infinity_polling()
 
-if __name__ == "__main__":
 
+
+if __name__ == "__main__":
     bot.set_my_commands([
         telebot.types.BotCommand("/start", "Start the bot"), #Command, description
         # telebot.types.BotCommand("/general_info", "general information"),
         telebot.types.BotCommand("/recommendation", "get a recommendation"),
         telebot.types.BotCommand("/upload_photo", "Upload photo"),
-        telebot.types.BotCommand("/map", "Generate the map"),
+        telebot.types.BotCommand("/map", "Deusto Collague link"),
         telebot.types.BotCommand("/personal_information", "Change and consult your personal information")
     ])
     # bot.polling()

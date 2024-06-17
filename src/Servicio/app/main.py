@@ -91,10 +91,15 @@ def State_change():
     
 
 app.include_router(api_router)
-from Telegram_bot.Telegram_bot_2 import bot, definir_mensajes
+from Telegram_bot.Telegram_bot_2 import bot, definir_mensajes,crear_mapa,actualizar_repositorio
 import telebot
 import threading
 
+def crear_mapa_bot():
+    print("Hola")
+    a=crear_mapa()
+    if a is not None:
+        actualizar_repositorio()
 
 if __name__ == "__main__":
     ## Use this for debugging purposes only
@@ -106,6 +111,7 @@ if __name__ == "__main__":
     # scheduler.add_job(State_change, 'interval', seconds=180)
     # scheduler.start()
     
+
     bot.set_my_commands([
         telebot.types.BotCommand("/start", "Start the bot"), #Command, description
         # telebot.types.BotCommand("/general_info", "general information"),
@@ -117,7 +123,8 @@ if __name__ == "__main__":
     # bot.polling()
     hilo_bot= threading.Thread(name="hilo_bot", target=definir_mensajes)
     hilo_bot.start()
-    
+    scheduler = BackgroundScheduler()
+    scheduler.add_job(crear_mapa_bot, 'interval', seconds=180)
+    scheduler.start()
 
     uvicorn.run(app, host="0.0.0.0", port=8001, log_level="debug")
-    print("hola")

@@ -1,11 +1,25 @@
 DROP DATABASE IF EXISTS SocioBeeMVE;
 /* DELETE USER 'mve' AT LOCAL SERVER*/
-
+DROP USER IF EXISTS 'mve'@'localhost';
+DROP USER IF EXISTS 'mve_automatic'@'localhost';
 
 
 CREATE DATABASE SocioBeeMVE;
 use SocioBeeMVE;
--- -----------------------------------------------------
+
+/* CREATE THE USER 'mve' AT LOCAL and REMOTE SERVER WITH PASSWORD 'mvepasswd123' */
+CREATE USER IF NOT EXISTS 'mve'@'localhost' IDENTIFIED BY 'mvepasswd123';
+CREATE USER IF NOT EXISTS 'mve'@'%' IDENTIFIED BY 'mvepasswd123';
+CREATE USER IF NOT EXISTS 'mve_automatic'@'localhost' IDENTIFIED BY 'mvepasswd123';
+CREATE USER IF NOT EXISTS 'mve_automatic'@'%' IDENTIFIED BY 'mvepasswd123';
+
+GRANT ALL PRIVILEGES ON SocioBeeMVE.*  TO 'mve'@'localhost';
+GRANT ALL PRIVILEGES ON SocioBeeMVE.*  TO 'mve'@'%';
+GRANT ALL PRIVILEGES ON SocioBeeMVE.*  TO 'mve_automatic'@'localhost';
+GRANT ALL PRIVILEGES ON SocioBeeMVE.*  TO 'mve_automatic'@'%';
+
+
+---------------------------------
 -- Table Member
 -- -----------------------------------------------------
 CREATE TABLE Member (
