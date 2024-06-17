@@ -116,7 +116,7 @@ if __name__ == "__main__":
         telebot.types.BotCommand("/start", "Start the bot"), #Command, description
         # telebot.types.BotCommand("/general_info", "general information"),
         telebot.types.BotCommand("/recommendation", "get a recommendation"),
-        telebot.types.BotCommand("/upload_photo", "Upload photo"),
+        # telebot.types.BotCommand("/upload_photo", "Upload photo"),
         telebot.types.BotCommand("/map", "Generate the map"),
         telebot.types.BotCommand("/personal_information", "Change and consult your personal information")
     ])

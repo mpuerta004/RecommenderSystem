@@ -98,45 +98,47 @@ def start(message):
 def personal_information(message):
     markup=ReplyKeyboardRemove()
     user=list_users[message.chat.id]
-    texto='<code>Actual information:</code>\n'
-    texto+=f"<code>NAME...:</code> {user.name}\n"
+    texto='<code>Actual informacion:</code>\n'
+    texto+=f"<code>NAME   :</code> {user.name}\n"
     texto+=f"<code>SURNAME:</code> {user.surname}\n"
-    texto+=f"<code>AGE....:</code> {user.age}\n"
-    texto+=f"<code>MAIL...:</code> {user.mail}\n"
-    texto+=f"<code>GENDER.:</code> {user.gender}\n"
+    texto+=f"<code>AGE    :</code> {user.age}\n"
+    texto+=f"<code>MAIL   :</code> {user.mail}\n"
+    texto+=f"<code>GENDER :</code> {user.gender}\n"
     bot.send_message(message.chat.id, texto,parse_mode="html",reply_markup=markup)
         
     markup=ReplyKeyboardMarkup(one_time_keyboard=True, 
                                        input_field_placeholder="Do you want to change it?",
                                        resize_keyboard=True)
     markup.add('Yes','No')
+    markup=InlineKeyboardMarkup(row_width=2)
+    yes=InlineKeyboardButton("Yes", callback_data="Yes")
+    no=InlineKeyboardButton("No", callback_data="No")
+           
+    markup.add(yes, no)
+            # markup=ReplyKeyboardMarkup(one_time_keyboard=True, 
+            #                            input_field_placeholder="Selecciona tu Genero",
+            #                            row_width=2,
+            #                            resize_keyboard=True)
+            # markup.add("MALE","FEMALE","NO BINARY",'NO ANSWER')
 
     msg=bot.send_message(message.chat.id, "Do you want to change it?", reply_markup=markup) 
     bot.register_next_step_handler(msg, change_personal_information) 
     
+@bot.callback_query_handler(func=lambda call: (call.data=="Yes" or call.data=="No"))
+def change_personal_information(call):
+    cid=call.from_user.id #chat_id
+    mid= call.message.id #message_id
     
-def change_personal_information(message):
-    chat_id= message.chat.id 
-    if chat_id not in list(list_users.keys()):
-        bot.send_message(message.chat.id, "Please first introduce /start command")
-    else:
-        if message.text != "Yes" and message.text != "No":
-            bot.send_message(message.chat.id, "Please provide a valid answer")
-            markup=ReplyKeyboardMarkup(one_time_keyboard=True, 
-                                        input_field_placeholder="Do you want to change it?",
-                                        resize_keyboard=True)
-            markup.add('Yes','No')
-
-            msg=bot.send_message(message.chat.id, "Do you want to change it?", reply_markup=markup) 
-            bot.register_next_step_handler(msg, change_personal_information) 
-        else:
-            if message.text=="Yes":
+    markup=InlineKeyboardMarkup(row_width=1)
+    a=bot.edit_message_reply_markup(cid, mid, reply_markup=None)
+    bot.reply_to(a, f"Has seleccionado {call.data}")   
+    if call.data=="Yes":
                 markup=ForceReply()
-                msg=bot.send_message(message.chat.id, "Cual es tu nombre?", reply_markup=markup) 
+                msg=bot.send_message(cid, "Cual es tu nombre?", reply_markup=markup) 
                 bot.register_next_step_handler(msg, registrar_nombre)
-            else:
+    else:
                 markup=ReplyKeyboardRemove()
-                bot.send_message(message.chat.id, "Ok, no problem",reply_markup=markup)
+                bot.send_message(cid, "Ok, no problem",reply_markup=markup)
                 return None
 
 
@@ -236,61 +238,96 @@ def registrar_email(message):
         if set_name != None :
             user=list_users[message.chat.id]
             user.set_mail(mail=mail,list_users=list_users)
-            markup=ReplyKeyboardMarkup(one_time_keyboard=True, 
-                                       input_field_placeholder="Selecciona tu Genero",
-                                       row_width=2,
-                                       resize_keyboard=True)
-            markup.add("MALE","FEMALE","NO BINARY",'NO ANSWER')
+            markup=InlineKeyboardMarkup(row_width=2)
+            male=InlineKeyboardButton("Male", callback_data="MALE")
+            female=InlineKeyboardButton("Female", callback_data="FEMALE")
+            no_binary=InlineKeyboardButton("No binary", callback_data="NOBINARY")
+            No_answer=InlineKeyboardButton("No answer", callback_data="NOANSWER")
+            markup.add(male, female, no_binary, No_answer)
+            # markup=ReplyKeyboardMarkup(one_time_keyboard=True, 
+            #                            input_field_placeholder="Selecciona tu Genero",
+            #                            row_width=2,
+            #                            resize_keyboard=True)
+            # markup.add("MALE","FEMALE","NO BINARY",'NO ANSWER')
 
             msg=bot.send_message(message.chat.id, "Cual es tu genero?", reply_markup=markup) 
-            bot.register_next_step_handler(msg, registrar_genero) 
+            # bot.register_next_step_handler(msg, callback_query) 
            
         else:
             bot.send_message(message.chat.id,"Error with the system. please contact with @Maite314")
-            return None   
+            return None 
         
-def registrar_genero(message):
-    global list_users  # Declaramos que vamos a usar la variable global
-
-    bot.send_chat_action(message.chat.id, 'typing')
-
-    gender=message.text
-    if gender not in ["NO BINARY","MALE","FEMALE",'NO ANSWER']:
-        bot.reply_to(message, "Please provide a valid gender")
-        markup=ReplyKeyboardMarkup(one_time_keyboard=True, 
-                                       input_field_placeholder="Selecciona tu Genero",
-                                       resize_keyboard=True)
-        markup.add("NO BINARY","MALE","FEMALE",'NO ANSWER')
-
-        msg=bot.send_message(message.chat.id, "Cual es tu genero?", reply_markup=markup) 
-        bot.register_next_step_handler(msg, registrar_genero)
-    # if we have name:
+        
+@bot.callback_query_handler(func=lambda call: (call.data=="NOBINARY" or call.data=="FEMALE" or call.data=="MALE" or call.data=="NOANSWER"))
+def callback_query(call):
+    cid=call.from_user.id #chat_id
+    print(cid)
+    mid= call.message.id #message_id
+    markup=InlineKeyboardMarkup(row_width=1)
+    b1=InlineKeyboardButton("-", callback_data="-")
+    markup.add(b1)
+    a=bot.edit_message_reply_markup(cid, mid, reply_markup=None)
+    bot.reply_to(a, f"Has seleccionado {call.data}")
+    # bot.send_message(mid, f"Has seleccionado {call.data}",reply_markup=markup)
+    # bot.answer_callback_query(callback_query_id=call.id, text=f"Has seleccionado {call.data}")
+    # bot.delete_message(cid, mid)
+    set_name=bot_auxiliar.set_gender(member_id=cid, gender=call.data)
+    if set_name != None :
+        user=list_users[cid]
+        user.set_gender( gender=call.data,list_users=list_users)
+        texto='<code>Datos introducidos:</code>\n'
+        texto+=f"<code>NAME   :</code> {user.name}\n"
+        texto+=f"<code>SURNAME:</code> {user.surname}\n"
+        texto+=f"<code>AGE    :</code> {user.age}\n"
+        texto+=f"<code>MAIL   :</code> {user.mail}\n"
+        texto+=f"<code>GENDER :</code> {user.gender}\n"
+        bot.send_message(cid, texto,parse_mode="html")
     else:
-        # We look if the user is in the database.
-        if gender=="NO BINARY":
-            gender_transformate="NOBINARY"
-        elif gender=="NO ANSWER":
-            gender_transformate="NOANSWER"
-        else:
-            gender_transformate=gender
-        set_name=bot_auxiliar.set_gender(member_id=message.chat.id, gender=gender_transformate)
-        if set_name != None :
-            markup=ReplyKeyboardRemove()
-            user=list_users[message.chat.id]
-            user.set_gender( gender=gender_transformate,list_users=list_users)
-            texto='<code>Datos introducidos:</code>\n'
-            texto+=f"<code>NAME...:</code> {user.name}\n"
-            texto+=f"<code>SURNAME:</code> {user.surname}\n"
-            texto+=f"<code>AGE....:</code> {user.age}\n"
-            texto+=f"<code>MAIL...:</code> {user.mail}\n"
-            texto+=f"<code>GENDER.:</code> {user.gender}\n"
-            bot.send_message(message.chat.id, texto,parse_mode="html", reply_markup=markup)
+        bot.send_message(cid,"Error with the system. please contact with @Maite314")
+    
+        
+# def registrar_genero(message):
+#     global list_users  # Declaramos que vamos a usar la variable global
+
+#     bot.send_chat_action(message.chat.id, 'typing')
+
+#     gender=message.text
+#     if gender not in ["NO BINARY","MALE","FEMALE",'NO ANSWER']:
+#         bot.reply_to(message, "Please provide a valid gender")
+#         # markup=ReplyKeyboardMarkup(one_time_keyboard=True, 
+#         #                                input_field_placeholder="Selecciona tu Genero",
+#         #                                resize_keyboard=True)
+#         # markup.add("NO BINARY","MALE","FEMALE",'NO ANSWER')
+
+#         # msg=bot.send_message(message.chat.id, "Cual es tu genero?", reply_markup=markup) 
+#         # bot.register_next_step_handler(msg, registrar_genero)
+#     # if we have name:
+#     else:
+#         # We look if the user is in the database.
+#         if gender=="NO BINARY":
+#             gender_transformate="NOBINARY"
+#         elif gender=="NO ANSWER":
+#             gender_transformate="NOANSWER"
+#         else:
+#             gender_transformate=gender
+#         set_name=bot_auxiliar.set_gender(member_id=message.chat.id, gender=gender_transformate)
+#         if set_name != None :
+#             markup=ReplyKeyboardRemove()
+#             user=list_users[message.chat.id]
+#             user.set_gender( gender=gender_transformate,list_users=list_users)
+#             texto='<code>Datos introducidos:</code>\n'
+#             texto+=f"<code>NAME...:</code> {user.name}\n"
+#             texto+=f"<code>SURNAME:</code> {user.surname}\n"
+#             texto+=f"<code>AGE....:</code> {user.age}\n"
+#             texto+=f"<code>MAIL...:</code> {user.mail}\n"
+#             texto+=f"<code>GENDER.:</code> {user.gender}\n"
+#             bot.send_message(message.chat.id, texto,parse_mode="html", reply_markup=markup)
 
             
 
-        else:
-            bot.send_message(message.chat.id,"Error with the system. please contact with @Maite314")
-            return None   
+#         else:
+#             bot.send_message(message.chat.id,"Error with the system. please contact with @Maite314")
+#             return None   
 
 
 
@@ -330,14 +367,29 @@ def recommendation(message):
         
     else: 
         bot.reply_to(message, "Please first send the command /start to be added to the database. Thank you!")
-    
+
+
+# import time
+# def location(update, message):
+#     message = None
+#     if update.edited_message:
+#         message = update.edited_message
+#     else:
+#         message = update.message
+#     current_pos = (message.location.latitude, message.location.longitude)
+#     return message
+
 
 def crear_la_Recomendacion(message):
-    bot.send_chat_action(message.chat.id, 'typing')
-
-    #El uusario ha enviado la ubicación debemos crear la recomendación
-    # message.text="location"
+    # bot.edit_message_live_location
+    # bot.send_chat_action(message.chat.id, 'typing')
     # print(message.location.live_period)
+    # bot.get_updates()
+    # updates = bot.get_updates()
+    # message= location(update=updates, message=message)
+    # # El uusario ha enviado la ubicación debemos crear la recomendación
+    # # message.text="location"
+    # # print(message.location.live_period)
     # time.sleep(2* 60)
     # print(message.location.live_period)
     
@@ -360,9 +412,12 @@ def crear_la_Recomendacion(message):
                             message.chat.id, "There are currently no recommendations available for you. We apologize for the inconvenience.",reply_markup=markup)     
                                        
             else:
-                markup=ReplyKeyboardMarkup(one_time_keyboard=True, 
-                                       input_field_placeholder="Selecciona la recomendación",
-                                       resize_keyboard=True)
+                markup=InlineKeyboardMarkup(row_width=1)
+                
+                
+                    
+                
+               
                 recommendations=[]
                 for i in range(0,len(data['results'])):
                     point = data['results'][i]['cell']['centre']
@@ -370,7 +425,8 @@ def crear_la_Recomendacion(message):
                     # recomendation= RecommendationCreate(id=data['results'][i]['recommendation']['id'],member_id=message.chat.id, posicion=str(i), state="NOTIFIED",point={"Longitude":point['Longitude'],"Latitude":point['Latitude']})
                     
                     locations=locations+[{"latitude":point['Latitude'],"longitude":point['Longitude'],"title":f"Recommendation {i}"}]
-                    markup.add(f"Recommendation {i}")
+                    yes=InlineKeyboardButton(f"Recommendation {i}", callback_data=f"Recommendation {i}")
+                    markup.add(yes)
                     
                     recommendations.append({"latitude":point['Latitude'],"longitude":point['Longitude'],"id":data['results'][i]['recommendation']['id']})
                     
@@ -403,7 +459,7 @@ def crear_la_Recomendacion(message):
                 map.save(map_path)
                 with open(map_path, 'rb') as map_file:
                         msg=bot.send_document(message.chat.id, document=map_file,reply_markup=markup)
-                        bot.register_next_step_handler(msg, user_select_recomendations) 
+                        # bot.register_next_step_handler(msg, user_select_recomendations) 
 
                         
                 # except Exception as e:
@@ -414,22 +470,27 @@ def crear_la_Recomendacion(message):
 
             msg=bot.send_message(message, "Unfortunately, there are no recommendations available for you at this time. We apologize for the inconvenience.",reply_markup=markup)
 
-            
-def user_select_recomendations(message):
-    bot.send_chat_action(message.chat.id, 'typing')
+@bot.callback_query_handler(func=lambda call: (call.data=="Recommendation 0" or call.data=="Recommendation 1" or call.data=="Recommendation 2"))
+def user_select_recomendations(call):
+    cid=call.from_user.id #chat_id
+    mid= call.message.id #message_id
+    bot.send_chat_action(cid, 'typing')
 
-    a=message.text
-    recommendation=list_users[message.chat.id].recommendations[int(a[-1])]
-    list_users[message.chat.id].recommendations=[]
-    list_users[message.chat.id].recommendations_aceptada=[]
-    list_users[message.chat.id].recommendations_aceptada.append(recommendation)
-    print(message.text)
+    a=bot.edit_message_reply_markup(cid, mid, reply_markup=None)
+    bot.reply_to(a, f"Has seleccionado {call.data}")
+    
+    recommendation=list_users[cid].recommendations[int(call.data[-1])]
+    list_users[cid].recommendations=[]
+    list_users[cid].recommendations_aceptada=[]
+    list_users[cid].recommendations_aceptada.append(recommendation)
     print(recommendation)
-    accepted_recomendation=bot_auxiliar.update_recomendation(id_user=message.chat.id, recomendation_id=recommendation['id'])
+    accepted_recomendation=bot_auxiliar.update_recomendation(id_user=cid, recomendation_id=recommendation['id'])
     markup=ReplyKeyboardRemove()
-    bot.send_message(message.chat.id, f"¨Porfavor cuando llegues al punto seleccionado utiliza el comando /upload_photo",reply_markup=markup)
-    bot.send_message(message.chat.id, f"Te recuerdo que la ubicacion a la que tienes que ir para sacar la foto es la siguiente",reply_markup=markup)
-    bot.send_location(chat_id=message.chat.id, latitude=recommendation['latitude'], longitude=recommendation['longitude'])
+    bot.send_message(cid, f"¨Porfavor cuando llegues al punto seleccionado utiliza el comando /upload_photo",reply_markup=markup)
+    bot.send_message(cid, f"Te recuerdo que la ubicacion a la que tienes que ir para sacar la foto es la siguiente",reply_markup=markup)
+    bot.send_location(chat_id=cid, latitude=recommendation['latitude'], longitude=recommendation['longitude'])
+
+
 
 
 @bot.message_handler(commands=['upload_photo'])
