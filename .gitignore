@@ -74,13 +74,20 @@ target/
 *.mkv
 Untitled.xcf
 
-/recommendersystem/Telegram_bot/Token.py
 
 *.csv
 /src/Servicio/app/Demo/graficas/*.xlsx
 
-src/Servicio/app/Telegram_bot/Token.py
-src/Servicio/app/Telegram_bot/Token.py
 Token.py
-src/Servicio/app/Telegram_bot/Token.py
+
 /src/Servicio/app/Telegram_bot/Pictures
+*archivo.json
+archivo.json
+*src/Servicio/app/Demo/inicialitation.sql
+*/Resert_campaigns.sql
+src/Servicio/app/Pictures
+
+
+Resert_campaigns.sql
+
+/src/Servicio/app/Demo/inicialitation.sql

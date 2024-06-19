@@ -3,7 +3,7 @@ import math
 import json
 import requests
 import telebot
-from Telegram_bot.Token  import TOKEN, radio_cell
+from Telegram_bot.Token.Token  import TOKEN, radio_cell
 from telebot import types
 import datetime
 from csv import writer
@@ -21,24 +21,9 @@ import pandas as pd
 from folium import plugins
 from folium.utilities import image_to_url
 import subprocess
-from fastapi_utils.session import FastAPISessionMaker
-import deps
-# from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
-import crud
-import io
-from PIL import Image
-
-
-# from sqlalchemy.orm import Session
-# from schemas.Member import MemberCreate, MemberUpdate, MemberSearchResults
-# from schemas.Recommendation import RecommendationCreate, RecommendationUpdate, RecommendationSearchResults
-# from schemas.last_user_position import Last_user_positionCreate, Last_user_positionUpdate, Last_user_positionSearchResults
-# from schemas.Measurement import MeasurementCreate, MeasurementUpdate, MeasurementSearchResults
 
 from Telegram_bot.usuario import User
 from Telegram_bot.measurement_bot import Measurement_bot
-# Ponemos nuestro Token generado con el @BotFather
 bot = telebot.TeleBot(TOKEN)
 from telebot.types import ReplyKeyboardMarkup, ForceReply, ReplyKeyboardRemove
 

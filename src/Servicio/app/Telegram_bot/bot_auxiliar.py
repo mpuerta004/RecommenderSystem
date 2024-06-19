@@ -1,17 +1,6 @@
 import requests
-import telebot 
-from telebot import types
-from enum import Enum
 import random 
 import datetime 
-from csv import writer
-import folium
-from folium import plugins
-# from IPython.display import display
-import csv
-import math
-from fastapi import FastAPI, APIRouter, Query, HTTPException, Request, Depends
-
 from math import asin, atan2, cos, degrees, radians, sin, sqrt
 
 # #https://api.telegram.org/bot<TU_TOKEN/getUpdates
