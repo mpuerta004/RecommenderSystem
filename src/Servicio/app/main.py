@@ -113,12 +113,12 @@ if __name__ == "__main__":
     
 
     bot.set_my_commands([
-        telebot.types.BotCommand("/start", "Start the bot"), #Command, description
+        telebot.types.BotCommand("/start", "Start!"), #Command, description
         # telebot.types.BotCommand("/general_info", "general information"),
-        telebot.types.BotCommand("/recommendation", "get a recommendation"),
+        telebot.types.BotCommand("/recommendation", "Get a recommendation"),
         # telebot.types.BotCommand("/upload_photo", "Upload photo"),
-        telebot.types.BotCommand("/map", "Generate the map"),
-        telebot.types.BotCommand("/personal_information", "Change and consult your personal information")
+        telebot.types.BotCommand("/map", "Visualizate the map"),
+        telebot.types.BotCommand("/personal_information", "Your personal information")
     ])
     # bot.polling()
     hilo_bot= threading.Thread(name="hilo_bot", target=definir_mensajes)
