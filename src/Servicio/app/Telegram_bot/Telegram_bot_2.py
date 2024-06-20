@@ -52,23 +52,18 @@ def start(message):
         if response.status_code == 200:
             data = response.json()  # data -> user information -> Member
             chat_id=data['id']
-            #Si esta creado el objeto de este usuario en la lista de usuarios, no lo creamos de nuevo y sino se creara! 
             User(chat_id=message.chat.id,list_users=list_users,data=data)
             user=list_users[message.chat.id]
             markup=ReplyKeyboardRemove()
-            bot.send_message(message.chat.id, f"Wellcome back {user.name}!",reply_markup=markup)
-            #TODO
-            # explain_interaction(message)
-        # CASE NEW USER
+            bot.send_message(message.chat.id, f"Wellcome back {user.name}!👋\nReady to create the Duesto' collague?📸\nWhen you're ready, press /recommendation to begin",reply_markup=markup)
         else:
             data=bot_auxiliar.new_new_user(message=message)
             if data != None:
-                # We have to insert a device in the dataset for the user and also relate the user with the device.
+                # Vamos a conocer al usuario! 
                 User(chat_id=message.chat.id,list_users=list_users)
                 markup=ReplyKeyboardRemove()
-                bot.send_message(message.chat.id, f"Hello! I am the MVE bot. Vamos a conocernos un poco!",reply_markup=markup)
-                markup=ForceReply()
-                msg=bot.send_message(message.chat.id, "Como te llamas?", reply_markup=markup) 
+                bar = '■' * 1+ '□' * 5
+                msg=bot.send_message(message.chat.id, f"Hello!👋 I'm the MVE bot 🤖! Let's create the Duesto' collage together! 📸 \nBut first, 🤗 let's get to know each other!\n[{bar}] What's your name? 🤔",reply_markup=markup)
                 bot.register_next_step_handler(msg, registrar_nombre) 
             else:
                 print(f"Error en la solicitud. Código de respuesta: {response.status_code}")
@@ -78,7 +73,6 @@ def start(message):
         print("Error durante la conexion con la base de datos:", e)
         bot.send_message(message.chat.id,"Error with the system. please contact with @Maite314")
 
-
 @bot.message_handler(commands=['personal_information'])
 def personal_information(message):
     bot.send_chat_action(message.chat.id, 'typing')
@@ -87,29 +81,21 @@ def personal_information(message):
         markup=ReplyKeyboardRemove()
         user=list_users[message.chat.id]
         texto='<code>Actual informacion:</code>\n'
-        texto+=f"<code>NAME   :</code> {user.name}\n"
+        texto+=f"<code>NAME...:</code> {user.name}\n"
         texto+=f"<code>SURNAME:</code> {user.surname}\n"
-        texto+=f"<code>AGE    :</code> {user.age}\n"
-        texto+=f"<code>MAIL   :</code> {user.mail}\n"
-        texto+=f"<code>GENDER :</code> {user.gender}\n"
+        texto+=f"<code>AGE....:</code> {user.age}\n"
+        texto+=f"<code>MAIL...:</code> {user.mail}\n"
+        texto+=f"<code>GENDER.:</code> {user.gender}\n"
         bot.send_message(message.chat.id, texto,parse_mode="html",reply_markup=markup)
             
         markup=ReplyKeyboardMarkup(one_time_keyboard=True, 
-                                        input_field_placeholder="Do you want to change it?",
                                         resize_keyboard=True)
         markup.add('Yes','No')
         markup=InlineKeyboardMarkup(row_width=2)
         yes=InlineKeyboardButton("Yes", callback_data="Yes")
         no=InlineKeyboardButton("No", callback_data="No")
-            
         markup.add(yes, no)
-                # markup=ReplyKeyboardMarkup(one_time_keyboard=True, 
-                #                            input_field_placeholder="Selecciona tu Genero",
-                #                            row_width=2,
-                #                            resize_keyboard=True)
-                # markup.add("MALE","FEMALE","NO BINARY",'NO ANSWER')
-
-        msg=bot.send_message(message.chat.id, "Do you want to change it?", reply_markup=markup) 
+        msg=bot.send_message(message.chat.id, "Would you like to change it?", reply_markup=markup) 
         bot.register_next_step_handler(msg, change_personal_information) 
     else:
         markup=ReplyKeyboardRemove()
@@ -117,43 +103,32 @@ def personal_information(message):
     
 @bot.callback_query_handler(func=lambda call: (call.data=="Yes" or call.data=="No"))
 def change_personal_information(call):
-
     cid=call.from_user.id #chat_id
     mid= call.message.id #message_id
     bot.send_chat_action(cid, 'typing')
     if cid in list(list_users.keys()):
-
         markup=InlineKeyboardMarkup(row_width=1)
-        a=bot.edit_message_reply_markup(cid, mid, reply_markup=None)
-        bot.reply_to(a, f"Has seleccionado {call.data}")   
+        a=bot.delete_message(cid, mid)
         if call.data=="Yes":
-                    markup=ForceReply()
-                    msg=bot.send_message(cid, "Cual es tu nombre?", reply_markup=markup) 
-                    bot.register_next_step_handler(msg, registrar_nombre)
+            bar = '■' * 1+ '□' * 5
+            msg=bot.send_message(cid, f"Let's start then!😊👍\n[{bar}] What's your name?")   
+            bot.register_next_step_handler(msg, registrar_nombre)
         else:
-                    markup=ReplyKeyboardRemove()
-                    bot.send_message(cid, "Ok, no problem",reply_markup=markup)
-                    return None
+            bot.send_message(cid, "Ok, no problem!😊")
     else:
         bot.delete_message(cid, mid)
         markup=ReplyKeyboardRemove()
-        bot.send_message(cid, "Please frist send the command /start or cleck in the comand. Thank you!",reply_markup=markup)
-
-        
-        
-
+        bot.send_message(cid, "Please frist click in the command /start. Thank you!",reply_markup=markup)
 
 def registrar_nombre(message):
     global list_users  # Declaramos que vamos a usar la variable global
     bot.send_chat_action(message.chat.id, 'typing')
 	#aqui en message.text tenemos la info del nombre. 
     nombre=message.text
-    if type(nombre) != str or nombre == "":
+    if type(nombre) != str or nombre == "" or nombre[0:1]=="/":
         markup=ReplyKeyboardRemove()
         msg=bot.reply_to(message, "Please provide a valid name",reply_markup=markup)
         bot.register_next_step_handler(msg, registrar_nombre) 
-
-    # if we have name:
     else:
         # We look if the user is in the database.
         set_name=bot_auxiliar.set_name(member_id=message.chat.id, name=nombre)
@@ -162,7 +137,8 @@ def registrar_nombre(message):
             user.set_name( name=nombre,list_users=list_users)
             print(list_users[message.chat.id])
             markup=ForceReply()
-            msg=bot.send_message(message.chat.id, "Cual es tu apellido?", reply_markup=markup) 
+            bar = '■' * 2+ '□' * 3
+            msg=bot.send_message(message.chat.id, f"[{bar}] What's your surname?", reply_markup=markup) 
             bot.register_next_step_handler(msg, registrar_apellido) 
             
         else:
@@ -170,13 +146,12 @@ def registrar_nombre(message):
             return None
     
 
-
 def registrar_apellido(message):
     global list_users  # Declaramos que vamos a usar la variable global
 
     bot.send_chat_action(message.chat.id, 'typing')
     surname=message.text
-    if type(surname) != str or surname == "":
+    if type(surname) != str or surname == "" or surname[0:1]=="/":
         msg=bot.reply_to(message, "Please provide a valid surname")
         bot.register_next_step_handler(msg, registrar_apellido) 
 
@@ -187,7 +162,8 @@ def registrar_apellido(message):
             user=list_users[message.chat.id]
             user.set_surname(surname=surname,list_users=list_users)
             markup=ForceReply()
-            msg=bot.send_message(message.chat.id, "Cual es tu edad?", reply_markup=markup) 
+            bar = '■' * 3+ '□' * 2
+            msg=bot.send_message(message.chat.id, f"[{bar}] How old are you?" , reply_markup=markup) 
             bot.register_next_step_handler(msg, registrar_edad) 
            
         else:
@@ -212,7 +188,8 @@ def registrar_edad(message):
             user=list_users[message.chat.id]
             user.set_age( age=age,list_users=list_users)
             markup=ForceReply()
-            msg=bot.send_message(message.chat.id, "Cual es tu mail?", reply_markup=markup) 
+            bar = '■' * 4+ '□' * 1
+            msg=bot.send_message(message.chat.id, f"[{bar}] What is your email?", reply_markup=markup) 
             bot.register_next_step_handler(msg, registrar_email) 
            
         else:
@@ -226,11 +203,9 @@ def registrar_email(message):
     bot.send_chat_action(message.chat.id, 'typing')
 
     mail=message.text
-    if type(mail) != str or mail == "":
+    if type(mail) != str or mail == "" or mail[0:1]=="/" or "@" not in mail or "." not in mail:
         bot.reply_to(message, "Please provide a valid mail")
         bot.register_next_step_handler(msg, registrar_email) 
-
-    # if we have name:
     else:
         # We look if the user is in the database.
         set_name=bot_auxiliar.set_mail(member_id=message.chat.id, mail=mail)
@@ -243,15 +218,8 @@ def registrar_email(message):
             no_binary=InlineKeyboardButton("No binary", callback_data="NOBINARY")
             No_answer=InlineKeyboardButton("No answer", callback_data="NOANSWER")
             markup.add(male, female, no_binary, No_answer)
-            # markup=ReplyKeyboardMarkup(one_time_keyboard=True, 
-            #                            input_field_placeholder="Selecciona tu Genero",
-            #                            row_width=2,
-            #                            resize_keyboard=True)
-            # markup.add("MALE","FEMALE","NO BINARY",'NO ANSWER')
-
-            msg=bot.send_message(message.chat.id, "Cual es tu genero?", reply_markup=markup) 
-            # bot.register_next_step_handler(msg, callback_query) 
-           
+            bar = '■' * 5+ '□' * 0
+            msg=bot.send_message(message.chat.id, f"[{bar}] What is your gender?", reply_markup=markup)            
         else:
             bot.send_message(message.chat.id,"Error with the system. please contact with @Maite314")
         
@@ -262,25 +230,18 @@ def callback_query(call):
     cid=call.from_user.id #chat_id
     mid= call.message.id #message_id
     if cid in list(list_users.keys()):
-
-        markup=InlineKeyboardMarkup(row_width=1)
-        b1=InlineKeyboardButton("-", callback_data="-")
-        markup.add(b1)
         a=bot.edit_message_reply_markup(cid, mid, reply_markup=None)
-        bot.reply_to(a, f"Has seleccionado {call.data}")
-        # bot.send_message(mid, f"Has seleccionado {call.data}",reply_markup=markup)
-        # bot.answer_callback_query(callback_query_id=call.id, text=f"Has seleccionado {call.data}")
-        # bot.delete_message(cid, mid)
+        bot.send_message(cid, f"You have chosen {call.data}")
         set_name=bot_auxiliar.set_gender(member_id=cid, gender=call.data)
         if set_name != None :
             user=list_users[cid]
             user.set_gender( gender=call.data,list_users=list_users)
-            texto='<code>Datos introducidos:</code>\n'
-            texto+=f"<code>NAME   :</code> {user.name}\n"
+            texto='<code>Personal Information:</code>\n'
+            texto+=f"<code>NAME...:</code> {user.name}\n"
             texto+=f"<code>SURNAME:</code> {user.surname}\n"
-            texto+=f"<code>AGE    :</code> {user.age}\n"
-            texto+=f"<code>MAIL   :</code> {user.mail}\n"
-            texto+=f"<code>GENDER :</code> {user.gender}\n"
+            texto+=f"<code>AGE....:</code> {user.age}\n"
+            texto+=f"<code>MAIL...:</code> {user.mail}\n"
+            texto+=f"<code>GENDER.:</code> {user.gender}\n"
             bot.send_message(cid, texto,parse_mode="html")
         else:
             bot.send_message(cid,"Error with the system. please contact with @Maite314")
@@ -288,53 +249,6 @@ def callback_query(call):
         bot.delete_message(cid, mid)
         markup=ReplyKeyboardRemove()
         bot.send_message(cid, "Please frist send the command /start or cleck in the comand. Thank you!",reply_markup=markup)
-
-        
-    
-        
-# def registrar_genero(message):
-#     global list_users  # Declaramos que vamos a usar la variable global
-
-#     bot.send_chat_action(message.chat.id, 'typing')
-
-#     gender=message.text
-#     if gender not in ["NO BINARY","MALE","FEMALE",'NO ANSWER']:
-#         bot.reply_to(message, "Please provide a valid gender")
-#         # markup=ReplyKeyboardMarkup(one_time_keyboard=True, 
-#         #                                input_field_placeholder="Selecciona tu Genero",
-#         #                                resize_keyboard=True)
-#         # markup.add("NO BINARY","MALE","FEMALE",'NO ANSWER')
-
-#         # msg=bot.send_message(message.chat.id, "Cual es tu genero?", reply_markup=markup) 
-#         # bot.register_next_step_handler(msg, registrar_genero)
-#     # if we have name:
-#     else:
-#         # We look if the user is in the database.
-#         if gender=="NO BINARY":
-#             gender_transformate="NOBINARY"
-#         elif gender=="NO ANSWER":
-#             gender_transformate="NOANSWER"
-#         else:
-#             gender_transformate=gender
-#         set_name=bot_auxiliar.set_gender(member_id=message.chat.id, gender=gender_transformate)
-#         if set_name != None :
-#             markup=ReplyKeyboardRemove()
-#             user=list_users[message.chat.id]
-#             user.set_gender( gender=gender_transformate,list_users=list_users)
-#             texto='<code>Datos introducidos:</code>\n'
-#             texto+=f"<code>NAME...:</code> {user.name}\n"
-#             texto+=f"<code>SURNAME:</code> {user.surname}\n"
-#             texto+=f"<code>AGE....:</code> {user.age}\n"
-#             texto+=f"<code>MAIL...:</code> {user.mail}\n"
-#             texto+=f"<code>GENDER.:</code> {user.gender}\n"
-#             bot.send_message(message.chat.id, texto,parse_mode="html", reply_markup=markup)
-
-            
-
-#         else:
-#             bot.send_message(message.chat.id,"Error with the system. please contact with @Maite314")
-#             return None   
-
 
 
 
@@ -346,66 +260,44 @@ def recommendation(message):
     # mid= call.message.id #message_id
     bot.send_chat_action(message.chat.id, 'typing')
     if message.chat.id in list(list_users.keys()):
-        bot.send_chat_action(message.chat.id, 'typing')
         user=list_users[message.chat.id]
         member_2 = bot_auxiliar.existe_user(id_user=message.chat.id)
         if user != None and member_2 != None:
             if list_users[message.chat.id].recommendations_aceptada==[]:
                 list_users[message.chat.id].recommendations=[]
                 markup = ReplyKeyboardMarkup(one_time_keyboard=True, 
-                                            input_field_placeholder="Enviar tu ubicación",
+                                            input_field_placeholder="Share your location",
                                             resize_keyboard=True)
-                location_btn = types.KeyboardButton("Enviar ubicación",request_location=True)
+                location_btn = types.KeyboardButton("Share your location 📍",request_location=True)
                 markup.add(location_btn)
                 
-                msg=bot.send_message(message.chat.id, "To begin, please share your location by pressing the button below. If you don't see it, please press the button before the clip button.", reply_markup=markup)
+                msg=bot.send_message(message.chat.id, "To begin, please share your location by pressing the button of your keyboard. ", reply_markup=markup)
                 #in the case we have the last position we delete this information! 
                 
                 
                 bot.register_next_step_handler(msg, crear_la_Recomendacion) 
             else:
                 markup=InlineKeyboardMarkup(row_width=1)
-                yes=InlineKeyboardButton(f"Estoy ready para hacer la foto!",callback_data="upload_photo")
+                yes=InlineKeyboardButton(f"I'm ready to take the photo!",callback_data="upload_photo")
                 markup.add(yes)
-                bot.send_message(message.chat.id, "You have already accepted a recommendation. Please go to this ocation and press and where you are here press the next botton.",reply_markup=markup)
+                bot.send_message(message.chat.id, "You have already accepted a recommendation. Please go to this location and where you are here press the next botton 👇 ",reply_markup=markup)
                 rec_Accepted=list_users[message.chat.id].recommendations_aceptada
                 bot.send_location(chat_id=message.chat.id, latitude=rec_Accepted['Latitude'], longitude=rec_Accepted['Longitude'])
                 
                 
         else: 
             markup=ReplyKeyboardRemove()
-            bot.send_message(message.chat.id, "Please frist send the command /start or cleck in the comand. Thank you!",reply_markup=markup)
+            bot.send_message(message.chat.id, "Please frist click in the command /start Thank you!",reply_markup=markup)
 
     else: 
         markup=ReplyKeyboardRemove()
-        bot.send_message(message.chat.id, "Please frist send the command /start or cleck in the comand. Thank you!",reply_markup=markup)
+        bot.send_message(message.chat.id,  "Please frist click in the command /start Thank you!",reply_markup=markup)
 
         
-# import time
-# def location(update, message):
-#     message = None
-#     if update.edited_message:
-#         message = update.edited_message
-#     else:
-#         message = update.message
-#     current_pos = (message.location.latitude, message.location.longitude)
-#     return message
-
 
 def crear_la_Recomendacion(message):
     global list_users
 
-    # bot.edit_message_live_location
-    # bot.send_chat_action(message.chat.id, 'typing')
-    # print(message.location.live_period)
-    # bot.get_updates()
-    # updates = bot.get_updates()
-    # message= location(update=updates, message=message)
-    # # El uusario ha enviado la ubicación debemos crear la recomendación
-    # # message.text="location"
-    # # print(message.location.live_period)
-    # time.sleep(2* 60)
-    # print(message.location.live_period)
     
     campaign = bot_auxiliar.get_campaign_hive_1()
     if campaign is not None:
@@ -423,7 +315,7 @@ def crear_la_Recomendacion(message):
                 markup=ReplyKeyboardRemove()
 
                 bot.send_message(
-                            message.chat.id, "There are currently no recommendations available for you. We apologize for the inconvenience.",reply_markup=markup)     
+                            message.chat.id, "There are no recommendations available. We apologize for the inconvenience.",reply_markup=markup)     
                                        
             else:
                 markup=InlineKeyboardMarkup(row_width=1)
@@ -472,7 +364,7 @@ def crear_la_Recomendacion(message):
                 # map_path = f'recommendation{message.chat.id}.html'
                 # map.save(map_path)
                 # with open(map_path, 'rb') as map_file:
-                msg=bot.send_message(message.chat.id, "Press the botton of the recomendaton you want to realized:",reply_markup=markup)
+                msg=bot.send_message(message.chat.id, "Select the recommendation based on the place you want to visit to take a photo!📸📸 Remember to bring out the artist in you!",reply_markup=markup)
                         # bot.register_next_step_handler(msg, user_select_recomendations) 
 
                         
@@ -494,20 +386,22 @@ def user_select_recomendations(call):
     if cid in list(list_users.keys()):
         if list_users[cid].recommendations != []:
             a=bot.edit_message_reply_markup(cid, mid, reply_markup=None)
-            bot.reply_to(a, f"Has seleccionado la recommendacion {int(call.data[-1])+1}")
+            bot.reply_to(a, f"You have chosen the recommendation {int(call.data[-1])+1}")
             
             recommendation=list_users[cid].recommendations[int(call.data[-1])]
             list_users[cid].recommendations=[]
             list_users[cid].recommendations_aceptada=[]
             list_users[cid].recommendations_aceptada.append(recommendation)
             accepted_recomendation=bot_auxiliar.update_recomendation(id_user=cid, recomendation_id=recommendation['id'])
-            markup=ReplyKeyboardRemove()
-            bot.send_message(cid, f"Te recuerdo que la ubicacion a la que tienes que ir para sacar la foto es la siguiente",reply_markup=markup)
-            bot.send_location(chat_id=cid, latitude=recommendation['latitude'], longitude=recommendation['longitude'])
             markup=InlineKeyboardMarkup(row_width=1)
-            yes=InlineKeyboardButton(f"Estoy ready para hacer la foto!",callback_data="upload_photo")
+            yes=InlineKeyboardButton(f"I'm ready to take the picture! 📸",callback_data="upload_photo")
             markup.add(yes)
-            bot.send_message(cid, f"¨Porfavor cuando llegues al punto press this botton. ",reply_markup=markup)
+            bot.send_message(cid, f"This is the place you select👇! Please go there to take a photo!📸 When you are there, please press the button!",reply_markup=markup)
+            bot.send_location(chat_id=cid, latitude=recommendation['latitude'], longitude=recommendation['longitude'])
+            # markup=InlineKeyboardMarkup(row_width=1)
+            # yes=InlineKeyboardButton(f"Estoy ready para hacer la foto!",callback_data="upload_photo")
+            # markup.add(yes)
+            # bot.send_message(cid, f"¨Porfavor cuando llegues al punto press this botton. ",reply_markup=markup)
         else:
             markup=ReplyKeyboardRemove()
             bot.send_message(cid, "Please frist send the command /recommendation or click in the comand. Thank you!",reply_markup=markup)
@@ -535,11 +429,11 @@ def medicion(call):
             if list_users[cid].recommendations_aceptada!=[]:
                 list_users[cid].recommendations=[]
                 markup = ReplyKeyboardMarkup(one_time_keyboard=True, 
-                                                    input_field_placeholder="Enviar tu ubicación",
+                                                    input_field_placeholder="Share your location 📍",
                                                     resize_keyboard=True)
-                location_btn = types.KeyboardButton("Enviar ubicación",request_location=True)
+                location_btn = types.KeyboardButton("Share your location 📍",request_location=True)
                 markup.add(location_btn)
-                msg=bot.send_message(cid, "To begin, please share your location by pressing the button below. If you don't see it, please press the button before the clip button.", reply_markup=markup)
+                msg=bot.send_message(cid, "To begin, please share your location by pressing the button of your keyboard.", reply_markup=markup)
                 bot.register_next_step_handler(msg, verificar_posicion_correcta) 
                         
             else:
@@ -556,21 +450,6 @@ def medicion(call):
         bot.delete_message(cid, mid)
         markup=ReplyKeyboardRemove()
         bot.send_message(cid, "Please frist send the command /start or cleck in the comand. Thank you!",reply_markup=markup)
-
-
-
-    # Hay que pedirle la photo al usuario
-    # markup = ReplyKeyboardMarkup(one_time_keyboard=True, 
-    #                                     input_field_placeholder="Enviar tu ubicación",
-    #                                     resize_keyboard=True)
-    # location_btn = types.KeyboardButton("Enviar ubicación",request_location=True)
-    # markup.add(location_btn)
-    # markup=ReplyKeyboardRemove()
-  
-    # msg=bot.send_message(message.chat.id, "Share the photo!", reply_markup=markup)
-    #In the case we have the last position we delete this information! 
-                   
-    # bot.register_next_step_handler(msg, subir_la_photo ) 
     
     
 def verificar_posicion_correcta(message): 
@@ -603,21 +482,25 @@ def verificar_posicion_correcta(message):
                         # El usuario esta donde debe para hacer la medicion!
                                 
             else:
-                markup=ReplyKeyboardRemove()
-                bot.send_message(message.chat.id, "Please ensure that you take the photo at the correct location you select. i send to you the location!", reply_markup=markup)
+                
+                markup=InlineKeyboardMarkup(row_width=1)
+                yes=InlineKeyboardButton(f"I'm ready to take the picture! 📸",callback_data="upload_photo")
+                markup.add(yes)
+                
+                bot.send_message(message.chat.id, "Please ensure that you take the photo at the correct location you select. I send to you the location!👇When you are there, please press the button!", reply_markup=markup)
                 lat = red_acceptada[0]['latitude']
                 long = red_acceptada[0]['longitude']
                 bot.send_location(chat_id=message.chat.id, latitude=lat, longitude=long)
-                markup=InlineKeyboardMarkup(row_width=1)
-                yes=InlineKeyboardButton(f"Estoy ready para hacer la foto!",callback_data="upload_photo")
-                markup.add(yes)
-                bot.send_message(message.chat.id, f"Cuando estes en la localizacion pulsa este boton", reply_markup=    markup)
+                # markup=InlineKeyboardMarkup(row_width=1)
+                # yes=InlineKeyboardButton(f"I'm ready to take the picture! 📸",callback_data="upload_photo")
+                # markup.add(yes)
+                # bot.send_message(message.chat.id, f"Please go there to take a photo!📸 When you are there, please press the button!", reply_markup= markup)
                                           
         else:
             if recomendation_aceptada_2 == None:
                 list_users[message.chat.id].recommendations_aceptada=[]
                 markup=ReplyKeyboardRemove()
-                bot.reply_to(message, "Has tardado demasiado, su recomendacion no puede ser integrada. Porfavor pìda otra recomendación usando el comando /recommendation " ,reply_markup=markup)                          
+                bot.reply_to(message, "You have taken too long, your recommendation cannot be integrated. Please ask for another recommendation using the /recommendation command." ,reply_markup=markup)                          
         
         # else:
         #     markup=ReplyKeyboardRemove()
@@ -642,7 +525,7 @@ def pedir_photo(message):
     list_users[message.chat.id].measurement.append(measuremenmt)  
     list_users[message.chat.id].recommendations_aceptada=[]
 
-    bot.reply_to(message, "Tu foto a sido registrada! Si quieres mirar el mapa consulta este link. Cada minuto se suben las nuevas foto! Si todavia no esta la tuya espera un poco! y que tal si tomas mas fotos  mientras esperas!!" )
+    bot.reply_to(message, "Your photo has been registered! In a few minutes you will be able to see it by clicking the following button!" )
     markup=InlineKeyboardMarkup(row_width=1)
     b1=InlineKeyboardButton("Deusto collage picture map", url="https://raw.githack.com/mpuerta004/RecommenderSystem/Bot/index.html")
     markup.add(b1)
