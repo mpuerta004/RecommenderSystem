@@ -87,4 +87,3 @@ class User(object):
         list_users[self.chat_id]=self
         return self
     
-    

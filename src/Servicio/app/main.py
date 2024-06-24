@@ -105,11 +105,11 @@ if __name__ == "__main__":
     ## Use this for debugging purposes only
     import uvicorn
 
-    # #Add this line to run the system. 
-    # scheduler = BackgroundScheduler()
-    # scheduler.add_job(final_funtion, 'interval', seconds=180)
-    # scheduler.add_job(State_change, 'interval', seconds=180)
-    # scheduler.start()
+    #Add this line to run the system. 
+    scheduler = BackgroundScheduler()
+    scheduler.add_job(final_funtion, 'interval', seconds=180)
+    scheduler.add_job(State_change, 'interval', seconds=180)
+    scheduler.start()
     
 
     bot.set_my_commands([
@@ -126,5 +126,5 @@ if __name__ == "__main__":
     scheduler = BackgroundScheduler()
     scheduler.add_job(crear_mapa_bot, 'interval', seconds=180)
     scheduler.start()
-
+    
     uvicorn.run(app, host="0.0.0.0", port=8001, log_level="debug")
