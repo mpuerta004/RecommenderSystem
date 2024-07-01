@@ -97,11 +97,11 @@ def create_recomendation(
             status_code=404, detail=f"Member with id=={member_id} not found"
             )
     
-        print("user_id:",user.id)
-        print("user_name", user.name)
-        print(f"user_location: (Lat: {recipe_in.member_current_location['Latitude']},Long:{recipe_in.member_current_location['Longitude']})")
+        # print("user_id:",user.id)
+        # print("user_name", user.name)
+        # print(f"user_location: (Lat: {recipe_in.member_current_location['Latitude']},Long:{recipe_in.member_current_location['Longitude']})")
         campaign = crud.campaign.get(db=db, id=campaign_id)
-        # De este modo si la campaña noesta activa sacara un error de no_measurements_needed! 
+        # De este modo si la campaña no esta activa sacara un error de no_measurements_needed! 
         if campaign.start_datetime.replace(tzinfo=timezone.utc) <= time.replace(tzinfo=timezone.utc)  and time.replace(tzinfo=timezone.utc) < campaign.end_datetime.replace(tzinfo=timezone.utc):
             campaign_member = crud.campaign_member.get_Campaigns_of_member(
                 db=db, member_id=user.id)
@@ -122,28 +122,27 @@ def create_recomendation(
         if role_correct==False:
             print("ERROR: Incorrect_user_role")
             return {"details": "Incorrect_user_role"}
-
+        #------
         
         user_location=recipe_in.member_current_location
         list_of_cells=crud.cell.get_cells_campaign(db=db, campaign_id=campaign_id)
         list_cells_id=[cell.id for cell in list_of_cells]
         df_user_distance=pd.DataFrame([0 for i in range(0,len(list_of_cells))], index=list_cells_id,columns=["distance_cell_user"])
-        list_of_cells=crud.cell.get_cells_campaign(db=db, campaign_id=campaign_id)
+        # list_of_cells=crud.cell.get_cells_campaign(db=db, campaign_id=campaign_id)
         far_away=True
         for cell in list_of_cells:
             df_user_distance.loc[cell.id,"distance_cell_user"]=vincenty_inverse(
                 (cell.centre["Latitude"], cell.centre["Longitude"]), (user_location['Latitude'], user_location['Longitude']))
             distance=df_user_distance.loc[cell.id,"distance_cell_user"]
             if distance is not None:
-                if  distance <=campaign.cells_distance*5:
+                if distance <= campaign.cells_distance*5:
+                    #Hay alguna celda en el rango del usuario. 
                     far_away=False
         if far_away:
             print("ERROR: far_away_2")
             return {"detail": "far_away"}
+        #------
         probability_user=pd.DataFrame([], index= list_cells_id,columns=["probability"])
-        # if not (member_id in self.list_members_id):
-        #     self.new_user(member_id=member_id, campaign_id=self.campaign_id, db=db)
-            
         
         NEW_VALUE=-1.0
         for cell in list_of_cells:
@@ -184,17 +183,18 @@ def create_recomendation(
                     NEW_VALUE=-1.0
             probability_user.loc[cell.id,"probability" ]= NEW_VALUE
         probability_user["probability"]= pd.to_numeric(probability_user["probability"])
+        
         result = []
         probability_user_list_positive = probability_user.loc[probability_user["probability"]>=0.0]
         list_order_cell=probability_user_list_positive.sort_values(by="probability", ascending=False).index.tolist()
         definitivos=[]
-        if len(list_order_cell)<3:
+        if len(list_order_cell)<=3:
             definitivos=list_order_cell
         #Esto es para asegurarnos de que los tres primeros si son iguales en prioridad no se cogan por order de id sino que revolvemos.  
         else:
             definitivos=[]
             # print(len(list_order_cell))
-
+            #Obteniendo el order en caso de que halla varios que estan en la misma prioridad
             while list_order_cell!=[] and len(definitivos)<3 :
                 list_indices_valor_mas_bajo=[]
                 primer_elemento=list_order_cell[0]
@@ -211,30 +211,30 @@ def create_recomendation(
             # print(len(definitivos))
         if definitivos!=[]:
             
-            if len(definitivos)>3:
-                for i in range(3):
+                if len(definitivos)>3:
+                    for i in range(0,3):
                     
-                    cell_id = definitivos[i]
-                    slot=crud.slot.get_slot_time(db=db, cell_id=cell_id, time=time)
-                    recomendation = crud.recommendation.create_recommendation(
-                    db=db, obj_in=recipe_in, member_id=member_id, slot_id=slot.id, state="NOTIFIED", update_datetime=time, sent_datetime=time)
-                    cell = crud.cell.get(db=db, id=slot.cell_id)
-                    result.append(RecommendationCell(
-                             recommendation=recomendation, cell=cell))
-            
-                    
-            else:
-                for i in range(len(definitivos)):
-                    cell_id = definitivos[i]
-                    slot=crud.slot.get_slot_time(db=db, cell_id=cell_id, time=time)
-                    recomendation = crud.recommendation.create_recommendation(
-                    db=db, obj_in=recipe_in, member_id=member_id, slot_id=slot.id, state="NOTIFIED", update_datetime=time, sent_datetime=time)
-                    cell = crud.cell.get(db=db, id=slot.cell_id)
-                           
-                    result.append(RecommendationCell(
-                             recommendation=recomendation, cell=cell))
-            
-            return {"results": result}
+                        cell_id = definitivos[i]
+                        slot=crud.slot.get_slot_time(db=db, cell_id=cell_id, time=time)
+                        recomendation = crud.recommendation.create_recommendation(
+                        db=db, obj_in=recipe_in, member_id=member_id, slot_id=slot.id, state="NOTIFIED", update_datetime=time, sent_datetime=time)
+                        cell = crud.cell.get(db=db, id=slot.cell_id)
+                        result.append(RecommendationCell(
+                                recommendation=recomendation, cell=cell))
+                
+                        
+                else:
+                    for i in range(len(definitivos)):
+                        cell_id = definitivos[i]
+                        slot=crud.slot.get_slot_time(db=db, cell_id=cell_id, time=time)
+                        recomendation = crud.recommendation.create_recommendation(
+                        db=db, obj_in=recipe_in, member_id=member_id, slot_id=slot.id, state="NOTIFIED", update_datetime=time, sent_datetime=time)
+                        cell = crud.cell.get(db=db, id=slot.cell_id)
+                            
+                        result.append(RecommendationCell(
+                                recommendation=recomendation, cell=cell))
+                
+                return {"results": result}
         else:
             print("ERROR: no_measurements_needed; cells_and_priority empty for wanted campaign ")
             return {"detail": "no_measurements_needed"}

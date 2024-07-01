@@ -63,7 +63,7 @@ def start(message):
                 User(chat_id=message.chat.id,list_users=list_users)
                 markup=ReplyKeyboardRemove()
                 bar = '■' * 1+ '□' * 5
-                msg=bot.send_message(message.chat.id, f"Hello!👋 I'm the MVE bot 🤖! Let's create the Duesto' collage together! 📸 \nBut first, 🤗 let's get to know each other!\n[{bar}] What's your name? 🤔",reply_markup=markup)
+                msg=bot.send_message(message.chat.id, f"Hello!👋 I'm the MVE bot 🤖! Let's create the Deusto' collage together! 📸 \nBut first, 🤗 let's get to know each other!\n\n[{bar}] What's your name? 🤔",reply_markup=markup)
                 bot.register_next_step_handler(msg, registrar_nombre) 
             else:
                 print(f"Error en la solicitud. Código de respuesta: {response.status_code}")
@@ -95,16 +95,17 @@ def personal_information(message):
         yes=InlineKeyboardButton("Yes", callback_data="Yes")
         no=InlineKeyboardButton("No", callback_data="No")
         markup.add(yes, no)
-        msg=bot.send_message(message.chat.id, "Would you like to change it?", reply_markup=markup) 
-        bot.register_next_step_handler(msg, change_personal_information) 
+        bot.send_message(message.chat.id, "Would you like to change it?", reply_markup=markup) 
+        # bot.register_next_step_handler(msg, change_personal_information) 
     else:
         markup=ReplyKeyboardRemove()
         bot.send_message(message.chat.id, "Please frist send the command /start or cleck in the comand. Thank you!",reply_markup=markup)
     
 @bot.callback_query_handler(func=lambda call: (call.data=="Yes" or call.data=="No"))
-def change_personal_information(call):
+def callback_query(call):
     cid=call.from_user.id #chat_id
     mid= call.message.id #message_id
+    
     bot.send_chat_action(cid, 'typing')
     if cid in list(list_users.keys()):
         markup=InlineKeyboardMarkup(row_width=1)
@@ -135,7 +136,6 @@ def registrar_nombre(message):
         if set_name != None :
             user=list_users[message.chat.id]
             user.set_name( name=nombre,list_users=list_users)
-            print(list_users[message.chat.id])
             markup=ForceReply()
             bar = '■' * 2+ '□' * 3
             msg=bot.send_message(message.chat.id, f"[{bar}] What's your surname?", reply_markup=markup) 
@@ -215,7 +215,7 @@ def registrar_email(message):
             markup=InlineKeyboardMarkup(row_width=2)
             male=InlineKeyboardButton("Male", callback_data="MALE")
             female=InlineKeyboardButton("Female", callback_data="FEMALE")
-            no_binary=InlineKeyboardButton("No binary", callback_data="NOBINARY")
+            no_binary=InlineKeyboardButton("Non binary", callback_data="NOBINARY")
             No_answer=InlineKeyboardButton("No answer", callback_data="NOANSWER")
             markup.add(male, female, no_binary, No_answer)
             bar = '■' * 5+ '□' * 0
@@ -243,6 +243,7 @@ def callback_query(call):
             texto+=f"<code>MAIL...:</code> {user.mail}\n"
             texto+=f"<code>GENDER.:</code> {user.gender}\n"
             bot.send_message(cid, texto,parse_mode="html")
+            bot.send_message(cid, "send (or click) /recommendation to start the collague! ")
         else:
             bot.send_message(cid,"Error with the system. please contact with @Maite314")
     else:
@@ -297,87 +298,88 @@ def recommendation(message):
 
 def crear_la_Recomendacion(message):
     global list_users
+    if message.location is None:
+        bot.send_message(message.chat.id, "Please write the command /recommendation and share your location. Thank you!")
+    else:
+        campaign = bot_auxiliar.get_campaign_hive_1()
+        if campaign is not None:
+            campaign_id = campaign['id'] 
+            info = {
+                "member_current_location": {
+                    "Longitude": message.location.longitude,
+                    "Latitude": message.location.latitude
+                }} 
+            data = bot_auxiliar.recomendacion_2(
+            id_user=message.chat.id, campaign_id=campaign_id, info=info)
+            if data is not None and data!={"detail": "Incorrect_user_campaign"} and data != {'detail': 'far_away'} and data != {'details': 'Incorrect_user_role'} and data != {"detail": "no_measurements_needed"}:
+                locations = []
+                if len(data['results']) == 0:
+                    markup=ReplyKeyboardRemove()
 
-    
-    campaign = bot_auxiliar.get_campaign_hive_1()
-    if campaign is not None:
-        campaign_id = campaign['id'] 
-        info = {
-            "member_current_location": {
-                "Longitude": message.location.longitude,
-                "Latitude": message.location.latitude
-            }} 
-        data = bot_auxiliar.recomendacion_2(
-        id_user=message.chat.id, campaign_id=campaign_id, info=info)
-        if data is not None and data!={"detail": "Incorrect_user_campaign"} and data != {'detail': 'far_away'} and data != {'details': 'Incorrect_user_role'} and data != {"detail": "no_measurements_needed"}:
-            locations = []
-            if len(data['results']) == 0:
+                    bot.send_message(
+                                message.chat.id, "There are no recommendations available. We apologize for the inconvenience.",reply_markup=markup)     
+                                        
+                else:
+                    markup=InlineKeyboardMarkup(row_width=1)
+                    
+                    recommendations=[]
+                    for i in range(0,len(data['results'])):
+                        point = data['results'][i]['cell']['centre']
+                        
+                        # recomendation= RecommendationCreate(id=data['results'][i]['recommendation']['id'],member_id=message.chat.id, posicion=str(i), state="NOTIFIED",point={"Longitude":point['Longitude'],"Latitude":point['Latitude']})
+                        
+                        locations=locations+[{"latitude":point['Latitude'],"longitude":point['Longitude'],"title":f"Recommendation {i}"}]
+                        yes=InlineKeyboardButton(f"Recommendation {i+1}", callback_data=f"Recommendation {i}")
+                        markup.add(yes)
+                        markup_remove=ReplyKeyboardRemove()
+                        recommendations.append({"latitude":point['Latitude'],"longitude":point['Longitude'],"id":data['results'][i]['recommendation']['id']})
+                        text=f"Recommendation {i+1}:"
+                        bot.send_message(chat_id=message.chat.id, text=text,reply_markup=markup_remove)
+
+                        b=bot.send_location(chat_id=message.chat.id, latitude=point['Latitude'], longitude=point['Longitude'])
+
+                        # Generar el mapa con folium
+                    # map = folium.Map(location=[message.location.latitude, message.location.longitude], zoom_start=17)
+                    user=list_users[message.chat.id]
+                    list_users[message.chat.id].recommendations=recommendations 
+                    user.recommendations=recommendations
+                    
+                    # Añadir marcador para la ubicación del usuario
+                    # folium.Marker(
+                    #     [message.location.latitude, message.location.longitude],
+                    #         popup="You are here",
+                    #         icon=folium.Icon(color="blue")
+                    #     ).add_to(map)
+
+                    #     # Añadir marcadores para las localizaciones predefinidas
+                    # for loc in locations:
+                    #         folium.Marker(
+                    #             [loc["latitude"], loc["longitude"]],
+                    #             popup=loc["title"]
+                    #         ).add_to(map)
+
+                    #     # Guardar el mapa en un objeto BytesIO
+                    #  # Guardar el mapa en un archivo local para depuración
+                    # map.save("map.html")
+                    # # Enviar el mapa al usuario
+                    # # try:
+                    # map_path = f'recommendation{message.chat.id}.html'
+                    # map.save(map_path)
+                    # with open(map_path, 'rb') as map_file:
+                    msg=bot.send_message(message.chat.id, "Select the recommendation based on the place you want to visit to take a photo!📸📸 Remember to bring out the artist in you!",reply_markup=markup)
+                            # bot.register_next_step_handler(msg, user_select_recomendations) 
+
+                            
+                    # except Exception as e:
+                    #     print(f"Failed to send photo: {e}")
+                    # bot.register_next_step_handler(msg, user_select_recomendations) 
+            else:
                 markup=ReplyKeyboardRemove()
 
-                bot.send_message(
-                            message.chat.id, "There are no recommendations available. We apologize for the inconvenience.",reply_markup=markup)     
-                                       
-            else:
-                markup=InlineKeyboardMarkup(row_width=1)
-                
-                recommendations=[]
-                for i in range(0,len(data['results'])):
-                    point = data['results'][i]['cell']['centre']
-                    
-                    # recomendation= RecommendationCreate(id=data['results'][i]['recommendation']['id'],member_id=message.chat.id, posicion=str(i), state="NOTIFIED",point={"Longitude":point['Longitude'],"Latitude":point['Latitude']})
-                    
-                    locations=locations+[{"latitude":point['Latitude'],"longitude":point['Longitude'],"title":f"Recommendation {i}"}]
-                    yes=InlineKeyboardButton(f"Recommendation {i+1}", callback_data=f"Recommendation {i}")
-                    markup.add(yes)
-                    markup_remove=ReplyKeyboardRemove()
-                    recommendations.append({"latitude":point['Latitude'],"longitude":point['Longitude'],"id":data['results'][i]['recommendation']['id']})
-                    text=f"Recommendation {i+1}:"
-                    bot.send_message(chat_id=message.chat.id, text=text,reply_markup=markup_remove)
-
-                    b=bot.send_location(chat_id=message.chat.id, latitude=point['Latitude'], longitude=point['Longitude'])
-
-                    # Generar el mapa con folium
-                # map = folium.Map(location=[message.location.latitude, message.location.longitude], zoom_start=17)
-                user=list_users[message.chat.id]
-                list_users[message.chat.id].recommendations=recommendations 
-                user.recommendations=recommendations
-                
-                # Añadir marcador para la ubicación del usuario
-                # folium.Marker(
-                #     [message.location.latitude, message.location.longitude],
-                #         popup="You are here",
-                #         icon=folium.Icon(color="blue")
-                #     ).add_to(map)
-
-                #     # Añadir marcadores para las localizaciones predefinidas
-                # for loc in locations:
-                #         folium.Marker(
-                #             [loc["latitude"], loc["longitude"]],
-                #             popup=loc["title"]
-                #         ).add_to(map)
-
-                #     # Guardar el mapa en un objeto BytesIO
-                #  # Guardar el mapa en un archivo local para depuración
-                # map.save("map.html")
-                # # Enviar el mapa al usuario
-                # # try:
-                # map_path = f'recommendation{message.chat.id}.html'
-                # map.save(map_path)
-                # with open(map_path, 'rb') as map_file:
-                msg=bot.send_message(message.chat.id, "Select the recommendation based on the place you want to visit to take a photo!📸📸 Remember to bring out the artist in you!",reply_markup=markup)
-                        # bot.register_next_step_handler(msg, user_select_recomendations) 
-
-                        
-                # except Exception as e:
-                #     print(f"Failed to send photo: {e}")
-                # bot.register_next_step_handler(msg, user_select_recomendations) 
-        else:
-            markup=ReplyKeyboardRemove()
-
-            msg=bot.send_message(message.chat.id, "Unfortunately, there are no recommendations available for you at this time. We apologize for the inconvenience.",reply_markup=markup)
+                msg=bot.send_message(message.chat.id, "Unfortunately, there are no recommendations available for you at this time. We apologize for the inconvenience.",reply_markup=markup)
 
 @bot.callback_query_handler(func=lambda call: (call.data=="Recommendation 0" or call.data=="Recommendation 1" or call.data=="Recommendation 2"))
-def user_select_recomendations(call):
+def callback_query(call):
     global list_users
 
     cid=call.from_user.id #chat_id
@@ -418,6 +420,7 @@ def medicion(call):
     global list_users
 
     cid=call.from_user.id #chat_id
+    list_users[cid].recommendations=[]
     mid= call.message.id #message_id
     bot.send_chat_action(cid, 'typing')
     if cid in list(list_users.keys()):
@@ -454,82 +457,95 @@ def medicion(call):
     
 def verificar_posicion_correcta(message): 
     global list_users
+    if message.location is None:
+        markup=InlineKeyboardMarkup(row_width=1)
 
-    bot.send_chat_action(message.chat.id, 'typing')
-    if message.chat.id in list(list_users.keys()):
-        list_users[message.chat.id].location_to_measure={"Longitude": message.location.longitude,"Latitude": message.location.latitude}
-        list_users[message.chat.id].recommendations=[]
-        # if list_users[message.chat.id].location_to_measure != None:
-            #No tenem,os su ubicacion (Esto no es posible!)
-        red_acceptada=list_users[message.chat.id].recommendations_aceptada
-        recomendation_aceptada_2=bot_auxiliar.recomendaciones_aceptadas(message.chat.id)
-        if red_acceptada != None and recomendation_aceptada_2!=None:
-                #Que la base de datos sigue reguistrando que tienes una recopmendacion aceptada y ell bot tambien la tiene registrada. 
-                # if recomendation_aceptada_2 != None:
-                    #TODO esto no se si esta bien
-                    # data=bot_auxiliar.create_measurement(id_user=message.chat.id,  Latitud=list_users[message.chat.id].location_to_measure['Latitude'], Longitud=list_users[message.chat.id].location_to_measure['Longitude'])
-            Latitud_user=list_users[message.chat.id].location_to_measure['Latitude']
-            Longitud_user=list_users[message.chat.id].location_to_measure['Longitude']
-            lat = red_acceptada[0]['latitude']
-            long = red_acceptada[0]['longitude']
-            distance = vincenty_inverse((Latitud_user, Longitud_user), (lat, long))
-            if distance <= radio_cell:
-                markup=ReplyKeyboardRemove()
-                msg=bot.send_message(message.chat.id, "Please share your photo", reply_markup=markup)
-                        #in the case we have the last position we delete this information! 
-                bot.register_next_step_handler(msg, pedir_photo) 
-                        
-                        # El usuario esta donde debe para hacer la medicion!
-                                
-            else:
-                
-                markup=InlineKeyboardMarkup(row_width=1)
-                yes=InlineKeyboardButton(f"I'm ready to take the picture! 📸",callback_data="upload_photo")
-                markup.add(yes)
-                
-                bot.send_message(message.chat.id, "Please ensure that you take the photo at the correct location you select. I send to you the location!👇When you are there, please press the button!", reply_markup=markup)
+        yes=InlineKeyboardButton(f"I'm ready to take the picture! 📸",callback_data="upload_photo")
+        markup.add(yes)
+        bot.send_message(message.chat.id, f"Please press the button! and share the location when the system ask for it",reply_markup=markup)
+    else:
+        bot.send_chat_action(message.chat.id, 'typing')
+        if message.chat.id in list(list_users.keys()):
+            list_users[message.chat.id].location_to_measure={"Longitude": message.location.longitude,"Latitude": message.location.latitude}
+            list_users[message.chat.id].recommendations=[]
+            # if list_users[message.chat.id].location_to_measure != None:
+                #No tenem,os su ubicacion (Esto no es posible!)
+            red_acceptada=list_users[message.chat.id].recommendations_aceptada
+            recomendation_aceptada_2=bot_auxiliar.recomendaciones_aceptadas(message.chat.id)
+            if red_acceptada != None and recomendation_aceptada_2!=None:
+                    #Que la base de datos sigue reguistrando que tienes una recopmendacion aceptada y ell bot tambien la tiene registrada. 
+                    # if recomendation_aceptada_2 != None:
+                        #TODO esto no se si esta bien
+                        # data=bot_auxiliar.create_measurement(id_user=message.chat.id,  Latitud=list_users[message.chat.id].location_to_measure['Latitude'], Longitud=list_users[message.chat.id].location_to_measure['Longitude'])
+                Latitud_user=list_users[message.chat.id].location_to_measure['Latitude']
+                Longitud_user=list_users[message.chat.id].location_to_measure['Longitude']
                 lat = red_acceptada[0]['latitude']
                 long = red_acceptada[0]['longitude']
-                bot.send_location(chat_id=message.chat.id, latitude=lat, longitude=long)
-                # markup=InlineKeyboardMarkup(row_width=1)
-                # yes=InlineKeyboardButton(f"I'm ready to take the picture! 📸",callback_data="upload_photo")
-                # markup.add(yes)
-                # bot.send_message(message.chat.id, f"Please go there to take a photo!📸 When you are there, please press the button!", reply_markup= markup)
-                                          
+                distance = vincenty_inverse((Latitud_user, Longitud_user), (lat, long))
+                if distance <= radio_cell:
+                    markup=ReplyKeyboardRemove()
+                    msg=bot.send_message(message.chat.id, "Please share your photo", reply_markup=markup)
+                            #in the case we have the last position we delete this information! 
+                    bot.register_next_step_handler(msg, pedir_photo) 
+                            
+                            # El usuario esta donde debe para hacer la medicion!
+                                    
+                else:
+                    
+                    markup=InlineKeyboardMarkup(row_width=1)
+                    yes=InlineKeyboardButton(f"I'm ready to take the picture! 📸",callback_data="upload_photo")
+                    markup.add(yes)
+                    
+                    bot.send_message(message.chat.id, "Please ensure that you take the photo at the correct location you select. I send to you the location!👇When you are there, please press the button!", reply_markup=markup)
+                    lat = red_acceptada[0]['latitude']
+                    long = red_acceptada[0]['longitude']
+                    bot.send_location(chat_id=message.chat.id, latitude=lat, longitude=long)
+                    # markup=InlineKeyboardMarkup(row_width=1)
+                    # yes=InlineKeyboardButton(f"I'm ready to take the picture! 📸",callback_data="upload_photo")
+                    # markup.add(yes)
+                    # bot.send_message(message.chat.id, f"Please go there to take a photo!📸 When you are there, please press the button!", reply_markup= markup)
+                                            
+            else:
+                if recomendation_aceptada_2 == None:
+                    list_users[message.chat.id].recommendations_aceptada=[]
+                    markup=ReplyKeyboardRemove()
+                    bot.reply_to(message, "You have taken too long, your recommendation cannot be integrated. Please ask for another recommendation using the /recommendation command." ,reply_markup=markup)                          
+            
+            # else:
+            #     markup=ReplyKeyboardRemove()
+            #     bot.reply_to(message, "Please first send the command /recommendation to share your location. Thank you!",reply_markup=markup)
         else:
-            if recomendation_aceptada_2 == None:
-                list_users[message.chat.id].recommendations_aceptada=[]
-                markup=ReplyKeyboardRemove()
-                bot.reply_to(message, "You have taken too long, your recommendation cannot be integrated. Please ask for another recommendation using the /recommendation command." ,reply_markup=markup)                          
+            markup=ReplyKeyboardRemove()
+            bot.reply_to(message, "Please, first prees /start botton. Thanks you!",reply_markup=markup)
         
-        # else:
-        #     markup=ReplyKeyboardRemove()
-        #     bot.reply_to(message, "Please first send the command /recommendation to share your location. Thank you!",reply_markup=markup)
-    else:
-        markup=ReplyKeyboardRemove()
-        bot.reply_to(message, "Please, first prees /start botton. Thanks you!",reply_markup=markup)
-    
 
 def pedir_photo(message):
     global list_users
     bot.send_chat_action(message.chat.id, 'typing')
-    data=bot_auxiliar.create_measurement(id_user=message.chat.id,  Latitud=list_users[message.chat.id].location_to_measure['Latitude'], Longitud=list_users[message.chat.id].location_to_measure['Longitude'])
-    file_id = message.photo[-1].file_id
-    file_info = bot.get_file(file_id)
-    downloaded_file = bot.download_file(file_info.file_path)
-    file_path = f'/recommendersystem/src/Servicio/app/Telegram_bot/Pictures/photo{data["id"]}.jpg'
-                        # measurement=MeasurementCreate(id=data['id'],url=file_path, location={ 'Longitude': list_users[message.chat.id].location_to_measure['Longitude'], 'Latitude': list_users[message.chat.id].location_to_measure['Latitude']})
-    with open(file_path, 'wb') as new_file:
-        new_file.write(downloaded_file)
-    measuremenmt= Measurement_bot(list_users[message.chat.id].location_to_measure, file_path)
-    list_users[message.chat.id].measurement.append(measuremenmt)  
-    list_users[message.chat.id].recommendations_aceptada=[]
 
-    bot.reply_to(message, "Your photo has been registered! In a few minutes you will be able to see it by clicking the following button!" )
-    markup=InlineKeyboardMarkup(row_width=1)
-    b1=InlineKeyboardButton("Deusto collage picture map", url="https://raw.githack.com/mpuerta004/RecommenderSystem/Bot/index.html")
-    markup.add(b1)
-    bot.send_message(message.chat.id, "Please visit the following link to see the collage of the photos taken.", reply_markup=markup)
+    if message.photo[-1] is None:
+        markup=ReplyKeyboardRemove()
+        msg=bot.send_message(message.chat.id, "Please share your photo. Press the📎icon to take a picture", reply_markup=markup)
+                            #in the case we have the last position we delete this information! 
+        bot.register_next_step_handler(msg, pedir_photo) 
+    else:
+        data=bot_auxiliar.create_measurement(id_user=message.chat.id,  Latitud=list_users[message.chat.id].location_to_measure['Latitude'], Longitud=list_users[message.chat.id].location_to_measure['Longitude'])
+        file_id = message.photo[-1].file_id
+        file_info = bot.get_file(file_id)
+        downloaded_file = bot.download_file(file_info.file_path)
+        file_path = f'/recommendersystem/src/Servicio/app/Telegram_bot/Pictures/photo{data["id"]}.jpg'
+                            # measurement=MeasurementCreate(id=data['id'],url=file_path, location={ 'Longitude': list_users[message.chat.id].location_to_measure['Longitude'], 'Latitude': list_users[message.chat.id].location_to_measure['Latitude']})
+        with open(file_path, 'wb') as new_file:
+            new_file.write(downloaded_file)
+        measuremenmt= Measurement_bot(list_users[message.chat.id].location_to_measure, file_path)
+        list_users[message.chat.id].measurement.append(measuremenmt)  
+        list_users[message.chat.id].recommendations_aceptada=[]
+
+        bot.reply_to(message, "Your photo has been registered! In a few minutes you will be able to see it by clicking the following button!" )
+        markup=InlineKeyboardMarkup(row_width=1)
+        b1=InlineKeyboardButton("Deusto collage picture map", url="https://raw.githack.com/mpuerta004/RecommenderSystem/Bot/index.html")
+        markup.add(b1)
+        bot.send_message(message.chat.id, "Please visit the following link to see the collage of the photos taken.", reply_markup=markup)
 
    
     
