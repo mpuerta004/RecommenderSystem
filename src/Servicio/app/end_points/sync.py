@@ -142,7 +142,7 @@ def update_devices(
             result.append(device_db_new)
     return result
 
-
+import pytz
                 
                 
 @api_router_sync.put("/hives/{hive_id}/members/", status_code=201, response_model=List[NewMembers])
@@ -171,9 +171,9 @@ def update_members(
             hiveCreate=Hive_MemberCreate(hive_id=hive_id,member_id=member_db_new.id)
             hive_member=crud.hive_member.create_hiveMember(db=db,obj_in=hiveCreate,role=role)
             list_campaigns = crud.campaign.get_campaigns_from_hive_id_active(
-                db=db, time=datetime.utcnow(), hive_id=hive_id)
+                db=db, time=datetime.now(pytz.timezone('Europe/Madrid')), hive_id=hive_id)
             a= crud.campaign.get_campaigns_from_hive_id_future(
-                    db=db, time=datetime.utcnow(), hive_id=hive_id)
+                    db=db, time=datetime.now(pytz.timezone('Europe/Madrid')), hive_id=hive_id)
             list_campaigns= list_campaigns + a
 
             # Verify if there is any active campaign
@@ -199,9 +199,9 @@ def update_members(
                 hiveCreate=Hive_MemberCreate(hive_id=hive_id,member_id=member_db_new.id)
                 hive_member=crud.hive_member.create_hiveMember(db=db,obj_in=hiveCreate,role=role)
                 list_campaigns = crud.campaign.get_campaigns_from_hive_id_active(
-                db=db, time=datetime.utcnow(), hive_id=hive_id)
+                db=db, time=datetime.now(pytz.timezone('Europe/Madrid')), hive_id=hive_id)
                 a= crud.campaign.get_campaigns_from_hive_id_future(
-                        db=db, time=datetime.utcnow(), hive_id=hive_id)
+                        db=db, time=datetime.now(pytz.timezone('Europe/Madrid')), hive_id=hive_id)
                 list_campaigns= list_campaigns + a
 
                 # Verify if there is any active campaign
@@ -221,7 +221,7 @@ def update_members(
                 if(hive_member.role!=role):
                     crud.hive_member.update(db=db, db_obj=hive_member,obj_in={"role":role})
                     a= crud.campaign.get_campaigns_from_hive_id_future(
-                            db=db, time=datetime.utcnow(), hive_id=hive_id)
+                            db=db, time=datetime.now(pytz.timezone('Europe/Madrid')), hive_id=hive_id)
                     for i in a:
                         campaign_member= crud.campaign_member.get_Campaign_Member_in_campaign(db=db, campaign_id=i.id, member_id=member_db_new.id)
                         crud.campaign_member.update(db=db, obj_in={"role": role}, db_obj=campaign_member)
@@ -465,7 +465,7 @@ def update_campaign(
     #If the campaign exists, we update it! 
     if campaign_metadata.start_datetime != campaign.start_datetime or campaign_metadata.end_datetime != campaign.end_datetime or campaign_metadata.cells_distance != campaign.cells_distance or campaign_metadata.sampling_period != campaign.sampling_period or campaign_metadata.min_samples != campaign.min_samples:
         #Verify if the campaign is active (time)
-        if datetime.utcnow().replace(tzinfo=timezone.utc) > campaign.start_datetime.replace(tzinfo=timezone.utc):
+        if datetime.now(pytz.timezone('Europe/Madrid')).replace(tzinfo=pytz.timezone('Europe/Madrid')) > campaign.start_datetime.replace(tzinfo=pytz.timezone('Europe/Madrid')):
             raise HTTPException(
                 status_code=401, detail=f"An active campaign cannot be modified."
             )

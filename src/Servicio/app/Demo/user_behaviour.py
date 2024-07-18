@@ -17,6 +17,7 @@ from random import shuffle
 from Demo.Trayectoria import trajectory
 from Demo.List_users import ListUsers
 from Demo import variables 
+import pytz
 class User(object):
     
 
@@ -61,7 +62,7 @@ class User(object):
         for i in list_campaign:
             cam = crud.campaign.get_campaign(
                 db=db, campaign_id=i.campaign_id, hive_id=hive_id)
-            if cam.start_datetime.replace(tzinfo=timezone.utc) <= time.replace(tzinfo=timezone.utc) and time.replace(tzinfo=timezone.utc) < cam.end_datetime.replace(tzinfo=timezone.utc):
+            if cam.start_datetime.replace(tzinfo= pytz.timezone('Europe/Madrid')) <= time.replace(tzinfo=pytz.timezone('Europe/Madrid')) and time.replace(tzinfo=pytz.timezone('Europe/Madrid')) < cam.end_datetime.replace(tzinfo=pytz.timezone('Europe/Madrid')):
                 active_campaign.append([i.campaign_id, cam])
         if len(active_campaign) != 0:
             # Select the position of the user.
@@ -87,21 +88,21 @@ class User(object):
                 cam, surface = self.seleccion_campaign_over_hive(hive_id=hive_id, time=time, db=db)
                 self.trajectory.generar_new_trajectory(campaign_id=cam.id,surface_id=surface.id, hive_id=hive_id,time=time, db=db)
                 self.trajectory.end_trajectory=False
-                if self.id==1:
-                    print("---------------------------------------/n")
-                    print(self.trajectory.posicion)
-                    print("inicial", self.trajectory.posicion_inicial_inicial)
-                    print("final", self.trajectory.posicion_final_final)
+                # if self.id==1:
+                #     print("---------------------------------------/n")
+                #     print(self.trajectory.posicion)
+                #     print("inicial", self.trajectory.posicion_inicial_inicial)
+                #     print("final", self.trajectory.posicion_final_final)
 
             else:
                 #En el caso de que no sea la primera trajectoria puedes ver si se va a repetir o no la trayectoria. 
                 aleatorio = random.random()
-                if aleatorio> self.probability_of_trajectory_recursivity:
+                if aleatorio <= self.probability_of_trajectory_recursivity:
                     self.trajectory.repeticion_trajectoria_inicial()
                     self.trajectory.end_trajectory=False
-                    if self.id==1:
-                        print("---------------------------------------/n")
-                        print(self.trajectory.posicion)
+                #     if self.id==1:
+                #         print("---------------------------------------/n")
+                #         print(self.trajectory.posicion)
                 else:
                     hive_members=crud.hive_member.get_by_member_id(db=db, member_id=self.member.id)
                     hive_member= random.randint(0, len(hive_members)-1)
@@ -109,17 +110,17 @@ class User(object):
                     cam, surface = self.seleccion_campaign_over_hive(hive_id=hive_id, time=time, db=db)
                     self.trajectory.generar_new_trajectory(campaign_id=cam.id,surface_id=surface.id, hive_id=hive_id,time=time, db=db)
                     self.trajectory.end_trajectory=False
-                    if self.id==1:
-                        print("---------------------------------------/n")
-                        print(self.trajectory.posicion)
+                    # if self.id==1:
+                    #     print("---------------------------------------/n")
+                    #     print(self.trajectory.posicion)
         else:
             cam, surface = self.seleccion_campaign_over_hive(hive_id=hive_id, time=time, db=db)
 
             #Esto significa que ya esta en una trajectoria iniciada. 
             self.trajectory.actualizar_poscion_trayectoria_iniciada(db=db, campaign_id=cam.id, hive_id=hive_id,surface_id=surface.id)
-            if self.id==1:
-                    print("---------------------------------------/n")
-                    print(self.trajectory.posicion)
+            # if self.id==1:
+            #         print("---------------------------------------/n")
+            #         print(self.trajectory.posicion)
     
     
     

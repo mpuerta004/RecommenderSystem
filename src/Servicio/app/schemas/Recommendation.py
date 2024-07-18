@@ -34,13 +34,13 @@ class RecommendationUpdate(BaseModel):
     state:state
     update_datetime:datetime
 
-    
+import pytz
 # Properties shared by models stored in DB
 class RecommendationInDBBase(RecommendationBase):
     member_id:int
     state:state
     update_datetime:datetime
-    sent_datetime:datetime=datetime.utcnow()
+    sent_datetime:datetime=datetime.now(pytz.timezone('Europe/Madrid'))
     # state_id:int
     id:int
     slot_id:int

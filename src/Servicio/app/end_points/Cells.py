@@ -150,7 +150,7 @@ def delete_cell(*,
     crud.cell.remove(db=db, cell=result)
     return {"ok": True}
 
-
+import pytz
 ##################  POST -create a cell- enpoint   ##################
 @api_router_cell.post("/", status_code=201, response_model=Cell)
 def create_cell(
@@ -182,7 +182,7 @@ def create_cell(
             status_code=404, detail=f"Campaign with id=={campaign_id} not found"
         )
     # Verify if the campaign is active. If it is active, we can not create a new cell
-    if datetime.utcnow() > Campaign.start_datetime:
+    if datetime.now(pytz.timezone('Europe/Madrid')) > Campaign.start_datetime:
         raise HTTPException(
             status_code=400, detail=f"We can not create a surface in an active campaigm"
         )

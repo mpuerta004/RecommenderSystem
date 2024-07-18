@@ -105,7 +105,7 @@ def parcially_update_surface(
             status_code=404, detail=f"Campaign with id=={campaign_id} not found"
         )
 
-    if datetime.utcnow()> Campaign.start_datetime:
+    if datetime.now(pytz.timezone('Europe/Madrid'))> Campaign.start_datetime:
          raise HTTPException(
             status_code=404, detail=f"Surface of an active campaignm can not be updated"
         )
@@ -156,7 +156,7 @@ def delete_surface(*,
             status_code=404, detail=f"Campaign with id=={campaign_id} not found"
         )
 
-    if datetime.utcnow()>Campaign.start_datetime:
+    if datetime.now(pytz.timezone('Europe/Madrid'))>Campaign.start_datetime:
         raise HTTPException(
             status_code=400, detail=f"We can not remove a surface in an active campaigm"
         )
@@ -168,7 +168,7 @@ def delete_surface(*,
     crud.surface.remove(db=db, surface=surface)
     return {"ok": True}
 
-
+import pytz
 @api_router_surface.post("/", status_code=201, response_model=Surface)
 def create_surface(
     *,
@@ -192,7 +192,7 @@ def create_surface(
         raise HTTPException(
             status_code=404, detail=f"Campaign with id=={campaign_id} not found"
         )
-    if datetime.utcnow() > Campaign.start_datetime:
+    if datetime.now(pytz.timezone('Europe/Madrid')) > Campaign.start_datetime:
 
         raise HTTPException(
             status_code=400, detail=f"We can not create a surface in an active campaigm"

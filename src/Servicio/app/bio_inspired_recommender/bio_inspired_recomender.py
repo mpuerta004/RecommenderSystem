@@ -74,7 +74,7 @@ def get_recommendation(
             status_code=404, detail=f"Recommendation with id=={recommendation_id} not found"
         )
     return result
-
+import pytz
 @api_router_recommendation.post("/campaigns/{campaign_id}/recommendations", status_code=201, response_model=Union[RecommendationCellSearchResults,dict])
 def create_recomendation(
     *,
@@ -82,7 +82,7 @@ def create_recomendation(
     recipe_in: RecommendationCreate,
     campaign_id: int,
     db: Session = Depends(deps.get_db),
-    time:datetime = datetime.utcnow()
+    time:datetime = datetime.now(pytz.timezone('Europe/Madrid'))
 ) -> dict:
         print("---- RECOMENDATION ----------------------------")
         print("Campaign_user_want_id",campaign_id)
@@ -102,7 +102,7 @@ def create_recomendation(
         # print(f"user_location: (Lat: {recipe_in.member_current_location['Latitude']},Long:{recipe_in.member_current_location['Longitude']})")
         campaign = crud.campaign.get(db=db, id=campaign_id)
         # De este modo si la campaña no esta activa sacara un error de no_measurements_needed! 
-        if campaign.start_datetime.replace(tzinfo=timezone.utc) <= time.replace(tzinfo=timezone.utc)  and time.replace(tzinfo=timezone.utc) < campaign.end_datetime.replace(tzinfo=timezone.utc):
+        if campaign.start_datetime.replace(tzinfo=pytz.timezone('Europe/Madrid')) <= time.replace(tzinfo=pytz.timezone('Europe/Madrid'))  and time.replace(tzinfo=pytz.timezone('Europe/Madrid')) < campaign.end_datetime.replace(tzinfo=pytz.timezone('Europe/Madrid')):
             campaign_member = crud.campaign_member.get_Campaigns_of_member(
                 db=db, member_id=user.id)
             campaign_want=False
@@ -131,8 +131,8 @@ def create_recomendation(
         # list_of_cells=crud.cell.get_cells_campaign(db=db, campaign_id=campaign_id)
         far_away=True
         for cell in list_of_cells:
-            df_user_distance.loc[cell.id,"distance_cell_user"]=vincenty_inverse(
-                (cell.centre["Latitude"], cell.centre["Longitude"]), (user_location['Latitude'], user_location['Longitude']))
+            df_user_distance.loc[cell.id,"distance_cell_user"]=float(vincenty_inverse(
+                (cell.centre["Latitude"], cell.centre["Longitude"]), (user_location['Latitude'], user_location['Longitude'])))
             distance=df_user_distance.loc[cell.id,"distance_cell_user"]
             if distance is not None:
                 if distance <= campaign.cells_distance*5:
@@ -162,6 +162,7 @@ def create_recomendation(
                 recommendation_accepted = crud.recommendation.get_aceptance_state_of_cell(
                         db=db, slot_id=slot.id)
                 expected = Cardinal_actual + len(recommendation_accepted)
+                
                 if expected < campaign.min_samples and df_user_distance.loc[cell.id,"distance_cell_user"]<5*campaign.cells_distance: 
                     bio_inspired=crud.bio_inspired.get_threshole(db=db, cell_id=cell.id, member_id=member_id)
                     if bio_inspired is None:
@@ -202,8 +203,10 @@ def create_recomendation(
 
                 a=probability_user.loc[probability_user["probability"] == menor]
                 list_indices_valor_mas_bajo=a.index.tolist()
-                for i in range(0,random.randint(0,12)):
-                    shuffle(list_indices_valor_mas_bajo)
+                
+                list_indices_valor_mas_bajo.sort( key=lambda order_features: (df_user_distance.loc[order_features,"distance_cell_user"]), reverse=False)
+                # for i in range(0,random.randint(0,12)):
+                #     shuffle(list_indices_valor_mas_bajo)
 
                 definitivos= definitivos + list_indices_valor_mas_bajo
                 for i in list_indices_valor_mas_bajo:
@@ -263,7 +266,7 @@ def partially_update_recommendation(
         )
 
     recomendation_update = RecommendationUpdate(
-        state=recipe_in, update_datetime=datetime.now())
+        state=recipe_in, update_datetime=datetime.now(pytz.timezone('Europe/Madrid')))
     # dict_update={"state":recipe_in, "update_datetime":datetime.utcnow()}
     updated_recipe = crud.recommendation.update(
         db=db, db_obj=recommendation, obj_in=recomendation_update)

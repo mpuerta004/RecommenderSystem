@@ -2,7 +2,7 @@ import math
 from datetime import timezone
 from pathlib import Path
 from typing import Any, List, Optional
-
+import pytz
 import crud
 import deps
 import numpy as np
@@ -157,7 +157,7 @@ def create_measurement(
     for i in campaign_member:
         #Verify if the campaign is active
         campaign = crud.campaign.get(db=db, id=i.campaign_id)
-        if campaign.start_datetime.replace(tzinfo=timezone.utc) <= time.replace(tzinfo=timezone.utc) and campaign.end_datetime.replace(tzinfo=timezone.utc) > time.replace(tzinfo=timezone.utc):
+        if campaign.start_datetime.replace(tzinfo=pytz.timezone('Europe/Madrid')) <= time.replace(tzinfo=pytz.timezone('Europe/Madrid')) and campaign.end_datetime.replace(tzinfo=pytz.timezone('Europe/Madrid')) > time.replace(tzinfo=pytz.timezone('Europe/Madrid')):
             for surface in campaign.surfaces:
                 
                 boundary=crud.boundary.get_Boundary_by_id(db=db, id=surface.boundary_id)
@@ -275,13 +275,13 @@ def update_measurement(
         )
     
     # Change the timezone of the datetime
-    time = recipe_in.datetime.replace(tzinfo=None)
+    time = recipe_in.datetime.replace(tzinfo=pytz.timezone('Europe/Madrid'))
 
     #If the datetime or the location is different, we have to remove the measurement and create a new one with, in other case we can update the data.
     if time != measurement.datetime or recipe_in.location != measurement.location:
         crud.measurement.remove(db=db, measurement=measurement)
         
-        time = recipe_in.datetime.replace(tzinfo=None)
+        time = recipe_in.datetime.replace(tzinfo=timezone.utc)
         measurement_create=MeasurementCreate(datetime=time, location=recipe_in.location,                          no2=recipe_in.no2,
                     co2=recipe_in.co2,
                     o3=recipe_in.o3,

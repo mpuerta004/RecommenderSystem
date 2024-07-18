@@ -14,7 +14,8 @@ from schemas.Hive_Member import (Hive_Member, Hive_MemberCreate,
 from schemas.Member import MemberCreate, MemberSearchResults
 from schemas.newMember import NewRole
 from sqlalchemy.orm import Session
-
+from Demo.map_funtions import show_hive
+from fastapi.responses import HTMLResponse
 api_router_hive = APIRouter(prefix="/hives")
 
 
@@ -200,9 +201,9 @@ def create_a_new_member_for_a_hive_with_especific_role(
                 db=db, obj_in=hive_member_create, role=role.role)
             # Create the Role in active campaigns
             list_campaigns = crud.campaign.get_campaigns_from_hive_id_active(
-                db=db, time=datetime.utcnow(), hive_id=hive_id)
+                db=db, time=datetime.now(pytz.timezone('Europe/Madrid')), hive_id=hive_id)
             a= crud.campaign.get_campaigns_from_hive_id_future(
-                    db=db, time=datetime.utcnow(), hive_id=hive_id)
+                    db=db, time=datetime.now(pytz.timezone('Europe/Madrid')), hive_id=hive_id)
             list_campaigns= list_campaigns + a
             # Verify if there are active campaigns
             if list_campaigns is not []:
@@ -236,9 +237,9 @@ def create_a_new_member_for_a_hive_with_especific_role(
 
         # Create the Campaign_Member entity for active campaigns, add this member to the Campaign_Member table for a active campaigns of the hive.
         list_campaigns = crud.campaign.get_campaigns_from_hive_id_active(
-            db=db, time=datetime.utcnow(), hive_id=hive_id)
+            db=db, time=datetime.now(pytz.timezone('Europe/Madrid')), hive_id=hive_id)
         a= crud.campaign.get_campaigns_from_hive_id_future(
-                    db=db, time=datetime.utcnow(), hive_id=hive_id)
+                    db=db, time=datetime.now(pytz.timezone('Europe/Madrid')), hive_id=hive_id)
         list_campaigns= list_campaigns + a
         # Verify if there is any active campaign
         if list_campaigns is not []:
@@ -297,9 +298,9 @@ def associate_existing_member_with_a_hive_with_specific_role(
 
                 # Create the Role in active campaigns
                 list_campaigns = crud.campaign.get_campaigns_from_hive_id_active(
-                    db=db, time=datetime.utcnow(), hive_id=hive_id)
+                    db=db, time=datetime.now(pytz.timezone('Europe/Madrid')), hive_id=hive_id)
                 a= crud.campaign.get_campaigns_from_hive_id_future(
-                    db=db, time=datetime.utcnow(), hive_id=hive_id)
+                    db=db, time=datetime.now(pytz.timezone('Europe/Madrid')), hive_id=hive_id)
                 list_campaigns= list_campaigns + a
                 if list_campaigns is not []:
                     for i in list_campaigns:
@@ -324,9 +325,9 @@ def associate_existing_member_with_a_hive_with_specific_role(
 
             # Create the Role in active campaigns
             list_campaigns = crud.campaign.get_campaigns_from_hive_id_active(
-                db=db, time=datetime.utcnow(), hive_id=hive_id)
+                db=db, time=datetime.now(pytz.timezone('Europe/Madrid')), hive_id=hive_id)
             a= crud.campaign.get_campaigns_from_hive_id_future(
-                    db=db, time=datetime.utcnow(), hive_id=hive_id)
+                    db=db, time=datetime.now(pytz.timezone('Europe/Madrid')), hive_id=hive_id)
             list_campaigns= list_campaigns + a
             
             # Create the Campaign_Member entity for active campaigns, add this member to the Campaign_Member table for a active campaigns of the hive.
@@ -382,7 +383,7 @@ def delete_hive_member_of_hive(
 
     # Verify if the user is in an active campaign, if yes, we can not remove him/her from the hive
     activeCampaigns = crud.campaign.get_campaigns_from_hive_id_active(
-        db=db, time=datetime.utcnow(), hive_id=hive_id)
+        db=db, time=datetime.now(pytz.timezone('Europe/Madrid')), hive_id=hive_id)
     # a= crud.campaign.get_campaigns_from_hive_id_future(
     #                 db=db, time=datetime.utcnow(), hive_id=hive_id)
     # activeCampaigns= activeCampaigns +a
@@ -401,7 +402,7 @@ def delete_hive_member_of_hive(
                 )
     crud.hive_member.remove(db=db, hiveMember=hiveMember)
     a= crud.campaign.get_campaigns_from_hive_id_future(
-                    db=db, time=datetime.utcnow(), hive_id=hive_id)
+                    db=db, time=datetime.now(pytz.timezone('Europe/Madrid')), hive_id=hive_id)
     for i in a:
         campaign_member= crud.campaign_member.get_Campaign_Member_in_campaign(db=db, campaign_id=i.id, member_id=member_id)
         crud.campaign_member.remove(db=db, Campaign_Member=campaign_member)
@@ -453,7 +454,7 @@ def update_the_role_of_a_member_in_hive(
             updated_recipe = crud.hive_member.update(
                 db=db, obj_in={"role": role.role}, db_obj=hiveMember)
             a= crud.campaign.get_campaigns_from_hive_id_future(
-                    db=db, time=datetime.utcnow(), hive_id=hive_id)
+                    db=db, time=datetime.now(pytz.timezone('Europe/Madrid')), hive_id=hive_id)
             for i in a:
                 campaign_member= crud.campaign_member.get_Campaign_Member_in_campaign(db=db, campaign_id=i.id, member_id=member_id)
                 crud.campaign_member.update(db=db, obj_in={"role": role.role}, db_obj=campaign_member)
@@ -467,8 +468,22 @@ def update_the_role_of_a_member_in_hive(
         updated_recipe = crud.hive_member.update(
             db=db, obj_in={"role": role.role}, db_obj=hiveMember)
         a= crud.campaign.get_campaigns_from_hive_id_future(
-                    db=db, time=datetime.utcnow(), hive_id=hive_id)
+                    db=db, time=datetime.now(pytz.timezone('Europe/Madrid')), hive_id=hive_id)
         for i in a:
             campaign_member= crud.campaign_member.get_Campaign_Member_in_campaign(db=db, campaign_id=i.id, member_id=member_id)
             crud.campaign_member.update(db=db, obj_in={"role": role.role}, db_obj=campaign_member)
         return updated_recipe
+
+import pytz
+
+
+@api_router_hive.get("/{hive_id}/show_hive_progress", status_code=200, response_class=HTMLResponse)
+def measurement_proces(
+    time: datetime=datetime.now( pytz.timezone('Europe/Madrid')),
+    db: Session = Depends(deps.get_db)
+):
+        camm= crud.campaign.get_all_active_campaign(db=db, time=datetime.now(pytz.timezone('Europe/Madrid')))
+        if camm != []:
+            a=show_hive(db=db, hive_id=1, time=datetime.now(pytz.timezone('Europe/Madrid')))
+            return a._repr_html_()
+        return None

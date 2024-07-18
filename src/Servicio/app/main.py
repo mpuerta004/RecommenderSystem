@@ -14,6 +14,7 @@ from fastapi_utils.session import FastAPISessionMaker
 from datetime import datetime,timedelta
 from funtionalities import prioriry_calculation
 import keys
+from Demo.map_funtions import show_thesholes_piloto, show_hive
 SQLALCHEMY_DATABASE_URL = keys.SQLALCHEMY_DATABASE_URL
 sessionmaker = FastAPISessionMaker(SQLALCHEMY_DATABASE_URL)
 
@@ -36,7 +37,6 @@ app.include_router(Cells.api_router_cell, tags=["Cells"])
 app.include_router(Measurements.api_router_measurements, tags=["Measurements"])
 # app.include_router(Recommendation.api_router_recommendation, tags=["Recommendations"])
 app.include_router(Recommendation.api_router_recommendation, tags=["Recommendations"])
-
 app.include_router(Demo.api_router_demo, tags=["Demo"])
 app.include_router(sync.api_router_sync, tags=["Sync"])
 app.include_router(KPIS.api_router_kpis, tags=["KPIS"])
@@ -50,7 +50,7 @@ async def prioriry_calculation_main() -> None:
     """
     # await  asyncio.sleep(1)
     with sessionmaker.context_session() as db:
-        time= datetime.now()
+        time= datetime.now(pytz.timezone('Europe/Madrid'))
         List_campaigns = crud.campaign.get_all_active_campaign(db=db,time=time)
         for cam in List_campaigns:
             prioriry_calculation(time=time,cam=cam, db=db)
@@ -58,11 +58,16 @@ async def prioriry_calculation_main() -> None:
     return None
 
    
-   
+
+import pytz
+
 async def state_calculation()->None:
     with sessionmaker.context_session() as db:
         list_of_recommendations= crud.recommendation.get_aceptance_and_notified_state(db=db)
-        a = datetime.now()
+        zona_horaria = pytz.timezone('Europe/Madrid')
+
+        # Obtener el tiempo y fecha actual en la zona horaria especificada
+        a = datetime.now(zona_horaria)
         Current_time = datetime(year=a.year, month=a.month, day=a.day,
                         hour=a.hour, minute=a.minute, second=a.second)
         
@@ -90,6 +95,7 @@ def State_change():
     print("He terminado!")
     
 
+
 app.include_router(api_router)
 from Telegram_bot.Telegram_bot_2 import bot, definir_mensajes,crear_mapa,actualizar_repositorio
 import telebot
@@ -97,15 +103,36 @@ import threading
 
 def crear_mapa_bot():
     print("Hola")
-    a=crear_mapa()
-    if a is not None:
-        actualizar_repositorio()
+    with sessionmaker.context_session() as db:
+        camm= crud.campaign.get_all_active_campaign(db=db, time=datetime.now(pytz.timezone('Europe/Madrid')))
+        if camm != []:
+            a=crear_mapa()
+            if a is not None:
+                actualizar_repositorio()
+        db.close()
+    return None
+
+# def theshole_final():
+#     with sessionmaker.context_session() as db:
+#         a = datetime.now()
+#         users=crud.member.get_all(db=db)
+#         camm= crud.campaign.get_all_active_campaign(db=db, time=a)
+#         if camm != []:
+#             cam= crud.campaign.get_campaign(db=db, hive_id=1,campaign_id=1)
+#             if cam is not None:
+#                 for user in users:
+#                     show_thesholes_piloto(db=db, time=a,user=user, cam=cam)
+#         db.close()
+#     return None
+
+
+
 
 if __name__ == "__main__":
     ## Use this for debugging purposes only
     import uvicorn
 
-    #Add this line to run the system. 
+    # Add this line to run the system. 
     scheduler = BackgroundScheduler()
     scheduler.add_job(final_funtion, 'interval', seconds=180)
     scheduler.add_job(State_change, 'interval', seconds=180)
@@ -126,5 +153,4 @@ if __name__ == "__main__":
     scheduler = BackgroundScheduler()
     scheduler.add_job(crear_mapa_bot, 'interval', seconds=180)
     scheduler.start()
-    
     uvicorn.run(app, host="0.0.0.0", port=8001, log_level="debug")

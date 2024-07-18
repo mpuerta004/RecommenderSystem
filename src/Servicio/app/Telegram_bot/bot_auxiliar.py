@@ -196,10 +196,10 @@ def update_recomendation(id_user:int,recomendation_id:int):
     except Exception as e:
         print( f"Error with mysql {e}" )    
         return None
-    
+import pytz
 def create_measurement(id_user:int, Latitud:float, Longitud:float):
     peticion = api_url + f"/members/{id_user}/measurements"
-    date = datetime.datetime.utcnow()
+    date = datetime.datetime.now(pytz.timezone('Europe/Madrid'))
     measurement_creation = {
                         "datetime": date.strftime("%Y-%m-%dT%H:%M:%S"),
                         "location": {
@@ -243,11 +243,11 @@ def get_surface():
         print( f"Error with mysql {e}" )
         return None
 
-
+import pytz
 def get_point(id_user:int, latitud:float, longuitud:float):
     peticion = api_url + \
                                 f"/sync/get_location/{id_user}"
-    date = datetime.datetime.utcnow()
+    date = datetime.datetime.now(pytz.timezone('Europe/Madrid'))
     measurement_creation = {
                                 "datetime": date.strftime("%Y-%m-%dT%H:%M:%S"),
                                 "location": {
@@ -317,7 +317,7 @@ def get_campaign_hive_1():
 def recomendacion_2(id_user:int, info,campaign_id:int):
     peticion = api_url + f'/members/{id_user}/campaigns/{campaign_id}/recommendations'    
     try:               
-        response = requests.post(peticion, params={'time': datetime.datetime.utcnow()},headers=headers,json=info) 
+        response = requests.post(peticion, params={'time': datetime.datetime.now(pytz.timezone('Europe/Madrid'))},headers=headers,json=info) 
         if response.status_code == 201:
             data = response.json() 
             return data 

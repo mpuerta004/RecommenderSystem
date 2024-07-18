@@ -37,6 +37,9 @@ headers = {
 }
 
 
+        
+        
+
 # Manejar el comando /start ->
 @bot.message_handler(commands=['start'])
 def start(message):
@@ -282,8 +285,8 @@ def recommendation(message):
                 yes=InlineKeyboardButton(f"I'm ready to take the photo!",callback_data="upload_photo")
                 markup.add(yes)
                 bot.send_message(message.chat.id, "You have already accepted a recommendation. Please go to this location and where you are here press the next botton 👇 ",reply_markup=markup)
-                rec_Accepted=list_users[message.chat.id].recommendations_aceptada
-                bot.send_location(chat_id=message.chat.id, latitude=rec_Accepted['Latitude'], longitude=rec_Accepted['Longitude'])
+                rec_Accepted=list_users[message.chat.id].recommendations_aceptada[0]
+                bot.send_location(chat_id=message.chat.id, latitude=rec_Accepted['latitude'], longitude=rec_Accepted['longitude'])
                 
                 
         else: 
@@ -484,7 +487,7 @@ def verificar_posicion_correcta(message):
                 distance = vincenty_inverse((Latitud_user, Longitud_user), (lat, long))
                 if distance <= radio_cell:
                     markup=ReplyKeyboardRemove()
-                    msg=bot.send_message(message.chat.id, "Please share your photo", reply_markup=markup)
+                    msg=bot.send_message(message.chat.id, "Please take a picture and send me!", reply_markup=markup)
                             #in the case we have the last position we delete this information! 
                     bot.register_next_step_handler(msg, pedir_photo) 
                             

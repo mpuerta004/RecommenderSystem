@@ -9,7 +9,7 @@ from schemas.Member import Member
 from schemas.Priority import Priority, PriorityCreate, PrioritySearchResults
 import deps
 import matplotlib
-from statistics import variance
+from statistics import variance, mean
 import matplotlib.pyplot as plt
 from datetime import datetime, timezone
 from datetime import datetime, timezone, timedelta
@@ -32,15 +32,16 @@ from folium.plugins import HeatMap
 from bio_inspired_recommender import bio_inspired_recomender
 from Heuristic_recommender.Recommendation import create_recomendation_system_per_campaign, create_recomendation_per_campaign
 import Demo.variables as variables
-from Demo.map_funtions import show_hive,show_recomendation_with_thesholes,show_recomendation
+from Demo.map_funtions import show_hive, show_thesholes_piloto, show_recomendation_with_thesholes,show_recomendation , show_thesholes
 import random
 from Demo.List_users import ListUsers
 from Demo.user_behaviour import User
-
+import pandas as pd 
+from bio_inspired_recommender.variables_bio_inspired import O_max,O_min
 api_router_demo = APIRouter(prefix="/demos/hives/{hive_id}")
 
-@api_router_demo.post("/campaign", status_code=201, response_model=None)
-def asignacion_recursos_hive(
+@api_router_demo.post("/campaign_bio_inpired", status_code=201, response_model=None)
+def asignacion_recursos_hive_bio_inspired(
     hive_id:int,
     campaign_id:int,
         db: Session = Depends(deps.get_db)):
@@ -100,6 +101,8 @@ def asignacion_recursos_hive(
             # print(len(list_users_available))
             if list_users_available != []:
                 for user_class in list_users_available:
+                    prioriry_calculation(time=time, cam=cam, db=db)
+
                     user_class.user_new_position(time=time, db=db,hive_id=hive_id)
                     lat, lon = user_class.trajectory.posicion
                     if lat is not None and lon is not None:
@@ -114,8 +117,9 @@ def asignacion_recursos_hive(
                             recomendation_coguida = user_class.user_selecction(db=db, list_recommendations=recc,user_position=(lat, lon))
                             
                             if recomendation_coguida is not None:
-                                show_recomendation_with_thesholes(db=db, user=user_class, cam=cam, result=recc,time=time,recomendation=recomendation_coguida)
-                                if user_class.id==1:
+                                if user_class.id<=10:
+                                    show_recomendation_with_thesholes(db=db, user=user_class, cam=cam, result=recc,time=time,recomendation=recomendation_coguida)
+
                                     show_recomendation(db=db, user_2=user_class, cam=cam, user=user_class.member, time=time, result=recc,recomendation=recomendation_coguida)
                                 recomendation_a_polinizar = crud.recommendation.get_recommendation(db=db, member_id=user_class.member.id, recommendation_id=recomendation_coguida.id)
                                 recomendacion_polinizar = crud.recommendation.update(
@@ -141,13 +145,15 @@ def asignacion_recursos_hive(
                                                  device_id=Member_Device_user.device_id, recommendation_id=mediciones[i][1].id)
                     create_measurement(db=db, member_id=user_class.member.id,recipe_in=creation) 
                     user_class.trajectory.update_user_position_after_measurements(lat=cell.centre['Latitude'], lon=cell.centre['Longitude'])
+                    user_class.user_new_position(time=time, db=db,hive_id=hive_id)
+                    lat, lon = user_class.trajectory.posicion
                 else:
                     user_class.trajectory.end_trajectory=True
                     
             else:
                 new.append(mediciones[i])
         mediciones = new
-        
+    
         list_slots=crud.slot.get_list_slot_time(db=db, time=time)
         accepted_Recomendation = 0
         notidied_recomendation = 0
@@ -166,38 +172,188 @@ def asignacion_recursos_hive(
         element = variance(numbers_of_realized_recomendation)
         varianza.append(element)
     with open("output.csv", "w") as f:
-        writer = csv.writer(f)
+        writer = csv.writer(f,delimiter=";")
         writer.writerow(times)
-        writer.writerow(varianza)
+        writer.writerow([str(x).replace('.',',') for x in varianza])
+        writer.writerow(data_accepted)
+        writer.writerow(data_notified)
+        writer.writerow(data_realized)
+        uu=asignacion_recursos_variable(db=db, hive_id=hive_id)
+        writer.writerow([uu[0]])
+        writer.writerow([uu[1]])
+
+    for i in hive_members:
+        member=crud.member.get_by_id(db=db, id=i.member_id)
+        User(member=member,listUSers=list_user )
+        user=list_user.buscar_user(i.member_id)
+        show_thesholes(db=db, user=user, cam=cam,time=time)
+    return None
+
+@api_router_demo.post("/campaign_MVE", status_code=201, response_model=None)
+def asignacion_recursos_MVE(
+    hive_id:int,
+    campaign_id:int,
+        db: Session = Depends(deps.get_db)):
+    """
+    DEMO!
+    """
+    cam= crud.campaign.get(db=db, id=campaign_id)
+    list_user=ListUsers()
+
+    start = cam.start_datetime
+    end = cam.end_datetime
+    mediciones = []
+    dur = int((end - start).total_seconds())
+    times=[]
+    varianza=[]
+    data_accepted=[]
+    data_notified=[]
+    data_realized=[]
+    for segundo in range(60, int(dur), 60):
+        print("----------------------------------------------------------------------", segundo)
+        time = start + timedelta(seconds=segundo)
+        prioriry_calculation(time=time, cam=cam, db=db)
+        show_hive(hive_id=hive_id, time=time, db=db)
+        
+        
+        #Change the old recomendations in accepted and notified state to non realized state
+        Current_time = datetime(year=time.year, month=time.month, day=time.day,
+                            hour=time.hour, minute=time.minute, second=time.second)
+        #Estas son todas no las de aqui. 
+        list_of_recommendations= crud.recommendation.get_aceptance_and_notified_state(db=db)
+        for i in list_of_recommendations:
+            if (Current_time > i.update_datetime): # It is necessary to run demo 
+                if (Current_time - i.update_datetime) > timedelta(minutes=7):
+                    # print("Modificiacion")
+                    crud.recommendation.update(db=db,db_obj=i, obj_in={"state":"NON_REALIZED","update_datetime":Current_time})
+                    db.commit()  
+                    db.commit()
+        
+        #TODO esto es en geenral no por campaña esto hay que modificarlo! 
+        bool=True
+        slost_active= crud.slot.get_list_slot_time(db=db, time=time)
+        for slot in slost_active:
+            mediciones_in_slot= crud.measurement.get_all_Measurement_from_cell_in_the_current_slot(db=db, slot_id=slot.id, time=time)
+            if mediciones_in_slot != cam.min_samples and bool==True:
+                bool=False
+        if bool is False:
+            list_users_available=[]
+            #inicializar los usuarios. Se hace cada vez por si vienen usuarios nuevos tener esa posibilidad. 
+            hive_members= crud.hive_member.get_by_hive_id(db=db,hive_id=hive_id )
+            for i in hive_members:
+                member=crud.member.get_by_id(db=db, id=i.member_id)
+                User(member=member,listUSers=list_user )
+                user=list_user.buscar_user(i.member_id)
+                bool=user.user_available(db=db, hive_id=hive_id)
+                if bool is True:
+                    list_users_available.append(user)
+            # print(len(list_users_available))
+            if list_users_available != []:
+                for user_class in list_users_available:
+                    prioriry_calculation(time=time, cam=cam, db=db)
+
+                    user_class.user_new_position(time=time, db=db,hive_id=hive_id)
+                    lat, lon = user_class.trajectory.posicion
+                    if lat is not None and lon is not None:
+                        a = RecommendationCreate(member_current_location={
+                                                'Longitude': lon, 'Latitude': lat}, recommendation_datetime=time)
+                        # recomendaciones=create_recomendation_system_per_campaign(db=db,member_id=user_class.id,recipe_in=a,campaign_id=campaign_id,time=time)
+
+                        recomendaciones=create_recomendation_per_campaign(db=db,member_id=user_class.id,recipe_in=a,campaign_id=campaign_id,time=time)
+                        # recomendaciones = bio_inspired_recomender.create_recomendation(member_id=user_class.member.id,recipe_in=a,db=db,time=time,campaign_id=campaign_id)
+                        if recomendaciones is not None and "results" in recomendaciones and  len(recomendaciones['results']) > 0:
+                            recc= [i.recommendation for i in recomendaciones['results']] 
+                            recomendation_coguida = user_class.user_selecction(db=db, list_recommendations=recc,user_position=(lat, lon))
+                            
+                            if recomendation_coguida is not None:
+                                if user_class.id<=10:
+
+                                    show_recomendation(db=db, user_2=user_class, cam=cam, user=user_class.member, time=time, result=recc,recomendation=recomendation_coguida)
+                                recomendation_a_polinizar = crud.recommendation.get_recommendation(db=db, member_id=user_class.member.id, recommendation_id=recomendation_coguida.id)
+                                recomendacion_polinizar = crud.recommendation.update(
+                                     db=db, db_obj=recomendation_a_polinizar, obj_in={"state": "ACCEPTED", "update_datetime": time})
+                                db.commit()
+                                db.commit()
+                                mediciones.append(
+                                    [user_class, recomendation_coguida, random.randint(1, 419)])
+                            
+        new = []
+        for i in range(0, len(mediciones)):
+            user_class= mediciones[i][0]
+            # Anterior approach cuando declaramos el tiempo que el uusario iba a tardar en realizarlo
+            mediciones[i][2] = int(mediciones[i][2]) - 60
+            if mediciones[i][2] <= 0:
+                aletorio = random.random()
+                if aletorio >= user_class.user_realize:
+                    slot = crud.slot.get(db=db, id=mediciones[i][1].slot_id)
+                    cell = crud.cell.get_Cell(db=db, cell_id=slot.cell_id)
+                    Member_Device_user = crud.member_device.get_by_member_id(
+                        db=db, member_id=user_class.member.id)
+                    creation = MeasurementCreate(db=db, location=cell.centre, datetime=time,
+                                                 device_id=Member_Device_user.device_id, recommendation_id=mediciones[i][1].id)
+                    create_measurement(db=db, member_id=user_class.member.id,recipe_in=creation) 
+                    user_class.trajectory.update_user_position_after_measurements(lat=cell.centre['Latitude'], lon=cell.centre['Longitude'])
+                    user_class.user_new_position(time=time, db=db,hive_id=hive_id)
+                    lat, lon = user_class.trajectory.posicion
+                else:
+                    user_class.trajectory.end_trajectory=True
+                    
+            else:
+                new.append(mediciones[i])
+        mediciones = new
+    
+        list_slots=crud.slot.get_list_slot_time(db=db, time=time)
+        accepted_Recomendation = 0
+        notidied_recomendation = 0
+        realize_recommendation = 0
+        times.append(time)
+        numbers_of_realized_recomendation=[]
+        if list_slots != []:
+            for slot in list_slots:
+                accepted_Recomendation += len(crud.recommendation.get_aceptance_state_of_slot(db=db, time=time,slot_id=slot.id))
+                realize_recommendation += len(crud.recommendation.get_relize_state_of_slot(db=db, slot_id=slot.id,time=time))
+                numbers_of_realized_recomendation.append(len(crud.recommendation.get_relize_state_of__all_slot(db=db, slot_id=slot.id,time=time)))
+                notidied_recomendation += len(crud.recommendation.get_notified_state_of_slot(db=db, slot_id=slot.id,time=time))
+        data_accepted.append(accepted_Recomendation)
+        data_notified.append(notidied_recomendation)
+        data_realized.append(realize_recommendation)
+        element = variance(numbers_of_realized_recomendation)
+        varianza.append(element)
+    with open("output.csv", "w") as f:
+        writer = csv.writer(f,delimiter=";")
+        writer.writerow(times)
+        writer.writerow([str(x).replace('.',',') for x in varianza])
         writer.writerow(data_accepted)
         writer.writerow(data_notified)
         writer.writerow(data_realized)
     
-    # fig, axs = plt.subplots(3, 1, figsize=(15, 15), sharex=True)
-
-    # for ax, data, label, color in zip(axs, [data_notified, data_accepted, data_realized], ['Notified', 'Accepted', 'Realized'],['b','g','r']):
-    #     ax.plot(times, data, marker='o', linestyle='-', color=color, label=f'{label} Recommendation')
-    #     window_size = 25  # Tamaño de la ventana para la media móvil
-    #     mov_avg = np.convolve(data, np.ones(window_size) / window_size, mode='valid')
-    #     ax.plot(times[window_size-1:], mov_avg, linestyle='--', label=f'Moving Average ({window_size})')
-    #     ax.set_title(f'Number of {label} Recommendations')
-    #     ax.set_ylabel('Number')
-    #     ax.legend()
-    #     ax.grid(True)
-    #     ax.tick_params(axis='x', rotation=45)
-    #     ax.tick_params(axis='both', which='major', labelsize=10)
-
-    # axs[-1].set_xlabel('Time')
-    
-    # plt.tight_layout()
-    # plt.savefig("recommendations_metrics_with_moving_average.jpg")
-    # plt.show()
-
-    # print("rate_number: ", number_of_recomendation_rate(campaign_id=cam.id,times=times, db=db))
-    # print("user_rate;", number_of_recomendation_rate_users(campaign_id=cam.id,times=times, db=db))
     return None
 
 
+@api_router_demo.get("/calcular_varianza", status_code=201, response_model=None)
+def asignacion_recursos_variable(
+    hive_id:int,
+    db: Session = Depends(deps.get_db)):
+    
+    
+    
+    list_of_cells=crud.cell.get_cells_campaign(db=db, campaign_id=1)
+    list_cells_id=[cell.id for cell in list_of_cells]
+    list_user =ListUsers()
+    hive_members= crud.hive_member.get_by_hive_id(db=db,hive_id=hive_id )
+    threshole_medio_por_usuario=[]
+    for i in hive_members:
+        member_id=i.member_id
+        result=0
+        for cell in list_of_cells:
+            a= crud.bio_inspired.get_threshole(db=db, member_id=member_id, cell_id=cell.id)
+            result = result + (O_max- a.threshold)
+        threshole_medio_por_usuario.append( result/((O_max-O_min)*len(list_of_cells)))
+    varianza=str(variance(threshole_medio_por_usuario)).replace('.',',')
+    media= str(mean(threshole_medio_por_usuario)).replace('.',',')
+    
+    print((media, varianza))
+    return (media, varianza)
 
     #     accepted_Recomendation=0
     #     notidied_recomendation=0
@@ -466,6 +622,19 @@ def number_of_recomendation_rate_users(campaign_id:int,times:List, db: Session =
     cardinal=len(list(number_of_recomendation_notified_and_not_realize.keys()))
     return result/cardinal
 
+import pytz
+@api_router_demo.get("/theshole_final", status_code=201, response_model=None)
+def threshole_final(
+    time:datetime=datetime.now(pytz.timezone('Europe/Madrid')),
+         db: Session = Depends(deps.get_db)):
+        users=crud.member.get_all(db=db)
+        camm= crud.campaign.get_all_active_campaign(db=db, time=time)
+        if camm != []:
+            cam= crud.campaign.get_campaign(db=db, hive_id=1,campaign_id=1)
+            if cam is not None:
+                for user in users:
+                    show_thesholes_piloto(db=db, time=time,user=user, cam=cam)
+        return None
 # @api_router_demo.post("/bio_inspired/campaign", status_code=201, response_model=None)
 # def asignacion_recursos_hive(
 #     hive_id:int,

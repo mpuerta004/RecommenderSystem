@@ -165,7 +165,7 @@ def point_to_line_distance(point, line_start, bearing):
     
     return distance_to_line
 
-
+import pytz
 def prioriry_calculation(time: datetime, cam: Campaign, db: Session = Depends(deps.get_db)) -> None:
     """
     Create the priorirty of a campaign (all its surfaces) based on the measurements
@@ -173,7 +173,7 @@ def prioriry_calculation(time: datetime, cam: Campaign, db: Session = Depends(de
 
     # db.refresh(cam)
     #Verify if The campaign is active 
-    if cam.start_datetime.replace(tzinfo=timezone.utc) <= time.replace(tzinfo=timezone.utc) and time.replace(tzinfo=timezone.utc) < cam.end_datetime.replace(tzinfo=timezone.utc):
+    if cam.start_datetime.replace(tzinfo=pytz.timezone('Europe/Madrid')) <= time.replace(tzinfo=pytz.timezone('Europe/Madrid')) and time.replace(tzinfo=pytz.timezone('Europe/Madrid')) < cam.end_datetime.replace(tzinfo=pytz.timezone('Europe/Madrid')):
         #Get the list of surface
         surfaces = crud.surface.get_multi_surface_from_campaign_id(
             db=db, campaign_id=cam.id)
@@ -197,7 +197,7 @@ def prioriry_calculation(time: datetime, cam: Campaign, db: Session = Depends(de
                     db=db, slot_id=slot.id)
                     expected= Cardinal_actual + len(recommendation_accepted)
                     
-                    init = (momento.replace(tzinfo=timezone.utc) - cam.start_datetime.replace(tzinfo=timezone.utc)).total_seconds() / cam.sampling_period - (momento.replace(tzinfo=timezone.utc) - cam.start_datetime.replace(tzinfo=timezone.utc)).total_seconds() //cam.sampling_period 
+                    init = (momento.replace(tzinfo=pytz.timezone('Europe/Madrid')) - cam.start_datetime.replace(tzinfo=pytz.timezone('Europe/Madrid'))).total_seconds() / cam.sampling_period - (momento.replace(tzinfo=pytz.timezone('Europe/Madrid')) - cam.start_datetime.replace(tzinfo=pytz.timezone('Europe/Madrid'))).total_seconds() //cam.sampling_period 
 
                     # a = init - timedelta(seconds=((init).total_seconds() //
                     #                      cam.sampling_period)*cam.sampling_period)
@@ -390,8 +390,9 @@ def update_thesthold_based_action(
             if id==cell_id:
                 new_theshold= theshold - variables_bio_inspired.e_0
             else:
-                if id in list_cell_id_close:
-                    new_theshold=theshold - variables_bio_inspired.e_neighbour
+                if id in list_cell_id_close :
+                    if id != cell_id:
+                        new_theshold=theshold - variables_bio_inspired.e_neighbour
                 else:
                     new_theshold=theshold + variables_bio_inspired.fi
             if new_theshold>variables_bio_inspired.O_max:

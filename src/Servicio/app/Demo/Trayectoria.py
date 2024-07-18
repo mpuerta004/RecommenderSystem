@@ -7,6 +7,8 @@ from vincenty import vincenty_inverse
 from funtionalities import get_point_at_distance, prioriry_calculation, point_to_line_distance
 from datetime import datetime, timedelta
 import deps
+import pytz
+
 import numpy as np 
 from sqlalchemy.orm import Session
 from fastapi import APIRouter, Depends, FastAPI, HTTPException, Query, Request
@@ -60,6 +62,7 @@ class trajectory(object):
     def update_user_position_after_measurements(self, lat,lon ):
         self.posicion= (lat,lon)
         self.update_direction()
+        
     
     
     #TODO! cuando es el fin de la trajectoria no se muy bien si estoy devolviendo lo correcto.    
@@ -70,8 +73,12 @@ class trajectory(object):
             
             surface=crud.surface.get_surface_by_ids(db=db, campaign_id=campaign_id, surface_id=surface_id)
             boundary = surface.boundary
+            # distance = random.randint(
+            #     0, round(100*(boundary.radius + cam.cells_distance) ))
             distance = random.randint(
-                0, round(100*(boundary.radius + cam.cells_distance) ))
+                1, round(200*cam.cells_distance) )
+            if distance==0:
+                print("*********************************************************************************************************************")
             distancia_final_objetive= vincenty_inverse((self.posicion[0], self.posicion[1]), (self.end_position[0], self.end_position[1]))
             distance=distance/100
             if distance > distancia_final_objetive:
@@ -95,20 +102,21 @@ class trajectory(object):
               
    
           
-
     def generar_user_position_random(self, campaign_id:int,surface_id:int, hive_id:int,time:datetime, db: Session = Depends(deps.get_db)):
         # generate the user position, select randomly a surface and generate a point closer in a random direction of this surface.
         # List of the entity campaign_member of the user
      
         cam = crud.campaign.get_campaign(
                 db=db, campaign_id=campaign_id, hive_id=hive_id)
-        if cam.start_datetime.replace(tzinfo=timezone.utc) <= time.replace(tzinfo=timezone.utc) and time.replace(tzinfo=timezone.utc) < cam.end_datetime.replace(tzinfo=timezone.utc):
+        if cam.start_datetime.replace(tzinfo=pytz.timezone('Europe/Madrid')) <= time.replace(tzinfo=pytz.timezone('Europe/Madrid')) and time.replace(tzinfo=pytz.timezone('Europe/Madrid')) < cam.end_datetime.replace(tzinfo=pytz.timezone('Europe/Madrid')):
             surface=crud.surface.get_surface_by_ids(db=db, campaign_id=campaign_id, surface_id=surface_id)
             boundary = surface.boundary
             distance_start = random.randint(
-                0, round(100*(boundary.radius + cam.cells_distance) ))
+                1, round(100*(boundary.radius + cam.cells_distance) ))
+            # distance_start = random.randint(
+            #     0, round(100*(boundary.radius + cam.cells_distance) ))
             distance_final = random.randint(
-                0, round(100*(boundary.radius +  cam.cells_distance)))
+                3, round(100*(boundary.radius +  cam.cells_distance)))
             distance_start = distance_start/100
             distance_final = distance_final/100
             

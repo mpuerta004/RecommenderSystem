@@ -12,7 +12,7 @@ import crud
 from datetime import datetime, timezone, timedelta
 import math
 from funtionalities import prioriry_calculation
-
+import pytz
 api_router_recommendation = APIRouter(prefix="/members/{member_id}")
 
 ################################ GET  ALL Recommendation ########################################
@@ -98,7 +98,7 @@ def create_recomendation(
         if (i.role == "QueenBee" or i.role == "WorkerBee"):
             campaign = crud.campaign.get(db=db, id=i.campaign_id)
             # Verify if the campaign is active
-            if campaign.start_datetime.replace(tzinfo=timezone.utc) <= time.replace(tzinfo=timezone.utc) and time.replace(tzinfo=timezone.utc) < campaign.end_datetime.replace(tzinfo=timezone.utc):
+            if campaign.start_datetime.replace(tzinfo=pytz.timezone('Europe/Madrid')) <= time.replace(tzinfo=pytz.timezone('Europe/Madrid')) and time.replace(tzinfo=pytz.timezone('Europe/Madrid')) < campaign.end_datetime.replace(tzinfo=pytz.timezone('Europe/Madrid')):
                 list_cells = crud.cell.get_cells_campaign(
                     db=db, campaign_id=i.campaign_id)
                 # verify is the list of cell is not empty
@@ -180,7 +180,7 @@ def create_recomendation_per_campaign(
     campaign_id:int,
     recipe_in: RecommendationCreate,
     db: Session = Depends(deps.get_db),
-    time: datetime = datetime.utcnow()
+    time: datetime = datetime.now(pytz.timezone('Europe/Madrid'))
     ) -> dict:
 
     """
@@ -219,7 +219,7 @@ def create_recomendation_per_campaign(
             role_correct=True
             campaign = crud.campaign.get(db=db, id=i.campaign_id)
             # Verify if the campaign is active
-            if campaign.start_datetime.replace(tzinfo=timezone.utc) <= time.replace(tzinfo=timezone.utc)  and time.replace(tzinfo=timezone.utc) < campaign.end_datetime.replace(tzinfo=timezone.utc):
+            if campaign.start_datetime.replace(tzinfo=pytz.timezone('Europe/Madrid')) <= time.replace(tzinfo=pytz.timezone('Europe/Madrid'))  and time.replace(tzinfo=pytz.timezone('Europe/Madrid')) < campaign.end_datetime.replace(tzinfo=pytz.timezone('Europe/Madrid')):
                 # print("campaign_id ------------------------------------------",i.campaign_id)
                 # print("Campaign_ACTIVE", True)
                 # print("user_has_correct_role",True)
@@ -322,7 +322,7 @@ def create_recomendation_per_campaign(
             result.append(RecommendationCell(
                 recommendation=recomendation, cell=cell))
     return {"results": result}
-
+import pytz
 # @api_router_recommendation.post("/campaigns/{campaign_id}/recommendations", status_code=201, response_model=Union[RecommendationCellSearchResults,dict])
 def create_recomendation_system_per_campaign(
     *,
@@ -369,7 +369,7 @@ def create_recomendation_system_per_campaign(
             role_correct=True
             campaign = crud.campaign.get(db=db, id=i.campaign_id)
             # Verify if the campaign is active
-            if campaign.start_datetime.replace(tzinfo=timezone.utc) <= time.replace(tzinfo=timezone.utc)  and time.replace(tzinfo=timezone.utc) < campaign.end_datetime.replace(tzinfo=timezone.utc):
+            if campaign.start_datetime.replace(tzinfo=pytz.timezone('Europe/Madrid')) <= time.replace(tzinfo=pytz.timezone('Europe/Madrid'))  and time.replace(tzinfo=pytz.timezone('Europe/Madrid')) < campaign.end_datetime.replace(tzinfo=pytz.timezone('Europe/Madrid')):
                 # print("campaign_id ------------------------------------------",i.campaign_id)
                 # print("Campaign_ACTIVE", True)
                 # print("user_has_correct_role",True)
