@@ -3,7 +3,7 @@ import json
 hive_id= 1 #Change this variable as in the simulation need. 
 # Code to create the terminal lines to ejecute in the termineal and populate the database for the experiments. 
 result = ''
-number_users=2
+number_users=100
 inicio=1
 result = result+ f"insert into BeeKeeper (name,surname,age,gender,city, mail,birthday,real_user,id) values (name,surname,0,'FEMALE',city, mail,   '2023-03-09 10:47:50',true,1);"
 result = result + f"insert into Hive (id,beekeeper_id,city, name) values ({hive_id},1,city,name);"
@@ -12,12 +12,12 @@ result = result + f"insert into Hive (id,beekeeper_id,city, name) values ({hive_
 
 with open('archivo.json', 'w') as file:
 
-    for id in range(inicio, number_users):
+    for id in range(inicio, number_users+1):
         #Insert the line that create the user and his/her role in the hive
         element = f"insert into Member (name,surname,age,gender,city, mail,birthday,real_user,id) values (name,surname,0,'FEMALE',city, mail,   '2023-03-09 10:47:50',true,{id});"
         result = result + element #+ element2 + element3
 
-    for id in range(inicio, number_users):
+    for id in range(inicio, number_users+1):
         #Insert the line that create the user and his/her role in the hive
         if id==1:
             role="QueenBee"
@@ -27,12 +27,12 @@ with open('archivo.json', 'w') as file:
         result = result + element 
 
     #Create the .json file to save all this mysql commant to ejecute in the terminal. 
-    for id in range(inicio, number_users):
+    for id in range(inicio, number_users+1):
         #Insert the line that create the user and his/her role in the hive
         element= f"insert into Device (id) values ({id});"          
         result = result + element
 
-    for id in range(inicio, number_users):
+    for id in range(inicio, number_users+1):
         #Insert the line that create the user and his/her role in the hive
         element =  f"insert into Member_Device (device_id, member_id) values ({id},{id});"
         result = result + element #+ element2 + element3

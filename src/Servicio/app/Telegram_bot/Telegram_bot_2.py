@@ -655,6 +655,117 @@ def crear_mapa():
             return True
         return None
     return None
+
+import os.path as path
+
+
+def crear_mapa_2():
+
+    data=bot_auxiliar.get_surface()
+    
+    if data != None:
+        surface_centre_lat = data['results'][0]['boundary']['centre']['Latitude'] 
+        surface_centre_long = data['results'][0]['boundary']['centre']['Longitude']
+        surface_radius = data['results'][0]['boundary']['radius']
+        mapa = folium.Map(
+                location=[surface_centre_lat, surface_centre_long], zoom_start=18)
+        #Este tiene que tener la localizacion y la recomendacion y la foto 
+        measuerements =bot_auxiliar.get_measurement()
+
+            
+        # measu=[]
+        # for i in list_users:
+        #     for j in list_users[i].measurement:
+        #         measu.append(j)
+        
+        # Obtener el número de combinaciones diferentes de las dos primeras columnas
+        campaign=bot_auxiliar.get_campaign_hive_1()
+        if campaign is None:
+            return None
+        else:
+            radio=campaign['cells_distance']/2
+            hipotenusa= math.sqrt(2*((radio)**2))
+            dics={}
+            if measuerements !=[]:
+                for i in measuerements:
+                    url=f"src/Servicio/app/Telegram_bot/Pictures/photo{str(i['id'])}.jpg"
+                    if path.exists(url):
+
+                        print(i['location']['Latitude'])
+                        print(i['location']['Longitude'])
+                        (lat, long ) =bot_auxiliar.get_point(id_user=1, latitud= i['location']['Latitude'], longuitud=i['location']['Longitude'])
+                        
+                        
+                        if (lat,long)  in list(dics.keys()):
+                            dics[(lat,long)]=dics[(lat,long)]+1 
+                            
+                        else:
+                            dics[(lat,long)]=0
+                        
+                        n_files=dics[(lat,long)]
+                        # if n_files==4:
+                        #     dics[(lat,long)]=0
+                        
+
+                        combinacion =  (lat, long )
+                        datos_tercera_columna = url
+                        grados = 90
+                        lat, long =   (lat, long )
+                            # print(n_files*grados, n_files)
+                        if 0 <= (n_files*grados)%360 and 90 > (n_files*grados)%360:                    
+                                esquina_derecha_arriba=bot_auxiliar.get_point_at_distance(lat1=lat, lon1=long, d=radio,bearing=0 )
+                                medio_ARRIBA=  bot_auxiliar.get_point_at_distance(lat1=lat, lon1=long, d=radio,bearing=90)
+                                image_overlay = folium.raster_layers.ImageOverlay(
+                                                    image=datos_tercera_columna,
+                                                    bounds=[medio_ARRIBA,esquina_derecha_arriba],
+                                                    opacity=0.75,
+                                                    interactive=True,
+                                                    cross_origin=False,
+                                                    zindex=1,
+                                                )
+                                image_overlay.add_to(mapa)
+                        elif(n_files*grados)%360 >= 270 and (n_files*grados)%360 < 360:
+                                esquina_arriba_izquierda=bot_auxiliar.get_point_at_distance(lat1=lat, lon1=long, d=hipotenusa,bearing=135 )
+                                medio_ARRIBA=  [lat,long]
+                                image_overlay = folium.raster_layers.ImageOverlay(
+                                                    image=datos_tercera_columna,
+                                                    bounds=[esquina_arriba_izquierda,medio_ARRIBA],
+                                                    opacity=0.75,
+                                                    interactive=True,
+                                                    cross_origin=False,
+                                                    zindex=1,
+                                                )
+                                image_overlay.add_to(mapa)                               
+                        elif 180 <= (n_files*grados)%360 and 270 > (n_files*grados)%360:
+                                lateral_izq_medio=bot_auxiliar.get_point_at_distance(lat1=lat, lon1=long, d=radio,bearing=180 )
+                                punto_central= bot_auxiliar.get_point_at_distance(lat1=lat, lon1=long, d=radio,bearing=270)
+                                image_overlay = folium.raster_layers.ImageOverlay(
+                                                    image=datos_tercera_columna,
+                                                    bounds=[lateral_izq_medio,punto_central],
+                                                    opacity=0.75,
+                                                    interactive=True,
+                                                    cross_origin=False,
+                                                    zindex=1,
+                                                )
+                                image_overlay.add_to(mapa)
+                        elif  90 <= (n_files*grados)%360 and 180 > (n_files*grados)%360:
+                                lateral_derecho_medio=bot_auxiliar.get_point_at_distance(lat1=lat, lon1=long, d=hipotenusa,bearing=315 )
+                                central_point= [lat,long]
+                                image_overlay = folium.raster_layers.ImageOverlay(
+                                    image=datos_tercera_columna,
+                                    bounds=[central_point,lateral_derecho_medio],
+                                    opacity=0.75,
+                                    interactive=True,
+                                    cross_origin=False,
+                                    zindex=1,
+                                                )
+                                image_overlay.add_to(mapa)
+                    else:
+                        print(url)
+            mapa.save('index.html')
+        return True
+    return None
+    return None
                 # Enviar el mapa al usuario
                 # try:
             #map_path = f'index.html'

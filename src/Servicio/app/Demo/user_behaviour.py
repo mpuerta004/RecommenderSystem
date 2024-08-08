@@ -49,7 +49,7 @@ class User(object):
             #Si tiene recomendaciones pendientes no esta disponible. 
             if len(list_of_recomendations) == 0:
                 aletorio = random.random()
-                if aletorio >= self.user_available_probability:
+                if aletorio <= self.user_available_probability:
                     return True
             else:
                 return False 

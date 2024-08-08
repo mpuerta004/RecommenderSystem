@@ -136,7 +136,7 @@ def asignacion_recursos_hive_bio_inspired(
             mediciones[i][2] = int(mediciones[i][2]) - 60
             if mediciones[i][2] <= 0:
                 aletorio = random.random()
-                if aletorio >= user_class.user_realize:
+                if aletorio <= user_class.user_realize:
                     slot = crud.slot.get(db=db, id=mediciones[i][1].slot_id)
                     cell = crud.cell.get_Cell(db=db, cell_id=slot.cell_id)
                     Member_Device_user = crud.member_device.get_by_member_id(
@@ -284,7 +284,7 @@ def asignacion_recursos_MVE(
             mediciones[i][2] = int(mediciones[i][2]) - 60
             if mediciones[i][2] <= 0:
                 aletorio = random.random()
-                if aletorio >= user_class.user_realize:
+                if aletorio <= user_class.user_realize:
                     slot = crud.slot.get(db=db, id=mediciones[i][1].slot_id)
                     cell = crud.cell.get_Cell(db=db, cell_id=slot.cell_id)
                     Member_Device_user = crud.member_device.get_by_member_id(
@@ -334,8 +334,6 @@ def asignacion_recursos_MVE(
 def asignacion_recursos_variable(
     hive_id:int,
     db: Session = Depends(deps.get_db)):
-    
-    
     
     list_of_cells=crud.cell.get_cells_campaign(db=db, campaign_id=1)
     list_cells_id=[cell.id for cell in list_of_cells]
