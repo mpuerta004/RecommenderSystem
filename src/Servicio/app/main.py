@@ -153,4 +153,4 @@ if __name__ == "__main__":
     # scheduler = BackgroundScheduler()
     # scheduler.add_job(crear_mapa_bot, 'interval', seconds=60)
     # scheduler.start()
-    # uvicorn.run(app, host="0.0.0.0", port=8001, log_level="debug")
+    uvicorn.run(app, host="0.0.0.0", port=8001, log_level="debug")
