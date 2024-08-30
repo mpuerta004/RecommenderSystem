@@ -258,7 +258,7 @@ def asignacion_recursos_MVE(
                     if lat is not None and lon is not None:
                         a = RecommendationCreate(member_current_location={
                                                 'Longitude': lon, 'Latitude': lat}, recommendation_datetime=time)
-                        # recomendaciones=create_recomendation_system_per_campaign(db=db,member_id=user_class.id,recipe_in=a,campaign_id=campaign_id,time=time)
+                        #recomendaciones=create_recomendation_system_per_campaign(db=db,member_id=user_class.id,recipe_in=a,campaign_id=campaign_id,time=time)
 
                         recomendaciones=create_recomendation_per_campaign(db=db,member_id=user_class.id,recipe_in=a,campaign_id=campaign_id,time=time)
                         # recomendaciones = bio_inspired_recomender.create_recomendation(member_id=user_class.member.id,recipe_in=a,db=db,time=time,campaign_id=campaign_id)
