@@ -14,6 +14,7 @@ from fastapi_utils.session import FastAPISessionMaker
 from datetime import datetime,timedelta
 from funtionalities import prioriry_calculation
 import keys
+import pytz
 from Demo.map_funtions import show_thesholes_piloto, show_hive
 SQLALCHEMY_DATABASE_URL = keys.SQLALCHEMY_DATABASE_URL
 sessionmaker = FastAPISessionMaker(SQLALCHEMY_DATABASE_URL)
@@ -58,9 +59,6 @@ async def prioriry_calculation_main() -> None:
     return None
 
    
-
-import pytz
-
 async def state_calculation()->None:
     with sessionmaker.context_session() as db:
         list_of_recommendations= crud.recommendation.get_aceptance_and_notified_state(db=db)
@@ -137,8 +135,6 @@ if __name__ == "__main__":
     scheduler.add_job(final_funtion, 'interval', seconds=180)
     scheduler.add_job(State_change, 'interval', seconds=180)
     scheduler.start()
-    
-
     # bot.set_my_commands([
     #     telebot.types.BotCommand("/start", "Start!"), #Command, description
     #     # telebot.types.BotCommand("/general_info", "general information"),

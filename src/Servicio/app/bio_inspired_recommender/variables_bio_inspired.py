@@ -6,7 +6,6 @@ e_0= 2.0# cuanto decrece el threshold cuando el usuario realiza una accion
 e_neighbour= 1.0 # cianto decrece el threshold cuando el usuario realiza una accion en una celda vecina de la misma camapaña
 alpha = 2 # modulate the threshold
 beta= 2  # modulate the threshold of the distance 
-
 neighbour_close=3
 
 # O_max=10.0 # threshold maximo
