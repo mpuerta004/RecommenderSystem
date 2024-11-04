@@ -75,6 +75,8 @@ def get_recommendation(
         )
     return result
 import pytz
+
+
 @api_router_recommendation.post("/campaigns/{campaign_id}/recommendations", status_code=201, response_model=Union[RecommendationCellSearchResults,dict])
 def create_recomendation(
     *,
@@ -131,6 +133,7 @@ def create_recomendation(
         # list_of_cells=crud.cell.get_cells_campaign(db=db, campaign_id=campaign_id)
         far_away=True
         for cell in list_of_cells:
+            df_user_distance.loc[cell.id,"distance_cell_user"]=df_user_distance.loc[cell.id,"distance_cell_user"].astype(float)
             df_user_distance.loc[cell.id,"distance_cell_user"]=float(vincenty_inverse(
                 (cell.centre["Latitude"], cell.centre["Longitude"]), (user_location['Latitude'], user_location['Longitude'])))
             distance=df_user_distance.loc[cell.id,"distance_cell_user"]

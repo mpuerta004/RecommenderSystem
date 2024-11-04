@@ -3,7 +3,7 @@ import math
 import json
 import requests
 import telebot
-from Telegram_bot.Token.Token  import TOKEN, radio_cell
+from Telegram_bot.TOKEN.TOKEN  import TOKEN, radio_cell
 from telebot import types
 import datetime
 from csv import writer
@@ -21,7 +21,6 @@ import pandas as pd
 from folium import plugins
 from folium.utilities import image_to_url
 import subprocess
-
 from Telegram_bot.usuario import User
 from Telegram_bot.measurement_bot import Measurement_bot
 bot = telebot.TeleBot(TOKEN)

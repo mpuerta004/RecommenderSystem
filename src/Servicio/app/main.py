@@ -7,7 +7,8 @@ from end_points import (BeeKeeper, Campaign_Member, Campaigns, Cells, Devices, H
                         Surface, sync,KPIS)
 from Demo import Demo
 # from Heuristic_recommender import Recommendation
-from bio_inspired_recommender import bio_inspired_recomender as Recommendation
+# from bio_inspired_recommender import bio_inspired_recomender as Recommendation
+from Mix_recommender import mix_recommender as Recommendation
 from fastapi import (APIRouter, FastAPI)
 from fastapi.templating import Jinja2Templates
 from fastapi_utils.session import FastAPISessionMaker

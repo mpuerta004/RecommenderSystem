@@ -1,6 +1,6 @@
 Delete from Hive;
-Delete from Hive_Member;
 Delete from Bio_inspired;
+Delete from Hive_Member;
 Delete from BeeKeeper;
 Delete from Device;
 Delete from Member_Device;
@@ -13,5 +13,5 @@ Delete from Cell;
 Delete from Priority;
 Delete from Slot;
 Delete from Measurement;
-
+Delete from Bio_inspired;
 

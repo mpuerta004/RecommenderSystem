@@ -66,8 +66,7 @@ def get_recommendation(
     return result
 
 
-####################################### POST ########################################
-#TODO! Not work i think! 
+
 @api_router_recommendation.post("/recommendations", status_code=201, response_model=Union[RecommendationCellSearchResults,str])
 def create_recomendation(
     *,
@@ -323,6 +322,7 @@ def create_recomendation_per_campaign(
                 recommendation=recomendation, cell=cell))
     return {"results": result}
 import pytz
+
 # @api_router_recommendation.post("/campaigns/{campaign_id}/recommendations", status_code=201, response_model=Union[RecommendationCellSearchResults,dict])
 def create_recomendation_system_per_campaign(
     *,

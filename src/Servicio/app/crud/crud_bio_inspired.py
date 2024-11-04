@@ -32,6 +32,10 @@ class CRUDBio_inspired(CRUDBase[Bio_inspired, Bio_inspiredCreate, Bio_inspiredUp
         except Exception as e:
                         raise HTTPException(status_code=500, detail=f"Error with mysql {e}" )
 
-
+    def get_list_threshole(self, db: Session, *, member_id:int) -> List[int]:
+        try:
+            return db.query(Bio_inspired.threshold).filter(Bio_inspired.member_id==member_id).all()
+        except Exception as e:
+                        raise HTTPException(status_code=500, detail=f"Error with mysql {e}" )
 
 bio_inspired = CRUDBio_inspired(Bio_inspired)

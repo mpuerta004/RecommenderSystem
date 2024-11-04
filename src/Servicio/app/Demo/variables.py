@@ -35,6 +35,9 @@ color_list_gradient_green_distribution = ['#94C58C', '#64AD62', ' #429B46', '#0A
 # User behaviour ########################################################################################
 
 
-variables_comportamiento = {"user_aceptance": 0.0, "user_realize": 1.0, "user_availability": 1.0,
-                            "popularidad_cell": 0.85, "number_of_unpopular_cells": 5}
+variables_comportamiento = {"user_aceptance": 0.0, 
+"user_realize": 0.75, 
+"user_availability": 0.5,
+"popularidad_cell": 0.85,
+"number_of_unpopular_cells": 5}
 
