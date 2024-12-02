@@ -92,7 +92,6 @@ def final_funtion():
 def State_change():
     asyncio.run(state_calculation())
     print("He terminado!")
-    
 
 
 app.include_router(api_router)

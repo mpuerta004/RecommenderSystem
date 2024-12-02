@@ -122,8 +122,8 @@ def show_hive(
                     list_point.append([lat2, lon2])
 
                
-                folium.Polygon(locations=list_point, color='black', fill=False,
-                            weight=1, popup=(folium.Popup(str(j.id))), opacity=0.5, fill_opacity=0.2).add_to(mapObj)
+                folium.Polygon(locations=list_point, color='black', fill=True, fill_color='white',
+                            weight=1, opacity=0.5, fill_opacity=0.5).add_to(mapObj)
                 
                 
                 # with open("src/Servicio/Telegram_bot/Pictures/DATAMAP.csv", "a", newline="") as f_object:
@@ -139,7 +139,6 @@ def show_hive(
                             icon=DivIcon(
                     icon_size=(200, 36),
                     icon_anchor=(0, 0),
-                    
                     html=f'<div style="font-size: 20pt;color:{color_number};">{str(j.id)}</div>'
                 )
                 ).add_to(mapObj)
